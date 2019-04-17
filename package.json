@@ -1,0 +1,7 @@
+{
+  "name": "artemis-data",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Joe Torreggiani <jtorreggiani@agrilyst.com>",
+  "license": "MIT"
+}
