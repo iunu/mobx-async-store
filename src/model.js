@@ -19,7 +19,7 @@ export function attribute (coerce = (obj) => obj) {
   }
 }
 
-/**
+/*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
  * ```
@@ -34,7 +34,7 @@ export function attribute (coerce = (obj) => obj) {
  * @method hasMany
  */
 
-/**
+/*
  * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
  * An optional argument specifies the data model, if different from the property name.
  * ```
