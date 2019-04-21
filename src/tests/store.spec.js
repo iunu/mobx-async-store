@@ -84,8 +84,8 @@ describe('Store', () => {
     expect.assertions(1)
     expect(toJS(store.data)).toEqual({
       todos: {
-        cache: {},
         records: {},
+        cache: {},
         isEmpty: true
       }
     })
@@ -99,13 +99,12 @@ describe('Store', () => {
     })
   })
 
-  xdescribe('findOne', () => {
+  describe('findOne', () => {
     it('find model in store', async () => {
       expect.assertions(1)
       const addedModel = store.add('todos', { title: 'Buy Milk' })
       const { id } = addedModel
-      const options = { fromServer: true }
-      const foundModel = await store.findOne('todos', id, options)
+      const foundModel = await store.findOne('todos', id)
       expect(foundModel.title).toEqual(addedModel.title)
     })
 
@@ -189,9 +188,7 @@ describe('Store', () => {
       it('caches list ids by request url', async () => {
         expect.assertions(1)
         fetch.mockResponse(mockTodosResponse)
-        await store.findAll('todos', {
-          fromServer: true
-        })
+        await store.findAll('todos', { fromServer: true })
         const { data: { todos: { cache } } } = store
         expect(cache['/example_api/todos']).toEqual(['1'])
       })
@@ -242,8 +239,7 @@ describe('Store', () => {
     })
 
     describe('cache behavior', () => {
-      const assertionText = `
-        if a record, originally fetched via a query, is changed
+      const assertionText = `if a record, originally fetched via a query, is changed
         (client only) and the record is found in a cached query
       `
       describe(assertionText, () => {

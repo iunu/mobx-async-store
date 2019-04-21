@@ -45,8 +45,21 @@ function dbOrNewId (properties) {
  * @constructor
  */
 class Store {
+  /**
+   * Observable property used to store data and
+   * handle changes to state
+   *
+   * @property data
+   * @type {Object}
+   * @default {}
+   */
   @observable data = {}
 
+  /**
+   * Initializer for Store class
+   *
+   * @method constructor
+   */
   constructor (options) {
     this.init(options)
   }
@@ -69,10 +82,10 @@ class Store {
     const id = dbOrNewId(properties)
     // Create new model install
     const model = this.createModel(type, id, properties)
-    // Add the model to the type records index
-    this.data[type].records[id] = model
     // Return the model
     this.data[type].isEmpty = false
+    // Add the model to the type records index
+    this.data[type].records[id] = model
     return model
   }
 
@@ -106,19 +119,13 @@ class Store {
    * @param id
    * @param {Object} options
    */
-  // findOne (type, id, options = {}) {
-  //   // Search store for
-  //   const { fromServer } = options
-  //
-  //   let model = this.getRecord(type, id)
-  //   if (!fromServer) return model
-  //
-  //   if (!model) {
-  //     model = this.fetchOne(type, id)
-  //   }
-  //
-  //   return Promise.resolve(model)
-  // }
+  findOne (type, id, options = {}) {
+    if (this.shouldFetchOne(type, id, options)) {
+      return this.fetchOne(type, id)
+    } else {
+      return this.getRecord(type, id)
+    }
+  }
 
   /**
    * finds all of the instances of a given type. If there are instances available in the store,
@@ -276,17 +283,19 @@ class Store {
    *
    * @method getType
    * @params {String} type
+   * @return {Object} observable type object structure
    */
   getType (type) {
     return this.data[type]
   }
 
   /**
-   * Gets records for type of collection from observable
+   * Gets individual record from store
    *
-   * @method getRecordsIndex
+   * @method getRecord
    * @params {String} type
-   * @return {Object} indexed object of records
+   * @params {Number} id
+   * @return {Object} record
    */
   getRecord (type, id) {
     return this.getType(type).records[id]
@@ -303,25 +312,13 @@ class Store {
     return Object.values(this.getType(type).records)
   }
 
-  getMatchingRecords (type, queryParams) {
-    if (queryParams) {
-      return this.getCachedRecords(type, queryParams)
-    } else {
-      return this.getRecords(type)
-    }
-  }
-
-  isQueryCached (type, queryParams = {}) {
-    const url = this.fetchUrl(type, queryParams)
-    return !!this.getType(type).cache[url]
-  }
-
   /**
-   * Gets cache for type of collection from observable
-   * TODO: This probably shouldn't be in the observable
+   * Gets records from store based on cached query
    *
-   * @method getRecords
+   * @method getCachedRecords
    * @params {String} type
+   * @params {Object} queryParams
+   * @return {Array} array or records
    */
   getCachedRecords (type, queryParams) {
     // Get the url the request would use
@@ -330,6 +327,23 @@ class Store {
     const ids = this.getType(type).cache[url]
     // Get the records matching the ids
     return ids.map(id => this.getRecord(type, id))
+  }
+
+  /**
+   * Gets records all records or records
+   * based on query params
+   *
+   * @method getMatchingRecords
+   * @params {String} type
+   * @params {Object} queryParams
+   * @return {Array} array or records
+   */
+  getMatchingRecords (type, queryParams) {
+    if (queryParams) {
+      return this.getCachedRecords(type, queryParams)
+    } else {
+      return this.getRecords(type)
+    }
   }
 
   /**
@@ -385,6 +399,7 @@ class Store {
     if (response.status === 200) {
       this.data[type].cache[url] = []
       const json = await response.json()
+      // TODO: Refactor, abstract, and handle relations
       const records = json.data.map(dataObject => {
         const { id } = dataObject
         const { attributes } = dataObject
@@ -402,24 +417,44 @@ class Store {
   }
 
   /**
-   * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
+   * fetches record by `id`.
    *
+   * @async
    * @method fetchOne
    * @param {String} type the type to find
    * @param {String} id
    */
-  // fetchOne (type, id) {
-  //   const url = this.fetchUrl(type)
-  //   // Trigger request
-  //   const response = await this.fetch(`${url}/${id}`)
-  //   // Handle response
-  //   if (response.status === 200) {
-  //     const json = await response.json()
-  //     return this.createModel(type, null, json.data.attributes)
-  //   } else {
-  //     return response.status
-  //   }
-  // }
+  async fetchOne (type, id) {
+    const url = this.fetchUrl(type)
+    // Trigger request
+    const response = await this.fetch(`${url}/${id}`)
+    // Handle response
+    if (response.status === 200) {
+      const json = await response.json()
+      return this.createModel(type, null, json.data.attributes)
+    } else {
+      return response.status
+    }
+  }
+
+  /**
+   * Determines if an individual record should be
+   * fetched or looked up in the store
+   *
+   * @method shouldFetchOne
+   * @param {String} type the type to find
+   * @param {String} id
+   * @param {Object} options
+   */
+  shouldFetchOne (type, id, { fromServer }) {
+    // If fromServer is true immediately return true
+    if (fromServer === true) return true
+    // Check if matching record is in store
+    // If fromServer is undefined and record is not found
+    // return true
+    return typeof fromServer === 'undefined' &&
+           !this.getRecord(type, id)
+  }
 }
 
 export default Store
