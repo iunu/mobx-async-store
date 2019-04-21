@@ -1,0 +1,65 @@
+version: 2
+jobs:
+  yarn_install:
+    docker:
+      - image: circleci/node:10.15.0
+
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules from cache
+          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+
+      - run: sudo yarn install
+
+      - save_cache:
+          paths:
+            - node_modules
+          name: Cache node_modules
+          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+
+  yuidoc:
+    docker:
+      - image: circleci/node:10.15.0
+    steps:
+      - checkout
+      - run:
+          name: Check Javascript Docs
+          command: sudo npm install -g yuidocjs && yuidoc --lint
+
+  eslint:
+    docker:
+      - image: circleci/node:10.15.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules from cache
+          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+      - run:
+          name: Run Eslint
+          command: node_modules/.bin/eslint src
+
+  jest:
+    docker:
+      - image: circleci/node:10.15.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules from cache
+          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+      - run:
+          name: Run Jest
+          command: node_modules/.bin/jest src
+
+workflows:
+  version: 2
+  run_tests:
+    jobs:
+      - yarn_install
+      - yuidoc
+      - eslint:
+          requires:
+            - yarn_install
+      - jest:
+          requires:
+            - yarn_install
