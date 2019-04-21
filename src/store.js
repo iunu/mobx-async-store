@@ -208,7 +208,7 @@ class Store {
    * Entry point for configuring the store
    *
    * @method init
-   * @params {Object} options passed to constructor
+   * @param {Object} options passed to constructor
    */
   init (options) {
      this.initializeNextworkConfiguration(options)
@@ -220,7 +220,7 @@ class Store {
    * Entry point for configuring the store
    *
    * @method initializeNextworkConfiguration
-   * @params {Object} options for nextwork config
+   * @param {Object} options for nextwork config
    */
   initializeNextworkConfiguration (options = {}) {
     this.baseUrl = options.baseUrl || ''
@@ -231,7 +231,7 @@ class Store {
    * Entry point for configuring the store
    *
    * @method initializeNextworkConfiguration
-   * @params {Object} options for nextwork config
+   * @param {Object} options for nextwork config
    */
   initializeModelTypeIndex () {
     const { types } = this.constructor
@@ -248,7 +248,7 @@ class Store {
    * Observable({ todos: {} })
    *
    * @method initializeObservableDataProperty
-   * @params {Object} options for nextwork config
+   * @param {Object} options for nextwork config
    */
   initializeObservableDataProperty () {
     const { types } = this.constructor
@@ -267,8 +267,8 @@ class Store {
    * Wrapper around fetch applies user defined fetch options
    *
    * @method fetch
-   * @params {String} url
-   * @params {Object} options
+   * @param {String} url
+   * @param {Object} options
    */
   fetch (url, options = {}) {
     const { defaultFetchOptions } = this
@@ -282,7 +282,7 @@ class Store {
    * Gets type of collection from data observable
    *
    * @method getType
-   * @params {String} type
+   * @param {String} type
    * @return {Object} observable type object structure
    */
   getType (type) {
@@ -293,8 +293,8 @@ class Store {
    * Gets individual record from store
    *
    * @method getRecord
-   * @params {String} type
-   * @params {Number} id
+   * @param {String} type
+   * @param {Number} id
    * @return {Object} record
    */
   getRecord (type, id) {
@@ -305,7 +305,7 @@ class Store {
    * Gets records for type of collection from observable
    *
    * @method getRecords
-   * @params {String} type
+   * @param {String} type
    * @return {Array} array of objects
    */
   getRecords (type) {
@@ -316,8 +316,8 @@ class Store {
    * Gets records from store based on cached query
    *
    * @method getCachedRecords
-   * @params {String} type
-   * @params {Object} queryParams
+   * @param {String} type
+   * @param {Object} queryParams
    * @return {Array} array or records
    */
   getCachedRecords (type, queryParams) {
@@ -334,8 +334,8 @@ class Store {
    * based on query params
    *
    * @method getMatchingRecords
-   * @params {String} type
-   * @params {Object} queryParams
+   * @param {String} type
+   * @param {Object} queryParams
    * @return {Array} array or records
    */
   getMatchingRecords (type, queryParams) {
@@ -361,15 +361,17 @@ class Store {
    * Helper to create a new model
    *
    * @method createModel
-   * @param {String}
+   * @param {String} type
+   * @param {Number} type
+   * @param {Object} attributes
    * @return {Object} model instance
    */
-  createModel (type, id, properties) {
+  createModel (type, id, attributes) {
     const ModelKlass = this.getKlass(type)
     return new ModelKlass({
       id,
       store: this,
-      ...properties
+      ...attributes
     })
   }
 
