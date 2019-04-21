@@ -106,14 +106,6 @@ class Store {
    *
    * @method reset
    */
-
-  /**
-   * @method ping
-   * @return {String} 'pong'
-   */
-  ping () {
-    return 'pong'
-  }
 }
 
 export default Store
