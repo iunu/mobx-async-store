@@ -1,12 +1,9 @@
-import { observable, extendObservable } from 'mobx'
+/* global fetch */
+import { observable } from 'mobx'
 import uuidv1 from 'uuid/v1'
 
-function log (message) {
-  // console.log(message)
-}
-
 export function stringifyFilterParams (filters) {
-  return Object.keys(filters).map(function(key) {
+  return Object.keys(filters).map(function (key) {
     const encodedValue = encodeURIComponent(filters[key])
     return `filter[${key}]=${encodedValue}`
   }).join('&')
@@ -173,7 +170,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  findAll(type, options = {}) {
+  findAll (type, options = {}) {
     const { fromServer, queryParams } = options
     const { isEmpty } = this.getType(type)
     if (fromServer === false && isEmpty) return []
@@ -353,7 +350,7 @@ class Store {
    * @param {String}
    * @return {Object} model instance
    */
-  createModel(type, id, properties) {
+  createModel (type, id, properties) {
     const ModelKlass = this.getKlass(type)
     return new ModelKlass({
       id,

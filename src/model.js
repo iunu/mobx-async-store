@@ -94,7 +94,7 @@ class Model {
   }
 
   trackState () {
-    let firstAutorun = true;
+    let firstAutorun = true
     autorun(() => {
       // `JSON.stringify` will touch all attributes
       // ensuring they are automatically observed.

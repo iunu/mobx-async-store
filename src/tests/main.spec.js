@@ -62,59 +62,60 @@ describe('Store', () => {
     store.reset()
   })
 
-  // it('has observable data property', () => {
-  //   expect.assertions(1)
-  //   expect(isObservable(store.data)).toBe(true)
-  // })
-  //
-  // it('sets network configuration properties', () => {
-  //   expect.assertions(2)
-  //   expect(store.baseUrl).toEqual(mockBaseUrl)
-  //   expect(store.defaultFetchOptions).toEqual(mockFetchOptions)
-  // })
-  //
-  // it('sets model type index', () => {
-  //   expect.assertions(1)
-  //   expect(store.modelTypeIndex).toEqual({
-  //     'todos': Todo
-  //   })
-  // })
-  //
-  // it('initializes data observable', () => {
-  //   expect.assertions(1)
-  //   expect(toJS(store.data)).toEqual({
-  //     todos: {
-  //       cache: {},
-  //       records: {}
-  //     }
-  //   })
-  // })
+  it('has observable data property', () => {
+    expect.assertions(1)
+    expect(isObservable(store.data)).toBe(true)
+  })
 
-  // describe('add', () => {
-  //   it('adds basic model to store', () => {
-  //     expect.assertions(1)
-  //     const example = store.add('todos', { title: 'Buy Milk' })
-  //     expect(example.title).toEqual('Buy Milk')
-  //   })
-  // })
+  it('sets network configuration properties', () => {
+    expect.assertions(2)
+    expect(store.baseUrl).toEqual(mockBaseUrl)
+    expect(store.defaultFetchOptions).toEqual(mockFetchOptions)
+  })
 
-  // describe('findOne', () => {
-  //   it('find model in store', async () => {
-  //     expect.assertions(1)
-  //     const addedModel = store.add('todos', { title: 'Buy Milk' })
-  //     const { id } = addedModel
-  //     const options = { fromServer: true }
-  //     const foundModel = await store.findOne('todos', id, options)
-  //     expect(foundModel.title).toEqual(addedModel.title)
-  //   })
-  //
-  //   it('fetches model if it not present', async () => {
-  //     expect.assertions(1)
-  //     fetch.mockResponse(mockTodoResponse)
-  //     const todo = await store.findOne('todos', '1')
-  //     expect(todo.title).toEqual('Do taxes')
-  //   })
-  // })
+  it('sets model type index', () => {
+    expect.assertions(1)
+    expect(store.modelTypeIndex).toEqual({
+      'todos': Todo
+    })
+  })
+
+  it('initializes data observable', () => {
+    expect.assertions(1)
+    expect(toJS(store.data)).toEqual({
+      todos: {
+        cache: {},
+        records: {},
+        isEmpty: true
+      }
+    })
+  })
+
+  describe('add', () => {
+    it('adds basic model to store', () => {
+      expect.assertions(1)
+      const example = store.add('todos', { title: 'Buy Milk' })
+      expect(example.title).toEqual('Buy Milk')
+    })
+  })
+
+  xdescribe('findOne', () => {
+    it('find model in store', async () => {
+      expect.assertions(1)
+      const addedModel = store.add('todos', { title: 'Buy Milk' })
+      const { id } = addedModel
+      const options = { fromServer: true }
+      const foundModel = await store.findOne('todos', id, options)
+      expect(foundModel.title).toEqual(addedModel.title)
+    })
+
+    it('fetches model if it not present', async () => {
+      expect.assertions(1)
+      fetch.mockResponse(mockTodoResponse)
+      const todo = await store.findOne('todos', '1')
+      expect(todo.title).toEqual('Do taxes')
+    })
+  })
 
   describe('findAll', () => {
     describe('when "fromServer" is set to false', () => {
@@ -157,7 +158,7 @@ describe('Store', () => {
       it('fetches data with filter query params', async () => {
         expect.assertions(2)
         fetch.mockResponse(mockTodosResponse)
-        const todos = await store.findAll('todos', {
+        await store.findAll('todos', {
           fromServer: true,
           queryParams: {
             filter: {
@@ -174,7 +175,7 @@ describe('Store', () => {
       it('fetches data with include query params', async () => {
         expect.assertions(2)
         fetch.mockResponse(mockTodosResponse)
-        const todos = await store.findAll('todos', {
+        await store.findAll('todos', {
           fromServer: true,
           queryParams: {
             include: ['notes', 'comments']
@@ -188,7 +189,7 @@ describe('Store', () => {
       it('caches list ids by request url', async () => {
         expect.assertions(1)
         fetch.mockResponse(mockTodosResponse)
-        const todos = await store.findAll('todos', {
+        await store.findAll('todos', {
           fromServer: true
         })
         const { data: { todos: { cache } } } = store

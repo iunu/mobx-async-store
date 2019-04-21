@@ -1,6 +1,4 @@
 /* global fetch */
-
-import { isObservable } from 'mobx'
 import { Store, Model, attribute } from '../main.js'
 
 const timeStamp = new Date().toISOString().split('T')[0]
@@ -46,19 +44,6 @@ const mockTodoData = {
 }
 
 const mockTodoResponse = JSON.stringify(mockTodoData)
-
-const mockTodosResponse = JSON.stringify({
-  data: [
-    {
-      id: '1',
-      type: 'todos',
-      attributes: {
-        id: 1,
-        title: 'Do taxes'
-      }
-    }
-  ]
-})
 
 describe('Model', () => {
   beforeEach(() => {
