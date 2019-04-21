@@ -1,0 +1,9 @@
+{
+    "name": "Artemis Data",
+    "description": "Data Management for Artemis",
+    "url": "https://portal.agrilyst.com/",
+    "options": {
+        "outdir": "./doc/yuidoc",
+        "paths": "./src"
+    }
+}
