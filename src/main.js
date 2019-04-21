@@ -1,4 +1,4 @@
 import Store from './store'
-import Model from './model'
+import Model, { attribute } from './model'
 
-export { Store, Model }
+export { Store, Model, attribute }

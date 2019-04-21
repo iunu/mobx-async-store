@@ -32,6 +32,7 @@ export default [
 	{
 		input: 'src/main.js',
 		external: [
+			'@babel/runtime/helpers/esm/asyncToGenerator',
 			'@babel/runtime/helpers/esm/classCallCheck',
 			'@babel/runtime/helpers/esm/createClass',
 			'@babel/runtime/helpers/esm/defineProperty',
