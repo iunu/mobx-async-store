@@ -78,36 +78,6 @@ class Model {
     this.trackState()
   }
 
-  makeObservable (initialAttributes) {
-    extendObservable(this, {
-      ...this.defaultAttributes,
-      ...initialAttributes
-    })
-  }
-
-  setCurrentSnapShot () {
-    this.snapshot = this.attributes
-  }
-
-  setPreviousSnapshot () {
-    this.previousSnapshot = this.snapshot
-  }
-
-  trackState () {
-    let firstAutorun = true
-    autorun(() => {
-      // `JSON.stringify` will touch all attributes
-      // ensuring they are automatically observed.
-      JSON.stringify(this.attributes)
-      if (!firstAutorun) {
-        this.setPreviousSnapshot()
-        this.setCurrentSnapShot()
-        this.isDirty = true
-      }
-      firstAutorun = false
-    })
-  }
-
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
    * (eg 'calendar_events').
@@ -229,12 +199,17 @@ class Model {
    let url = store.fetchUrl(constructor.type)
    let method = 'POST'
 
-   if (!id.match(/tmp/)) {
+   if (!String(id).match(/tmp/)) {
      method = 'PUT'
      url += `/${id}`
    }
 
-   const response = await this.store.fetch(url, { method })
+   const body = JSON.stringify(this.jsonapi)
+
+   const response = await this.store.fetch(url, {
+     method,
+     body
+   })
    const json = await response.json()
    const attributes = json.data.attributes
 
@@ -249,6 +224,62 @@ class Model {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
+   destroy () {
+     throw new Error('Pending Implementation')
+   }
+
+   /* Private Methods */
+
+   /**
+    * Magic method that makes changes to records
+    * observable
+    *
+    * @method setCurrentSnapShot
+    */
+   makeObservable (initialAttributes) {
+     extendObservable(this, {
+       ...this.defaultAttributes,
+       ...initialAttributes
+     })
+   }
+
+   /**
+    * Sets current snapshot to current attributes
+    *
+    * @method setCurrentSnapShot
+    */
+   setCurrentSnapShot () {
+     this.snapshot = this.attributes
+   }
+
+   /**
+    * Sets previous snapshot to current snapshot
+    *
+    * @method setPreviousSnapshot
+    */
+   setPreviousSnapshot () {
+     this.previousSnapshot = this.snapshot
+   }
+
+   /**
+    * Uses mobx.autorun to track changes to attributes
+    *
+    * @method trackState
+    */
+   trackState () {
+     let firstAutorun = true
+     autorun(() => {
+       // `JSON.stringify` will touch all attributes
+       // ensuring they are automatically observed.
+       JSON.stringify(this.attributes)
+       if (!firstAutorun) {
+         this.setPreviousSnapshot()
+         this.setCurrentSnapShot()
+         this.isDirty = true
+       }
+       firstAutorun = false
+     })
+   }
 
    /**
     * current attributes of record
@@ -280,23 +311,30 @@ class Model {
      }, {})
    }
 
+   /**
+    * getter method to get data in api compliance format
+    * TODO: Figure out how to handle unpesisted ids
+    *
+    * @method jsonapi
+    * @return {Object} data in JSON::API format
+    */
    get jsonapi () {
      const { id } = this
      const { type, attributes: attrDefs } = this.constructor
+
      const attributes = this.attributeNames.reduce((attrs, key) => {
        attrs[key] = attrDefs[key].coerce(this[key])
-       if (!String(id).match(/tmp/)) {
-         attrs.id = id
-       }
        return attrs
      }, {})
-     return {
-       data: {
-         id: String(id),
-         type,
-         attributes
-       }
+
+     const dataObject = { data: { type, attributes } }
+
+     if (!String(id).match(/tmp/)) {
+       dataObject.data.id = String(id)
+       dataObject.data.attributes.id = id
      }
+
+     return dataObject
    }
 }
 

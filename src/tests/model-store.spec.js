@@ -53,7 +53,7 @@ describe('Model', () => {
 
   describe('.save', () => {
     it('makes request and updates model in store', async () => {
-      expect.assertions(8)
+      expect.assertions(9)
       // Add record to store
       const example = store.add('todos', { title: 'Buy Milk' })
       // Check the model doesn't have attributes
@@ -71,8 +71,16 @@ describe('Model', () => {
       expect(fetch.mock.calls).toHaveLength(1)
       expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos')
       expect(fetch.mock.calls[0][1].method).toEqual('POST')
-      // Check that the id is now what was provider from
-      // the server
+      expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+        data: {
+          type: 'todos',
+          attributes: {
+            title: 'Buy Milk'
+          }
+        }
+      })
+      // Check that the id is now what was provider
+      // from the server
       expect(example.id).toEqual(1)
       // Check that the `created_at` attribute is populated
       expect(example.created_at).toEqual(timeStamp)
