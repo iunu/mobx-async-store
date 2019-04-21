@@ -38,7 +38,8 @@
     "prepare": "yarn build",
     "build": "rollup -c",
     "watch": "rollup -c -w",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "lint": "node_modules/.bin/eslint src"
   },
   "jest": {
     "automock": false,

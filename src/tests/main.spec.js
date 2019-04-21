@@ -1,5 +1,5 @@
 import { isObservable } from 'mobx'
-import { Store, Model } from '../main.js'
+import { Store } from '../main.js'
 
 class AppStore extends Store {}
 
