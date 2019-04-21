@@ -1,7 +1,52 @@
 {
   "name": "artemis-data",
   "version": "1.0.0",
-  "main": "index.js",
-  "author": "Joe Torreggiani <jtorreggiani@agrilyst.com>",
-  "license": "MIT"
+  "main": "dist/artemis-data.cjs.js",
+  "module": "dist/artemis-data.esm.js",
+  "browser": "dist/artemis-data.umd.js",
+  "dependencies": {
+    "mobx": "^5.9.4",
+    "ms": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/plugin-proposal-decorators": "^7.4.0",
+    "@babel/plugin-transform-runtime": "^7.4.3",
+    "@babel/preset-env": "^7.2.3",
+    "@babel/runtime": "^7.4.3",
+    "jest": "24.7.1",
+    "jest-fetch-mock": "^2.1.2",
+    "rollup": "^1.0.0",
+    "rollup-jest": "^0.0.2",
+    "rollup-plugin-babel": "^4.2.0",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^4.0.0"
+  },
+  "scripts": {
+    "prepare": "yarn build",
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "test": "jest --verbose"
+  },
+  "jest": {
+    "automock": false,
+    "setupFiles": [
+      "./setupJest.js"
+    ],
+    "transform": {
+      "^.+\\.js?$": "babel-jest"
+    },
+    "testPathIgnorePatterns": [
+      "/tests/fixtures/",
+      "/tests/support/",
+      "/dist/",
+      "/node_modules/",
+      "/rollup.config.js",
+      "/setupJest.js"
+    ]
+  },
+  "files": [
+    "dist"
+  ]
 }
