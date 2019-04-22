@@ -47,7 +47,7 @@ export default [
 			'uuid'
 		],
 		output: [
-			// { file: pkg.main, format: 'cjs' },
+			{ file: pkg.main, format: 'cjs' },
 			{ file: pkg.module, format: 'es' }
 		],
 		plugins: [

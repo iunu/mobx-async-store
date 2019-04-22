@@ -1,12 +1,11 @@
 {
   "name": "artemis-data",
   "version": "1.0.0",
-  "main": "dist/artemis-data.cjs.js",
   "module": "dist/artemis-data.esm.js",
   "browser": "dist/artemis-data.umd.js",
+  "main": "dist/artemis-data.cjs.js",
   "dependencies": {
-    "mobx": "^5.9.4",
-    "uuid": "^3.3.2"
+    "mobx": "^5.9.4"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",

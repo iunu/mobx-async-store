@@ -1,6 +1,12 @@
 /* global fetch */
 import { observable } from 'mobx'
-import uuidv1 from 'uuid/v1'
+// Bug with dependency on node
+// TODO: Figure out patch
+// import uuidv1 from 'uuid/v1'
+function uuidv1 () {
+  const number = Math.floor(100000 + Math.random() * 900000)
+  return String(number)
+}
 
 export function stringifyFilterParams (filters) {
   return Object.keys(filters).map(function (key) {
