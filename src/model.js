@@ -1,4 +1,5 @@
 import { autorun, extendObservable } from 'mobx'
+import ProxyPromise from './proxy_promise'
 
 /**
  * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
@@ -14,7 +15,6 @@ import { autorun, extendObservable } from 'mobx'
 
 export function attribute (coerce = (obj) => obj) {
   return function (target, property, descriptor) {
-    target.attributes = target.attributes || {}
     target.attributes[property] = {
       defaultValue: descriptor.initializer(),
       coerce
@@ -93,6 +93,8 @@ class Model {
    * @static
    */
 
+  static attributes = {}
+
   /**
    * True if the instance has been modified from its persisted state
    * ```
@@ -129,6 +131,7 @@ class Model {
    * @type {Boolean}
    * @default false
    */
+  isInFlight = false
 
   /**
    * A hash of errors from the server
@@ -194,7 +197,7 @@ class Model {
    * @method save
    * @return {Promise}
    */
-  async save () {
+  save () {
    const { constructor, store, id } = this
    let url = store.fetchUrl(constructor.type)
    let method = 'POST'
@@ -206,17 +209,12 @@ class Model {
 
    const body = JSON.stringify(this.jsonapi)
 
-   const response = await this.store.fetch(url, {
+   const response = this.store.fetch(url, {
      method,
      body
    })
-   const json = await response.json()
-   const attributes = json.data.attributes
 
-   Object.keys(attributes).forEach(key => {
-     this[key] = attributes[key]
-   })
-   return this
+   return ProxyPromise(response, this)
   }
 
   /**

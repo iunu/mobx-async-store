@@ -45,14 +45,43 @@ const mockTodoData = {
 
 const mockTodoResponse = JSON.stringify(mockTodoData)
 
-describe('Model', () => {
+// jest.useFakeTimers()
+
+describe('Model store based actions', () => {
   beforeEach(() => {
     fetch.resetMocks()
     store.reset()
   })
 
   describe('.save', () => {
-    it('makes request and updates model in store', async () => {
+    it('handles in flight behavior', (done) => {
+      // expect.assertions(3)
+      // Mock slow server response
+      fetch.mockResponseOnce(() => {
+        return new Promise(resolve => {
+          return setTimeout(() => resolve({
+            body: mockTodoResponse
+          }), 500)
+        })
+      })
+
+      const todo = store.add('todos', { title: 'Buy Milk' })
+      expect(todo.isInFlight).toBe(false)
+
+      todo.save()
+      // Assert isInFlight is true
+      expect(todo.isInFlight).toBe(true)
+      // Assert title hasn't changed yet
+      expect(todo.title).toEqual('Buy Milk')
+
+      setTimeout(() => {
+        expect(todo.isInFlight).toBe(false)
+        expect(todo.title).toEqual('Do taxes')
+        done()
+      }, 501)
+    })
+
+    xit('makes request and updates model in store', async () => {
       expect.assertions(9)
       // Add record to store
       const example = store.add('todos', { title: 'Buy Milk' })
