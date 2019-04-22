@@ -1,5 +1,9 @@
-import { autorun, extendObservable } from 'mobx'
-import ProxyPromise from './proxy_promise'
+import {
+  autorun,
+  extendObservable,
+  set
+} from 'mobx'
+import ObjectPromiseProxy from './object_promise_proxy'
 
 /**
  * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
@@ -13,13 +17,21 @@ import ProxyPromise from './proxy_promise'
  * @method attribute
  */
 
-export function attribute (coerce = (obj) => obj) {
+export function attribute (dataType = (obj) => obj, thing) {
   return function (target, property, descriptor) {
-    target.attributes[property] = {
-      defaultValue: descriptor.initializer(),
-      coerce
+    const defaultValue = descriptor.initializer()
+    target.constructor.attributeDefinitions[property] = {
+      defaultValue,
+      dataType
     }
-    return descriptor
+    return {
+      get () {
+        return defaultValue
+      },
+      set (value) {
+        set(target, property, value)
+      }
+    }
   }
 }
 
@@ -72,7 +84,7 @@ class Model {
    *
    * @method constructor
    */
-  constructor (initialAttributes) {
+  constructor (initialAttributes = {}) {
     this.makeObservable(initialAttributes)
     this.setCurrentSnapShot()
     this.trackState()
@@ -93,7 +105,12 @@ class Model {
    * @static
    */
 
-  static attributes = {}
+   /**
+    * Attributes defined via attribute decorator
+    * @property attributeDefinitions
+    * @static
+    */
+   static attributeDefinitions = {}
 
   /**
    * True if the instance has been modified from its persisted state
@@ -214,7 +231,7 @@ class Model {
      body
    })
 
-   return ProxyPromise(response, this)
+   return ObjectPromiseProxy(response, this)
   }
 
   /**
@@ -235,8 +252,9 @@ class Model {
     * @method setCurrentSnapShot
     */
    makeObservable (initialAttributes) {
+     const { defaultAttributes } = this
      extendObservable(this, {
-       ...this.defaultAttributes,
+       ...defaultAttributes,
        ...initialAttributes
      })
    }
@@ -286,6 +304,7 @@ class Model {
     * @return {Object} current attributes
     */
    get attributes () {
+     // console.log('attributes', this.attributeNames)
      return this.attributeNames.reduce((attributes, key) => {
        attributes[key] = this[key]
        return attributes
@@ -299,12 +318,13 @@ class Model {
     * @return {Object} current attributes
     */
    get attributeNames () {
-     return Object.keys(this.constructor.attributes)
+     return Object.keys(this.constructor.attributeDefinitions)
    }
 
    get defaultAttributes () {
+     const { attributeDefinitions } = this.constructor
      return this.attributeNames.reduce((defaults, key) => {
-       defaults[key] = this.constructor.attributes[key].defaultValue
+       defaults[key] = attributeDefinitions[key].defaultValue
        return defaults
      }, {})
    }
@@ -318,10 +338,10 @@ class Model {
     */
    get jsonapi () {
      const { id } = this
-     const { type, attributes: attrDefs } = this.constructor
+     const { type, attributeDefinitions } = this.constructor
 
      const attributes = this.attributeNames.reduce((attrs, key) => {
-       attrs[key] = attrDefs[key].coerce(this[key])
+       attrs[key] = attributeDefinitions[key].dataType(this[key])
        return attrs
      }, {})
 

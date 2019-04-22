@@ -1,6 +1,7 @@
-function ProxyPromise(promise, target) {
+function ObjectPromiseProxy (promise, target) {
+  target.isInFlight = true
   const result = promise.then(
-    function(v) {
+    function (v) {
       const json = JSON.parse(v.body)
       // Update target model
       const { attributes } = json.data
@@ -11,15 +12,15 @@ function ProxyPromise(promise, target) {
       target.isInFlight = false
       return target
     },
-    function(e) {
+    function (e) {
       // TODO: Handle error states correctly
       target.isInFlight = false
-      target.errors = errors
+      target.errors = e
       throw e
     }
   )
   // Define proxied attributes
-  const attributeNames = Object.keys(target.constructor.attributes)
+  const attributeNames = Object.keys(target.attributeNames)
   const tempProperties = attributeNames.reduce((attrs, key) => {
     attrs[key] = {
       value: target[key],
@@ -29,11 +30,12 @@ function ProxyPromise(promise, target) {
   }, {})
 
   Object.defineProperties(result, {
-    isInFlight: { value: true },
+    isInFlight: { value: target.isInFlight },
     ...tempProperties
   })
+
   // Return promise
   return result
 }
 
-export default ProxyPromise
+export default ObjectPromiseProxy

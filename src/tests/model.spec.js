@@ -1,4 +1,7 @@
-import { isObservable } from 'mobx'
+import {
+  autorun,
+  isObservable
+} from 'mobx'
 import { Model, attribute } from '../main.js'
 import moment from 'moment'
 
@@ -8,8 +11,8 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) static title = 'NEW TODO'
-  @attribute(Date) static due_at = dueAt
+  @attribute(String) title = 'NEW TODO'
+  @attribute(Date) due_at = dueAt
 }
 
 describe('Model', () => {
@@ -17,12 +20,24 @@ describe('Model', () => {
     it('attributes can have default values', () => {
       const todo = new Todo()
       expect(todo.title).toEqual('NEW TODO')
-      expect(todo.due_at).toEqual(dueAt)
     })
 
-    it('attributes are observable', () => {
-      const todo = new Todo()
+    it('attributes are observable', (done) => {
+      const todo = new Todo({ title: 'one' })
       expect(isObservable(todo)).toBe(true)
+
+      let runs = 0
+      const expected = ['one', 'two', 'three']
+      autorun(() => {
+        expect(todo.title).toBe(expected[runs])
+        runs++
+        if (runs === 3) {
+          done()
+        }
+      })
+
+      todo.title = 'two'
+      todo.title = 'three'
     })
 
     it('attributes are overridable in constructor', () => {

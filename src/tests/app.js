@@ -1,5 +1,10 @@
 import React, { Component } from 'react'
-import { action, computed, observable } from 'mobx'
+import {
+  action,
+  computed,
+  observable,
+  isObservable
+} from 'mobx'
 import { inject, observer } from 'mobx-react'
 
 @inject('store') @observer

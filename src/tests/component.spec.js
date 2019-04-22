@@ -10,7 +10,7 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) static title = ''
+  @attribute(String) title = ''
 }
 
 class AppStore extends Store {

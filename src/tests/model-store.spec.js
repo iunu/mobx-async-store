@@ -7,7 +7,7 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) static title = 'NEW TODO'
+  @attribute(String) title = 'NEW TODO'
 }
 
 class AppStore extends Store {
@@ -61,7 +61,7 @@ describe('Model store based actions', () => {
         return new Promise(resolve => {
           return setTimeout(() => resolve({
             body: mockTodoResponse
-          }), 500)
+          }), 1000)
         })
       })
 
@@ -78,10 +78,10 @@ describe('Model store based actions', () => {
         expect(todo.isInFlight).toBe(false)
         expect(todo.title).toEqual('Do taxes')
         done()
-      }, 501)
+      }, 1001)
     })
 
-    xit('makes request and updates model in store', async () => {
+    it('makes request and updates model in store', async () => {
       expect.assertions(9)
       // Add record to store
       const example = store.add('todos', { title: 'Buy Milk' })
