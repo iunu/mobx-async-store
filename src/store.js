@@ -1,5 +1,6 @@
 /* global fetch */
 import { observable } from 'mobx'
+import moment from 'moment'
 // Bug with dependency on node
 // TODO: Figure out patch
 // import uuidv1 from 'uuid/v1'
@@ -40,7 +41,7 @@ export function requestUrl (baseUrl, endpoint, queryParams = {}) {
 }
 
 function dbOrNewId (properties) {
-  const timestamp = new Date().toISOString()
+  const timestamp = moment().format('YYYY-MM-DD')
   return properties.id || `tmp-${timestamp}-${uuidv1()}`
 }
 
@@ -83,11 +84,11 @@ class Store {
    * @param {Object} properties the properties to use
    * @return {Object} the new record
    */
-  add (type, properties) {
+  add (type, attributes) {
     // Use id from DB/API or create a temporary id
-    const id = dbOrNewId(properties)
+    const id = dbOrNewId(attributes)
     // Create new model install
-    const model = this.createModel(type, id, properties)
+    const model = this.createModel(type, id, { attributes })
     // Return the model
     this.data[type].isEmpty = false
     // Add the model to the type records index
@@ -332,7 +333,21 @@ class Store {
     // Get the matching ids from the response
     const ids = this.getType(type).cache[url]
     // Get the records matching the ids
+    return this.getRecordsById(type, ids)
+  }
+
+  /**
+   * Get multiple records by id
+   *
+   * @method getRecordsById
+   * @param {String} type
+   * @param {Array} ids
+   * @return {Array} array or records
+   */
+  getRecordsById (type, ids) {
+    // NOTE: Is there a better way to do this?
     return ids.map(id => this.getRecord(type, id))
+      .filter(record => typeof record !== 'undefined')
   }
 
   /**
@@ -372,11 +387,19 @@ class Store {
    * @param {Object} attributes
    * @return {Object} model instance
    */
-  createModel (type, id, attributes) {
+  createModel (type, id, data) {
+    const { attributes } = data
+
+    let relationships = {}
+    if (data.hasOwnProperty('relationships')) {
+      relationships = data.relationships
+    }
+    const store = this
     const ModelKlass = this.getKlass(type)
     return new ModelKlass({
       id,
-      store: this,
+      store,
+      relationships,
       ...attributes
     })
   }
@@ -439,7 +462,7 @@ class Store {
     // Handle response
     if (response.status === 200) {
       const json = await response.json()
-      return this.createModel(type, null, json.data.attributes)
+      return this.createModel(type, null, json.data)
     } else {
       return response.status
     }

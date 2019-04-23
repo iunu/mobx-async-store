@@ -20,7 +20,7 @@ const exampleRelationalResponse = JSON.stringify({
   "included": [
     {
       "id": "1",
-      "type": "type",
+      "type": "notes",
       "attributes": {
         "description": "Use fabric softener"
       }

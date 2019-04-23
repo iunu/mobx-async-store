@@ -6,24 +6,48 @@ import {
 import ObjectPromiseProxy from './object_promise_proxy'
 
 /**
+ * Utility class used to store the schema
+ * of model attribute definitions
+ *
+ * @class Schema
+ */
+class Schema {
+  structure = {}
+
+  addAttribute ({ type, property, dataType, defaultValue }) {
+    this.structure[type] = this.structure[type] || {}
+    this.structure[type][property] = {
+      defaultValue, dataType
+    }
+  }
+}
+
+// TODO: Abstract into separate file
+const schema = new Schema()
+
+/**
  * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
  * This can be a Javascript primitive or another class. `id` cannot be defined as it is assumed to exist.
  * Attributes can be defined with a default.
  * ```
  * class Todo extends Model {
- *   @attribute(Date) static start_time = moment()
+ *   @attribute(Date) start_time = moment()
  * }
  * ```
  * @method attribute
  */
-
-export function attribute (dataType = (obj) => obj, thing) {
+export function attribute (dataType = (obj) => obj) {
   return function (target, property, descriptor) {
+    const { type } = target.constructor
     const defaultValue = descriptor.initializer()
-    target.constructor.attributeDefinitions[property] = {
+    // Update the schema
+    schema.addAttribute({
+      dataType,
       defaultValue,
-      dataType
-    }
+      property,
+      type
+    })
+    // Return custom descriptor
     return {
       get () {
         return defaultValue
@@ -49,13 +73,25 @@ export function attribute (dataType = (obj) => obj, thing) {
  * ```
  * @method hasMany
  */
+export function hasMany (modelKlass = (obj) => obj) {
+  return function (target, property, descriptor) {
+    return {
+      get () {
+        const { type } = modelKlass
+        const references = Object.values(this.relationships[type].data)
+        const ids = references.map(ref => ref.id)
+        return this.store.getRecordsById(type, ids)
+      }
+    }
+  }
+}
 
 /*
  * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
  * An optional argument specifies the data model, if different from the property name.
  * ```
- * class CropVariety extends Model {
- *   @belongsTo crop
+ * class Note extends Model {
+ *   @belongsTo todo
  *   @belongsTo(Facility) greenhouse
  * }
  * ```
@@ -77,7 +113,6 @@ export function attribute (dataType = (obj) => obj, thing) {
 /**
  @class Model
  */
-
 class Model {
   /**
    * Initializer for model
@@ -104,13 +139,6 @@ class Model {
    * @property endpoint
    * @static
    */
-
-   /**
-    * Attributes defined via attribute decorator
-    * @property attributeDefinitions
-    * @static
-    */
-   static attributeDefinitions = {}
 
   /**
    * True if the instance has been modified from its persisted state
@@ -304,11 +332,15 @@ class Model {
     * @return {Object} current attributes
     */
    get attributes () {
-     // console.log('attributes', this.attributeNames)
      return this.attributeNames.reduce((attributes, key) => {
        attributes[key] = this[key]
        return attributes
      }, {})
+   }
+
+   get attributeDefinitions () {
+     const { type } = this.constructor
+     return schema.structure[type]
    }
 
    /**
@@ -318,11 +350,11 @@ class Model {
     * @return {Object} current attributes
     */
    get attributeNames () {
-     return Object.keys(this.constructor.attributeDefinitions)
+     return Object.keys(this.attributeDefinitions)
    }
 
    get defaultAttributes () {
-     const { attributeDefinitions } = this.constructor
+     const { attributeDefinitions } = this
      return this.attributeNames.reduce((defaults, key) => {
        defaults[key] = attributeDefinitions[key].defaultValue
        return defaults
@@ -337,21 +369,17 @@ class Model {
     * @return {Object} data in JSON::API format
     */
    get jsonapi () {
-     const { id } = this
-     const { type, attributeDefinitions } = this.constructor
-
+     const { attributeDefinitions, constructor, id } = this
+     const { type } = constructor
      const attributes = this.attributeNames.reduce((attrs, key) => {
        attrs[key] = attributeDefinitions[key].dataType(this[key])
        return attrs
      }, {})
-
      const dataObject = { data: { type, attributes } }
-
      if (!String(id).match(/tmp/)) {
        dataObject.data.id = String(id)
        dataObject.data.attributes.id = id
      }
-
      return dataObject
    }
 }

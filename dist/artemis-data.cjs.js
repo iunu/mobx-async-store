@@ -12,8 +12,11 @@ var _createClass = _interopDefault(require('@babel/runtime/helpers/esm/createCla
 var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/esm/applyDecoratedDescriptor'));
 require('@babel/runtime/helpers/esm/initializerWarningHelper');
 var mobx = require('mobx');
+var moment = _interopDefault(require('moment'));
 
 var _class, _descriptor, _temp;
+// TODO: Figure out patch
+// import uuidv1 from 'uuid/v1'
 
 function uuidv1() {
   var number = Math.floor(100000 + Math.random() * 900000);
@@ -57,7 +60,7 @@ function requestUrl(baseUrl, endpoint) {
 }
 
 function dbOrNewId(properties) {
-  var timestamp = new Date().toISOString();
+  var timestamp = moment().format('YYYY-MM-DD');
   return properties.id || "tmp-".concat(timestamp, "-").concat(uuidv1());
 }
 /**
@@ -109,11 +112,13 @@ function () {
 
   _createClass(Store, [{
     key: "add",
-    value: function add(type, properties) {
+    value: function add(type, attributes) {
       // Use id from DB/API or create a temporary id
-      var id = dbOrNewId(properties); // Create new model install
+      var id = dbOrNewId(attributes); // Create new model install
 
-      var model = this.createModel(type, id, properties); // Return the model
+      var model = this.createModel(type, id, {
+        attributes: attributes
+      }); // Return the model
 
       this.data[type].isEmpty = false; // Add the model to the type records index
 
@@ -396,15 +401,32 @@ function () {
   }, {
     key: "getCachedRecords",
     value: function getCachedRecords(type, queryParams) {
-      var _this2 = this;
-
       // Get the url the request would use
       var url = this.fetchUrl(type, queryParams); // Get the matching ids from the response
 
       var ids = this.getType(type).cache[url]; // Get the records matching the ids
 
+      return this.getRecordsById(type, ids);
+    }
+    /**
+     * Get multiple records by id
+     *
+     * @method getRecordsById
+     * @param {String} type
+     * @param {Array} ids
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "getRecordsById",
+    value: function getRecordsById(type, ids) {
+      var _this2 = this;
+
+      // NOTE: Is there a better way to do this?
       return ids.map(function (id) {
         return _this2.getRecord(type, id);
+      }).filter(function (record) {
+        return typeof record !== 'undefined';
       });
     }
     /**
@@ -451,11 +473,20 @@ function () {
 
   }, {
     key: "createModel",
-    value: function createModel(type, id, attributes) {
+    value: function createModel(type, id, data) {
+      var attributes = data.attributes;
+      var relationships = {};
+
+      if (data.hasOwnProperty('relationships')) {
+        relationships = data.relationships;
+      }
+
+      var store = this;
       var ModelKlass = this.getKlass(type);
       return new ModelKlass(_objectSpread({
         id: id,
-        store: this
+        store: store,
+        relationships: relationships
       }, attributes));
     }
     /**
@@ -583,7 +614,7 @@ function () {
 
               case 7:
                 json = _context2.sent;
-                return _context2.abrupt("return", this.createModel(type, null, json.data.attributes));
+                return _context2.abrupt("return", this.createModel(type, null, json.data));
 
               case 11:
                 return _context2.abrupt("return", response.status);
@@ -635,7 +666,8 @@ function () {
   }
 })), _class);
 
-function ProxyPromise(promise, target) {
+function ObjectPromiseProxy(promise, target) {
+  target.isInFlight = true;
   var result = promise.then(function (v) {
     var json = JSON.parse(v.body); // Update target model
 
@@ -649,11 +681,11 @@ function ProxyPromise(promise, target) {
   }, function (e) {
     // TODO: Handle error states correctly
     target.isInFlight = false;
-    target.errors = errors;
+    target.errors = e;
     throw e;
   }); // Define proxied attributes
 
-  var attributeNames = Object.keys(target.constructor.attributes);
+  var attributeNames = Object.keys(target.attributeNames);
   var tempProperties = attributeNames.reduce(function (attrs, key) {
     attrs[key] = {
       value: target[key],
@@ -663,7 +695,7 @@ function ProxyPromise(promise, target) {
   }, {});
   Object.defineProperties(result, _objectSpread({
     isInFlight: {
-      value: true
+      value: target.isInFlight
     }
   }, tempProperties)); // Return promise
 
@@ -671,27 +703,76 @@ function ProxyPromise(promise, target) {
 }
 
 /**
+ * Utility class used to store the schema
+ * of model attribute definitions
+ *
+ * @class Schema
+ */
+
+var Schema =
+/*#__PURE__*/
+function () {
+  function Schema() {
+    _classCallCheck(this, Schema);
+
+    this.structure = {};
+  }
+
+  _createClass(Schema, [{
+    key: "addAttribute",
+    value: function addAttribute(_ref) {
+      var type = _ref.type,
+          property = _ref.property,
+          dataType = _ref.dataType,
+          defaultValue = _ref.defaultValue;
+      this.structure[type] = this.structure[type] || {};
+      this.structure[type][property] = {
+        defaultValue: defaultValue,
+        dataType: dataType
+      };
+    }
+  }]);
+
+  return Schema;
+}(); // TODO: Abstract into separate file
+
+
+var schema = new Schema();
+/**
  * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
  * This can be a Javascript primitive or another class. `id` cannot be defined as it is assumed to exist.
  * Attributes can be defined with a default.
  * ```
  * class Todo extends Model {
- *   @attribute(Date) static start_time = moment()
+ *   @attribute(Date) start_time = moment()
  * }
  * ```
  * @method attribute
  */
 
 function attribute() {
-  var coerce = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function (obj) {
+  var dataType = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function (obj) {
     return obj;
   };
   return function (target, property, descriptor) {
-    target.attributes[property] = {
-      defaultValue: descriptor.initializer(),
-      coerce: coerce
+    var type = target.constructor.type;
+    var defaultValue = descriptor.initializer(); // Update the schema
+
+    schema.addAttribute({
+      dataType: dataType,
+      defaultValue: defaultValue,
+      property: property,
+      type: type
+    }); // Return custom descriptor
+
+    return {
+      get: function get() {
+        return defaultValue;
+      },
+      set: function set(value) {
+        mobx.set(target, property, value);
+      }
     };
-    return descriptor;
   };
 }
 /*
@@ -709,12 +790,29 @@ function attribute() {
  * @method hasMany
  */
 
+function hasMany() {
+  var modelKlass = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function (obj) {
+    return obj;
+  };
+  return function (target, property, descriptor) {
+    return {
+      get: function get() {
+        var type = modelKlass.type;
+        var references = Object.values(this.relationships[type].data);
+        var ids = references.map(function (ref) {
+          return ref.id;
+        });
+        return this.store.getRecordsById(type, ids);
+      }
+    };
+  };
+}
 /*
  * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
  * An optional argument specifies the data model, if different from the property name.
  * ```
- * class CropVariety extends Model {
- *   @belongsTo crop
+ * class Note extends Model {
+ *   @belongsTo todo
  *   @belongsTo(Facility) greenhouse
  * }
  * ```
@@ -745,7 +843,9 @@ function () {
    *
    * @method constructor
    */
-  function Model(initialAttributes) {
+  function Model() {
+    var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
     _classCallCheck(this, Model);
 
     this.isDirty = false;
@@ -770,6 +870,26 @@ function () {
    * Defaults to the underscored version of the class name
    * @property endpoint
    * @static
+   */
+
+  /**
+   * True if the instance has been modified from its persisted state
+   * ```
+   * kpi = store.find('kpis', 5)
+   * kpi.name
+   * => "A good thing to measure"
+   * kpi.isDirty
+   * => false
+   * kpi.name = "Another good thing to measure"
+   * kpi.isDirty
+   * => true
+   * await kpi.save()
+   * kpi.isDirty
+   * => false
+   * ```
+   * @property isDirty
+   * @type {Boolean}
+   * @default false
    */
 
 
@@ -822,7 +942,7 @@ function () {
         method: method,
         body: body
       });
-      return ProxyPromise(response, this);
+      return ObjectPromiseProxy(response, this);
     }
     /**
      * deletes a record from the store and server
@@ -847,7 +967,8 @@ function () {
   }, {
     key: "makeObservable",
     value: function makeObservable(initialAttributes) {
-      mobx.extendObservable(this, _objectSpread({}, this.defaultAttributes, initialAttributes));
+      var defaultAttributes = this.defaultAttributes;
+      mobx.extendObservable(this, _objectSpread({}, defaultAttributes, initialAttributes));
     }
     /**
      * Sets current snapshot to current attributes
@@ -916,6 +1037,12 @@ function () {
         return attributes;
       }, {});
     }
+  }, {
+    key: "attributeDefinitions",
+    get: function get() {
+      var type = this.constructor.type;
+      return schema.structure[type];
+    }
     /**
      * current attributes of record
      *
@@ -926,15 +1053,14 @@ function () {
   }, {
     key: "attributeNames",
     get: function get() {
-      return Object.keys(this.constructor.attributes);
+      return Object.keys(this.attributeDefinitions);
     }
   }, {
     key: "defaultAttributes",
     get: function get() {
-      var _this4 = this;
-
+      var attributeDefinitions = this.attributeDefinitions;
       return this.attributeNames.reduce(function (defaults, key) {
-        defaults[key] = _this4.constructor.attributes[key].defaultValue;
+        defaults[key] = attributeDefinitions[key].defaultValue;
         return defaults;
       }, {});
     }
@@ -949,14 +1075,14 @@ function () {
   }, {
     key: "jsonapi",
     get: function get() {
-      var _this5 = this;
+      var _this4 = this;
 
-      var id = this.id;
-      var _this$constructor = this.constructor,
-          type = _this$constructor.type,
-          attrDefs = _this$constructor.attributes;
+      var attributeDefinitions = this.attributeDefinitions,
+          constructor = this.constructor,
+          id = this.id;
+      var type = constructor.type;
       var attributes = this.attributeNames.reduce(function (attrs, key) {
-        attrs[key] = attrDefs[key].coerce(_this5[key]);
+        attrs[key] = attributeDefinitions[key].dataType(_this4[key]);
         return attrs;
       }, {});
       var dataObject = {
@@ -978,8 +1104,7 @@ function () {
   return Model;
 }();
 
-Model.attributes = {};
-
 exports.Model = Model;
 exports.Store = Store;
 exports.attribute = attribute;
+exports.hasMany = hasMany;
