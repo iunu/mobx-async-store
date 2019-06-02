@@ -1,5 +1,5 @@
-import Store from './store'
-import Model, { attribute, hasMany } from './model'
+import Store from './Store'
+import Model, { attribute, hasMany } from './Model'
 
 export {
   attribute,
