@@ -13,7 +13,7 @@ var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass')
 var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
 require('@babel/runtime/helpers/initializerWarningHelper');
 var mobx = require('mobx');
-var uuidv1 = _interopDefault(require('uuid/v1'));
+require('uuid/v1');
 var jqueryParam = _interopDefault(require('jquery-param'));
 var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
@@ -49,7 +49,7 @@ function requestUrl(baseUrl, endpoint) {
   return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
 }
 function dbOrNewId(properties) {
-  return properties.id || "tmp-".concat(uuidv1());
+  return properties.id || "tmp-".concat(uuid.v1());
 }
 
 var _class, _descriptor, _temp;
@@ -1565,7 +1565,6 @@ function () {
     key: "jsonapi",
     get: function get() {
       var attributeNames = this.attributeNames,
-          meta = this.meta,
           id = this.id,
           _this$constructor = this.constructor,
           type = _this$constructor.type,

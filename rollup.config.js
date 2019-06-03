@@ -20,9 +20,14 @@ export default [
 					['@babel/transform-runtime', { regenerator: false, useESModules: true }]
 				]
 			}),
-			resolve(), // so Rollup can find `ms`
+			resolve({
+				browser: true
+			}), // so Rollup can find `ms`
 			commonjs({
-				include: 'node_modules/**'
+				include: 'node_modules/**',
+				ignore: [
+          'crypto', 'util', 'buffer'
+				]
 			}), // so Rollup can convert `ms` to an ES module
 		]
 	},

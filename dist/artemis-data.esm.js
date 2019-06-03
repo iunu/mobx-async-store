@@ -7,7 +7,7 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import { observable, transaction, set, extendObservable, autorun, toJS } from 'mobx';
-import uuidv1 from 'uuid/v1';
+import 'uuid/v1';
 import jqueryParam from 'jquery-param';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
@@ -43,7 +43,7 @@ function requestUrl(baseUrl, endpoint) {
   return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
 }
 function dbOrNewId(properties) {
-  return properties.id || "tmp-".concat(uuidv1());
+  return properties.id || "tmp-".concat(uuid.v1());
 }
 
 var _class, _descriptor, _temp;
@@ -1559,7 +1559,6 @@ function () {
     key: "jsonapi",
     get: function get() {
       var attributeNames = this.attributeNames,
-          meta = this.meta,
           id = this.id,
           _this$constructor = this.constructor,
           type = _this$constructor.type,
