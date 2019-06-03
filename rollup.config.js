@@ -16,10 +16,14 @@ export default [
 			babel({
 				exclude: ['node_modules/**'],
 				runtimeHelpers: true,
-				plugins: [['@babel/transform-runtime', { regenerator: false, useESModules: true }]]
+				plugins: [
+					['@babel/transform-runtime', { regenerator: false, useESModules: true }]
+				]
 			}),
 			resolve(), // so Rollup can find `ms`
-			commonjs(), // so Rollup can convert `ms` to an ES module
+			commonjs({
+				include: 'node_modules/**'
+			}), // so Rollup can convert `ms` to an ES module
 		]
 	},
 
@@ -32,19 +36,25 @@ export default [
 	{
 		input: 'src/main.js',
 		external: [
-			'@babel/runtime/helpers/esm/asyncToGenerator',
-			'@babel/runtime/helpers/esm/classCallCheck',
-			'@babel/runtime/helpers/esm/createClass',
-			'@babel/runtime/helpers/esm/defineProperty',
-			'@babel/runtime/helpers/esm/getPrototypeOf',
-			'@babel/runtime/helpers/esm/inherits',
-			'@babel/runtime/helpers/esm/initializerDefineProperty',
-			'@babel/runtime/helpers/esm/objectSpread',
-			'@babel/runtime/helpers/esm/possibleConstructorReturn',
-      '@babel/runtime/helpers/esm/applyDecoratedDescriptor',
-      '@babel/runtime/helpers/esm/initializerWarningHelper',
+			'@babel/runtime/helpers/applyDecoratedDescriptor',
+			'@babel/runtime/helpers/asyncToGenerator',
+			'@babel/runtime/helpers/classCallCheck',
+			'@babel/runtime/helpers/createClass',
+			'@babel/runtime/helpers/defineProperty',
+			'@babel/runtime/helpers/getPrototypeOf',
+			'@babel/runtime/helpers/inherits',
+			'@babel/runtime/helpers/initializerDefineProperty',
+			'@babel/runtime/helpers/initializerWarningHelper',
+			'@babel/runtime/helpers/objectSpread',
+			'@babel/runtime/helpers/possibleConstructorReturn',
+			'@babel/runtime/regenerator',
+      '@babel/runtime/helpers/assertThisInitialized',
+      '@babel/runtime/helpers/toConsumableArray',
+      '@babel/runtime/helpers/wrapNativeSuper',
+			'jquery-param',
+			'jsonapi-serializer',
 			'mobx',
-			'uuid'
+			'uuid/v1'
 		],
 		output: [
 			{ file: pkg.main, format: 'cjs' },
@@ -54,7 +64,7 @@ export default [
 			babel({
 				exclude: ['node_modules/**'],
 				runtimeHelpers: true,
-				plugins: [['@babel/transform-runtime', { regenerator: false, useESModules: true }]]
+				plugins: [['@babel/transform-runtime', { regenerator: true, useESModules: false }]]
 			})
 		]
 	}
