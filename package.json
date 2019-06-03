@@ -5,6 +5,8 @@
   "browser": "dist/artemis-data.umd.js",
   "main": "dist/artemis-data.cjs.js",
   "dependencies": {
+    "jquery-param": "^1.0.1",
+    "jsonapi-serializer": "^3.6.4",
     "mobx": "^5.9.4"
   },
   "devDependencies": {

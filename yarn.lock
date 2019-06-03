@@ -2735,6 +2735,11 @@ imurmurhash@^0.1.4:
   resolved "https://registry.yarnpkg.com/imurmurhash/-/imurmurhash-0.1.4.tgz#9218b9b2b928a238b13dc4fb6b6d576f231453ea"
   integrity sha1-khi5srkoojixPcT7a21XbyMUU+o=
 
+inflected@^1.1.6:
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/inflected/-/inflected-1.1.7.tgz#c393df6e28472d0d77b3082ec3aa2091f4bc96f9"
+  integrity sha1-w5PfbihHLQ13swguw6ogkfS8lvk=
+
 inflight@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9"
@@ -3428,6 +3433,11 @@ jest@^24.7.1:
     import-local "^2.0.0"
     jest-cli "^24.7.1"
 
+jquery-param@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/jquery-param/-/jquery-param-1.0.1.tgz#fba32ca58a91e8b1d64ac4765d2fe5a25ac46781"
+  integrity sha512-7HN1dLvfweR7lNDtajA8FfhghN+SKsKz/ME7D/PAPQ8eDUr2ub42WqeyrZptWEdslckrpKpp+ZGGiKjE+r7iuQ==
+
 js-levenshtein@^1.1.3:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/js-levenshtein/-/js-levenshtein-1.1.6.tgz#c6cee58eb3550372df8deb85fad5ce66ce01d59d"
@@ -3534,6 +3544,14 @@ json5@^2.1.0:
   integrity sha512-8Mh9h6xViijj36g7Dxi+Y4S6hNGV96vcJZr/SrlHh1LR/pEn/8j/+qIBbs44YKl69Lrfctp4QD+AdWLTMqEZAQ==
   dependencies:
     minimist "^1.2.0"
+
+jsonapi-serializer@^3.6.4:
+  version "3.6.4"
+  resolved "https://registry.yarnpkg.com/jsonapi-serializer/-/jsonapi-serializer-3.6.4.tgz#70b61c2eb6e9366e1b49cf18a01fd4a04473791e"
+  integrity sha512-n0FVi4Cs7Gzk6dH9kn+8to7yGYhVpdsFRtMHi3SaC80EWap2wjCcXPioSlq0hnqzdEFXtay0hRR4yRqXkLTJSA==
+  dependencies:
+    inflected "^1.1.6"
+    lodash "^4.16.3"
 
 jsprim@^1.2.2:
   version "1.4.1"
@@ -3662,7 +3680,7 @@ lodash.sortby@^4.7.0:
   resolved "https://registry.yarnpkg.com/lodash.sortby/-/lodash.sortby-4.7.0.tgz#edd14c824e2cc9c1e0b0a1b42bb5210516a42438"
   integrity sha1-7dFMgk4sycHgsKG0K7UhBRakJDg=
 
-lodash@^4.15.0, lodash@^4.17.11, lodash@^4.17.4, lodash@^4.2.0, lodash@^4.3.0:
+lodash@^4.15.0, lodash@^4.16.3, lodash@^4.17.11, lodash@^4.17.4, lodash@^4.2.0, lodash@^4.3.0:
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
@@ -4855,9 +4873,9 @@ rollup-plugin-commonjs@^9.2.0:
     rollup-pluginutils "^2.6.0"
 
 rollup-plugin-node-resolve@^4.0.0:
-  version "4.2.3"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-4.2.3.tgz#638a373a54287d19fcc088fdd1c6fd8a58e4d90a"
-  integrity sha512-r+WaesPzdGEynpLZLALFEDugA4ACa5zn7bc/+LVX4vAXQQ8IgDHv0xfsSvJ8tDXUtprfBtrDtRFg27ifKjcJTg==
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-4.2.4.tgz#7d370f8d6fd3031006a0032c38262dd9be3c6250"
+  integrity sha512-t/64I6l7fZ9BxqD3XlX4ZeO6+5RLKyfpwE2CiPNUKa+GocPlQhf/C208ou8y3AwtNsc6bjSk/8/6y/YAyxCIvw==
   dependencies:
     "@types/resolve" "0.0.8"
     builtin-modules "^3.1.0"
