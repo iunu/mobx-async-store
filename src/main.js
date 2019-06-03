@@ -1,9 +1,15 @@
 import Store from './Store'
-import Model, { attribute, hasMany } from './Model'
+
+import Model, {
+  attribute,
+  relatedToMany,
+  relatedToOne
+} from './Model'
 
 export {
   attribute,
-  hasMany,
   Model,
+  relatedToMany,
+  relatedToOne,
   Store
 }

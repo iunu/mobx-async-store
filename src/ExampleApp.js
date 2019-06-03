@@ -1,28 +1,31 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+
 import {
   action,
   computed,
-  observable,
-  isObservable
+  observable
 } from 'mobx'
+
 import { inject, observer } from 'mobx-react'
+
+const todoCardPropTypes = {
+  store: PropTypes.object.isRequired,
+  todo: PropTypes.object.isRequired
+}
 
 @inject('store') @observer
 class TodoCard extends Component {
-  @action onChange = ({ target }) => {
-    this.props.todo.title = target.value
-  }
-
-  @action onClick = (todo, { value }) => {
-    // todo.title = this.title
-  }
-
   @computed get todo () {
     return this.props.todo
   }
 
+  @action onChange = ({ target }) => {
+    this.todo.title = target.value
+  }
+
   render () {
-    const { onClick, onChange, todo } = this
+    const { onChange, todo } = this
     return (
       <li>
         <label>{ todo.title }</label>
@@ -30,11 +33,12 @@ class TodoCard extends Component {
           value={todo.title}
           onChange={onChange}
         />
-        <button onClick={onClick}>Save</button>
       </li>
     )
   }
 }
+
+TodoCard.wrappedComponent.propTypes = todoCardPropTypes
 
 function TodoList ({ todos }) {
   return (
@@ -46,8 +50,16 @@ function TodoList ({ todos }) {
   )
 }
 
+TodoList.propTypes = {
+  todos: PropTypes.array.isRequired
+}
+
+const exampleAppPropTypes = {
+  store: PropTypes.object.isRequired
+}
+
 @inject('store') @observer
-class App extends Component {
+class ExampleApp extends Component {
   @observable title = ''
 
   @action onChange = ({ target }) => {
@@ -77,4 +89,6 @@ class App extends Component {
   }
 }
 
-export default App
+ExampleApp.wrappedComponent.propTypes = exampleAppPropTypes
+
+export default ExampleApp

@@ -1,10 +1,10 @@
 /* global fetch */
 import React from 'react'
-import { Store, Model, attribute } from '../main'
 import { mount } from 'enzyme'
 import { Provider } from 'mobx-react'
 
-import App from './app'
+import { Store, Model, attribute } from './main'
+import ExampleApp from './ExampleApp'
 
 class Todo extends Model {
   static type = 'todos'
@@ -33,7 +33,7 @@ describe('Example React App', () => {
     // Mount the component and set the wrapper variable
     const wrapper = mount(
       <Provider store={store}>
-        <App/>
+        <ExampleApp />
       </Provider>
     )
     expect(wrapper.text()).toMatch('Todos')
@@ -46,7 +46,7 @@ describe('Example React App', () => {
 
     const wrapper = mount(
       <Provider store={store}>
-        <App/>
+        <ExampleApp />
       </Provider>
     )
 
@@ -71,7 +71,7 @@ describe('Example React App', () => {
 
     const wrapper = mount(
       <Provider store={todoStore}>
-        <App/>
+        <ExampleApp />
       </Provider>
     )
 

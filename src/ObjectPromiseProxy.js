@@ -1,22 +1,42 @@
+import { transaction } from 'mobx'
+
 function ObjectPromiseProxy (promise, target) {
   target.isInFlight = true
   const result = promise.then(
-    function (v) {
-      const json = JSON.parse(v.body)
-      // Update target model
-      const { attributes } = json.data
-      Object.keys(attributes).forEach(key => {
-        target[key] = attributes[key]
-      })
-      // Update target isInFlight
-      target.isInFlight = false
-      return target
+    async function (response) {
+      if (response.status === 200 || response.status === 201) {
+        const json = await response.json()
+        // Update target model
+        const { attributes, relationships } = json.data
+        transaction(() => {
+          Object.keys(attributes).forEach(key => {
+            target[key] = attributes[key]
+          })
+          if (relationships) {
+            Object.keys(relationships).forEach(key => {
+              if (!relationships[key].hasOwnProperty('meta')) {
+                target.relationships[key] = relationships[key]
+              }
+            })
+          }
+          if (json.included) {
+            target.store.createModelsFromData(json.included)
+          }
+          // Update target isInFlight
+          target.isInFlight = false
+        })
+        return target
+      } else {
+        target.errors = { status: response.status }
+        return target
+      }
     },
-    function (e) {
+    function (error) {
       // TODO: Handle error states correctly
       target.isInFlight = false
-      target.errors = e
-      throw e
+      target.errors = error
+      throw error
+      // return target
     }
   )
   // Define proxied attributes
