@@ -664,7 +664,6 @@ class Model {
   get jsonapi () {
     const {
       attributeNames,
-      meta,
       id,
       constructor: { type, requestAttributeNames }
     } = this
