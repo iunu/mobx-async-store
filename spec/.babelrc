@@ -5,7 +5,8 @@
       "targets": {
         "browsers": "ie >= 11"
       }
-    }]
+    }],
+    "@babel/preset-react"
   ],
   "env": {
     "test": {

@@ -37,7 +37,7 @@ jobs:
           key: yarn-dependencies-v1-{{ checksum "package.json" }}
       - run:
           name: Run Eslint
-          command: node_modules/.bin/eslint src
+          command: node_modules/.bin/eslint src spec
 
   jest:
     docker:
@@ -49,7 +49,7 @@ jobs:
           key: yarn-dependencies-v1-{{ checksum "package.json" }}
       - run:
           name: Run Jest
-          command: node_modules/.bin/jest src
+          command: node_modules/.bin/jest spec
 
 workflows:
   version: 2
