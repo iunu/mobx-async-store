@@ -3,13 +3,13 @@ import { autorun, isObservable } from 'mobx'
 import moment from 'moment'
 
 import {
-  attribute,
-  relatedToOne,
-  relatedToMany,
-  validates,
   Model,
-  Store
-} from './main'
+  Store,
+  attribute,
+  relatedToMany,
+  relatedToOne,
+  validates
+} from 'artemis-data'
 
 import {
   exampleRelatedToManyResponse,

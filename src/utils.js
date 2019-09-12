@@ -56,3 +56,17 @@ export function uniqueByReducer (key) {
 export function uniqueBy (array, key) {
   return array.reduce(uniqueByReducer(key), [])
 }
+
+export function stringifyIds (object) {
+  Object.keys(object).forEach(key => {
+    const property = object[key]
+
+    if (typeof property === 'object') {
+      if (property.id) {
+        property.id = String(property.id)
+      }
+
+      stringifyIds(property)
+    }
+  })
+}

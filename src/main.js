@@ -1,17 +1,13 @@
+import Model from './Model'
 import Store from './Store'
-
-import Model, {
-  attribute,
-  relatedToMany,
-  relatedToOne,
-  validates
-} from './Model'
+import { attribute, validates } from './decorators/attributes'
+import { relatedToMany, relatedToOne } from './decorators/relationships'
 
 export {
-  attribute,
   Model,
+  Store,
+  attribute,
   relatedToMany,
   relatedToOne,
-  Store,
   validates
 }

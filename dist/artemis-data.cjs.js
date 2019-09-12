@@ -4,27 +4,130 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
+var _objectSpread = _interopDefault(require('@babel/runtime/helpers/objectSpread'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
 var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
-var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
-var _objectSpread = _interopDefault(require('@babel/runtime/helpers/objectSpread'));
 var _initializerDefineProperty = _interopDefault(require('@babel/runtime/helpers/initializerDefineProperty'));
 var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass'));
-var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
 require('@babel/runtime/helpers/initializerWarningHelper');
+var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
 var mobx = require('mobx');
-var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
+var moment = _interopDefault(require('moment'));
+var jsonapiSerializer = require('jsonapi-serializer');
+var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
 var uuidv1 = _interopDefault(require('uuid/v1'));
 var jqueryParam = _interopDefault(require('jquery-param'));
+var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
 var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
 var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
 var _wrapNativeSuper = _interopDefault(require('@babel/runtime/helpers/wrapNativeSuper'));
-var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
-var moment = _interopDefault(require('moment'));
-var jsonapiSerializer = require('jsonapi-serializer');
+
+function ObjectPromiseProxy(promise, target) {
+  var tmpId = target.id;
+  target.isInFlight = true;
+  var promiseProxy = promise.then(
+  /*#__PURE__*/
+  function () {
+    var _ref = _asyncToGenerator(
+    /*#__PURE__*/
+    _regeneratorRuntime.mark(function _callee(response) {
+      var status, json, _json$data, attributes, relationships, included;
+
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              status = response.status;
+
+              if (!(status === 200 || status === 201)) {
+                _context.next = 14;
+                break;
+              }
+
+              _context.next = 4;
+              return response.json();
+
+            case 4:
+              json = _context.sent;
+              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships, included = json.included;
+              mobx.transaction(function () {
+                Object.keys(attributes).forEach(function (key) {
+                  mobx.set(target, key, attributes[key]);
+                });
+
+                if (relationships) {
+                  Object.keys(relationships).forEach(function (key) {
+                    if (!relationships[key].hasOwnProperty('meta')) {
+                      // todo: throw error if relationship is not defined in model
+                      mobx.set(target.relationships, key, relationships[key]);
+                    }
+                  });
+                }
+
+                if (included) {
+                  target.store.createModelsFromData(included);
+                }
+              }); // Update target isInFlight and isDirty
+
+              target.isInFlight = false;
+              target.isDirty = false;
+              target.setPreviousSnapshot();
+              mobx.transaction(function () {
+                // NOTE: This resolves an issue where a record is persisted but the
+                // index key is still a temp uuid. We can't simply remove the temp
+                // key because there may be associated records that have the temp
+                // uuid id as its only reference to the newly persisted record.
+                // TODO: Figure out a way to update associated records to use the
+                // newly persisted id.
+                target.store.data[target.type].records[tmpId] = target;
+                target.store.data[target.type].records[target.id] = target;
+              });
+              return _context.abrupt("return", target);
+
+            case 14:
+              // TODO: Handle unexpected status codes correctly
+              target.isInFlight = false;
+              target.errors = {
+                status: response.status
+              };
+              return _context.abrupt("return", target);
+
+            case 17:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee);
+    }));
+
+    return function (_x) {
+      return _ref.apply(this, arguments);
+    };
+  }(), function (error) {
+    target.isInFlight = false;
+    target.errors = error;
+    throw error;
+  }); // Define proxied attributes
+
+  var attributeNames = Object.keys(target.attributeNames);
+  var tempProperties = attributeNames.reduce(function (attrs, key) {
+    attrs[key] = {
+      value: target[key],
+      writable: false
+    };
+    return attrs;
+  }, {});
+  Object.defineProperties(promiseProxy, _objectSpread({
+    isInFlight: {
+      value: target.isInFlight
+    }
+  }, tempProperties));
+  return promiseProxy;
+}
 
 /**
  * Build request url from base url, endpoint, query params, and ids.
@@ -86,8 +189,698 @@ function uniqueByReducer(key) {
 function uniqueBy(array, key) {
   return array.reduce(uniqueByReducer(key), []);
 }
+function stringifyIds(object) {
+  Object.keys(object).forEach(function (key) {
+    var property = object[key];
 
-var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _temp;
+    if (_typeof(property) === 'object') {
+      if (property.id) {
+        property.id = String(property.id);
+      }
+
+      stringifyIds(property);
+    }
+  });
+}
+
+/**
+ * Utility class used to store the schema
+ * of model attribute definitions
+ *
+ * @class Schema
+ */
+var Schema =
+/*#__PURE__*/
+function () {
+  function Schema() {
+    _classCallCheck(this, Schema);
+
+    this.structure = {};
+    this.relations = {};
+  }
+
+  _createClass(Schema, [{
+    key: "addAttribute",
+    value: function addAttribute(_ref) {
+      var type = _ref.type,
+          property = _ref.property,
+          dataType = _ref.dataType,
+          defaultValue = _ref.defaultValue;
+      this.structure[type] = this.structure[type] || {};
+      this.structure[type][property] = {
+        defaultValue: defaultValue,
+        dataType: dataType
+      };
+    }
+  }, {
+    key: "addRelationship",
+    value: function addRelationship(_ref2) {
+      var type = _ref2.type,
+          property = _ref2.property,
+          dataType = _ref2.dataType;
+      this.relations[type] = this.relations[type] || {};
+      this.relations[type][property] = {
+        dataType: dataType
+      };
+    }
+  }, {
+    key: "addValidation",
+    value: function addValidation(_ref3) {
+      var type = _ref3.type,
+          property = _ref3.property,
+          validator = _ref3.validator;
+      this.structure[type][property].validator = validator;
+    }
+  }]);
+
+  return Schema;
+}();
+
+var schema = new Schema();
+
+var _class, _descriptor, _descriptor2, _temp;
+/**
+ * @class Model
+ */
+
+var Model = (_class = (_temp =
+/*#__PURE__*/
+function () {
+  /**
+   * Initializer for model
+   *
+   * @method constructor
+   */
+  function Model() {
+    var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    _classCallCheck(this, Model);
+
+    _initializerDefineProperty(this, "_isDirty", _descriptor, this);
+
+    this.isInFlight = false;
+
+    _initializerDefineProperty(this, "errors", _descriptor2, this);
+
+    this.previousSnapshot = {};
+
+    this._makeObservable(initialAttributes);
+
+    this.setPreviousSnapshot();
+
+    this._trackState();
+  }
+  /**
+   * The type of the model. Defined on the class. Defaults to the underscored version of the class name
+   * (eg 'calendar_events').
+   *
+   * @property type
+   * @static
+   */
+
+  /**
+   * The canonical path to the resource on the server. Defined on the class.
+   * Defaults to the underscored version of the class name
+   * @property endpoint
+   * @static
+   */
+
+  /**
+   * True if the instance has been modified from its persisted state
+   * ```
+   * kpi = store.add('kpis', { name: 'A good thing to measure' })
+   * kpi.isDirty
+   * => true
+   * kpi.name
+   * => "A good thing to measure"
+   * await kpi.save()
+   * kpi.isDirty
+   * => false
+   * kpi.name = "Another good thing to measure"
+   * kpi.isDirty
+   * => true
+   * await kpi.save()
+   * kpi.isDirty
+   * => false
+   * ```
+   * @property isDirty
+   * @type {Boolean}
+   * @default false
+   */
+
+
+  _createClass(Model, [{
+    key: "rollback",
+
+    /**
+     * restores data to its last persisted state
+     * ```
+     * kpi = store.find('kpis', 5)
+     * kpi.name
+     * => "A good thing to measure"
+     * kpi.name = "Another good thing to measure"
+     * kpi.rollback()
+     * kpi.name
+     * => "A good thing to measure"
+     * ```
+     * @method rollback
+     */
+    value: function rollback() {
+      var _this2 = this;
+
+      mobx.transaction(function () {
+        _this2.attributeNames.forEach(function (key) {
+          _this2[key] = _this2.previousSnapshot[key];
+        });
+
+        _this2.errors = {};
+      });
+      this.setPreviousSnapshot();
+    }
+    /**
+     * creates or updates a record.
+     * @method save
+     * @return {Promise}
+     * @param {Object} options
+     */
+
+  }, {
+    key: "save",
+    value: function save() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      this.errors = {};
+
+      if (!options.skip_validations && !this.validate()) {
+        var errorString = JSON.stringify(this.errors);
+        return Promise.reject(new Error(errorString));
+      }
+
+      var attributes = options.attributes,
+          queryParams = options.queryParams,
+          relationships = options.relationships;
+      var constructor = this.constructor,
+          id = this.id,
+          isNew = this.isNew;
+      var requestId = id;
+      var method = 'PATCH';
+
+      if (isNew) {
+        method = 'POST';
+        requestId = null;
+      }
+
+      var url = this.store.fetchUrl(constructor.type, queryParams, requestId);
+      var body = JSON.stringify(this.jsonapi({
+        relationships: relationships,
+        attributes: attributes
+      }));
+      var response = this.store.fetch(url, {
+        method: method,
+        body: body
+      });
+      return new ObjectPromiseProxy(response, this);
+    }
+    /**
+     * Checks all validations, adding errors where necessary and returning `false` if any are not valid
+     * @method validate
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "validate",
+    value: function validate() {
+      var _this3 = this;
+
+      var attributeNames = this.attributeNames,
+          attributeDefinitions = this.attributeDefinitions;
+      var validationChecks = attributeNames.map(function (property) {
+        var validator = attributeDefinitions[property].validator;
+        if (!validator) return true;
+        var validationResult = validator(_this3[property], _this3);
+
+        if (!validationResult.isValid) {
+          _this3.errors[property] = validationResult.errors;
+        }
+
+        return validationResult.isValid;
+      });
+      return validationChecks.every(function (value) {
+        return value;
+      });
+    }
+    /**
+     * deletes a record from the store and server
+     * @method destroy
+     * @return {Promise} an empty promise with any success/error status
+     */
+
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var type = this.type,
+          id = this.id,
+          snapshot = this.snapshot,
+          isNew = this.isNew;
+
+      if (isNew) {
+        this.store.remove(type, id);
+        return snapshot;
+      }
+
+      var _options$params = options.params,
+          params = _options$params === void 0 ? {} : _options$params,
+          _options$skipRemove = options.skipRemove,
+          skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
+      this.isInFlight = true;
+      var url = this.store.fetchUrl(type, params, id);
+      var promise = this.store.fetch(url, {
+        method: 'DELETE'
+      });
+
+      var _this = this;
+
+      return promise.then(
+      /*#__PURE__*/
+      function () {
+        var _ref = _asyncToGenerator(
+        /*#__PURE__*/
+        _regeneratorRuntime.mark(function _callee(response) {
+          var json;
+          return _regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _this.isInFlight = false;
+
+                  if (!(response.status === 202 || response.status === 204)) {
+                    _context.next = 17;
+                    break;
+                  }
+
+                  if (!skipRemove) {
+                    _this.store.remove(type, id);
+                  }
+
+                  _context.prev = 3;
+                  _context.next = 6;
+                  return response.json();
+
+                case 6:
+                  json = _context.sent;
+
+                  if (json.data && json.data.attributes) {
+                    Object.keys(json.data.attributes).forEach(function (key) {
+                      mobx.set(_this, key, json.data.attributes[key]);
+                    });
+                  }
+
+                  _context.next = 13;
+                  break;
+
+                case 10:
+                  _context.prev = 10;
+                  _context.t0 = _context["catch"](3);
+                  console.log(_context.t0); // It is text, do you text handling here
+
+                case 13:
+                  // NOTE: If deleting a record changes other related model
+                  // You can return then in the delete response
+                  if (json && json.included) {
+                    _this.store.createModelsFromData(json.included);
+                  }
+
+                  return _context.abrupt("return", _this);
+
+                case 17:
+                  _this.errors = {
+                    status: response.status
+                  };
+                  return _context.abrupt("return", _this);
+
+                case 19:
+                case "end":
+                  return _context.stop();
+              }
+            }
+          }, _callee, null, [[3, 10]]);
+        }));
+
+        return function (_x) {
+          return _ref.apply(this, arguments);
+        };
+      }(), function (error) {
+        // TODO: Handle error states correctly
+        _this.isInFlight = false;
+        _this.errors = error;
+        throw error;
+      });
+    }
+    /* Private Methods */
+
+    /**
+     * Magic method that makes changes to records
+     * observable
+     *
+     * @method _makeObservable
+     */
+
+  }, {
+    key: "_makeObservable",
+    value: function _makeObservable(initialAttributes) {
+      var defaultAttributes = this.defaultAttributes;
+      mobx.extendObservable(this, _objectSpread({}, defaultAttributes, initialAttributes));
+    }
+    /**
+     * The current state of defined attributes and relationships of the instance
+     * Really just an alias for attributes
+     * ```
+     * todo = store.find('todos', 5)
+     * todo.title
+     * => "Buy the eggs"
+     * snapshot = todo.snapshot
+     * todo.title = "Buy the eggs and bacon"
+     * snapshot.title
+     * => "Buy the eggs and bacon"
+     * ```
+     * @method snapshot
+     * @return {Object} current attributes
+     */
+
+  }, {
+    key: "setPreviousSnapshot",
+
+    /**
+     * Sets previous snapshot to current snapshot
+     *
+     * @method setPreviousSnapshot
+     */
+    value: function setPreviousSnapshot() {
+      this.previousSnapshot = this.snapshot;
+    }
+    /**
+     * Uses mobx.autorun to track changes to attributes
+     *
+     * @method _trackState
+     */
+
+  }, {
+    key: "_trackState",
+    value: function _trackState() {
+      var _this4 = this;
+
+      mobx.reaction(function () {
+        return JSON.stringify(_this4.attributes);
+      }, function (objectString) {
+        _this4.isDirty = true;
+      });
+      mobx.reaction(function () {
+        return JSON.stringify(_this4.relationships);
+      }, function (relString) {
+        _this4.isDirty = true;
+      });
+    }
+    /**
+     * shortcut to get the static
+     *
+     * @method type
+     * @return {String} current attributes
+     */
+
+  }, {
+    key: "errorForKey",
+
+    /**
+     * Getter to check if the record has errors.
+     *
+     * @method hasErrors
+     * @return {Boolean}
+     */
+    value: function errorForKey(key) {
+      return this.errors[key];
+    }
+    /**
+     * Getter to just get the names of a records attributes.
+     *
+     * @method attributeNames
+     * @return {Array}
+     */
+
+  }, {
+    key: "jsonapi",
+
+    /**
+     * getter method to get data in api compliance format
+     * TODO: Figure out how to handle unpersisted ids
+     *
+     * @method jsonapi
+     * @return {Object} data in JSON::API format
+     */
+    value: function jsonapi() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var attributeDefinitions = this.attributeDefinitions,
+          attributeNames = this.attributeNames,
+          attributes = this.attributes,
+          id = this.id,
+          relationships = this.relationships,
+          type = this.type;
+      var attributeNamesSubset = options.attributes,
+          relationshipNamesSubset = options.relationships;
+
+      if (attributeNamesSubset) {
+        attributeNames = attributeNames.filter(function (name) {
+          return attributeNamesSubset.includes(name);
+        });
+      }
+
+      var attributeData = attributeNames.reduce(function (attrs, key) {
+        var value = attributes[key];
+
+        if (value) {
+          var DataType = attributeDefinitions[key].dataType;
+          var attr;
+
+          if (DataType.name === 'Array' || DataType.name === 'Object') {
+            attr = mobx.toJS(value);
+          } else if (DataType.name === 'Date') {
+            attr = moment(value).toISOString();
+          } else {
+            attr = DataType(value);
+          }
+
+          attrs[key] = attr;
+        } else {
+          attrs[key] = value;
+        }
+
+        return attrs;
+      }, {});
+      var relationshipNames = Object.keys(relationships);
+
+      if (relationshipNamesSubset) {
+        relationshipNames = relationshipNames.filter(function (name) {
+          return relationshipNamesSubset.includes(name);
+        });
+      }
+
+      var relationshipData = relationshipNames.reduce(function (rels, key) {
+        rels[key] = mobx.toJS(relationships[key].data);
+        stringifyIds(rels[key]);
+        return rels;
+      }, {});
+      var relationshipSerializerConfigs = relationshipNames.reduce(function (relConfig, key) {
+        relConfig[key] = {
+          ref: 'id',
+          included: false
+        };
+        return relConfig;
+      }, {});
+      var ModelSerializer = new jsonapiSerializer.Serializer(type, _objectSpread({
+        attributes: [].concat(_toConsumableArray(attributeNames), _toConsumableArray(relationshipNames)),
+        keyForAttribute: 'underscore_case'
+      }, relationshipSerializerConfigs));
+
+      if (String(id).match(/tmp/)) {
+        id = null;
+      }
+
+      return ModelSerializer.serialize(_objectSpread({
+        id: id,
+        type: type
+      }, attributeData, relationshipData));
+    }
+  }, {
+    key: "updateAttributes",
+    value: function updateAttributes(attributes) {
+      var _this5 = this;
+
+      mobx.transaction(function () {
+        Object.keys(attributes).forEach(function (key) {
+          _this5[key] = attributes[key];
+        });
+      });
+    }
+  }, {
+    key: "isDirty",
+    get: function get() {
+      var isNew = this.isNew,
+          _isDirty = this._isDirty;
+      return _isDirty || isNew;
+    },
+    set: function set(value) {
+      this._isDirty = value;
+    }
+    /**
+     * Private method. True if the model has been programatically changed,
+     * as opposed to just being new.
+     * @property _isDirty
+     * @type {Boolean}
+     * @default false
+     * @private
+     */
+
+  }, {
+    key: "isNew",
+
+    /**
+     * True if the model has not been sent to the store
+     * @property isNew
+     * @type {Boolean}
+     */
+    get: function get() {
+      var id = this.id;
+      return !!String(id).match(/tmp/);
+    }
+    /**
+     * True if the instance is coming from / going to the server
+     * ```
+     * kpi = store.find('kpis', 5)
+     * // fetch started
+     * kpi.isInFlight
+     * => true
+     * // fetch finished
+     * kpi.isInFlight
+     * => false
+     * ```
+     * @property isInFlight
+     * @type {Boolean}
+     * @default false
+     */
+
+  }, {
+    key: "snapshot",
+    get: function get() {
+      return this.attributes;
+    }
+  }, {
+    key: "type",
+    get: function get() {
+      return this.constructor.type;
+    }
+    /**
+     * current attributes of record
+     *
+     * @method attributes
+     * @return {Object} current attributes
+     */
+
+  }, {
+    key: "attributes",
+    get: function get() {
+      var _this6 = this;
+
+      return this.attributeNames.reduce(function (attributes, key) {
+        var value = mobx.toJS(_this6[key]);
+
+        if (!value) {
+          delete attributes[key];
+        } else {
+          attributes[key] = value;
+        }
+
+        return attributes;
+      }, {});
+    }
+    /**
+     * Getter find the attribute definition for the model type.
+     *
+     * @method attributeDefinitions
+     * @return {Object}
+     */
+
+  }, {
+    key: "attributeDefinitions",
+    get: function get() {
+      return schema.structure[this.type];
+    }
+    /**
+     * Getter find the relationship definitions for the model type.
+     *
+     * @method relationshipDefinitions
+     * @return {Object}
+     */
+
+  }, {
+    key: "relationshipDefinitions",
+    get: function get() {
+      return schema.relations[this.type];
+    }
+    /**
+     * Getter to check if the record has errors.
+     *
+     * @method hasErrors
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "hasErrors",
+    get: function get() {
+      return Object.keys(this.errors).length > 0;
+    }
+  }, {
+    key: "attributeNames",
+    get: function get() {
+      return Object.keys(this.attributeDefinitions);
+    }
+    /**
+     * getter method to get the default attributes
+     *
+     * @method defaultAttributes
+     * @return {Object}
+     */
+
+  }, {
+    key: "defaultAttributes",
+    get: function get() {
+      var attributeDefinitions = this.attributeDefinitions;
+      return this.attributeNames.reduce(function (defaults, key) {
+        var defaultValue = attributeDefinitions[key].defaultValue;
+        defaults[key] = defaultValue;
+        return defaults;
+      }, {
+        relationships: {}
+      });
+    }
+  }]);
+
+  return Model;
+}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [mobx.observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return false;
+  }
+}), _applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return {};
+  }
+})), _class);
+
+var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _descriptor4, _temp$1;
 /**
  * Defines the Artemis Data Store class.
  *
@@ -95,7 +888,7 @@ var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _temp;
  * @constructor
  */
 
-var Store = (_class = (_temp =
+var Store = (_class$1 = (_temp$1 =
 /*#__PURE__*/
 function () {
   /**
@@ -117,7 +910,7 @@ function () {
 
     _classCallCheck(this, Store);
 
-    _initializerDefineProperty(this, "data", _descriptor, this);
+    _initializerDefineProperty(this, "data", _descriptor$1, this);
 
     this.add = function (type, data) {
       if (data.constructor.name === 'Array') {
@@ -127,7 +920,7 @@ function () {
       }
     };
 
-    _initializerDefineProperty(this, "addModel", _descriptor2, this);
+    _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
 
     _initializerDefineProperty(this, "newModel", _descriptor3, this);
 
@@ -806,14 +1599,14 @@ function () {
   }]);
 
   return Store;
-}(), _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "data", [mobx.observable], {
+}(), _temp$1), (_descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "data", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "addModel", [mobx.action], {
+}), _descriptor2$1 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -832,7 +1625,7 @@ function () {
       return model;
     };
   }
-}), _descriptor3 = _applyDecoratedDescriptor(_class.prototype, "newModel", [mobx.action], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "newModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -845,7 +1638,7 @@ function () {
       });
     };
   }
-}), _descriptor4 = _applyDecoratedDescriptor(_class.prototype, "remove", [mobx.action], {
+}), _descriptor4 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -864,153 +1657,15 @@ function () {
       }, {});
     };
   }
-})), _class);
-
-function ObjectPromiseProxy(promise, target) {
-  target.isInFlight = true;
-  var result = promise.then(
-  /*#__PURE__*/
-  function () {
-    var _ref = _asyncToGenerator(
-    /*#__PURE__*/
-    _regeneratorRuntime.mark(function _callee(response) {
-      var json, _json$data, attributes, relationships;
-
-      return _regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              if (!(response.status === 200 || response.status === 201)) {
-                _context.next = 9;
-                break;
-              }
-
-              _context.next = 3;
-              return response.json();
-
-            case 3:
-              json = _context.sent;
-              // Update target model
-              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
-              mobx.transaction(function () {
-                Object.keys(attributes).forEach(function (key) {
-                  target[key] = attributes[key];
-                });
-
-                if (relationships) {
-                  Object.keys(relationships).forEach(function (key) {
-                    if (!relationships[key].hasOwnProperty('meta')) {
-                      target.relationships[key] = relationships[key];
-                    }
-                  });
-                }
-
-                if (json.included) {
-                  target.store.createModelsFromData(json.included);
-                } // Update target isInFlight
-
-
-                target.isInFlight = false;
-              });
-              return _context.abrupt("return", target);
-
-            case 9:
-              target.errors = {
-                status: response.status
-              };
-              return _context.abrupt("return", target);
-
-            case 11:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee);
-    }));
-
-    return function (_x) {
-      return _ref.apply(this, arguments);
-    };
-  }(), function (error) {
-    // TODO: Handle error states correctly
-    target.isInFlight = false;
-    target.errors = error;
-    throw error; // return target
-  }); // Define proxied attributes
-
-  var attributeNames = Object.keys(target.attributeNames);
-  var tempProperties = attributeNames.reduce(function (attrs, key) {
-    attrs[key] = {
-      value: target[key],
-      writable: false
-    };
-    return attrs;
-  }, {});
-  Object.defineProperties(result, _objectSpread({
-    isInFlight: {
-      value: target.isInFlight
-    }
-  }, tempProperties)); // Return promise
-
-  return result;
-}
+})), _class$1);
 
 /**
- * Utility class used to store the schema
- * of model attribute definitions
+ * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
  *
- * @class Schema
+ * @method isPresent
+ * @param value
+ * @return {Boolean}
  */
-var Schema =
-/*#__PURE__*/
-function () {
-  function Schema() {
-    _classCallCheck(this, Schema);
-
-    this.structure = {};
-    this.relations = {};
-  }
-
-  _createClass(Schema, [{
-    key: "addAttribute",
-    value: function addAttribute(_ref) {
-      var type = _ref.type,
-          property = _ref.property,
-          dataType = _ref.dataType,
-          defaultValue = _ref.defaultValue;
-      this.structure[type] = this.structure[type] || {};
-      this.structure[type][property] = {
-        defaultValue: defaultValue,
-        dataType: dataType
-      };
-    }
-  }, {
-    key: "addRelationship",
-    value: function addRelationship(_ref2) {
-      var type = _ref2.type,
-          property = _ref2.property,
-          dataType = _ref2.dataType;
-      this.relations[type] = this.relations[type] || {};
-      this.relations[type][property] = {
-        dataType: dataType
-      };
-    }
-  }, {
-    key: "addValidation",
-    value: function addValidation(_ref3) {
-      var type = _ref3.type,
-          property = _ref3.property,
-          validator = _ref3.validator;
-      this.structure[type][property].validator = validator;
-    }
-  }]);
-
-  return Schema;
-}();
-
-var schema = new Schema();
-
-var _class$1, _descriptor$1, _descriptor2$1, _temp$1;
 
 function isPresent(value) {
   return value !== null && value !== undefined && value !== '';
@@ -1021,7 +1676,6 @@ function isPresent(value) {
  * @param value
  */
 
-
 function validatePresence(value) {
   return {
     isValid: isPresent(value),
@@ -1030,20 +1684,6 @@ function validatePresence(value) {
       message: 'can\'t be blank'
     }]
   };
-}
-
-function stringifyIds(object) {
-  Object.keys(object).forEach(function (key) {
-    var property = object[key];
-
-    if (_typeof(property) === 'object') {
-      if (property.id) {
-        property.id = String(property.id);
-      }
-
-      stringifyIds(property);
-    }
-  });
 }
 /**
  * Helper method for apply the correct defaults to attributes.
@@ -1098,9 +1738,19 @@ function attribute() {
       get: function get() {
         return defaultValue;
       },
-      set: function set(value) {
-        mobx.set(target, property, value);
-      }
+      set: function (_set) {
+        function set(_x) {
+          return _set.apply(this, arguments);
+        }
+
+        set.toString = function () {
+          return _set.toString();
+        };
+
+        return set;
+      }(function (value) {
+        set(target, property, value);
+      })
     };
   };
 }
@@ -1138,6 +1788,92 @@ function validates(target, property) {
       type: type,
       validator: validator
     });
+  }
+}
+
+/*
+ * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
+ * An optional argument specifies the data model, if different from the property name
+ * ```
+ * class CropVariety extends Model {
+ *   @relatedToMany growth_cycles
+ * }
+ *
+ * class Crop extends Model {
+ *   @relatedToMany(CropVariety) varieties
+ * }
+ * ```
+ * @method relatedToMany
+ */
+
+function relatedToMany(targetOrModelKlass, property, descriptor) {
+  if (typeof targetOrModelKlass === 'function') {
+    return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Array
+      });
+      return {
+        get: function get() {
+          var type = targetOrModelKlass.type;
+          return getRelatedRecords(this, property2, type);
+        }
+      };
+    };
+  } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property: property,
+      dataType: Array
+    });
+    return {
+      get: function get() {
+        return getRelatedRecords(this, property);
+      }
+    };
+  }
+}
+/**
+ * Syntactic sugar of relatedToMany relationship. Basically
+ * everything the same except it only returns a single record.
+ *
+ * @method relatedToOne
+ */
+
+function relatedToOne(targetOrModelKlass, property, descriptor) {
+  if (typeof targetOrModelKlass === 'function') {
+    return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Object
+      });
+      return {
+        get: function get() {
+          var type = targetOrModelKlass.type;
+          return getRelatedRecord(this, property2, type);
+        },
+        set: function set(record) {
+          var type = targetOrModelKlass.type;
+          return setRelatedRecord(this, record, property2, type);
+        }
+      };
+    };
+  } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property: property,
+      dataType: Object
+    });
+    return {
+      get: function get() {
+        return getRelatedRecord(this, property);
+      },
+      set: function set(record) {
+        return setRelatedRecord(this, record, property);
+      }
+    };
   }
 }
 /**
@@ -1245,91 +1981,6 @@ function setRelatedRecord(record, relatedRecord, property) {
 
   return relatedRecord;
 }
-/*
- * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
- * An optional argument specifies the data model, if different from the property name
- * ```
- * class CropVariety extends Model {
- *   @relatedToMany growth_cycles
- * }
- *
- * class Crop extends Model {
- *   @relatedToMany(CropVariety) varieties
- * }
- * ```
- * @method relatedToMany
- */
-
-function relatedToMany(targetOrModelKlass, property, descriptor) {
-  if (typeof targetOrModelKlass === 'function') {
-    return function (target2, property2, descriptor2) {
-      schema.addRelationship({
-        type: target2.constructor.type,
-        property: property2,
-        dataType: Array
-      });
-      return {
-        get: function get() {
-          var type = targetOrModelKlass.type;
-          return getRelatedRecords(this, property2, type);
-        }
-      };
-    };
-  } else {
-    schema.addRelationship({
-      type: targetOrModelKlass.constructor.type,
-      property: property,
-      dataType: Array
-    });
-    return {
-      get: function get() {
-        return getRelatedRecords(this, property);
-      }
-    };
-  }
-}
-/**
- * Syntactic sugar of relatedToMany relationship. Basically
- * everything the same except it only returns a single record.
- *
- * @method relatedToOne
- */
-
-function relatedToOne(targetOrModelKlass, property, descriptor) {
-  if (typeof targetOrModelKlass === 'function') {
-    return function (target2, property2, descriptor2) {
-      schema.addRelationship({
-        type: target2.constructor.type,
-        property: property2,
-        dataType: Object
-      });
-      return {
-        get: function get() {
-          var type = targetOrModelKlass.type;
-          return getRelatedRecord(this, property2, type);
-        },
-        set: function set(record) {
-          var type = targetOrModelKlass.type;
-          return setRelatedRecord(this, record, property2, type);
-        }
-      };
-    };
-  } else {
-    schema.addRelationship({
-      type: targetOrModelKlass.constructor.type,
-      property: property,
-      dataType: Object
-    });
-    return {
-      get: function get() {
-        return getRelatedRecord(this, property);
-      },
-      set: function set(record) {
-        return setRelatedRecord(this, record, property);
-      }
-    };
-  }
-}
 /**
  * An array that allows for updating store references and relationships
  * @class RelatedRecordsArray
@@ -1347,14 +1998,14 @@ function (_Array) {
   function RelatedRecordsArray(_array, _record, _property) {
     var _getPrototypeOf2;
 
-    var _this2;
+    var _this;
 
     _classCallCheck(this, RelatedRecordsArray);
 
-    _this2 = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
 
-    _this2.add = function (relatedRecord) {
-      var _assertThisInitialize = _assertThisInitialized(_this2),
+    _this.add = function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized(_this),
           record = _assertThisInitialize.record,
           property = _assertThisInitialize.property;
 
@@ -1391,7 +2042,7 @@ function (_Array) {
           type: type
         });
 
-        _this2.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
+        _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
 
 
         setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
@@ -1400,8 +2051,8 @@ function (_Array) {
       return relatedRecord;
     };
 
-    _this2.remove = function (relatedRecord) {
-      var _assertThisInitialize2 = _assertThisInitialized(_this2),
+    _this.remove = function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized(_this),
           record = _assertThisInitialize2.record,
           property = _assertThisInitialize2.property;
 
@@ -1416,11 +2067,11 @@ function (_Array) {
         });
         relationships[property].data.splice(referenceIndexToRemove, 1);
 
-        var recordIndexToRemove = _this2.findIndex(function (model) {
+        var recordIndexToRemove = _this.findIndex(function (model) {
           return model.id === id && model.type === type;
         });
 
-        if (recordIndexToRemove > 0) _this2.splice(recordIndexToRemove, 1);
+        if (recordIndexToRemove > 0) _this.splice(recordIndexToRemove, 1);
 
         if (!relationships[property].data.length) {
           delete relationships[property];
@@ -1437,25 +2088,25 @@ function (_Array) {
       return relatedRecord;
     };
 
-    _this2.replace = function (array) {
-      var _assertThisInitialize3 = _assertThisInitialized(_this2),
+    _this.replace = function (array) {
+      var _assertThisInitialize3 = _assertThisInitialized(_this),
           record = _assertThisInitialize3.record,
           property = _assertThisInitialize3.property;
 
       var relationships = record.relationships;
-      mobx.transaction(function () {
+      transaction(function () {
         relationships[property] = {
           data: []
         };
         array.forEach(function (object) {
-          return _this2.add(object);
+          return _this.add(object);
         });
       });
     };
 
-    _this2.property = _property;
-    _this2.record = _record;
-    return _this2;
+    _this.property = _property;
+    _this.record = _record;
+    return _this;
   }
   /**
    * Adds a record to the array, and updates references in the store, as well as inverse references
@@ -1467,655 +2118,6 @@ function (_Array) {
 
   return RelatedRecordsArray;
 }(_wrapNativeSuper(Array));
-/*
- * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
- * An optional argument specifies the data model, if different from the property name.
- * ```
- * class Note extends Model {
- *   @belongsTo todo
- *   @belongsTo(Facility) greenhouse
- * }
- * ```
- * Polymorphic relationships
- * Define `belongsTo` with the the associated models
- * Define `hasMany` as you normally would
- * ```
- * class Note extends Model {
- *   @belongsTo(Todo, ScheduledEvent) notable
- * }
- *
- * class Todo extends Model {
- *   @hasMany notes
- * }
- * ```
- * @method belongsTo
- */
-
-/**
- @class Model
- */
-
-
-var Model = (_class$1 = (_temp$1 =
-/*#__PURE__*/
-function () {
-  /**
-   * Initializer for model
-   *
-   * @method constructor
-   */
-  function Model() {
-    var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    _classCallCheck(this, Model);
-
-    _initializerDefineProperty(this, "_isDirty", _descriptor$1, this);
-
-    this.isInFlight = false;
-
-    _initializerDefineProperty(this, "errors", _descriptor2$1, this);
-
-    this.previousSnapshot = {};
-
-    this._makeObservable(initialAttributes);
-
-    this.setPreviousSnapshot();
-
-    this._trackState();
-  }
-  /**
-   * The type of the model. Defined on the class. Defaults to the underscored version of the class name
-   * (eg 'calendar_events').
-   *
-   * @property type
-   * @static
-   */
-
-  /**
-   * The canonical path to the resource on the server. Defined on the class.
-   * Defaults to the underscored version of the class name
-   * @property endpoint
-   * @static
-   */
-
-  /**
-   * True if the instance has been modified from its persisted state
-   * ```
-   * kpi = store.add('kpis', { name: 'A good thing to measure' })
-   * kpi.isDirty
-   * => true
-   * kpi.name
-   * => "A good thing to measure"
-   * await kpi.save()
-   * kpi.isDirty
-   * => false
-   * kpi.name = "Another good thing to measure"
-   * kpi.isDirty
-   * => true
-   * await kpi.save()
-   * kpi.isDirty
-   * => false
-   * ```
-   * @property isDirty
-   * @type {Boolean}
-   * @default false
-   */
-
-
-  _createClass(Model, [{
-    key: "rollback",
-
-    /**
-     * restores data to its last persisted state
-     * ```
-     * kpi = store.find('kpis', 5)
-     * kpi.name
-     * => "A good thing to measure"
-     * kpi.name = "Another good thing to measure"
-     * kpi.rollback()
-     * kpi.name
-     * => "A good thing to measure"
-     * ```
-     * @method rollback
-     */
-    value: function rollback() {
-      var _this3 = this;
-
-      mobx.transaction(function () {
-        _this3.attributeNames.forEach(function (key) {
-          _this3[key] = _this3.previousSnapshot[key];
-        });
-
-        _this3.errors = {};
-      });
-      this.setPreviousSnapshot();
-    }
-    /**
-     * creates or updates a record.
-     * @method save
-     * @return {Promise}
-     * @param {Object} options
-     */
-
-  }, {
-    key: "save",
-    value: function save() {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      this.errors = {};
-
-      if (!options.skip_validations && !this.validate()) {
-        var errorString = JSON.stringify(this.errors);
-        return Promise.reject(new Error(errorString));
-      }
-
-      var queryParams = options.queryParams,
-          relationships = options.relationships,
-          attributes = options.attributes;
-      var constructor = this.constructor,
-          id = this.id,
-          isNew = this.isNew;
-      var requestId = id;
-      var method = 'PATCH';
-
-      if (isNew) {
-        method = 'POST';
-        requestId = null;
-      }
-
-      var url = this.store.fetchUrl(constructor.type, queryParams, requestId);
-      var body = JSON.stringify(this.jsonapi({
-        relationships: relationships,
-        attributes: attributes
-      }));
-      var response = this.store.fetch(url, {
-        method: method,
-        body: body
-      });
-      return new ObjectPromiseProxy(response, this);
-    }
-    /**
-     * Checks all validations, adding errors where necessary and returning `false` if any are not valid
-     * @method validate
-     * @return {Boolean}
-     */
-
-  }, {
-    key: "validate",
-    value: function validate() {
-      var _this4 = this;
-
-      var attributeNames = this.attributeNames,
-          attributeDefinitions = this.attributeDefinitions;
-      var validationChecks = attributeNames.map(function (property) {
-        var validator = attributeDefinitions[property].validator;
-        if (!validator) return true;
-        var validationResult = validator(_this4[property], _this4);
-
-        if (!validationResult.isValid) {
-          _this4.errors[property] = validationResult.errors;
-        }
-
-        return validationResult.isValid;
-      });
-      return validationChecks.every(function (value) {
-        return value;
-      });
-    }
-    /**
-     * deletes a record from the store and server
-     * @method destroy
-     * @return {Promise} an empty promise with any success/error status
-     */
-
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var type = this.constructor.type,
-          id = this.id,
-          snapshot = this.snapshot,
-          isNew = this.isNew;
-
-      if (isNew) {
-        this.store.remove(type, id);
-        return snapshot;
-      }
-
-      var _options$params = options.params,
-          params = _options$params === void 0 ? {} : _options$params,
-          _options$skipRemove = options.skipRemove,
-          skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
-      var url = this.store.fetchUrl(type, params, id);
-      this.isInFlight = true;
-      var promise = this.store.fetch(url, {
-        method: 'DELETE'
-      });
-
-      var _this = this;
-
-      return promise.then(
-      /*#__PURE__*/
-      function () {
-        var _ref = _asyncToGenerator(
-        /*#__PURE__*/
-        _regeneratorRuntime.mark(function _callee(response) {
-          var json;
-          return _regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  _this.isInFlight = false;
-
-                  if (!(response.status === 202 || response.status === 204)) {
-                    _context.next = 17;
-                    break;
-                  }
-
-                  if (!skipRemove) {
-                    _this.store.remove(type, id);
-                  }
-
-                  _context.prev = 3;
-                  _context.next = 6;
-                  return response.json();
-
-                case 6:
-                  json = _context.sent;
-
-                  if (json.data && json.data.attributes) {
-                    Object.keys(json.data.attributes).forEach(function (key) {
-                      mobx.set(_this, key, json.data.attributes[key]);
-                    });
-                  }
-
-                  _context.next = 13;
-                  break;
-
-                case 10:
-                  _context.prev = 10;
-                  _context.t0 = _context["catch"](3);
-                  console.log(_context.t0); // It is text, do you text handling here
-
-                case 13:
-                  // NOTE: If deleting a record changes other related model
-                  // You can return then in the delete response
-                  if (json && json.included) {
-                    _this.store.createModelsFromData(json.included);
-                  }
-
-                  return _context.abrupt("return", _this);
-
-                case 17:
-                  _this.errors = {
-                    status: response.status
-                  };
-                  return _context.abrupt("return", _this);
-
-                case 19:
-                case "end":
-                  return _context.stop();
-              }
-            }
-          }, _callee, null, [[3, 10]]);
-        }));
-
-        return function (_x) {
-          return _ref.apply(this, arguments);
-        };
-      }(), function (error) {
-        // TODO: Handle error states correctly
-        _this.isInFlight = false;
-        _this.errors = error;
-        throw error;
-      });
-    }
-    /* Private Methods */
-
-    /**
-     * Magic method that makes changes to records
-     * observable
-     *
-     * @method _makeObservable
-     */
-
-  }, {
-    key: "_makeObservable",
-    value: function _makeObservable(initialAttributes) {
-      var defaultAttributes = this.defaultAttributes;
-      mobx.extendObservable(this, _objectSpread({}, defaultAttributes, initialAttributes));
-    }
-    /**
-     * The current state of defined attributes and relationships of the instance
-     * Really just an alias for attributes
-     * ```
-     * todo = store.find('todos', 5)
-     * todo.title
-     * => "Buy the eggs"
-     * snapshot = todo.snapshot
-     * todo.title = "Buy the eggs and bacon"
-     * snapshot.title
-     * => "Buy the eggs and bacon"
-     * ```
-     * @method snapshot
-     * @return {Object} current attributes
-     */
-
-  }, {
-    key: "setPreviousSnapshot",
-
-    /**
-     * Sets previous snapshot to current snapshot
-     *
-     * @method setPreviousSnapshot
-     */
-    value: function setPreviousSnapshot() {
-      this.previousSnapshot = this.snapshot;
-    }
-    /**
-     * Uses mobx.autorun to track changes to attributes
-     *
-     * @method _trackState
-     */
-
-  }, {
-    key: "_trackState",
-    value: function _trackState() {
-      var _this5 = this;
-
-      mobx.reaction(function () {
-        return JSON.stringify(_this5.attributes);
-      }, function (objectString) {
-        // console.log(objectString)
-        _this5.isDirty = true;
-      });
-      mobx.reaction(function () {
-        return JSON.stringify(_this5.relationships);
-      }, function (relString) {
-        // console.log(relString)
-        _this5.isDirty = true;
-      });
-    }
-    /**
-     * shortcut to get the static
-     *
-     * @method type
-     * @return {String} current attributes
-    */
-
-  }, {
-    key: "errorForKey",
-
-    /**
-     * Getter to check if the record has errors.
-     *
-     * @method hasErrors
-     * @return {Boolean}
-     */
-    value: function errorForKey(key) {
-      return this.errors[key];
-    }
-    /**
-     * Getter to just get the names of a records attributes.
-     *
-     * @method attributeNames
-     * @return {Array}
-     */
-
-  }, {
-    key: "jsonapi",
-
-    /**
-     * getter method to get data in api compliance format
-     * TODO: Figure out how to handle unpersisted ids
-     *
-     * @method jsonapi
-     * @return {Object} data in JSON::API format
-     */
-    value: function jsonapi() {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var attributeDefinitions = this.attributeDefinitions,
-          attributeNames = this.attributeNames,
-          attributes = this.attributes,
-          id = this.id,
-          relationships = this.relationships,
-          type = this.type;
-      var attributeNamesSubset = options.attributes,
-          relationshipNamesSubset = options.relationships;
-
-      if (attributeNamesSubset) {
-        attributeNames = attributeNames.filter(function (name) {
-          return attributeNamesSubset.includes(name);
-        });
-      }
-
-      var attributeData = attributeNames.reduce(function (attrs, key) {
-        var value = attributes[key];
-
-        if (value) {
-          var DataType = attributeDefinitions[key].dataType;
-          var attr;
-
-          if (DataType.name === 'Array' || DataType.name === 'Object') {
-            attr = mobx.toJS(value);
-          } else if (DataType.name === 'Date') {
-            attr = moment(value).toISOString();
-          } else {
-            attr = DataType(value);
-          }
-
-          attrs[key] = attr;
-        } else {
-          attrs[key] = value;
-        }
-
-        return attrs;
-      }, {});
-      var relationshipNames = Object.keys(relationships);
-
-      if (relationshipNamesSubset) {
-        relationshipNames = relationshipNames.filter(function (name) {
-          return relationshipNamesSubset.includes(name);
-        });
-      }
-
-      var relationshipData = relationshipNames.reduce(function (rels, key) {
-        rels[key] = mobx.toJS(relationships[key].data);
-        stringifyIds(rels[key]);
-        return rels;
-      }, {});
-      var relationshipSerializerConfigs = relationshipNames.reduce(function (relConfig, key) {
-        relConfig[key] = {
-          ref: 'id',
-          included: false
-        };
-        return relConfig;
-      }, {});
-      var ModelSerializer = new jsonapiSerializer.Serializer(type, _objectSpread({
-        attributes: [].concat(_toConsumableArray(attributeNames), _toConsumableArray(relationshipNames)),
-        keyForAttribute: 'underscore_case'
-      }, relationshipSerializerConfigs));
-
-      if (String(id).match(/tmp/)) {
-        id = null;
-      }
-
-      return ModelSerializer.serialize(_objectSpread({
-        id: id,
-        type: type
-      }, attributeData, relationshipData));
-    }
-  }, {
-    key: "updateAttributes",
-    value: function updateAttributes(attributes) {
-      var _this6 = this;
-
-      mobx.transaction(function () {
-        Object.keys(attributes).forEach(function (key) {
-          _this6[key] = attributes[key];
-        });
-      });
-    }
-  }, {
-    key: "isDirty",
-    get: function get() {
-      var isNew = this.isNew,
-          _isDirty = this._isDirty;
-      return _isDirty || isNew;
-    },
-    set: function set(value) {
-      this._isDirty = value;
-    }
-    /**
-     * Private method. True if the model has been programatically changed,
-     * as opposed to just being new.
-     * @property _isDirty
-     * @type {Boolean}
-     * @default false
-     * @private
-     */
-
-  }, {
-    key: "isNew",
-
-    /**
-     * True if the model has not been sent to the store
-     * @property isNew
-     * @type {Boolean}
-     */
-    get: function get() {
-      var id = this.id;
-      return !!String(id).match(/tmp/);
-    }
-    /**
-     * True if the instance is coming from / going to the server
-     * ```
-     * kpi = store.find('kpis', 5)
-     * // fetch started
-     * kpi.isInFlight
-     * => true
-     * // fetch finished
-     * kpi.isInFlight
-     * => false
-     * ```
-     * @property isInFlight
-     * @type {Boolean}
-     * @default false
-     */
-
-  }, {
-    key: "snapshot",
-    get: function get() {
-      return this.attributes;
-    }
-  }, {
-    key: "type",
-    get: function get() {
-      return this.constructor.type;
-    }
-    /**
-     * current attributes of record
-     *
-     * @method attributes
-     * @return {Object} current attributes
-     */
-
-  }, {
-    key: "attributes",
-    get: function get() {
-      var _this7 = this;
-
-      return this.attributeNames.reduce(function (attributes, key) {
-        var value = mobx.toJS(_this7[key]);
-
-        if (!value) {
-          delete attributes[key];
-        } else {
-          attributes[key] = value;
-        }
-
-        return attributes;
-      }, {});
-    }
-    /**
-     * Getter find the attribute definition for the model type.
-     *
-     * @method attributeDefinitions
-     * @return {Object}
-     */
-
-  }, {
-    key: "attributeDefinitions",
-    get: function get() {
-      var type = this.constructor.type;
-      return schema.structure[type];
-    }
-    /**
-     * Getter find the relationship definitions for the model type.
-     *
-     * @method relationshipDefinitions
-     * @return {Object}
-     */
-
-  }, {
-    key: "relationshipDefinitions",
-    get: function get() {
-      var type = this.constructor.type;
-      return schema.relations[type];
-    }
-    /**
-     * Getter to check if the record has errors.
-     *
-     * @method hasErrors
-     * @return {Boolean}
-     */
-
-  }, {
-    key: "hasErrors",
-    get: function get() {
-      return Object.keys(this.errors).length > 0;
-    }
-  }, {
-    key: "attributeNames",
-    get: function get() {
-      return Object.keys(this.attributeDefinitions);
-    }
-    /**
-     * getter method to get the default attributes
-     *
-     * @method defaultAttributes
-     * @return {Object}
-     */
-
-  }, {
-    key: "defaultAttributes",
-    get: function get() {
-      var attributeDefinitions = this.attributeDefinitions;
-      return this.attributeNames.reduce(function (defaults, key) {
-        var defaultValue = attributeDefinitions[key].defaultValue;
-        defaults[key] = defaultValue;
-        return defaults;
-      }, {
-        relationships: {}
-      });
-    }
-  }]);
-
-  return Model;
-}(), _temp$1), (_applyDecoratedDescriptor(_class$1.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class$1.prototype, "isDirty"), _class$1.prototype), _descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "_isDirty", [mobx.observable], {
-  configurable: true,
-  enumerable: true,
-  writable: true,
-  initializer: function initializer() {
-    return false;
-  }
-}), _applyDecoratedDescriptor(_class$1.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class$1.prototype, "isNew"), _class$1.prototype), _descriptor2$1 = _applyDecoratedDescriptor(_class$1.prototype, "errors", [mobx.observable], {
-  configurable: true,
-  enumerable: true,
-  writable: true,
-  initializer: function initializer() {
-    return {};
-  }
-})), _class$1);
 
 exports.Model = Model;
 exports.Store = Store;
