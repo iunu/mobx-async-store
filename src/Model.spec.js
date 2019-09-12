@@ -182,6 +182,12 @@ describe('Model', () => {
       todo.options.test = 'two'
     })
 
+    it('attributes are observable', () => {
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
+
+      expect(todo.options.test).toEqual('one')
+    })
+
     it('relatedToOne relationship can be set', () => {
       const note = store.add('notes', {
         id: 1,

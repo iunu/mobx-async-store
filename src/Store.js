@@ -1,5 +1,5 @@
 /* global fetch */
-import { action, observable, transaction, set } from 'mobx'
+import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, newId, requestUrl, uniqueBy } from './utils'
 
 /**
@@ -58,10 +58,13 @@ class Store {
   @action
   addModel = (type, attributes) => {
     const id = dbOrNewId(attributes)
+
     // Create new model install
     const model = this.createModel(type, id, { attributes })
+
     // Add the model to the type records index
     this.data[type].records[id] = model
+
     return model
   }
 
@@ -96,6 +99,7 @@ class Store {
   @action
   remove = (type, id) => {
     const records = this.getRecords(type)
+
     this.data[type].records = records.reduce((hash, record) => {
       if (String(record.id) !== String(id)) {
         hash[record.id] = record
@@ -159,6 +163,7 @@ class Store {
   findOrFetchOne = (type, id, queryParams) => {
     // Get the matching record
     const record = this.getMatchingRecord(type, id, queryParams)
+
     // If the cached record is present
     if (record && record.id) {
       // Return data
@@ -221,6 +226,7 @@ class Store {
    */
   findAll = (type, options = {}) => {
     const { fromServer, queryParams } = options
+
     if (fromServer === true) {
       // If fromServer is true always fetch the data and return
       return this.fetchAll(type, queryParams)
@@ -242,6 +248,7 @@ class Store {
   findOrFetchAll = (type, queryParams) => {
     // Get any matching records
     const records = this.getMatchingRecords(type, queryParams)
+
     // If any records are present
     if (records.length > 0) {
       // Return data
@@ -319,13 +326,11 @@ class Store {
    */
   initializeObservableDataProperty () {
     const { types } = this.constructor
+
     // NOTE: Is there a performance cost to setting
     // each property individually?
     types.forEach(modelKlass => {
-      this.data[modelKlass.type] = {
-        records: {},
-        cache: {}
-      }
+      this.data[modelKlass.type] = { records: {}, cache: {} }
     })
   }
 
@@ -339,10 +344,7 @@ class Store {
   fetch (url, options = {}) {
     const { defaultFetchOptions } = this
 
-    return fetch(url, {
-      ...defaultFetchOptions,
-      ...options
-    })
+    return fetch(url, { ...defaultFetchOptions, ...options })
   }
 
   /**
@@ -402,9 +404,8 @@ class Store {
    * @return {Array} array of objects
    */
   getRecords (type) {
-    const records = Object
-      .values(this.getType(type).records)
-      .filter(value => value && value !== 'undefined')
+    const records = Object.values(this.getType(type).records)
+                          .filter(value => value && value !== 'undefined')
 
     // NOTE: Handles a scenario where the store keeps around a reference
     // to a newly persisted record by its temp uuid. This is required
@@ -426,6 +427,7 @@ class Store {
    */
   getCachedRecord (type, id, queryParams) {
     const cachedRecords = this.getCachedRecords(type, queryParams, id)
+
     return cachedRecords && cachedRecords[0]
   }
 
@@ -481,7 +483,8 @@ class Store {
   getRecordsById (type, ids = []) {
     // NOTE: Is there a better way to do this?
     return ids.map(id => this.getRecord(type, id))
-      .filter(record => typeof record !== 'undefined')
+              .filter(record => record)
+              .filter(record => typeof record !== 'undefined')
   }
 
   /**
@@ -519,12 +522,7 @@ class Store {
    * @param {Object} dataObject
    */
   createOrUpdateModel (dataObject) {
-    const {
-      attributes = {},
-      id,
-      relationships = {},
-      type
-    } = dataObject
+    const { attributes = {}, id, relationships = {}, type } = dataObject
 
     let record = this.getRecord(type, id)
 
@@ -547,16 +545,10 @@ class Store {
         })
       }
     } else {
-      // TODO: Merge with createModel method
-      const ModelKlass = this.modelTypeIndex[type]
-      record = new ModelKlass({
-        id,
-        store: this,
-        relationships,
-        ...attributes
-      })
+      record = this.createModel(type, id, { attributes, relationships })
       this.data[type].records[record.id] = record
     }
+
     return record
   }
 
@@ -567,9 +559,13 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
+    let records = []
+
     transaction(() => {
-      data.forEach(dataObject => this.createOrUpdateModel(dataObject))
+      records = data.forEach(dataObject => this.createOrUpdateModel(dataObject))
     })
+
+    return records
   }
 
   /**
@@ -582,13 +578,7 @@ class Store {
    * @return {Object} model instance
    */
   createModel (type, id, data) {
-    const { attributes = {} } = data
-
-    let relationships = {}
-    if (data.hasOwnProperty('relationships') && data.relationships) {
-      relationships = data.relationships
-    }
-
+    const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
     const ModelKlass = this.getKlass(type)
 
@@ -596,12 +586,7 @@ class Store {
       throw new Error(`Could not find a model for '${type}'`)
     }
 
-    return new ModelKlass({
-      id,
-      store,
-      relationships,
-      ...attributes
-    })
+    return new ModelKlass({ id, store, relationships, ...attributes })
   }
 
   /**
@@ -626,32 +611,34 @@ class Store {
    * @param {Object} options
    */
   async fetchAll (type, queryParams) {
+    const store = this
     const url = this.fetchUrl(type, queryParams)
     const response = await this.fetch(url, { method: 'GET' })
+
     if (response.status === 200) {
       this.data[type].cache[url] = []
+
       const json = await response.json()
+
       if (json.included) {
         this.createModelsFromData(json.included)
       }
 
       let records = []
+
       transaction(() => {
         records = json.data.map(dataObject => {
-          const { id, attributes, relationships } = dataObject
-
+          const { id, attributes = {}, relationships = {} } = dataObject
           const ModelKlass = this.modelTypeIndex[type]
-          const store = this
-          const record = new ModelKlass({
-            relationships: relationships || {},
-            store,
-            ...attributes
-          })
+          const record = new ModelKlass({ store, relationships, ...attributes })
+
           this.data[type].cache[url].push(id)
           this.data[type].records[id] = record
+
           return record
         })
       })
+
       return records
     } else {
       return Promise.reject(response.status)
@@ -668,8 +655,10 @@ class Store {
    */
   async fetchOne (type, id, queryParams) {
     const url = this.fetchUrl(type, queryParams, id)
+
     // Trigger request
     const response = await this.fetch(url, { method: 'GET' })
+
     // Handle response
     if (response.status === 200) {
       const json = await response.json()

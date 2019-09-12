@@ -7,7 +7,7 @@ import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
 import _createClass from '@babel/runtime/helpers/createClass';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import '@babel/runtime/helpers/initializerWarningHelper';
-import { observable, action, set, transaction, computed, extendObservable, reaction, toJS } from 'mobx';
+import { observable, action, set, transaction, toJS, computed, extendObservable, reaction } from 'mobx';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import uuidv1 from 'uuid/v1';
 import jqueryParam from 'jquery-param';
@@ -489,6 +489,8 @@ function () {
       return ids.map(function (id) {
         return _this3.getRecord(type, id);
       }).filter(function (record) {
+        return record;
+      }).filter(function (record) {
         return typeof record !== 'undefined';
       });
     }
@@ -562,13 +564,10 @@ function () {
           });
         }
       } else {
-        // TODO: Merge with createModel method
-        var ModelKlass = this.modelTypeIndex[type];
-        record = new ModelKlass(_objectSpread({
-          id: id,
-          store: this,
+        record = this.createModel(type, id, {
+          attributes: attributes,
           relationships: relationships
-        }, attributes));
+        });
         this.data[type].records[record.id] = record;
       }
 
@@ -586,11 +585,13 @@ function () {
     value: function createModelsFromData(data) {
       var _this5 = this;
 
+      var records = [];
       transaction(function () {
-        data.forEach(function (dataObject) {
+        records = data.forEach(function (dataObject) {
           return _this5.createOrUpdateModel(dataObject);
         });
       });
+      return records;
     }
     /**
      * Helper to create a new model
@@ -605,13 +606,11 @@ function () {
   }, {
     key: "createModel",
     value: function createModel(type, id, data) {
-      var _data$attributes = data.attributes,
-          attributes = _data$attributes === void 0 ? {} : _data$attributes;
-      var relationships = {};
-
-      if (data.hasOwnProperty('relationships') && data.relationships) {
-        relationships = data.relationships;
-      }
+      var _toJS = toJS(data),
+          _toJS$attributes = _toJS.attributes,
+          attributes = _toJS$attributes === void 0 ? {} : _toJS$attributes,
+          _toJS$relationships = _toJS.relationships,
+          relationships = _toJS$relationships === void 0 ? {} : _toJS$relationships;
 
       var store = this;
       var ModelKlass = this.getKlass(type);
@@ -658,30 +657,31 @@ function () {
       _regeneratorRuntime.mark(function _callee(type, queryParams) {
         var _this6 = this;
 
-        var url, response, json, records;
+        var store, url, response, json, records;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
+                store = this;
                 url = this.fetchUrl(type, queryParams);
-                _context.next = 3;
+                _context.next = 4;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
-              case 3:
+              case 4:
                 response = _context.sent;
 
                 if (!(response.status === 200)) {
-                  _context.next = 15;
+                  _context.next = 16;
                   break;
                 }
 
                 this.data[type].cache[url] = [];
-                _context.next = 8;
+                _context.next = 9;
                 return response.json();
 
-              case 8:
+              case 9:
                 json = _context.sent;
 
                 if (json.included) {
@@ -692,13 +692,14 @@ function () {
                 transaction(function () {
                   records = json.data.map(function (dataObject) {
                     var id = dataObject.id,
-                        attributes = dataObject.attributes,
-                        relationships = dataObject.relationships;
+                        _dataObject$attribute2 = dataObject.attributes,
+                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+                        _dataObject$relations2 = dataObject.relationships,
+                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
                     var ModelKlass = _this6.modelTypeIndex[type];
-                    var store = _this6;
                     var record = new ModelKlass(_objectSpread({
-                      relationships: relationships || {},
-                      store: store
+                      store: store,
+                      relationships: relationships
                     }, attributes));
 
                     _this6.data[type].cache[url].push(id);
@@ -709,10 +710,10 @@ function () {
                 });
                 return _context.abrupt("return", records);
 
-              case 15:
+              case 16:
                 return _context.abrupt("return", Promise.reject(response.status));
 
-              case 16:
+              case 17:
               case "end":
                 return _context.stop();
             }
