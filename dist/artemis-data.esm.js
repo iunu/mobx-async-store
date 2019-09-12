@@ -907,7 +907,9 @@ function () {
     _initializerDefineProperty(this, "data", _descriptor$1, this);
 
     this.add = function (type, data) {
-      var attributes = toJS(data);
+      var attributes = toJS(data, {
+        recurseEverything: true
+      });
 
       if (data.constructor.name === 'Array') {
         return _this.addModels(type, attributes);
