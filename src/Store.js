@@ -42,10 +42,12 @@ class Store {
    * @return {Object} the new record
    */
   add = (type, data) => {
+    const attributes = toJS(data)
+
     if (data.constructor.name === 'Array') {
-      return this.addModels(type, data)
+      return this.addModels(type, attributes)
     } else {
-      return this.addModel(type, data)
+      return this.addModel(type, attributes)
     }
   }
 
@@ -56,8 +58,7 @@ class Store {
    * @return {Object} Artemis Data record
    */
   @action
-  addModel = (type, data) => {
-    const attributes = toJS(data)
+  addModel = (type, attributes) => {
     const id = dbOrNewId(attributes)
     const model = this.createModel(type, id, { attributes })
 
@@ -80,9 +81,11 @@ class Store {
    */
   addModels = (type, data) => {
     let records = []
+
     transaction(() => {
       records = data.map(obj => this.addModel(type, obj))
     })
+
     return records
   }
 

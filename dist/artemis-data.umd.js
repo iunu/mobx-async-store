@@ -15703,10 +15703,12 @@
       _initializerDefineProperty(this, "data", _descriptor$1, this);
 
       this.add = function (type, data) {
+        var attributes = toJS$$1(data);
+
         if (data.constructor.name === 'Array') {
-          return _this.addModels(type, data);
+          return _this.addModels(type, attributes);
         } else {
-          return _this.addModel(type, data);
+          return _this.addModel(type, attributes);
         }
       };
 
@@ -16403,8 +16405,7 @@
     initializer: function initializer() {
       var _this7 = this;
 
-      return function (type, data) {
-        var attributes = toJS$$1(data);
+      return function (type, attributes) {
         var id = dbOrNewId(attributes);
 
         var model = _this7.createModel(type, id, {
