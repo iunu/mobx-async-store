@@ -1,6 +1,6 @@
 /* global fetch */
-import { observable, transaction } from 'mobx'
-import { dbOrNewId, requestUrl } from './utils'
+import { action, observable, transaction, set } from 'mobx'
+import { dbOrNewId, newId, requestUrl, uniqueBy } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -49,6 +49,13 @@ class Store {
     }
   }
 
+  /**
+   * @method addModel
+   * @param {String} type
+   * @param {Object} attributes json api attributes
+   * @return {Object} Artemis Data record
+   */
+  @action
   addModel = (type, attributes) => {
     const id = dbOrNewId(attributes)
     // Create new model install
@@ -58,6 +65,17 @@ class Store {
     return model
   }
 
+  @action
+  newModel = (type, attributes) => {
+    return this.createModel(type, newId(), { attributes })
+  }
+
+  /**
+   * @method addModels
+   * @param {String} type
+   * @param {String} data array of data objects
+   * @return {Array} array of ArtemisData records
+   */
   addModels = (type, data) => {
     let records = []
     transaction(() => {
@@ -66,8 +84,24 @@ class Store {
     return records
   }
 
+  /**
+   * Adds a record from the store. We can't simply remove the record
+   * by deleting the records property/key via delete due to a bug
+   * in mobx.
+   *
+   * @method remove
+   * @param {String} type
+   * @param {String} id of record to remove
+   */
+  @action
   remove = (type, id) => {
-    delete this.data[type].records[id]
+    const records = this.getRecords(type)
+    this.data[type].records = records.reduce((hash, record) => {
+      if (String(record.id) !== String(id)) {
+        hash[record.id] = record
+      }
+      return hash
+    }, {})
   }
 
   /**
@@ -101,10 +135,37 @@ class Store {
    * @param {Object} options
    */
   findOne = (type, id, options = {}) => {
-    if (this.shouldFetchOne(type, id, options)) {
-      return this.fetchOne(type, id, options)
+    const { fromServer, queryParams } = options
+
+    if (fromServer === true) {
+      // If fromServer is true always fetch the data and return
+      return this.fetchOne(type, id, queryParams)
+    } else if (fromServer === false) {
+      // If fromServer is false never fetch the data and return
+      return this.getRecord(type, id, queryParams)
     } else {
-      return this.getRecord(type, id)
+      return this.findOrFetchOne(type, id, queryParams)
+    }
+  }
+
+  /**
+   * returns cache if exists, returns promise if not
+   *
+   * @method findOrFetchOne
+   * @param {String} type record type
+   * @param id
+   * @param {Object} queryParams will inform whether to return cached or fetch
+   */
+  findOrFetchOne = (type, id, queryParams) => {
+    // Get the matching record
+    const record = this.getMatchingRecord(type, id, queryParams)
+    // If the cached record is present
+    if (record && record.id) {
+      // Return data
+      return record
+    } else {
+      // Otherwise fetch it from the server
+      return this.fetchOne(type, id, queryParams)
     }
   }
 
@@ -160,15 +221,28 @@ class Store {
    */
   findAll = (type, options = {}) => {
     const { fromServer, queryParams } = options
-    // If fromServer is true always fetch the data and return
-    if (fromServer === true) return this.fetchAll(type, queryParams)
-    // If fromServer is false never fetch the data and return
-    if (fromServer === false) return this.getMatchingRecords(type, queryParams)
+    if (fromServer === true) {
+      // If fromServer is true always fetch the data and return
+      return this.fetchAll(type, queryParams)
+    } else if (fromServer === false) {
+      // If fromServer is false never fetch the data and return
+      return this.getMatchingRecords(type, queryParams)
+    } else {
+      return this.findOrFetchAll(type, queryParams)
+    }
+  }
+
+  /**
+   * returns cache if exists, returns promise if not
+   *
+   * @method findOrFetchAll
+   * @param {String} type record type
+   * @param {Object} queryParams will inform whether to return cached or fetch
+   */
+  findOrFetchAll = (type, queryParams) => {
     // Get any matching records
     const records = this.getMatchingRecords(type, queryParams)
     // If any records are present
-    // console.log('findAll', type, queryParams)
-    // console.log('records', records.length)
     if (records.length > 0) {
       // Return data
       return records
@@ -205,10 +279,10 @@ class Store {
    * @param {Object} options passed to constructor
    */
   init (options) {
-     this.initializeNetworkConfiguration(options)
-     this.initializeModelTypeIndex()
-     this.initializeObservableDataProperty()
-   }
+    this.initializeNetworkConfiguration(options)
+    this.initializeModelTypeIndex()
+    this.initializeObservableDataProperty()
+  }
 
   /**
    * Entry point for configuring the store
@@ -283,6 +357,24 @@ class Store {
   }
 
   /**
+   * Get single all record
+   * based on query params
+   *
+   * @method getMatchingRecord
+   * @param {String} type
+   * @param id
+   * @param {Object} queryParams
+   * @return {Array} array or records
+   */
+  getMatchingRecord (type, id, queryParams) {
+    if (queryParams) {
+      return this.getCachedRecord(type, id, queryParams)
+    } else {
+      return this.getRecord(type, id)
+    }
+  }
+
+  /**
    * Gets individual record from store
    *
    * @method getRecord
@@ -291,11 +383,15 @@ class Store {
    * @return {Object} record
    */
   getRecord (type, id) {
-    const collection = this.getType(type)
-    if (!collection) {
+    if (!this.getType(type)) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
-    return collection.records[id]
+
+    const record = this.getType(type).records[id]
+
+    if (!record || record === 'undefined') return
+
+    return record
   }
 
   /**
@@ -306,7 +402,31 @@ class Store {
    * @return {Array} array of objects
    */
   getRecords (type) {
-    return Object.values(this.getType(type).records)
+    const records = Object
+      .values(this.getType(type).records)
+      .filter(value => value && value !== 'undefined')
+
+    // NOTE: Handles a scenario where the store keeps around a reference
+    // to a newly persisted record by its temp uuid. This is required
+    // because we can't simply remove the temp uuid reference because other
+    // related models may be still using the temp uuid in their relationships
+    // data object. However, when we are listing out records we want them
+    // to be unique by the persisted id (which is updated after a Model.save)
+    return uniqueBy(records, 'id')
+  }
+
+  /**
+   * Gets single from store based on cached query
+   *
+   * @method getCachedRecord
+   * @param {String} type
+   * @param id
+   * @param {Object} queryParams
+   * @return {Array} array or records
+   */
+  getCachedRecord (type, id, queryParams) {
+    const cachedRecords = this.getCachedRecords(type, queryParams, id)
+    return cachedRecords && cachedRecords[0]
   }
 
   /**
@@ -317,9 +437,9 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getCachedRecords (type, queryParams) {
+  getCachedRecords (type, queryParams, id) {
     // Get the url the request would use
-    const url = this.fetchUrl(type, queryParams)
+    const url = this.fetchUrl(type, queryParams, id)
     // Get the matching ids from the response
     const ids = this.getCachedIds(type, url)
     // Get the records matching the ids
@@ -336,6 +456,18 @@ class Store {
    */
   getCachedIds (type, url) {
     return this.getType(type).cache[url]
+  }
+
+  /**
+   * Gets records from store based on cached query
+   *
+   * @method getCachedIds
+   * @param {String} type
+   * @param {String} url
+   * @return {Array} array of ids
+   */
+  getCachedId (type, id) {
+    return this.getType(type).cache[id]
   }
 
   /**
@@ -380,41 +512,63 @@ class Store {
     return this.modelTypeIndex[type]
   }
 
-  createModelsFromData (data) {
-    const store = this
-    transaction(() => {
-      data.forEach(dataObject => {
-        const {
-          attributes,
-          id,
-          relationships,
-          type
-        } = dataObject
+  /**
+   * Creates or updates a model
+   *
+   * @method createOrUpdateModel
+   * @param {Object} dataObject
+   */
+  createOrUpdateModel (dataObject) {
+    const {
+      attributes = {},
+      id,
+      relationships = {},
+      type
+    } = dataObject
 
-        const existingRecord = this.getRecord(type, id)
+    let record = this.getRecord(type, id)
 
-        if (existingRecord) {
-          Object.keys(attributes).forEach(key => {
-            existingRecord[key] = attributes[key]
-            this.data[type].records[id] = existingRecord
-          })
-          if (relationships) {
-            Object.keys(relationships).forEach(key => {
-              existingRecord.relationships[key] = relationships[key]
-              this.data[type].records[id] = existingRecord
-            })
-          }
-        } else {
-          const ModelKlass = this.modelTypeIndex[type]
-          const record = new ModelKlass({
-            id,
-            store,
-            relationships,
-            ...attributes
-          })
-          this.data[type].records[record.id] = record
-        }
+    if (record) {
+      // Update existing object attributes
+      Object.keys(attributes).forEach(key => {
+        set(record, key, attributes[key])
+        set(this.data[type].records, id, record)
       })
+
+      // If relationships are present, update relationships
+      if (relationships) {
+        Object.keys(relationships).forEach(key => {
+          // Don't try to create relationship if meta included false
+          if (!relationships[key].meta) {
+            // defensive against existingRecord.relationships being undefined
+            set(record, 'relationships', { ...record.relationships, [key]: relationships[key] })
+            set(this.data[type].records, id, record)
+          }
+        })
+      }
+    } else {
+      // TODO: Merge with createModel method
+      const ModelKlass = this.modelTypeIndex[type]
+      record = new ModelKlass({
+        id,
+        store: this,
+        relationships,
+        ...attributes
+      })
+      this.data[type].records[record.id] = record
+    }
+    return record
+  }
+
+  /**
+   * Create multiple models from an array of data
+   *
+   * @method createModelsFromData
+   * @param {Array} data
+   */
+  createModelsFromData (data) {
+    transaction(() => {
+      data.forEach(dataObject => this.createOrUpdateModel(dataObject))
     })
   }
 
@@ -428,10 +582,10 @@ class Store {
    * @return {Object} model instance
    */
   createModel (type, id, data) {
-    const { attributes } = data
+    const { attributes = {} } = data
 
     let relationships = {}
-    if (data.hasOwnProperty('relationships')) {
+    if (data.hasOwnProperty('relationships') && data.relationships) {
       relationships = data.relationships
     }
 
@@ -460,19 +614,20 @@ class Store {
   fetchUrl (type, queryParams, id) {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
+
     return requestUrl(baseUrl, endpoint, queryParams, id)
   }
 
   /**
    * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
    *
-   * @method findAll
+   * @method fetchAll
    * @param {String} type the type to find
    * @param {Object} options
    */
   async fetchAll (type, queryParams) {
     const url = this.fetchUrl(type, queryParams)
-    const response = await this.fetch(url)
+    const response = await this.fetch(url, { method: 'GET' })
     if (response.status === 200) {
       this.data[type].cache[url] = []
       const json = await response.json()
@@ -483,12 +638,12 @@ class Store {
       let records = []
       transaction(() => {
         records = json.data.map(dataObject => {
-          const { id } = dataObject
-          const { attributes, relationships } = dataObject
+          const { id, attributes, relationships } = dataObject
+
           const ModelKlass = this.modelTypeIndex[type]
           const store = this
           const record = new ModelKlass({
-            relationships,
+            relationships: relationships || {},
             store,
             ...attributes
           })
@@ -511,47 +666,31 @@ class Store {
    * @param {String} type the type to find
    * @param {String} id
    */
-  async fetchOne (type, id, options) {
-    const { queryParams } = options
+  async fetchOne (type, id, queryParams) {
     const url = this.fetchUrl(type, queryParams, id)
     // Trigger request
-    const response = await this.fetch(url)
+    const response = await this.fetch(url, { method: 'GET' })
     // Handle response
     if (response.status === 200) {
       const json = await response.json()
 
-      if (json.included) {
-        this.createModelsFromData(json.included)
+      const { data, included } = json
+
+      if (included) {
+        this.createModelsFromData(included)
       }
 
-      const record = this.createModel(type, null, json.data)
+      const record = this.createModel(type, data.id, data)
+
       // Is this needed?
       this.data[type].cache[url] = []
       this.data[type].cache[url].push(record.id)
       this.data[type].records[record.id] = record
+
       return record
     } else {
       return response.status
     }
-  }
-
-  /**
-   * Determines if an individual record should be
-   * fetched or looked up in the store
-   *
-   * @method shouldFetchOne
-   * @param {String} type the type to find
-   * @param {String} id
-   * @param {Object} options
-   */
-  shouldFetchOne (type, id, { fromServer }) {
-    // If fromServer is true immediately return true
-    if (fromServer === true) return true
-    // Check if matching record is in store
-    // If fromServer is undefined and record is not found
-    // return true
-    return typeof fromServer === 'undefined' &&
-           !this.getRecord(type, id)
   }
 }
 

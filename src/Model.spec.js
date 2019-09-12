@@ -1,14 +1,12 @@
 /* global fetch */
-import {
-  autorun,
-  isObservable
-} from 'mobx'
+import { autorun, isObservable } from 'mobx'
 import moment from 'moment'
 
 import {
   attribute,
   relatedToOne,
   relatedToMany,
+  validates,
   Model,
   Store
 } from './main'
@@ -29,13 +27,51 @@ class Note extends Model {
   @relatedToOne todo
 }
 
+function validatesArray (property) {
+  return {
+    isValid: Array.isArray(property),
+    errors: [{
+      key: 'must_be_an_array',
+      message: 'must be an array'
+    }]
+  }
+}
+
+function validatesOptions (property, target) {
+  const errors = []
+
+  if (target.requiredOptions) {
+    target.requiredOptions.forEach(optionKey => {
+      if (!property[optionKey]) {
+        errors.push({
+          key: 'blank',
+          message: 'can\t be blank',
+          data: { optionKey }
+        })
+      }
+    })
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
 class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
+  @validates
   @attribute(String) title = 'NEW TODO'
+
   @attribute(Date) due_at = timestamp
+
+  @validates(validatesArray)
   @attribute(Array) tags
+
+  @validates(validatesOptions)
+  @attribute(Object) options = {}
 
   @relatedToMany(Note) meeting_notes
   @relatedToMany notes
@@ -127,6 +163,23 @@ describe('Model', () => {
       todo.tags.push('chore')
       expect(todo.tags).toHaveLength(1)
       expect(todo.tags[0]).toEqual('chore')
+    })
+
+    it('attributes are observable', (done) => {
+      const todo = new Todo({})
+
+      let runs = 0
+      const expected = [undefined, 'one', 'two']
+      autorun(() => {
+        expect(todo.options.test).toEqual(expected[runs])
+        runs++
+        if (runs === 2) {
+          done()
+        }
+      })
+
+      todo.options.test = 'one'
+      todo.options.test = 'two'
     })
 
     it('relatedToOne relationship can be set', () => {
@@ -231,7 +284,6 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-
     const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
@@ -275,24 +327,55 @@ describe('Model', () => {
     it('sets snapshot on initialization', async () => {
       const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.snapshot).toEqual({
-        due_at: new Date(timestamp),
+        due_at: moment(timestamp).toDate(),
         tags: [],
-        title: 'Buy Milk'
+        title: 'Buy Milk',
+        options: {}
       })
     })
   })
 
   describe('.jsonapi', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
-      const todo = new Todo({ id: '1', title: 'Buy Milk' })
-      expect(todo.jsonapi).toEqual({
+      const todo = new Todo({ id: 1, title: 'Buy Milk' })
+      expect(todo.jsonapi()).toEqual({
         data: {
           id: '1',
           type: 'todos',
           attributes: {
-            due_at: new Date(timestamp),
+            due_at: moment(timestamp).toISOString(),
             tags: [],
-            title: 'Buy Milk'
+            title: 'Buy Milk',
+            options: {}
+          }
+        }
+      })
+    })
+
+    it('relatedToMany models can be added', () => {
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+
+      todo.notes.add(note)
+
+      expect(todo.jsonapi({ relationships: ['notes'] })).toEqual({
+        data: {
+          id: '11',
+          type: 'todos',
+          attributes: {
+            due_at: moment(timestamp).toISOString(),
+            tags: [],
+            title: 'Buy Milk',
+            options: {}
+          },
+          relationships: {
+            notes: {
+              data: [{ id: '11', type: 'notes' }]
+            }
           }
         }
       })
@@ -312,6 +395,38 @@ describe('Model', () => {
     })
   })
 
+  describe('.validate', () => {
+    it('validates correct data formats', () => {
+      const todo = new Todo()
+      expect(todo.validate()).toBeTruthy()
+      expect(Object.keys(todo.errors)).toHaveLength(0)
+    })
+
+    it('uses default validation to check for presence', () => {
+      const todo = new Todo({ title: '' })
+      expect(todo.validate()).toBeFalsy()
+      expect(todo.errors.title[0].key).toEqual('blank')
+      expect(todo.errors.title[0].message).toEqual('can\'t be blank')
+    })
+
+    it('uses custom validation', () => {
+      const todo = new Todo({ tags: 'not an array' })
+      expect(todo.validate()).toBeFalsy()
+      expect(todo.errors.tags[0].key).toEqual('must_be_an_array')
+      expect(todo.errors.tags[0].message).toEqual('must be an array')
+    })
+
+    it('uses introspective custom validation', () => {
+      const todo = new Todo({ options: { foo: 'bar', baz: null } })
+
+      todo.requiredOptions = ['foo', 'baz']
+
+      expect(todo.validate()).toBeFalsy()
+      expect(todo.errors.options[0].key).toEqual('blank')
+      expect(todo.errors.options[0].data.optionKey).toEqual('baz')
+    })
+  })
+
   describe('.rollback', () => {
     it('rollback restores data to last persisted state ', async () => {
       const todo = new Todo({ title: 'Buy Milk' })
@@ -321,6 +436,22 @@ describe('Model', () => {
       todo.rollback()
       expect(todo.title).toEqual('Buy Milk')
       expect(todo.snapshot.title).toEqual('Buy Milk')
+    })
+
+    it('rollbacks to state after save', async () => {
+      // expect.assertions(9)
+      // Add record to store
+      const savedTitle = mockTodoData.data.attributes.title
+      const todo = store.add('todos', { title: savedTitle })
+      // Mock the API response
+      fetch.mockResponse(mockTodoResponse)
+      // Trigger the save function and subsequent request
+      await todo.save()
+      expect(todo.title).toEqual(savedTitle)
+      todo.title = 'Unsaved title'
+      expect(todo.title).toEqual('Unsaved title')
+      todo.rollback()
+      expect(todo.title).toEqual(savedTitle)
     })
   })
 
@@ -376,9 +507,10 @@ describe('Model', () => {
         data: {
           type: 'todos',
           attributes: {
-            due_at: new Date(timestamp).toISOString(),
+            due_at: moment(timestamp).toDate().toISOString(),
             tags: [],
-            title: 'Buy Milk'
+            title: 'Buy Milk',
+            options: {}
           }
         }
       })

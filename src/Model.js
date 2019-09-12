@@ -1,15 +1,50 @@
 import {
-  autorun,
+  computed,
   extendObservable,
   observable,
+  reaction,
   set,
   toJS,
   transaction
 } from 'mobx'
+
+import moment from 'moment'
 import { Serializer as JSONAPISerializer } from 'jsonapi-serializer'
 
 import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
+
+function isPresent (value) {
+  return value !== null && value !== undefined && value !== ''
+}
+
+/**
+ * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
+ * @method validatePresence
+ * @param value
+ */
+
+function validatePresence (value) {
+  return {
+    isValid: isPresent(value),
+    errors: [{
+      key: 'blank',
+      message: 'can\'t be blank'
+    }]
+  }
+}
+
+function stringifyIds (object) {
+  Object.keys(object).forEach(key => {
+    const property = object[key]
+    if (typeof property === 'object') {
+      if (property.id) {
+        property.id = String(property.id)
+      }
+      stringifyIds(property)
+    }
+  })
+}
 
 /**
  * Helper method for apply the correct defaults to attributes.
@@ -19,7 +54,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
-      return new DataType(value)
+      return moment(value).toDate()
     } else {
       return DataType(value)
     }
@@ -64,6 +99,45 @@ export function attribute (dataType = (obj) => obj) {
     }
   }
 }
+
+/**
+ * Defines validations for attributes that will be applied before saving. Takes one argument, a function to validate
+ * the attribute. The default validator is `presence`: not `null`, `undefined`, or `''`.
+ * ```
+ * function nonzero(value => value !== 0)
+ *
+ * class Todo extends Model {
+ *   `@validates`
+ *   `@attribute`(nonzero) numberOfAssignees
+ * }
+ * ```
+ * @method validates
+ */
+
+ export function validates (target, property) {
+   let validator = validatePresence
+
+   if (typeof target === 'function') {
+     validator = target
+
+     return function (target, property) {
+       const { type } = target.constructor
+
+       schema.addValidation({
+         property,
+         type,
+         validator
+       })
+     }
+   } else {
+     const { type } = target.constructor
+     schema.addValidation({
+       property,
+       type,
+       validator
+     })
+   }
+ }
 
 /**
  * Handles getting polymorphic records or only a specific
@@ -137,6 +211,7 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
 
   const { id } = referenceRecord
   const { type } = referenceRecord.constructor
+
   const data = relationships[relationType] && relationships[relationType].data
 
   if (!relatedRecord) {
@@ -176,6 +251,12 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
 export function relatedToMany (targetOrModelKlass, property, descriptor) {
   if (typeof targetOrModelKlass === 'function') {
     return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Array
+      })
+
       return {
         get () {
           const { type } = targetOrModelKlass
@@ -184,6 +265,12 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
       }
     }
   } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property,
+      dataType: Array
+    })
+
     return {
       get () {
         return getRelatedRecords(this, property)
@@ -201,6 +288,12 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
 export function relatedToOne (targetOrModelKlass, property, descriptor) {
   if (typeof targetOrModelKlass === 'function') {
     return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Object
+      })
+
       return {
         get () {
           const { type } = targetOrModelKlass
@@ -213,6 +306,11 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
       }
     }
   } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property,
+      dataType: Object
+    })
     return {
       get () {
         return getRelatedRecord(this, property)
@@ -262,10 +360,15 @@ class RelatedRecordsArray extends Array {
     const { relationships } = record
 
     if (!relationships[property]) {
-      relationships[property] = { data: [] }
+      relationships[property] = {}
     }
 
-    const alreadyThere = relationships[property].data.find((model) => model.id === id && model.type === type)
+    if (!relationships[property].data) {
+      relationships[property].data = []
+    }
+
+    const existingRelationships = relationships[property]
+    const alreadyThere = existingRelationships && existingRelationships.data.find((model) => model.id === id && model.type === type)
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
       this.push(relatedRecord)
@@ -291,10 +394,8 @@ class RelatedRecordsArray extends Array {
       const referenceIndexToRemove = relationships[property].data.findIndex((model) => model.id === id && model.type === type)
       relationships[property].data.splice(referenceIndexToRemove, 1)
 
-      let recordIndexToRemove = this.findIndex((model) => model.id === id && model.type === type)
-      if (recordIndexToRemove >= 0) {
-        this.splice(recordIndexToRemove, 1)
-      }
+      const recordIndexToRemove = this.findIndex((model) => model.id === id && model.type === type)
+      if (recordIndexToRemove > 0) this.splice(recordIndexToRemove, 1)
 
       if (!relationships[property].data.length) {
         delete relationships[property]
@@ -355,9 +456,9 @@ class Model {
    * @method constructor
    */
   constructor (initialAttributes = {}) {
-    this.makeObservable(initialAttributes)
-    this.setCurrentSnapShot()
-    this.trackState()
+    this._makeObservable(initialAttributes)
+    this.setPreviousSnapshot()
+    this._trackState()
   }
 
   /**
@@ -378,9 +479,12 @@ class Model {
   /**
    * True if the instance has been modified from its persisted state
    * ```
-   * kpi = store.find('kpis', 5)
+   * kpi = store.add('kpis', { name: 'A good thing to measure' })
+   * kpi.isDirty
+   * => true
    * kpi.name
    * => "A good thing to measure"
+   * await kpi.save()
    * kpi.isDirty
    * => false
    * kpi.name = "Another good thing to measure"
@@ -394,7 +498,34 @@ class Model {
    * @type {Boolean}
    * @default false
    */
-  @observable isDirty = false
+  @computed get isDirty () {
+    const { isNew, _isDirty } = this
+    return _isDirty || isNew
+  }
+  set isDirty (value) {
+    this._isDirty = value
+  }
+
+  /**
+   * Private method. True if the model has been programatically changed,
+   * as opposed to just being new.
+   * @property _isDirty
+   * @type {Boolean}
+   * @default false
+   * @private
+   */
+
+  @observable _isDirty = false
+
+  /**
+   * True if the model has not been sent to the store
+   * @property isNew
+   * @type {Boolean}
+   */
+  @computed get isNew () {
+    const { id } = this
+    return !!String(id).match(/tmp/)
+  }
 
   /**
    * True if the instance is coming from / going to the server
@@ -424,24 +555,7 @@ class Model {
    * @type {Object}
    * @default {}
    */
-  errors = {}
-
-  /**
-   * The current state of defined attributes and relationships of the instance
-   * ```
-   * todo = store.find('todos', 5)
-   * todo.title
-   * => "Buy the eggs"
-   * snapshot = todo.snapshot
-   * todo.title = "Buy the eggs and bacon"
-   * snapshot.title
-   * => "Buy the eggs and bacon"
-   * ```
-   * @property snapshot
-   * @type {Object}
-   * @default {}
-   */
-  snapshot = {}
+  @observable errors = {}
 
   /**
    * The previous state of defined attributes and relationships of the instance
@@ -466,10 +580,13 @@ class Model {
    * @method rollback
    */
   rollback () {
-    this.attributeNames.forEach((key) => {
-      this[key] = this.previousSnapshot[key]
+    transaction(() => {
+      this.attributeNames.forEach((key) => {
+        this[key] = this.previousSnapshot[key]
+      })
+      this.errors = {}
     })
-    this.setCurrentSnapShot()
+    this.setPreviousSnapshot()
   }
 
   /**
@@ -479,22 +596,61 @@ class Model {
    * @param {Object} options
    */
   save (options = {}) {
-   const { queryParams } = options
-   const { constructor, id } = this
+    this.errors = {}
+    if (!options.skip_validations && !this.validate()) {
+      const errorString = JSON.stringify(this.errors)
+      return Promise.reject(new Error(errorString))
+    }
 
-   let requestId = id
-   let method = 'PATCH'
+    const {
+      queryParams,
+      relationships,
+      attributes
+    } = options
 
-   if (String(id).match(/tmp/)) {
-     method = 'POST'
-     requestId = null
-   }
+    const { constructor, id, isNew } = this
 
-   const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
-   const body = JSON.stringify(this.jsonapi)
-   const response = this.store.fetch(url, { method, body })
+    let requestId = id
+    let method = 'PATCH'
 
-   return new ObjectPromiseProxy(response, this)
+    if (isNew) {
+      method = 'POST'
+      requestId = null
+    }
+
+    const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
+
+    const body = JSON.stringify(this.jsonapi(
+      { relationships, attributes }
+    ))
+
+    const response = this.store.fetch(url, { method, body })
+
+    return new ObjectPromiseProxy(response, this)
+  }
+
+  /**
+   * Checks all validations, adding errors where necessary and returning `false` if any are not valid
+   * @method validate
+   * @return {Boolean}
+   */
+
+  validate () {
+    const { attributeNames, attributeDefinitions } = this
+    const validationChecks = attributeNames.map((property) => {
+      const { validator } = attributeDefinitions[property]
+
+      if (!validator) return true
+
+      const validationResult = validator(this[property], this)
+
+      if (!validationResult.isValid) {
+        this.errors[property] = validationResult.errors
+      }
+
+      return validationResult.isValid
+    })
+    return validationChecks.every(value => value)
   }
 
   /**
@@ -502,17 +658,19 @@ class Model {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy () {
+  destroy (options = {}) {
     const {
-      constructor: { type }, id, snapshot
+      constructor: { type }, id, snapshot, isNew
     } = this
 
-    if (String(id).match(/tmp/)) {
+    if (isNew) {
       this.store.remove(type, id)
       return snapshot
     }
 
-    const url = this.store.fetchUrl(type, {}, id)
+    const { params = {}, skipRemove = false } = options
+
+    const url = this.store.fetchUrl(type, params, id)
     this.isInFlight = true
     const promise = this.store.fetch(url, { method: 'DELETE' })
     const _this = this
@@ -520,7 +678,29 @@ class Model {
       async function (response) {
         _this.isInFlight = false
         if (response.status === 202 || response.status === 204) {
-          _this.store.remove(type, id)
+          if (!skipRemove) {
+            _this.store.remove(type, id)
+          }
+
+          let json
+          try {
+            json = await response.json()
+            if (json.data && json.data.attributes) {
+              Object.keys(json.data.attributes).forEach(key => {
+                set(_this, key, json.data.attributes[key])
+              })
+            }
+          } catch (err) {
+            console.log(err)
+            // It is text, do you text handling here
+          }
+
+          // NOTE: If deleting a record changes other related model
+          // You can return then in the delete response
+          if (json && json.included) {
+            _this.store.createModelsFromData(json.included)
+          }
+
           return _this
         } else {
           _this.errors = { status: response.status }
@@ -542,10 +722,11 @@ class Model {
    * Magic method that makes changes to records
    * observable
    *
-   * @method makeObservable
+   * @method _makeObservable
    */
-  makeObservable (initialAttributes) {
+  _makeObservable (initialAttributes) {
      const { defaultAttributes } = this
+
      extendObservable(this, {
        ...defaultAttributes,
        ...initialAttributes
@@ -553,13 +734,23 @@ class Model {
    }
 
   /**
-   * Sets current snapshot to current attributes
-   *
-   * @method setCurrentSnapShot
+   * The current state of defined attributes and relationships of the instance
+   * Really just an alias for attributes
+   * ```
+   * todo = store.find('todos', 5)
+   * todo.title
+   * => "Buy the eggs"
+   * snapshot = todo.snapshot
+   * todo.title = "Buy the eggs and bacon"
+   * snapshot.title
+   * => "Buy the eggs and bacon"
+   * ```
+   * @method snapshot
+   * @return {Object} current attributes
    */
-  setCurrentSnapShot () {
-     this.snapshot = this.attributes
-   }
+  get snapshot () {
+    return this.attributes
+  }
 
   /**
    * Sets previous snapshot to current snapshot
@@ -573,21 +764,34 @@ class Model {
   /**
    * Uses mobx.autorun to track changes to attributes
    *
-   * @method trackState
+   * @method _trackState
    */
-  trackState () {
-    let firstAutorun = true
-    autorun(() => {
-      // `JSON.stringify` will touch all attributes
-      // ensuring they are automatically observed.
-      JSON.stringify(this.attributes)
-      if (!firstAutorun) {
-        this.setPreviousSnapshot()
-        this.setCurrentSnapShot()
+  _trackState () {
+    reaction(
+      () => JSON.stringify(this.attributes),
+      objectString => {
+        // console.log(objectString)
         this.isDirty = true
       }
-      firstAutorun = false
-    })
+    )
+
+    reaction(
+      () => JSON.stringify(this.relationships),
+      relString => {
+        // console.log(relString)
+        this.isDirty = true
+      }
+    )
+  }
+
+  /**
+   * shortcut to get the static
+   *
+   * @method type
+   * @return {String} current attributes
+  */
+  get type () {
+    return this.constructor.type
   }
 
   /**
@@ -620,6 +824,17 @@ class Model {
   }
 
   /**
+   * Getter find the relationship definitions for the model type.
+   *
+   * @method relationshipDefinitions
+   * @return {Object}
+   */
+  get relationshipDefinitions () {
+    const { type } = this.constructor
+    return schema.relations[type]
+  }
+
+  /**
    * Getter to check if the record has errors.
    *
    * @method hasErrors
@@ -627,6 +842,16 @@ class Model {
    */
   get hasErrors () {
     return Object.keys(this.errors).length > 0
+  }
+
+  /**
+   * Getter to check if the record has errors.
+   *
+   * @method hasErrors
+   * @return {Boolean}
+   */
+  errorForKey (key) {
+    return this.errors[key]
   }
 
   /**
@@ -651,7 +876,9 @@ class Model {
       const { defaultValue } = attributeDefinitions[key]
       defaults[key] = defaultValue
       return defaults
-    }, {})
+    }, {
+      relationships: {}
+    })
   }
 
   /**
@@ -661,40 +888,83 @@ class Model {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  get jsonapi () {
-    const {
+  jsonapi (options = {}) {
+    let {
+      attributeDefinitions,
       attributeNames,
+      attributes,
       id,
-      constructor: { type, requestAttributeNames }
+      // meta = {},
+      relationships,
+      type
     } = this
 
-    let filterNames = attributeNames
-    if (requestAttributeNames) {
-      filterNames = attributeNames.filter(name => {
-        return requestAttributeNames.includes(name)
-      })
+    let {
+      attributes: attributeNamesSubset,
+      relationships: relationshipNamesSubset
+    } = options
+
+    if (attributeNamesSubset) {
+      attributeNames = attributeNames.filter(name => attributeNamesSubset.includes(name))
     }
+
+    const attributeData = attributeNames.reduce((attrs, key) => {
+      const value = attributes[key]
+      if (value) {
+        const { dataType: DataType } = attributeDefinitions[key]
+
+        let attr
+
+        if (DataType.name === 'Array' || DataType.name === 'Object') {
+          attr = toJS(value)
+        } else if (DataType.name === 'Date') {
+          attr = moment(value).toISOString()
+        } else {
+          attr = DataType(value)
+        }
+
+        attrs[key] = attr
+      } else {
+        attrs[key] = value
+      }
+      return attrs
+    }, {})
+
+    let relationshipNames = Object.keys(relationships)
+
+    if (relationshipNamesSubset) {
+      relationshipNames = relationshipNames.filter(name => relationshipNamesSubset.includes(name))
+    }
+
+    const relationshipData = relationshipNames.reduce((rels, key) => {
+      rels[key] = toJS(relationships[key].data)
+      stringifyIds(rels[key])
+      return rels
+    }, {})
+
+    const relationshipSerializerConfigs = relationshipNames.reduce((relConfig, key) => {
+      relConfig[key] = { ref: 'id', included: false }
+      return relConfig
+    }, {})
 
     const ModelSerializer = new JSONAPISerializer(type, {
-      attributes: filterNames,
-      keyForAttribute: 'underscore_case'
+      attributes: [...attributeNames, ...relationshipNames],
+      keyForAttribute: 'underscore_case',
+      ...relationshipSerializerConfigs
     })
 
-    const data = this.attributes
-
-    if (!String(id).match(/tmp/)) {
-      data.id = id
+    if (String(id).match(/tmp/)) {
+      id = null
     }
 
-    return ModelSerializer.serialize(data)
+    return ModelSerializer.serialize({
+      id,
+      type,
+      ...attributeData,
+      ...relationshipData
+    })
   }
 
-  /**
-   * getter method to get data in api compliance format
-   * TODO: Figure out how to handle unpersisted ids
-   *
-   * @method updateAttributes
-   */
   updateAttributes (attributes) {
     transaction(() => {
       Object.keys(attributes).forEach(key => {

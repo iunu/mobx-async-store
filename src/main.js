@@ -3,7 +3,8 @@ import Store from './Store'
 import Model, {
   attribute,
   relatedToMany,
-  relatedToOne
+  relatedToOne,
+  validates
 } from './Model'
 
 export {
@@ -11,5 +12,6 @@ export {
   Model,
   relatedToMany,
   relatedToOne,
-  Store
+  Store,
+  validates
 }
