@@ -1,44 +1,69 @@
-import { transaction } from 'mobx'
+import { transaction, set } from 'mobx'
 
 function ObjectPromiseProxy (promise, target) {
+  const tmpId = target.id
+
   target.isInFlight = true
-  const result = promise.then(
+
+  const promiseProxy = promise.then(
     async function (response) {
-      if (response.status === 200 || response.status === 201) {
+      const { status } = response
+
+      if (status === 200 || status === 201) {
         const json = await response.json()
-        // Update target model
-        const { attributes, relationships } = json.data
+        const { data: { attributes, relationships }, included } = json
+
         transaction(() => {
           Object.keys(attributes).forEach(key => {
-            target[key] = attributes[key]
+            set(target, key, attributes[key])
           })
+
           if (relationships) {
             Object.keys(relationships).forEach(key => {
               if (!relationships[key].hasOwnProperty('meta')) {
-                target.relationships[key] = relationships[key]
+                // todo: throw error if relationship is not defined in model
+                set(target.relationships, key, relationships[key])
               }
             })
           }
-          if (json.included) {
-            target.store.createModelsFromData(json.included)
+
+          if (included) {
+            target.store.createModelsFromData(included)
           }
-          // Update target isInFlight
-          target.isInFlight = false
         })
+
+        // Update target isInFlight and isDirty
+        target.isInFlight = false
+        target.isDirty = false
+        target.setPreviousSnapshot()
+
+        transaction(() => {
+          // NOTE: This resolves an issue where a record is persisted but the
+          // index key is still a temp uuid. We can't simply remove the temp
+          // key because there may be associated records that have the temp
+          // uuid id as its only reference to the newly persisted record.
+          // TODO: Figure out a way to update associated records to use the
+          // newly persisted id.
+          target.store.data[target.type].records[tmpId] = target
+          target.store.data[target.type].records[target.id] = target
+        })
+
         return target
       } else {
+        // TODO: Handle unexpected status codes correctly
+        target.isInFlight = false
         target.errors = { status: response.status }
+
         return target
       }
     },
     function (error) {
-      // TODO: Handle error states correctly
       target.isInFlight = false
       target.errors = error
       throw error
-      // return target
     }
   )
+
   // Define proxied attributes
   const attributeNames = Object.keys(target.attributeNames)
   const tempProperties = attributeNames.reduce((attrs, key) => {
@@ -49,13 +74,12 @@ function ObjectPromiseProxy (promise, target) {
     return attrs
   }, {})
 
-  Object.defineProperties(result, {
+  Object.defineProperties(promiseProxy, {
     isInFlight: { value: target.isInFlight },
     ...tempProperties
   })
 
-  // Return promise
-  return result
+  return promiseProxy
 }
 
 export default ObjectPromiseProxy
