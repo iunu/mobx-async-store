@@ -7,7 +7,7 @@ import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
 import _createClass from '@babel/runtime/helpers/createClass';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
-import { transaction as transaction$1, set as set$1, computed, observable, extendObservable, reaction, toJS, action } from 'mobx';
+import { transaction, set, computed, observable, extendObservable, reaction, toJS, action } from 'mobx';
 import moment from 'moment';
 import { Serializer } from 'jsonapi-serializer';
 import _typeof from '@babel/runtime/helpers/typeof';
@@ -48,16 +48,16 @@ function ObjectPromiseProxy(promise, target) {
             case 4:
               json = _context.sent;
               _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships, included = json.included;
-              transaction$1(function () {
+              transaction(function () {
                 Object.keys(attributes).forEach(function (key) {
-                  set$1(target, key, attributes[key]);
+                  set(target, key, attributes[key]);
                 });
 
                 if (relationships) {
                   Object.keys(relationships).forEach(function (key) {
                     if (!relationships[key].hasOwnProperty('meta')) {
                       // todo: throw error if relationship is not defined in model
-                      set$1(target.relationships, key, relationships[key]);
+                      set(target.relationships, key, relationships[key]);
                     }
                   });
                 }
@@ -70,7 +70,7 @@ function ObjectPromiseProxy(promise, target) {
               target.isInFlight = false;
               target.isDirty = false;
               target.setPreviousSnapshot();
-              transaction$1(function () {
+              transaction(function () {
                 // NOTE: This resolves an issue where a record is persisted but the
                 // index key is still a temp uuid. We can't simply remove the temp
                 // key because there may be associated records that have the temp
@@ -342,7 +342,7 @@ function () {
     value: function rollback() {
       var _this2 = this;
 
-      transaction$1(function () {
+      transaction(function () {
         _this2.attributeNames.forEach(function (key) {
           _this2[key] = _this2.previousSnapshot[key];
         });
@@ -485,7 +485,7 @@ function () {
 
                   if (json.data && json.data.attributes) {
                     Object.keys(json.data.attributes).forEach(function (key) {
-                      set$1(_this, key, json.data.attributes[key]);
+                      set(_this, key, json.data.attributes[key]);
                     });
                   }
 
@@ -708,7 +708,7 @@ function () {
     value: function updateAttributes(attributes) {
       var _this5 = this;
 
-      transaction$1(function () {
+      transaction(function () {
         Object.keys(attributes).forEach(function (key) {
           _this5[key] = attributes[key];
         });
@@ -920,7 +920,7 @@ function () {
 
     this.addModels = function (type, data) {
       var records = [];
-      transaction$1(function () {
+      transaction(function () {
         records = data.map(function (obj) {
           return _this.addModel(type, obj);
         });
@@ -1342,8 +1342,8 @@ function () {
       if (record) {
         // Update existing object attributes
         Object.keys(attributes).forEach(function (key) {
-          set$1(record, key, attributes[key]);
-          set$1(_this4.data[type].records, id, record);
+          set(record, key, attributes[key]);
+          set(_this4.data[type].records, id, record);
         }); // If relationships are present, update relationships
 
         if (relationships) {
@@ -1351,8 +1351,8 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              set$1(record, 'relationships', _objectSpread({}, record.relationships, _defineProperty({}, key, relationships[key])));
-              set$1(_this4.data[type].records, id, record);
+              set(record, 'relationships', _objectSpread({}, record.relationships, _defineProperty({}, key, relationships[key])));
+              set(_this4.data[type].records, id, record);
             }
           });
         }
@@ -1379,7 +1379,7 @@ function () {
       var _this5 = this;
 
       var records = [];
-      transaction$1(function () {
+      transaction(function () {
         records = data.forEach(function (dataObject) {
           return _this5.createOrUpdateModel(dataObject);
         });
@@ -1482,7 +1482,7 @@ function () {
                 }
 
                 records = [];
-                transaction$1(function () {
+                transaction(function () {
                   records = json.data.map(function (dataObject) {
                     var id = dataObject.id,
                         _dataObject$attribute2 = dataObject.attributes,
@@ -1607,8 +1607,9 @@ function () {
   initializer: function initializer() {
     var _this7 = this;
 
-    return function (type, attributes) {
-      var id = dbOrNewId(attributes); // Create new model install
+    return function (type, data) {
+      var attributes = toJS(data);
+      var id = dbOrNewId(attributes);
 
       var model = _this7.createModel(type, id, {
         attributes: attributes
@@ -1732,19 +1733,9 @@ function attribute() {
       get: function get() {
         return defaultValue;
       },
-      set: function (_set) {
-        function set(_x) {
-          return _set.apply(this, arguments);
-        }
-
-        set.toString = function () {
-          return _set.toString();
-        };
-
-        return set;
-      }(function (value) {
+      set: function set$1(value) {
         set(target, property, value);
-      })
+      }
     };
   };
 }

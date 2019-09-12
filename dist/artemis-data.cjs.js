@@ -1613,8 +1613,9 @@ function () {
   initializer: function initializer() {
     var _this7 = this;
 
-    return function (type, attributes) {
-      var id = dbOrNewId(attributes); // Create new model install
+    return function (type, data) {
+      var attributes = mobx.toJS(data);
+      var id = dbOrNewId(attributes);
 
       var model = _this7.createModel(type, id, {
         attributes: attributes
@@ -1738,19 +1739,9 @@ function attribute() {
       get: function get() {
         return defaultValue;
       },
-      set: function (_set) {
-        function set(_x) {
-          return _set.apply(this, arguments);
-        }
-
-        set.toString = function () {
-          return _set.toString();
-        };
-
-        return set;
-      }(function (value) {
-        set(target, property, value);
-      })
+      set: function set(value) {
+        mobx.set(target, property, value);
+      }
     };
   };
 }
@@ -2094,7 +2085,7 @@ function (_Array) {
           property = _assertThisInitialize3.property;
 
       var relationships = record.relationships;
-      transaction(function () {
+      mobx.transaction(function () {
         relationships[property] = {
           data: []
         };

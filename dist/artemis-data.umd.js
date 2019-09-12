@@ -14311,11 +14311,11 @@
    * console.log(object.x[0].y.z);
    * // => 5
    */
-  function set$1(object, path, value) {
+  function set(object, path, value) {
     return object == null ? object : _baseSet(object, path, value);
   }
 
-  var set_1 = set$1;
+  var set_1 = set;
 
   var deserializerUtils = function (jsonapi, data, opts) {
     var alreadyIncluded = {};
@@ -16403,8 +16403,9 @@
     initializer: function initializer() {
       var _this7 = this;
 
-      return function (type, attributes) {
-        var id = dbOrNewId(attributes); // Create new model install
+      return function (type, data) {
+        var attributes = toJS$$1(data);
+        var id = dbOrNewId(attributes);
 
         var model = _this7.createModel(type, id, {
           attributes: attributes
@@ -16528,19 +16529,9 @@
         get: function get() {
           return defaultValue;
         },
-        set: function (_set) {
-          function set(_x) {
-            return _set.apply(this, arguments);
-          }
-
-          set.toString = function () {
-            return _set.toString();
-          };
-
-          return set;
-        }(function (value) {
-          set(target, property, value);
-        })
+        set: function set(value) {
+          set$$1(target, property, value);
+        }
       };
     };
   }
@@ -16999,7 +16990,7 @@
             property = _assertThisInitialize3.property;
 
         var relationships = record.relationships;
-        transaction(function () {
+        transaction$$1(function () {
           relationships[property] = {
             data: []
           };

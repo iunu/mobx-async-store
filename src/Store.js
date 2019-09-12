@@ -56,10 +56,9 @@ class Store {
    * @return {Object} Artemis Data record
    */
   @action
-  addModel = (type, attributes) => {
+  addModel = (type, data) => {
+    const attributes = toJS(data)
     const id = dbOrNewId(attributes)
-
-    // Create new model install
     const model = this.createModel(type, id, { attributes })
 
     // Add the model to the type records index
