@@ -285,6 +285,27 @@ describe('Model', () => {
     expect(todo.notes).toContain(note)
   })
 
+  it('relatedToMany doesn\'t blow up on empty iteration', () => {
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    expect(todo.notes).toHaveLength(0)
+    expect(todo.notes.map(note => note)).toHaveLength(0)
+  })
+
+  it('relatedToMany doesn\'t blow up after adding to empty array', () => {
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    expect(todo.notes).toHaveLength(0)
+    expect(todo.notes.map(note => note)).toHaveLength(0)
+
+    const note = store.add('notes', {
+      id: 10,
+      description: 'Example description'
+    })
+
+    todo.notes.add(note)
+
+    expect(todo.notes.map(note => note)).toHaveLength(1)
+  })
+
   it('relatedToMany models can be removed', () => {
     const note = store.add('notes', {
       id: 10,

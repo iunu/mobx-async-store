@@ -45,7 +45,7 @@ class Store {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
-      return this.addModel(type, toJS(data, { recurseEverything: true }))
+      return this.addModel(type, toJS(data))
     }
   }
 

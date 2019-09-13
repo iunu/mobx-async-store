@@ -198,7 +198,13 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
  */
 export class RelatedRecordsArray extends Array {
   constructor (array, record, property) {
-    super(...array)
+    // Invalid attempt to spread non-iterable instance
+    // https://github.com/babel/babel/issues/7258
+    if (!array || !array.length || array.length === 0) {
+      super()
+    } else {
+      super(...array)
+    }
 
     this.property = property
     this.record = record
