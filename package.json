@@ -1,13 +1,13 @@
 {
   "name": "artemis-data",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "module": "dist/artemis-data.esm.js",
   "browser": "dist/artemis-data.umd.js",
   "main": "dist/artemis-data.cjs.js",
   "dependencies": {
     "jquery-param": "^1.0.1",
     "jsonapi-serializer": "^3.6.4",
-    "mobx": "^5.9.4",
+    "mobx": "5.9.4",
     "react-native-uuid": "^1.4.9",
     "uuid": "^3.3.2"
   },

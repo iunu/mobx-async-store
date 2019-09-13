@@ -42,12 +42,10 @@ class Store {
    * @return {Object} the new record
    */
   add = (type, data) => {
-    const attributes = toJS(data, { recurseEverything: true })
-
     if (data.constructor.name === 'Array') {
-      return this.addModels(type, attributes)
+      return this.addModels(type, data)
     } else {
-      return this.addModel(type, attributes)
+      return this.addModel(type, toJS(data, { recurseEverything: true }))
     }
   }
 

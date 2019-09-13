@@ -15703,14 +15703,12 @@
       _initializerDefineProperty(this, "data", _descriptor$1, this);
 
       this.add = function (type, data) {
-        var attributes = toJS$$1(data, {
-          recurseEverything: true
-        });
-
         if (data.constructor.name === 'Array') {
-          return _this.addModels(type, attributes);
+          return _this.addModels(type, data);
         } else {
-          return _this.addModel(type, attributes);
+          return _this.addModel(type, toJS$$1(data, {
+            recurseEverything: true
+          }));
         }
       };
 
