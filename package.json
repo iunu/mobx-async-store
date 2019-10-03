@@ -49,7 +49,7 @@
     "build": "rollup -c",
     "watch": "rollup -c -w",
     "test": "jest --verbose",
-    "lint": "node_modules/.bin/eslint src"
+    "lint": "node_modules/.bin/eslint src spec"
   },
   "jest": {
     "automock": false,
