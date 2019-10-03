@@ -14,12 +14,12 @@ var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass')
 require('@babel/runtime/helpers/initializerWarningHelper');
 var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
 var mobx = require('mobx');
-var moment = _interopDefault(require('moment'));
 var jsonapiSerializer = require('jsonapi-serializer');
 var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
 var uuidv1 = _interopDefault(require('uuid/v1'));
 var jqueryParam = _interopDefault(require('jquery-param'));
 var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
+var moment = _interopDefault(require('moment'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
 var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
@@ -258,12 +258,12 @@ function () {
 
 var schema = new Schema();
 
-var _class, _descriptor, _descriptor2, _temp;
+var _class, _descriptor, _descriptor2, _class2, _temp;
 /**
  * @class Model
  */
 
-var Model = (_class = (_temp =
+var Model = (_class = (_temp = _class2 =
 /*#__PURE__*/
 function () {
   /**
@@ -296,36 +296,6 @@ function () {
    *
    * @property type
    * @static
-   */
-
-  /**
-   * The canonical path to the resource on the server. Defined on the class.
-   * Defaults to the underscored version of the class name
-   * @property endpoint
-   * @static
-   */
-
-  /**
-   * True if the instance has been modified from its persisted state
-   * ```
-   * kpi = store.add('kpis', { name: 'A good thing to measure' })
-   * kpi.isDirty
-   * => true
-   * kpi.name
-   * => "A good thing to measure"
-   * await kpi.save()
-   * kpi.isDirty
-   * => false
-   * kpi.name = "Another good thing to measure"
-   * kpi.isDirty
-   * => true
-   * await kpi.save()
-   * kpi.isDirty
-   * => false
-   * ```
-   * @property isDirty
-   * @type {Boolean}
-   * @default false
    */
 
 
@@ -643,7 +613,9 @@ function () {
           attributes = this.attributes,
           id = this.id,
           relationships = this.relationships,
-          type = this.type;
+          store = this.store,
+          type = this.type; // meta = {},
+
       var attributeNamesSubset = options.attributes,
           relationshipNamesSubset = options.relationships;
 
@@ -663,7 +635,7 @@ function () {
           if (DataType.name === 'Array' || DataType.name === 'Object') {
             attr = mobx.toJS(value);
           } else if (DataType.name === 'Date') {
-            attr = moment(value).toISOString();
+            attr = store.moment(value).toISOString();
           } else {
             attr = DataType(value);
           }
@@ -709,6 +681,13 @@ function () {
         type: type
       }, attributeData, relationshipData));
     }
+    /**
+     * helper method to update multiple attributes at the same time
+     *
+     * @method updateAttributes
+     * @param {Object} attributes
+     */
+
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
@@ -716,12 +695,35 @@ function () {
 
       mobx.transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          _this5[key] = attributes[key];
+          mobx.set(_this5, key, attributes[key]);
         });
       });
     }
   }, {
     key: "isDirty",
+
+    /**
+     * True if the instance has been modified from its persisted state
+     * ```
+     * kpi = store.add('kpis', { name: 'A good thing to measure' })
+     * kpi.isDirty
+     * => true
+     * kpi.name
+     * => "A good thing to measure"
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * kpi.name = "Another good thing to measure"
+     * kpi.isDirty
+     * => true
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * ```
+     * @property isDirty
+     * @type {Boolean}
+     * @default false
+     */
     get: function get() {
       var isNew = this.isNew,
           _isDirty = this._isDirty;
@@ -864,7 +866,7 @@ function () {
   }]);
 
   return Model;
-}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [mobx.observable], {
+}(), _class2.type = 'generic', _class2.endpoint = null, _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -911,6 +913,8 @@ function () {
     _classCallCheck(this, Store);
 
     _initializerDefineProperty(this, "data", _descriptor$1, this);
+
+    this.moment = moment;
 
     this.add = function (type, data) {
       if (data.constructor.name === 'Array') {
@@ -1557,7 +1561,7 @@ function () {
                 response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 17;
+                  _context2.next = 16;
                   break;
                 }
 
@@ -1567,22 +1571,20 @@ function () {
               case 7:
                 json = _context2.sent;
                 data = json.data, included = json.included;
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache[url] = [];
+                this.data[type].cache[url].push(record.id);
 
                 if (included) {
                   this.createModelsFromData(included);
                 }
 
-                record = this.createModel(type, data.id, data); // Is this needed?
-
-                this.data[type].cache[url] = [];
-                this.data[type].cache[url].push(record.id);
-                this.data[type].records[record.id] = record;
                 return _context2.abrupt("return", record);
 
-              case 17:
+              case 16:
                 return _context2.abrupt("return", response.status);
 
-              case 18:
+              case 17:
               case "end":
                 return _context2.stop();
             }

@@ -52,14 +52,16 @@ export default [
 			'@babel/runtime/helpers/initializerWarningHelper',
 			'@babel/runtime/helpers/objectSpread',
 			'@babel/runtime/helpers/possibleConstructorReturn',
+			'@babel/runtime/helpers/typeof',
 			'@babel/runtime/regenerator',
-      '@babel/runtime/helpers/assertThisInitialized',
-      '@babel/runtime/helpers/toConsumableArray',
-      '@babel/runtime/helpers/wrapNativeSuper',
 			'jquery-param',
 			'jsonapi-serializer',
 			'mobx',
-			'uuid/v1'
+			'moment',
+			'uuid/v1',
+      '@babel/runtime/helpers/assertThisInitialized',
+      '@babel/runtime/helpers/toConsumableArray',
+      '@babel/runtime/helpers/wrapNativeSuper'
 		],
 		output: [
 			{ file: pkg.main, format: 'cjs' },

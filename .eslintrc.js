@@ -1,8 +1,7 @@
 module.exports = {
   "parser": "babel-eslint",
   "extends": [
-    "standard",
-    "plugin:react/recommended"
+    "standard"
   ],
   "rules": {
     "camelcase": 0,
