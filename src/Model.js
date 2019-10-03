@@ -8,7 +8,6 @@ import {
   transaction
 } from 'mobx'
 
-import moment from 'moment'
 import { Serializer as JSONAPISerializer } from 'jsonapi-serializer'
 
 import ObjectPromiseProxy from './ObjectPromiseProxy'
@@ -37,6 +36,7 @@ class Model {
    * @property type
    * @static
    */
+  static type = 'generic'
 
   /**
    * The canonical path to the resource on the server. Defined on the class.
@@ -44,6 +44,7 @@ class Model {
    * @property endpoint
    * @static
    */
+  static endpoint = null
 
   /**
    * True if the instance has been modified from its persisted state
@@ -458,10 +459,12 @@ class Model {
       attributeNames,
       attributes,
       id,
-      // meta = {},
       relationships,
+      store,
       type
     } = this
+
+    // meta = {},
 
     let {
       attributes: attributeNamesSubset,
@@ -483,7 +486,7 @@ class Model {
         if (DataType.name === 'Array' || DataType.name === 'Object') {
           attr = toJS(value)
         } else if (DataType.name === 'Date') {
-          attr = moment(value).toISOString()
+          attr = store.moment(value).toISOString()
         } else {
           attr = DataType(value)
         }
@@ -531,10 +534,16 @@ class Model {
     })
   }
 
+  /**
+   * helper method to update multiple attributes at the same time
+   *
+   * @method updateAttributes
+   * @param {Object} attributes
+   */
   updateAttributes (attributes) {
     transaction(() => {
       Object.keys(attributes).forEach(key => {
-        this[key] = attributes[key]
+        set(this, key, attributes[key])
       })
     })
   }

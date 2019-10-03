@@ -364,7 +364,7 @@ describe('Model', () => {
 
   describe('.jsonapi', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
-      const todo = new Todo({ id: 1, title: 'Buy Milk' })
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
       expect(todo.jsonapi()).toEqual({
         data: {
           id: '1',

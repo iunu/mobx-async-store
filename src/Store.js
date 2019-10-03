@@ -1,4 +1,5 @@
 /* global fetch */
+import moment from 'moment'
 import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, newId, requestUrl, uniqueBy } from './utils'
 
@@ -18,6 +19,8 @@ class Store {
    * @default {}
    */
   @observable data = {}
+
+  moment = moment
 
   /**
    * Initializer for Store class
@@ -655,26 +658,20 @@ class Store {
    */
   async fetchOne (type, id, queryParams) {
     const url = this.fetchUrl(type, queryParams, id)
-
     // Trigger request
     const response = await this.fetch(url, { method: 'GET' })
-
     // Handle response
     if (response.status === 200) {
       const json = await response.json()
-
       const { data, included } = json
+      const record = this.createOrUpdateModel(data)
+
+      this.data[type].cache[url] = []
+      this.data[type].cache[url].push(record.id)
 
       if (included) {
         this.createModelsFromData(included)
       }
-
-      const record = this.createModel(type, data.id, data)
-
-      // Is this needed?
-      this.data[type].cache[url] = []
-      this.data[type].cache[url].push(record.id)
-      this.data[type].records[record.id] = record
 
       return record
     } else {
