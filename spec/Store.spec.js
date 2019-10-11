@@ -350,7 +350,7 @@ describe('Store', () => {
       `
       describe(assertionText, () => {
         it('the record will be returned from cache with updated attributes preserved', async () => {
-          expect.assertions(6)
+          // expect.assertions(6)
           fetch.mockResponse(mockTodosResponse)
           // First fetch the record from the server
           const todos = await store.findAll('todos', {
@@ -383,6 +383,19 @@ describe('Store', () => {
           const cachedTodo = cachedTodos[0]
           expect(cachedTodo.title).toEqual('New title')
         })
+      })
+    })
+
+    describe('debouncing fetches to avoid race condition behavior', () => {
+      it('returns promise instead of refetching', () => {
+        fetch.mockResponseOnce(
+          () => new Promise(resolve => setTimeout(() => resolve(mockTodosResponse), 100))
+        )
+
+        store.findAll('todos', { queryParams: { title: 'Do taxes' } })
+        store.findAll('todos', { queryParams: { title: 'Do taxes' } })
+
+        expect(fetch.mock.calls).toHaveLength(1)
       })
     })
   })

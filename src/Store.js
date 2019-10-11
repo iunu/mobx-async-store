@@ -20,6 +20,10 @@ class Store {
    */
   @observable data = {}
 
+  pendingPromises = {}
+
+  genericErrorMessage = 'Something went wrong.'
+
   moment = moment
 
   /**
@@ -345,9 +349,11 @@ class Store {
    * @param {Object} options
    */
   fetch (url, options = {}) {
-    const { defaultFetchOptions } = this
+    const { debouncePromise, defaultFetchOptions } = this
+    const fetchOptions = { ...defaultFetchOptions, ...options }
+    const key = JSON.stringify({ url, fetchOptions })
 
-    return fetch(url, { ...defaultFetchOptions, ...options })
+    return debouncePromise(key, () => fetch(url, fetchOptions))
   }
 
   /**
@@ -677,6 +683,29 @@ class Store {
     } else {
       return response.status
     }
+  }
+
+  /**
+   * Handles debouncing of promises. Resolves race conditions with multiple
+   * requests being made at the same time.
+   *
+   * @method debouncePromise
+   * @param {String} key the unique key for the promise
+   * @param {Function} fn the function the generates the promise
+   * @return {Promise}
+   */
+  debouncePromise = (key, fn) => {
+    const { pendingPromises } = this
+    // Return pending premise if it already exists
+    if (pendingPromises[key]) return pendingPromises[key]
+    // Otherwise call the method and on resolution
+    // clear out the pending promise for the key
+    pendingPromises[key] = fn.call().then(args => {
+      pendingPromises[key] = null
+      return args
+    })
+    // Return the promise
+    return pendingPromises[key]
   }
 }
 

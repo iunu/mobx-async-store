@@ -15704,6 +15704,8 @@
 
       _initializerDefineProperty(this, "data", _descriptor$1, this);
 
+      this.pendingPromises = {};
+      this.genericErrorMessage = 'Something went wrong.';
       this.moment = moment;
 
       this.add = function (type, data) {
@@ -15788,6 +15790,20 @@
           // Otherwise fetch it from the server
           return _this.fetchAll(type, queryParams);
         }
+      };
+
+      this.debouncePromise = function (key, fn) {
+        var pendingPromises = _this.pendingPromises; // Return pending premise if it already exists
+
+        if (pendingPromises[key]) return pendingPromises[key]; // Otherwise call the method and on resolution
+        // clear out the pending promise for the key
+
+        pendingPromises[key] = fn.call().then(function (args) {
+          pendingPromises[key] = null;
+          return args;
+        }); // Return the promise
+
+        return pendingPromises[key];
       };
 
       this.init(_options);
@@ -15922,8 +15938,18 @@
         return fetch;
       }(function (url) {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var defaultFetchOptions = this.defaultFetchOptions;
-        return fetch(url, _objectSpread({}, defaultFetchOptions, options));
+        var debouncePromise = this.debouncePromise,
+            defaultFetchOptions = this.defaultFetchOptions;
+
+        var fetchOptions = _objectSpread({}, defaultFetchOptions, options);
+
+        var key = JSON.stringify({
+          url: url,
+          fetchOptions: fetchOptions
+        });
+        return debouncePromise(key, function () {
+          return fetch(url, fetchOptions);
+        });
       })
       /**
        * Gets type of collection from data observable
@@ -16388,6 +16414,16 @@
 
         return fetchOne;
       }()
+      /**
+       * Handles debouncing of promises. Resolves race conditions with multiple
+       * requests being made at the same time.
+       *
+       * @method debouncePromise
+       * @param {String} key the unique key for the promise
+       * @param {Function} fn the function the generates the promise
+       * @return {Promise}
+       */
+
     }]);
 
     return Store;
