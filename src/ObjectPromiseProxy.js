@@ -1,23 +1,20 @@
 import { transaction, set } from 'mobx'
 
-function ObjectPromiseProxy (promise, target) {
-  const tmpId = target.id
-
+function ObjectPromiseProxy (requestFunc, target) {
+  const promise = requestFunc()
   target.isInFlight = true
-
-  const promiseProxy = promise.then(
+  const tmpId = target.id
+  const result = promise.then(
     async function (response) {
       const { status } = response
-
       if (status === 200 || status === 201) {
         const json = await response.json()
-        const { data: { attributes, relationships }, included } = json
-
+        // Update target model
+        const { attributes, relationships } = json.data
         transaction(() => {
           Object.keys(attributes).forEach(key => {
             set(target, key, attributes[key])
           })
-
           if (relationships) {
             Object.keys(relationships).forEach(key => {
               if (!relationships[key].hasOwnProperty('meta')) {
@@ -26,17 +23,14 @@ function ObjectPromiseProxy (promise, target) {
               }
             })
           }
-
-          if (included) {
-            target.store.createModelsFromData(included)
+          if (json.included) {
+            target.store.createModelsFromData(json.included)
           }
         })
-
         // Update target isInFlight and isDirty
         target.isInFlight = false
         target.isDirty = false
         target.setPreviousSnapshot()
-
         transaction(() => {
           // NOTE: This resolves an issue where a record is persisted but the
           // index key is still a temp uuid. We can't simply remove the temp
@@ -47,23 +41,38 @@ function ObjectPromiseProxy (promise, target) {
           target.store.data[target.type].records[tmpId] = target
           target.store.data[target.type].records[target.id] = target
         })
-
+        return target
+      } else if (response.status === 503 || response.status === 429) {
+        // TODO: Implement offline mode
         return target
       } else {
-        // TODO: Handle unexpected status codes correctly
         target.isInFlight = false
-        target.errors = { status: response.status }
+        let message = target.store.genericErrorMessage
+        try {
+          const json = await response.json()
+          message = parseApiErrors(json.errors, message)
+        } catch (error) {
+          // 500 doesn't return a parsable response
+        }
+        // TODO: add all errors from the API response to the target
+        target.errors = {
+          ...target.errors,
+          status: status,
+          base: [{ message: message }]
+        }
 
-        return target
+        const errorString = JSON.stringify(target.errors)
+        return Promise.reject(new Error(errorString))
       }
     },
     function (error) {
+      // TODO: Handle error states correctly
       target.isInFlight = false
       target.errors = error
       throw error
+      // return target
     }
   )
-
   // Define proxied attributes
   const attributeNames = Object.keys(target.attributeNames)
   const tempProperties = attributeNames.reduce((attrs, key) => {
@@ -74,12 +83,17 @@ function ObjectPromiseProxy (promise, target) {
     return attrs
   }, {})
 
-  Object.defineProperties(promiseProxy, {
+  Object.defineProperties(result, {
     isInFlight: { value: target.isInFlight },
     ...tempProperties
   })
 
-  return promiseProxy
+  // Return promise
+  return result
+}
+
+function parseApiErrors (errors, defaultMessage) {
+  return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
 }
 
 export default ObjectPromiseProxy
