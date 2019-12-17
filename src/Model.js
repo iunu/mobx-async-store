@@ -983,7 +983,7 @@ class Model {
   updateAttributes (attributes) {
     transaction(() => {
       Object.keys(attributes).forEach(key => {
-        this[key] = attributes[key]
+        set(this, key, attributes[key])
       })
     })
   }

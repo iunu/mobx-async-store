@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = global || self, factory(global.artemisData = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
   function _defineProperty(obj, key, value) {
     if (key in obj) {
@@ -17,61 +17,6 @@
     }
 
     return obj;
-  }
-
-  function _objectSpread(target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i] != null ? arguments[i] : {};
-      var ownKeys = Object.keys(source);
-
-      if (typeof Object.getOwnPropertySymbols === 'function') {
-        ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) {
-          return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-        }));
-      }
-
-      ownKeys.forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
-    }
-
-    return target;
-  }
-
-  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-    try {
-      var info = gen[key](arg);
-      var value = info.value;
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (info.done) {
-      resolve(value);
-    } else {
-      Promise.resolve(value).then(_next, _throw);
-    }
-  }
-
-  function _asyncToGenerator(fn) {
-    return function () {
-      var self = this,
-          args = arguments;
-      return new Promise(function (resolve, reject) {
-        var gen = fn.apply(self, args);
-
-        function _next(value) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-        }
-
-        function _throw(err) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-        }
-
-        _next(undefined);
-      });
-    };
   }
 
   function _initializerDefineProperty(target, property, descriptor, context) {
@@ -157,16 +102,14 @@
     }
   }
 
-  function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
-
   function _typeof(obj) {
-    if (typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol") {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
       _typeof = function _typeof(obj) {
-        return _typeof2(obj);
+        return typeof obj;
       };
     } else {
       _typeof = function _typeof(obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof2(obj);
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
       };
     }
 
@@ -452,9 +395,6 @@
   function isES6Map$$1(thing) {
       return thing instanceof Map;
   }
-  function isES6Set$$1(thing) {
-      return thing instanceof Set;
-  }
   function getMapLikeKeys$$1(map) {
       if (isPlainObject$$1(map))
           return Object.keys(map);
@@ -487,15 +427,11 @@
           this.lastAccessedBy = 0;
           this.lowestObserverState = IDerivationState.NOT_TRACKING;
       }
-      Atom$$1.prototype.onBecomeObserved = function () {
-          if (this.onBecomeObservedListeners) {
-              this.onBecomeObservedListeners.forEach(function (listener) { return listener(); });
-          }
-      };
       Atom$$1.prototype.onBecomeUnobserved = function () {
-          if (this.onBecomeUnobservedListeners) {
-              this.onBecomeUnobservedListeners.forEach(function (listener) { return listener(); });
-          }
+          // noop
+      };
+      Atom$$1.prototype.onBecomeObserved = function () {
+          /* noop */
       };
       /**
        * Invoke this method to notify mobx that your atom has been used somehow.
@@ -522,13 +458,8 @@
       if (onBecomeObservedHandler === void 0) { onBecomeObservedHandler = noop$$1; }
       if (onBecomeUnobservedHandler === void 0) { onBecomeUnobservedHandler = noop$$1; }
       var atom = new Atom$$1(name);
-      // default `noop` listener will not initialize the hook Set
-      if (onBecomeObservedHandler !== noop$$1) {
-          onBecomeObserved$$1(atom, onBecomeObservedHandler);
-      }
-      if (onBecomeUnobservedHandler !== noop$$1) {
-          onBecomeUnobserved$$1(atom, onBecomeUnobservedHandler);
-      }
+      onBecomeObserved$$1(atom, onBecomeObservedHandler);
+      onBecomeUnobserved$$1(atom, onBecomeUnobservedHandler);
       return atom;
   }
 
@@ -633,14 +564,12 @@
           return observable$$1.object(v, undefined, { name: name });
       if (isES6Map$$1(v))
           return observable$$1.map(v, { name: name });
-      if (isES6Set$$1(v))
-          return observable$$1.set(v, { name: name });
       return v;
   }
   function shallowEnhancer$$1(v, _, name) {
       if (v === undefined || v === null)
           return v;
-      if (isObservableObject$$1(v) || isObservableArray$$1(v) || isObservableMap$$1(v) || isObservableSet$$1(v))
+      if (isObservableObject$$1(v) || isObservableArray$$1(v) || isObservableMap$$1(v))
           return v;
       if (Array.isArray(v))
           return observable$$1.array(v, { name: name, deep: false });
@@ -648,10 +577,8 @@
           return observable$$1.object(v, undefined, { name: name, deep: false });
       if (isES6Map$$1(v))
           return observable$$1.map(v, { name: name, deep: false });
-      if (isES6Set$$1(v))
-          return observable$$1.set(v, { name: name, deep: false });
       return fail$$1(process.env.NODE_ENV !== "production" &&
-          "The shallow modifier / decorator can only used in combination with arrays, objects, maps and sets");
+          "The shallow modifier / decorator can only used in combination with arrays, objects and maps");
   }
   function referenceEnhancer$$1(newValue) {
       // never turn into an observable
@@ -703,7 +630,7 @@
   };
   Object.freeze(defaultCreateObservableOptions$$1);
   function assertValidOption(key) {
-      if (!/^(deep|name|equals|defaultDecorator|proxy)$/.test(key))
+      if (!/^(deep|name|defaultDecorator|proxy)$/.test(key))
           fail$$1("invalid option for (extend)observable: " + key);
   }
   function asCreateObservableOptions$$1(thing) {
@@ -748,9 +675,7 @@
               ? observable$$1.array(v, arg2)
               : isES6Map$$1(v)
                   ? observable$$1.map(v, arg2)
-                  : isES6Set$$1(v)
-                      ? observable$$1.set(v, arg2)
-                      : v;
+                  : v;
       // this value could be converted to a new observable data structure, return it
       if (res !== v)
           return res;
@@ -763,7 +688,7 @@
           if (arguments.length > 2)
               incorrectlyUsedAsDecorator("box");
           var o = asCreateObservableOptions$$1(options);
-          return new ObservableValue$$1(value, getEnhancerFromOptions(o), o.name, true, o.equals);
+          return new ObservableValue$$1(value, getEnhancerFromOptions(o), o.name);
       },
       array: function (initialValues, options) {
           if (arguments.length > 2)
@@ -776,12 +701,6 @@
               incorrectlyUsedAsDecorator("map");
           var o = asCreateObservableOptions$$1(options);
           return new ObservableMap$$1(initialValues, getEnhancerFromOptions(o), o.name);
-      },
-      set: function (initialValues, options) {
-          if (arguments.length > 2)
-              incorrectlyUsedAsDecorator("set");
-          var o = asCreateObservableOptions$$1(options);
-          return new ObservableSet$$1(initialValues, getEnhancerFromOptions(o), o.name);
       },
       object: function (props, decorators, options) {
           if (typeof arguments[1] === "string")
@@ -816,9 +735,8 @@
       var get$$1 = descriptor.get, set$$1 = descriptor.set; // initialValue is the descriptor for get / set props
       // Optimization: faster on decorator target or instance? Assuming target
       // Optimization: find out if declaring on instance isn't just faster. (also makes the property descriptor simpler). But, more memory usage..
-      // Forcing instance now, fixes hot reloadig issues on React Native:
       var options = decoratorArgs[0] || {};
-      asObservableObject$$1(instance).addComputedProp(instance, propertyName, __assign({ get: get$$1,
+      asObservableObject$$1(instance).addComputedProp(decoratorTarget, propertyName, __assign({ get: get$$1,
           set: set$$1, context: instance }, options));
   });
   var computedStructDecorator = computedDecorator$$1({ equals: comparer$$1.structural });
@@ -848,35 +766,25 @@
   };
   computed$$1.struct = computedStructDecorator;
 
-  function createAction$$1(actionName, fn, ref) {
+  function createAction$$1(actionName, fn) {
       if (process.env.NODE_ENV !== "production") {
           invariant$$1(typeof fn === "function", "`action` can only be invoked on functions");
           if (typeof actionName !== "string" || !actionName)
               fail$$1("actions should have valid names, got: '" + actionName + "'");
       }
       var res = function () {
-          return executeAction$$1(actionName, fn, ref || this, arguments);
+          return executeAction$$1(actionName, fn, this, arguments);
       };
       res.isMobxAction = true;
       return res;
   }
   function executeAction$$1(actionName, fn, scope, args) {
       var runInfo = startAction(actionName, fn, scope, args);
-      var shouldSupressReactionError = true;
       try {
-          var res = fn.apply(scope, args);
-          shouldSupressReactionError = false;
-          return res;
+          return fn.apply(scope, args);
       }
       finally {
-          if (shouldSupressReactionError) {
-              globalState$$1.suppressReactionErrors = shouldSupressReactionError;
-              endAction(runInfo);
-              globalState$$1.suppressReactionErrors = false;
-          }
-          else {
-              endAction(runInfo);
-          }
+          endAction(runInfo);
       }
   }
   function startAction(actionName, fn, scope, args) {
@@ -922,16 +830,14 @@
       globalState$$1.allowStateChanges = prev;
   }
 
+  var UNCHANGED$$1 = {};
   var ObservableValue$$1 = /** @class */ (function (_super) {
       __extends(ObservableValue$$1, _super);
-      function ObservableValue$$1(value, enhancer, name, notifySpy, equals) {
+      function ObservableValue$$1(value, enhancer, name, notifySpy) {
           if (name === void 0) { name = "ObservableValue@" + getNextId$$1(); }
           if (notifySpy === void 0) { notifySpy = true; }
-          if (equals === void 0) { equals = comparer$$1.default; }
           var _this = _super.call(this, name) || this;
           _this.enhancer = enhancer;
-          _this.name = name;
-          _this.equals = equals;
           _this.hasUnreportedChange = false;
           _this.value = enhancer(value, undefined, name);
           if (notifySpy && isSpyEnabled$$1() && process.env.NODE_ENV !== "production") {
@@ -948,7 +854,7 @@
       ObservableValue$$1.prototype.set = function (newValue) {
           var oldValue = this.value;
           newValue = this.prepareNewValue(newValue);
-          if (newValue !== globalState$$1.UNCHANGED) {
+          if (newValue !== UNCHANGED$$1) {
               var notifySpy = isSpyEnabled$$1();
               if (notifySpy && process.env.NODE_ENV !== "production") {
                   spyReportStart$$1({
@@ -972,12 +878,12 @@
                   newValue: newValue
               });
               if (!change)
-                  return globalState$$1.UNCHANGED;
+                  return UNCHANGED$$1;
               newValue = change.newValue;
           }
           // apply modifier
           newValue = this.enhancer(newValue, this.value, this.name);
-          return this.equals(this.value, newValue) ? globalState$$1.UNCHANGED : newValue;
+          return this.value !== newValue ? newValue : UNCHANGED$$1;
       };
       ObservableValue$$1.prototype.setNewValue = function (newValue) {
           var oldValue = this.value;
@@ -1074,6 +980,7 @@
           this.isComputing = false; // to check for cycles
           this.isRunningSetter = false;
           this.isTracing = TraceMode$$1.NONE;
+          this.firstGet = true;
           if (process.env.NODE_ENV !== "production" && !options.get)
               throw "[mobx] missing option for computed: get";
           this.derivation = options.get;
@@ -1092,24 +999,21 @@
       ComputedValue$$1.prototype.onBecomeStale = function () {
           propagateMaybeChanged$$1(this);
       };
-      ComputedValue$$1.prototype.onBecomeObserved = function () {
-          if (this.onBecomeObservedListeners) {
-              this.onBecomeObservedListeners.forEach(function (listener) { return listener(); });
-          }
-      };
-      ComputedValue$$1.prototype.onBecomeUnobserved = function () {
-          if (this.onBecomeUnobservedListeners) {
-              this.onBecomeUnobservedListeners.forEach(function (listener) { return listener(); });
-          }
-      };
+      ComputedValue$$1.prototype.onBecomeUnobserved = function () { };
+      ComputedValue$$1.prototype.onBecomeObserved = function () { };
       /**
        * Returns the current value of this computed value.
        * Will evaluate its computation first if needed.
        */
       ComputedValue$$1.prototype.get = function () {
+          var _this = this;
+          if (this.keepAlive && this.firstGet) {
+              this.firstGet = false;
+              autorun$$1(function () { return _this.get(); });
+          }
           if (this.isComputing)
               fail$$1("Cycle detected in computation " + this.name + ": " + this.derivation);
-          if (globalState$$1.inBatch === 0 && this.observers.size === 0 && !this.keepAlive) {
+          if (globalState$$1.inBatch === 0 && this.observers.size === 0) {
               if (shouldCompute$$1(this)) {
                   this.warnAboutUntrackedRead();
                   startBatch$$1(); // See perf test 'computed memoization'
@@ -1195,10 +1099,8 @@
           return res;
       };
       ComputedValue$$1.prototype.suspend = function () {
-          if (!this.keepAlive) {
-              clearObserving$$1(this);
-              this.value = undefined; // don't hold on to computed value!
-          }
+          clearObserving$$1(this);
+          this.value = undefined; // don't hold on to computed value!
       };
       ComputedValue$$1.prototype.observe = function (listener, fireImmediately) {
           var _this = this;
@@ -1490,10 +1392,6 @@
            */
           this.version = 5;
           /**
-           * globally unique token to signal unchanged
-           */
-          this.UNCHANGED = {};
-          /**
            * Currently running derivation
            */
           this.trackingDerivation = null;
@@ -1555,11 +1453,6 @@
            * the stack when an exception occurs while debugging.
            */
           this.disableErrorBoundaries = false;
-          /*
-           * If true, we are already handling an exception in an action. Any errors in reactions should be supressed, as
-           * they are not the cause, see: https://github.com/mobxjs/mobx/issues/1836
-           */
-          this.suppressReactionErrors = false;
       }
       return MobXGlobals$$1;
   }());
@@ -1581,8 +1474,6 @@
       }
       else if (global.__mobxGlobals) {
           global.__mobxInstanceCount += 1;
-          if (!global.__mobxGlobals.UNCHANGED)
-              global.__mobxGlobals.UNCHANGED = {}; // make merge backward compatible
           return global.__mobxGlobals;
       }
       else {
@@ -1771,7 +1662,7 @@
           var lines = [];
           printDepTree(getDependencyTree$$1(derivation), lines, 1);
           // prettier-ignore
-          new Function("debugger;\n/*\nTracing '" + derivation.name + "'\n\nYou are entering this break point because derivation '" + derivation.name + "' is being traced and '" + observable$$1.name + "' is now forcing it to update.\nJust follow the stacktrace you should now see in the devtools to see precisely what piece of your code is causing this update\nThe stackframe you are looking for is at least ~6-8 stack-frames up.\n\n" + (derivation instanceof ComputedValue$$1 ? derivation.derivation.toString().replace(/[*]\//g, "/") : "") + "\n\nThe dependencies for this derivation are:\n\n" + lines.join("\n") + "\n*/\n    ")();
+          new Function("debugger;\n/*\nTracing '" + derivation.name + "'\n\nYou are entering this break point because derivation '" + derivation.name + "' is being traced and '" + observable$$1.name + "' is now forcing it to update.\nJust follow the stacktrace you should now see in the devtools to see precisely what piece of your code is causing this update\nThe stackframe you are looking for is at least ~6-8 stack-frames up.\n\n" + (derivation instanceof ComputedValue$$1 ? derivation.derivation.toString() : "") + "\n\nThe dependencies for this derivation are:\n\n" + lines.join("\n") + "\n*/\n    ")();
       }
   }
   function printDepTree(tree, lines, depth) {
@@ -1845,9 +1736,6 @@
           }
       };
       Reaction$$1.prototype.track = function (fn) {
-          if (this.isDisposed) {
-              fail$$1("Reaction already disposed");
-          }
           startBatch$$1();
           var notify = isSpyEnabled$$1();
           var startTime;
@@ -1883,14 +1771,9 @@
           }
           if (globalState$$1.disableErrorBoundaries)
               throw error;
-          var message = "[mobx] Encountered an uncaught exception that was thrown by a reaction or observer component, in: '" + this + "'";
-          if (globalState$$1.suppressReactionErrors) {
-              console.warn("[mobx] (error in reaction '" + this.name + "' suppressed, fix error of causing action below)"); // prettier-ignore
-          }
-          else {
-              console.error(message, error);
-              /** If debugging brought you here, please, read the above message :-). Tnx! */
-          }
+          var message = "[mobx] Encountered an uncaught exception that was thrown by a reaction or observer component, in: '" + this;
+          console.error(message, error);
+          /** If debugging brought you here, please, read the above message :-). Tnx! */
           if (isSpyEnabled$$1()) {
               spyReport$$1({
                   type: "error",
@@ -2096,7 +1979,7 @@
       // @action fn() {}
       if (arg4 === true) {
           // apply to instance immediately
-          addHiddenProp$$1(arg1, arg2, createAction$$1(arg1.name || arg2, arg3.value, this));
+          addHiddenProp$$1(arg1, arg2, createAction$$1(arg1.name || arg2, arg3.value));
       }
       else {
           return namedActionDecorator$$1(arg2).apply(null, arguments);
@@ -2225,24 +2108,15 @@
   function interceptHook(hook, thing, arg2, arg3) {
       var atom = typeof arg2 === "string" ? getAtom$$1(thing, arg2) : getAtom$$1(thing);
       var cb = typeof arg2 === "string" ? arg3 : arg2;
-      var listenersKey = hook + "Listeners";
-      if (atom[listenersKey]) {
-          atom[listenersKey].add(cb);
-      }
-      else {
-          atom[listenersKey] = new Set([cb]);
-      }
       var orig = atom[hook];
       if (typeof orig !== "function")
           return fail$$1(process.env.NODE_ENV !== "production" && "Not an atom that can be (un)observed");
+      atom[hook] = function () {
+          orig.call(this);
+          cb.call(this);
+      };
       return function () {
-          var hookListeners = atom[listenersKey];
-          if (hookListeners) {
-              hookListeners.delete(cb);
-              if (hookListeners.size === 0) {
-                  delete atom[listenersKey];
-              }
-          }
+          atom[hook] = orig;
       };
   }
 
@@ -2364,14 +2238,11 @@
       if (isObservableMap$$1(obj)) {
           return Array.from(obj.keys());
       }
-      if (isObservableSet$$1(obj)) {
-          return Array.from(obj.keys());
-      }
       if (isObservableArray$$1(obj)) {
           return obj.map(function (_, index) { return index; });
       }
       return fail$$1(process.env.NODE_ENV !== "production" &&
-          "'keys()' can only be used on observable objects, arrays, sets and maps");
+          "'keys()' can only be used on observable objects, arrays and maps");
   }
   function set$$1(obj, key, value) {
       if (arguments.length === 2) {
@@ -2417,8 +2288,7 @@
 
   var defaultOptions = {
       detectCycles: true,
-      exportMapsAsObjects: true,
-      recurseEverything: false
+      exportMapsAsObjects: true
   };
   function cache(map, key, value, options) {
       if (options.detectCycles)
@@ -2426,84 +2296,62 @@
       return value;
   }
   function toJSHelper(source, options, __alreadySeen) {
-      if (!options.recurseEverything && !isObservable$$1(source))
+      if (!isObservable$$1(source))
           return source;
-      if (typeof source !== "object")
-          return source;
-      // Directly return null if source is null
-      if (source === null)
-          return null;
-      // Directly return the Date object itself if contained in the observable
-      if (source instanceof Date)
-          return source;
-      if (isObservableValue$$1(source))
-          return toJSHelper(source.get(), options, __alreadySeen);
-      // make sure we track the keys of the object
-      if (isObservable$$1(source))
-          keys$$1(source);
       var detectCycles = options.detectCycles === true;
-      if (detectCycles && source !== null && __alreadySeen.has(source)) {
+      if (detectCycles &&
+          source !== null &&
+          typeof source === "object" &&
+          __alreadySeen.has(source)) {
           return __alreadySeen.get(source);
       }
-      if (isObservableArray$$1(source) || Array.isArray(source)) {
-          var res_1 = cache(__alreadySeen, source, [], options);
+      if (isObservableArray$$1(source)) {
+          var res = cache(__alreadySeen, source, [], options);
           var toAdd = source.map(function (value) { return toJSHelper(value, options, __alreadySeen); });
-          res_1.length = toAdd.length;
+          res.length = toAdd.length;
           for (var i = 0, l = toAdd.length; i < l; i++)
-              res_1[i] = toAdd[i];
-          return res_1;
+              res[i] = toAdd[i];
+          return res;
       }
-      if (isObservableSet$$1(source) || Object.getPrototypeOf(source) === Set.prototype) {
+      if (isObservableObject$$1(source)) {
+          var res = cache(__alreadySeen, source, {}, options);
+          keys$$1(source); // make sure we track the keys of the object
+          for (var key in source) {
+              res[key] = toJSHelper(source[key], options, __alreadySeen);
+          }
+          return res;
+      }
+      if (isObservableMap$$1(source)) {
           if (options.exportMapsAsObjects === false) {
-              var res_2 = cache(__alreadySeen, source, new Set(), options);
-              source.forEach(function (value) {
-                  res_2.add(toJSHelper(value, options, __alreadySeen));
+              var res_1 = cache(__alreadySeen, source, new Map(), options);
+              source.forEach(function (value, key) {
+                  res_1.set(key, toJSHelper(value, options, __alreadySeen));
+              });
+              return res_1;
+          }
+          else {
+              var res_2 = cache(__alreadySeen, source, {}, options);
+              source.forEach(function (value, key) {
+                  res_2[key] = toJSHelper(value, options, __alreadySeen);
               });
               return res_2;
           }
-          else {
-              var res_3 = cache(__alreadySeen, source, [], options);
-              source.forEach(function (value) {
-                  res_3.push(toJSHelper(value, options, __alreadySeen));
-              });
-              return res_3;
-          }
       }
-      if (isObservableMap$$1(source) || Object.getPrototypeOf(source) === Map.prototype) {
-          if (options.exportMapsAsObjects === false) {
-              var res_4 = cache(__alreadySeen, source, new Map(), options);
-              source.forEach(function (value, key) {
-                  res_4.set(key, toJSHelper(value, options, __alreadySeen));
-              });
-              return res_4;
-          }
-          else {
-              var res_5 = cache(__alreadySeen, source, {}, options);
-              source.forEach(function (value, key) {
-                  res_5[key] = toJSHelper(value, options, __alreadySeen);
-              });
-              return res_5;
-          }
-      }
-      // Fallback to the situation that source is an ObservableObject or a plain object
-      var res = cache(__alreadySeen, source, {}, options);
-      for (var key in source) {
-          res[key] = toJSHelper(source[key], options, __alreadySeen);
-      }
-      return res;
+      if (isObservableValue$$1(source))
+          return toJSHelper(source.get(), options, __alreadySeen);
+      return source;
   }
   function toJS$$1(source, options) {
+      if (!isObservable$$1(source))
+          return source;
       // backward compatibility
       if (typeof options === "boolean")
           options = { detectCycles: options };
       if (!options)
           options = defaultOptions;
-      options.detectCycles =
-          options.detectCycles === undefined
-              ? options.recurseEverything === true
-              : options.detectCycles === true;
+      var detectCycles = options.detectCycles === true;
       var __alreadySeen;
-      if (options.detectCycles)
+      if (detectCycles)
           __alreadySeen = new Map();
       return toJSHelper(source, options, __alreadySeen);
   }
@@ -2577,16 +2425,8 @@
               return target[name];
           var adm = getAdm(target);
           var observable$$1 = adm.values.get(name);
-          if (observable$$1 instanceof Atom$$1) {
-              var result = observable$$1.get();
-              if (result === undefined) {
-                  // This fixes #1796, because deleting a prop that has an
-                  // undefined value won't retrigger a observer (no visible effect),
-                  // the autorun wouldn't subscribe to future key changes (see also next comment)
-                  adm.has(name);
-              }
-              return result;
-          }
+          if (observable$$1 instanceof Atom$$1)
+              return observable$$1.get();
           // make sure we start listening to future keys
           // note that we only do this here for optimization
           if (typeof name === "string")
@@ -2743,7 +2583,7 @@
           return value;
       };
       ObservableArrayAdministration.prototype.dehanceValues = function (values$$1) {
-          if (this.dehancer !== undefined && values$$1.length > 0)
+          if (this.dehancer !== undefined && this.values.length > 0)
               return values$$1.map(this.dehancer);
           return values$$1;
       };
@@ -3164,7 +3004,7 @@
               entry.setNewValue(value);
           }
           else {
-              entry = new ObservableValue$$1(value, referenceEnhancer$$1, this.name + "." + stringifyKey(key) + "?", false);
+              entry = new ObservableValue$$1(value, referenceEnhancer$$1, this.name + "." + key + "?", false);
               this._hasMap.set(key, entry);
           }
           return entry;
@@ -3172,7 +3012,7 @@
       ObservableMap$$1.prototype._updateValue = function (key, newValue) {
           var observable$$1 = this._data.get(key);
           newValue = observable$$1.prepareNewValue(newValue);
-          if (newValue !== globalState$$1.UNCHANGED) {
+          if (newValue !== UNCHANGED$$1) {
               var notifySpy = isSpyEnabled$$1();
               var notify = hasListeners$$1(this);
               var change = notify || notifySpy
@@ -3197,7 +3037,7 @@
           var _this = this;
           checkIfStateModificationsAreAllowed$$1(this._keysAtom);
           transaction$$1(function () {
-              var observable$$1 = new ObservableValue$$1(newValue, _this.enhancer, _this.name + "." + stringifyKey(key), false);
+              var observable$$1 = new ObservableValue$$1(newValue, _this.enhancer, _this.name + "." + key, false);
               _this._data.set(key, observable$$1);
               newValue = observable$$1.value; // value might have been changed
               _this._updateHasMapEntry(key, true);
@@ -3297,11 +3137,8 @@
                       var _b = __read(_a, 2), key = _b[0], value = _b[1];
                       return _this.set(key, value);
                   });
-              else if (isES6Map$$1(other)) {
-                  if (other.constructor !== Map)
-                      fail$$1("Cannot initialize from classes that inherit from Map: " + other.constructor.name); // prettier-ignore
+              else if (isES6Map$$1(other))
                   other.forEach(function (value, key) { return _this.set(key, value); });
-              }
               else if (other !== null && other !== undefined)
                   fail$$1("Cannot initialize map from " + other);
           });
@@ -3361,8 +3198,7 @@
           try {
               for (var _b = __values(this), _c = _b.next(); !_c.done; _c = _b.next()) {
                   var _d = __read(_c.value, 2), key = _d[0], value = _d[1];
-                  // We lie about symbol key types due to https://github.com/Microsoft/TypeScript/issues/1863
-                  res[typeof key === "symbol" ? key : stringifyKey(key)] = value;
+                  res["" + key] = value;
               }
           }
           catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -3390,7 +3226,7 @@
           return (this.name +
               "[{ " +
               Array.from(this.keys())
-                  .map(function (key) { return stringifyKey(key) + ": " + ("" + _this.get(key)); })
+                  .map(function (key) { return key + ": " + ("" + _this.get(key)); })
                   .join(", ") +
               " }]");
       };
@@ -3409,232 +3245,8 @@
       };
       return ObservableMap$$1;
   }());
-  function stringifyKey(key) {
-      if (key && key.toString)
-          return key.toString();
-      else
-          return new String(key).toString();
-  }
   /* 'var' fixes small-build issue */
   var isObservableMap$$1 = createInstanceofPredicate$$1("ObservableMap", ObservableMap$$1);
-
-  var _a$1;
-  var ObservableSetMarker = {};
-  var ObservableSet$$1 = /** @class */ (function () {
-      function ObservableSet$$1(initialData, enhancer, name) {
-          if (enhancer === void 0) { enhancer = deepEnhancer$$1; }
-          if (name === void 0) { name = "ObservableSet@" + getNextId$$1(); }
-          this.name = name;
-          this[_a$1] = ObservableSetMarker;
-          this._data = new Set();
-          this._atom = createAtom$$1(this.name);
-          this[Symbol.toStringTag] = "Set";
-          if (typeof Set !== "function") {
-              throw new Error("mobx.set requires Set polyfill for the current browser. Check babel-polyfill or core-js/es6/set.js");
-          }
-          this.enhancer = function (newV, oldV) { return enhancer(newV, oldV, name); };
-          if (initialData) {
-              this.replace(initialData);
-          }
-      }
-      ObservableSet$$1.prototype.dehanceValue = function (value) {
-          if (this.dehancer !== undefined) {
-              return this.dehancer(value);
-          }
-          return value;
-      };
-      ObservableSet$$1.prototype.clear = function () {
-          var _this = this;
-          transaction$$1(function () {
-              untracked$$1(function () {
-                  var e_1, _a;
-                  try {
-                      for (var _b = __values(_this._data.values()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                          var value = _c.value;
-                          _this.delete(value);
-                      }
-                  }
-                  catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                  finally {
-                      try {
-                          if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-                      }
-                      finally { if (e_1) throw e_1.error; }
-                  }
-              });
-          });
-      };
-      ObservableSet$$1.prototype.forEach = function (callbackFn, thisArg) {
-          var e_2, _a;
-          try {
-              for (var _b = __values(this), _c = _b.next(); !_c.done; _c = _b.next()) {
-                  var value = _c.value;
-                  callbackFn.call(thisArg, value, value, this);
-              }
-          }
-          catch (e_2_1) { e_2 = { error: e_2_1 }; }
-          finally {
-              try {
-                  if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-              }
-              finally { if (e_2) throw e_2.error; }
-          }
-      };
-      Object.defineProperty(ObservableSet$$1.prototype, "size", {
-          get: function () {
-              this._atom.reportObserved();
-              return this._data.size;
-          },
-          enumerable: true,
-          configurable: true
-      });
-      ObservableSet$$1.prototype.add = function (value) {
-          var _this = this;
-          checkIfStateModificationsAreAllowed$$1(this._atom);
-          if (hasInterceptors$$1(this)) {
-              var change = interceptChange$$1(this, {
-                  type: "add",
-                  object: this,
-                  newValue: value
-              });
-              if (!change)
-                  return this;
-              // TODO: ideally, value = change.value would be done here, so that values can be
-              // changed by interceptor. Same applies for other Set and Map api's.
-          }
-          if (!this.has(value)) {
-              transaction$$1(function () {
-                  _this._data.add(_this.enhancer(value, undefined));
-                  _this._atom.reportChanged();
-              });
-              var notifySpy = isSpyEnabled$$1();
-              var notify = hasListeners$$1(this);
-              var change = notify || notifySpy
-                  ? {
-                      type: "add",
-                      object: this,
-                      newValue: value
-                  }
-                  : null;
-              if (notifySpy && process.env.NODE_ENV !== "production")
-                  spyReportStart$$1(change);
-              if (notify)
-                  notifyListeners$$1(this, change);
-              if (notifySpy && process.env.NODE_ENV !== "production")
-                  spyReportEnd$$1();
-          }
-          return this;
-      };
-      ObservableSet$$1.prototype.delete = function (value) {
-          var _this = this;
-          if (hasInterceptors$$1(this)) {
-              var change = interceptChange$$1(this, {
-                  type: "delete",
-                  object: this,
-                  oldValue: value
-              });
-              if (!change)
-                  return false;
-          }
-          if (this.has(value)) {
-              var notifySpy = isSpyEnabled$$1();
-              var notify = hasListeners$$1(this);
-              var change = notify || notifySpy
-                  ? {
-                      type: "delete",
-                      object: this,
-                      oldValue: value
-                  }
-                  : null;
-              if (notifySpy && process.env.NODE_ENV !== "production")
-                  spyReportStart$$1(__assign({}, change, { name: this.name }));
-              transaction$$1(function () {
-                  _this._atom.reportChanged();
-                  _this._data.delete(value);
-              });
-              if (notify)
-                  notifyListeners$$1(this, change);
-              if (notifySpy && process.env.NODE_ENV !== "production")
-                  spyReportEnd$$1();
-              return true;
-          }
-          return false;
-      };
-      ObservableSet$$1.prototype.has = function (value) {
-          this._atom.reportObserved();
-          return this._data.has(this.dehanceValue(value));
-      };
-      ObservableSet$$1.prototype.entries = function () {
-          var nextIndex = 0;
-          var keys$$1 = Array.from(this.keys());
-          var values$$1 = Array.from(this.values());
-          return makeIterable({
-              next: function () {
-                  var index = nextIndex;
-                  nextIndex += 1;
-                  return index < values$$1.length
-                      ? { value: [keys$$1[index], values$$1[index]], done: false }
-                      : { done: true };
-              }
-          });
-      };
-      ObservableSet$$1.prototype.keys = function () {
-          return this.values();
-      };
-      ObservableSet$$1.prototype.values = function () {
-          this._atom.reportObserved();
-          var self = this;
-          var nextIndex = 0;
-          var observableValues = Array.from(this._data.values());
-          return makeIterable({
-              next: function () {
-                  return nextIndex < observableValues.length
-                      ? { value: self.dehanceValue(observableValues[nextIndex++]), done: false }
-                      : { done: true };
-              }
-          });
-      };
-      ObservableSet$$1.prototype.replace = function (other) {
-          var _this = this;
-          if (isObservableSet$$1(other)) {
-              other = other.toJS();
-          }
-          transaction$$1(function () {
-              if (Array.isArray(other)) {
-                  _this.clear();
-                  other.forEach(function (value) { return _this.add(value); });
-              }
-              else if (isES6Set$$1(other)) {
-                  _this.clear();
-                  other.forEach(function (value) { return _this.add(value); });
-              }
-              else if (other !== null && other !== undefined) {
-                  fail$$1("Cannot initialize set from " + other);
-              }
-          });
-          return this;
-      };
-      ObservableSet$$1.prototype.observe = function (listener, fireImmediately) {
-          // TODO 'fireImmediately' can be true?
-          process.env.NODE_ENV !== "production" &&
-              invariant$$1(fireImmediately !== true, "`observe` doesn't support fireImmediately=true in combination with sets.");
-          return registerListener$$1(this, listener);
-      };
-      ObservableSet$$1.prototype.intercept = function (handler) {
-          return registerInterceptor$$1(this, handler);
-      };
-      ObservableSet$$1.prototype.toJS = function () {
-          return new Set(this);
-      };
-      ObservableSet$$1.prototype.toString = function () {
-          return this.name + "[ " + Array.from(this).join(", ") + " ]";
-      };
-      ObservableSet$$1.prototype[(_a$1 = $mobx$$1, Symbol.iterator)] = function () {
-          return this.values();
-      };
-      return ObservableSet$$1;
-  }());
-  var isObservableSet$$1 = createInstanceofPredicate$$1("ObservableSet", ObservableSet$$1);
 
   var ObservableObjectAdministration$$1 = /** @class */ (function () {
       function ObservableObjectAdministration$$1(target, values$$1, name, defaultEnhancer) {
@@ -3669,7 +3281,7 @@
           }
           newValue = observable$$1.prepareNewValue(newValue);
           // notify spy & observers
-          if (newValue !== globalState$$1.UNCHANGED) {
+          if (newValue !== UNCHANGED$$1) {
               var notify = hasListeners$$1(this);
               var notifySpy = isSpyEnabled$$1();
               var change = notify || notifySpy
@@ -3907,7 +3519,7 @@
   function generateComputedPropConfig$$1(propName) {
       return (computedPropertyConfigs[propName] ||
           (computedPropertyConfigs[propName] = {
-              configurable: false,
+              configurable: true,
               enumerable: false,
               get: function () {
                   return getAdministrationForComputedPropOwner(this).read(propName);
@@ -3934,9 +3546,6 @@
                   fail$$1(process.env.NODE_ENV !== "production" &&
                       "It is not possible to get index atoms from arrays");
               return thing[$mobx$$1].atom;
-          }
-          if (isObservableSet$$1(thing)) {
-              return thing[$mobx$$1];
           }
           if (isObservableMap$$1(thing)) {
               var anyThing = thing;
@@ -3980,7 +3589,7 @@
           return getAdministration$$1(getAtom$$1(thing, property));
       if (isAtom$$1(thing) || isComputedValue$$1(thing) || isReaction$$1(thing))
           return thing;
-      if (isObservableMap$$1(thing) || isObservableSet$$1(thing))
+      if (isObservableMap$$1(thing))
           return thing;
       // Initializers run lazily when transpiling to babel, so make sure they are run...
       initializeInstance$$1(thing);
@@ -3992,7 +3601,7 @@
       var named;
       if (property !== undefined)
           named = getAtom$$1(thing, property);
-      else if (isObservableObject$$1(thing) || isObservableMap$$1(thing) || isObservableSet$$1(thing))
+      else if (isObservableObject$$1(thing) || isObservableMap$$1(thing))
           named = getAdministration$$1(thing);
       else
           named = getAtom$$1(thing); // valid for arrays as well
@@ -4101,8 +3710,7 @@
       }
       else {
           // Deep compare objects.
-          var keys$$1 = Object.keys(a);
-          var key = void 0;
+          var keys$$1 = Object.keys(a), key;
           length = keys$$1.length;
           // Ensure that both objects contain the same number of properties before comparing deep equality.
           if (Object.keys(b).length !== length)
@@ -4123,8 +3731,6 @@
       if (isObservableArray$$1(a))
           return a.slice();
       if (isES6Map$$1(a) || isObservableMap$$1(a))
-          return Array.from(a.entries());
-      if (isES6Set$$1(a) || isObservableSet$$1(a))
           return Array.from(a.entries());
       return a;
   }
@@ -4166,7 +3772,7 @@
    *
    */
   if (typeof Proxy === "undefined" || typeof Symbol === "undefined") {
-      throw new Error("[mobx] MobX 5+ requires Proxy and Symbol objects. If your environment doesn't support Symbol or Proxy objects, please downgrade to MobX 4. For React Native Android, consider upgrading JSCore.");
+      throw new Error("[mobx] MobX 5+ requires Proxy and Symbol objects. If your environment doesn't support Proxy objects, please downgrade to MobX 4. For React Native Android, consider upgrading JSCore.");
   }
   try {
       // define process.env if needed
@@ -4184,8 +3790,7 @@
   (function () {
       function testCodeMinification() { }
       if (testCodeMinification.name !== "testCodeMinification" &&
-          process.env.NODE_ENV !== "production" &&
-          process.env.IGNORE_MOBX_MINIFY_WARNING !== "true") {
+          process.env.NODE_ENV !== "production") {
           console.warn(
           // Template literal(backtick) is used for fix issue with rollup-plugin-commonjs https://github.com/rollup/rollup-plugin-commonjs/issues/344
           "[mobx] you are running a minified build, but 'process.env.NODE_ENV' was not set to 'production' in your bundler. This results in an unnecessarily large and slow bundle");
@@ -4211,7 +3816,7 @@
 
   var moment = createCommonjsModule(function (module, exports) {
   (function (global, factory) {
-      module.exports = factory();
+       module.exports = factory() ;
   }(commonjsGlobal, (function () {
       var hookCallback;
 
@@ -8809,118 +8414,112 @@
   })));
   });
 
+  function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+  function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
   function ObjectPromiseProxy(requestFunc, target) {
     var promise = requestFunc();
     target.isInFlight = true;
     var tmpId = target.id;
-    var result = promise.then(
-    /*#__PURE__*/
-    function () {
-      var _ref = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee(response) {
-        var status, json, _json$data, attributes, relationships, message, _json, errorString;
+    var result = promise.then(function _callee(response) {
+      var status, json, _json$data, attributes, relationships, message, _json, errorString;
 
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                status = response.status;
+      return regeneratorRuntime.async(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              status = response.status;
 
-                if (!(status === 200 || status === 201)) {
-                  _context.next = 14;
-                  break;
-                }
-
-                _context.next = 4;
-                return response.json();
-
-              case 4:
-                json = _context.sent;
-                // Update target model
-                _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
-                transaction$$1(function () {
-                  Object.keys(attributes).forEach(function (key) {
-                    set$$1(target, key, attributes[key]);
-                  });
-
-                  if (relationships) {
-                    Object.keys(relationships).forEach(function (key) {
-                      if (!relationships[key].hasOwnProperty('meta')) {
-                        // todo: throw error if relationship is not defined in model
-                        set$$1(target.relationships, key, relationships[key]);
-                      }
-                    });
-                  }
-
-                  if (json.included) {
-                    target.store.createModelsFromData(json.included);
-                  }
-                }); // Update target isInFlight and isDirty
-
-                target.isInFlight = false;
-                target.isDirty = false;
-                target.setPreviousSnapshot();
-                transaction$$1(function () {
-                  // NOTE: This resolves an issue where a record is persisted but the
-                  // index key is still a temp uuid. We can't simply remove the temp
-                  // key because there may be associated records that have the temp
-                  // uuid id as its only reference to the newly persisted record.
-                  // TODO: Figure out a way to update associated records to use the
-                  // newly persisted id.
-                  target.store.data[target.type].records[tmpId] = target;
-                  target.store.data[target.type].records[target.id] = target;
-                });
-                return _context.abrupt("return", target);
-
-              case 14:
-                if (!(response.status === 503 || response.status === 429)) {
-                  _context.next = 18;
-                  break;
-                }
-
-                return _context.abrupt("return", target);
-
-              case 18:
-                target.isInFlight = false;
-                message = target.store.genericErrorMessage;
-                _context.prev = 20;
-                _context.next = 23;
-                return response.json();
-
-              case 23:
-                _json = _context.sent;
-                message = parseApiErrors(_json.errors, message);
-                _context.next = 29;
+              if (!(status === 200 || status === 201)) {
+                _context.next = 14;
                 break;
+              }
 
-              case 27:
-                _context.prev = 27;
-                _context.t0 = _context["catch"](20);
+              _context.next = 4;
+              return regeneratorRuntime.awrap(response.json());
 
-              case 29:
-                // TODO: add all errors from the API response to the target
-                target.errors = _objectSpread({}, target.errors, {
-                  status: status,
-                  base: [{
-                    message: message
-                  }]
+            case 4:
+              json = _context.sent;
+              // Update target model
+              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
+              transaction$$1(function () {
+                Object.keys(attributes).forEach(function (key) {
+                  set$$1(target, key, attributes[key]);
                 });
-                errorString = JSON.stringify(target.errors);
-                return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
-              case 32:
-              case "end":
-                return _context.stop();
-            }
+                if (relationships) {
+                  Object.keys(relationships).forEach(function (key) {
+                    if (!relationships[key].hasOwnProperty('meta')) {
+                      // todo: throw error if relationship is not defined in model
+                      set$$1(target.relationships, key, relationships[key]);
+                    }
+                  });
+                }
+
+                if (json.included) {
+                  target.store.createModelsFromData(json.included);
+                }
+              }); // Update target isInFlight and isDirty
+
+              target.isInFlight = false;
+              target.isDirty = false;
+              target.setPreviousSnapshot();
+              transaction$$1(function () {
+                // NOTE: This resolves an issue where a record is persisted but the
+                // index key is still a temp uuid. We can't simply remove the temp
+                // key because there may be associated records that have the temp
+                // uuid id as its only reference to the newly persisted record.
+                // TODO: Figure out a way to update associated records to use the
+                // newly persisted id.
+                target.store.data[target.type].records[tmpId] = target;
+                target.store.data[target.type].records[target.id] = target;
+              });
+              return _context.abrupt("return", target);
+
+            case 14:
+              if (!(response.status === 503 || response.status === 429)) {
+                _context.next = 18;
+                break;
+              }
+
+              return _context.abrupt("return", target);
+
+            case 18:
+              target.isInFlight = false;
+              message = target.store.genericErrorMessage;
+              _context.prev = 20;
+              _context.next = 23;
+              return regeneratorRuntime.awrap(response.json());
+
+            case 23:
+              _json = _context.sent;
+              message = parseApiErrors(_json.errors, message);
+              _context.next = 29;
+              break;
+
+            case 27:
+              _context.prev = 27;
+              _context.t0 = _context["catch"](20);
+
+            case 29:
+              // TODO: add all errors from the API response to the target
+              target.errors = _objectSpread({}, target.errors, {
+                status: status,
+                base: [{
+                  message: message
+                }]
+              });
+              errorString = JSON.stringify(target.errors);
+              return _context.abrupt("return", Promise.reject(new Error(errorString)));
+
+            case 32:
+            case "end":
+              return _context.stop();
           }
-        }, _callee, null, [[20, 27]]);
-      }));
-
-      return function (_x) {
-        return _ref.apply(this, arguments);
-      };
-    }(), function (error) {
+        }
+      }, null, null, [[20, 27]]);
+    }, function (error) {
       // TODO: Handle error states correctly
       target.isInFlight = false;
       target.errors = error;
@@ -9004,6 +8603,10 @@
   var schema = new Schema();
 
   var _class, _descriptor, _descriptor2, _temp;
+
+  function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+  function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
   function stringifyIds(object) {
     Object.keys(object).forEach(function (key) {
@@ -9499,76 +9102,66 @@
 
         var _this = this;
 
-        return promise.then(
-        /*#__PURE__*/
-        function () {
-          var _ref = _asyncToGenerator(
-          /*#__PURE__*/
-          regeneratorRuntime.mark(function _callee(response) {
-            var json;
-            return regeneratorRuntime.wrap(function _callee$(_context) {
-              while (1) {
-                switch (_context.prev = _context.next) {
-                  case 0:
-                    _this.isInFlight = false;
+        return promise.then(function _callee(response) {
+          var json;
+          return regeneratorRuntime.async(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _this.isInFlight = false;
 
-                    if (!(response.status === 202 || response.status === 204)) {
-                      _context.next = 17;
-                      break;
-                    }
-
-                    if (!skipRemove) {
-                      _this.store.remove(type, id);
-                    }
-
-                    _context.prev = 3;
-                    _context.next = 6;
-                    return response.json();
-
-                  case 6:
-                    json = _context.sent;
-
-                    if (json.data && json.data.attributes) {
-                      Object.keys(json.data.attributes).forEach(function (key) {
-                        set$$1(_this, key, json.data.attributes[key]);
-                      });
-                    }
-
-                    _context.next = 13;
+                  if (!(response.status === 202 || response.status === 204)) {
+                    _context.next = 17;
                     break;
+                  }
 
-                  case 10:
-                    _context.prev = 10;
-                    _context.t0 = _context["catch"](3);
-                    console.log(_context.t0); // It is text, do you text handling here
+                  if (!skipRemove) {
+                    _this.store.remove(type, id);
+                  }
 
-                  case 13:
-                    // NOTE: If deleting a record changes other related model
-                    // You can return then in the delete response
-                    if (json && json.included) {
-                      _this.store.createModelsFromData(json.included);
-                    }
+                  _context.prev = 3;
+                  _context.next = 6;
+                  return regeneratorRuntime.awrap(response.json());
 
-                    return _context.abrupt("return", _this);
+                case 6:
+                  json = _context.sent;
 
-                  case 17:
-                    _this.errors = {
-                      status: response.status
-                    };
-                    return _context.abrupt("return", _this);
+                  if (json.data && json.data.attributes) {
+                    Object.keys(json.data.attributes).forEach(function (key) {
+                      set$$1(_this, key, json.data.attributes[key]);
+                    });
+                  }
 
-                  case 19:
-                  case "end":
-                    return _context.stop();
-                }
+                  _context.next = 13;
+                  break;
+
+                case 10:
+                  _context.prev = 10;
+                  _context.t0 = _context["catch"](3);
+                  console.log(_context.t0); // It is text, do you text handling here
+
+                case 13:
+                  // NOTE: If deleting a record changes other related model
+                  // You can return then in the delete response
+                  if (json && json.included) {
+                    _this.store.createModelsFromData(json.included);
+                  }
+
+                  return _context.abrupt("return", _this);
+
+                case 17:
+                  _this.errors = {
+                    status: response.status
+                  };
+                  return _context.abrupt("return", _this);
+
+                case 19:
+                case "end":
+                  return _context.stop();
               }
-            }, _callee, null, [[3, 10]]);
-          }));
-
-          return function (_x) {
-            return _ref.apply(this, arguments);
-          };
-        }(), function (error) {
+            }
+          }, null, null, [[3, 10]]);
+        }, function (error) {
           // TODO: Handle error states correctly
           _this.isInFlight = false;
           _this.errors = error;
@@ -9588,7 +9181,7 @@
       key: "_makeObservable",
       value: function _makeObservable(initialAttributes) {
         var defaultAttributes = this.defaultAttributes;
-        extendObservable$$1(this, _objectSpread({}, defaultAttributes, initialAttributes));
+        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
       }
       /**
        * The current state of defined attributes and relationships of the instance
@@ -9766,7 +9359,7 @@
 
         transaction$$1(function () {
           Object.keys(attributes).forEach(function (key) {
-            _this8[key] = attributes[key];
+            set$$1(_this8, key, attributes[key]);
           });
         });
       }
@@ -10154,7 +9747,7 @@
           module.exports = param;
       }
 
-  }(commonjsGlobal));
+  }());
   });
 
   /**
@@ -10219,6 +9812,10 @@
   }
 
   var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _descriptor4, _temp$1;
+
+  function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+  function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
   /**
    * Defines the Artemis Data Store class.
    *
@@ -10469,7 +10066,7 @@
       }(function (url) {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var defaultFetchOptions = this.defaultFetchOptions;
-        return fetch(url, _objectSpread({}, defaultFetchOptions, options));
+        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
       })
       /**
        * Gets type of collection from data observable
@@ -10697,7 +10294,7 @@
               // Don't try to create relationship if meta included false
               if (!relationships[key].meta) {
                 // defensive against existingRecord.relationships being undefined
-                set$$1(record, 'relationships', _objectSpread({}, record.relationships, _defineProperty({}, key, relationships[key])));
+                set$$1(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
                 set$$1(_this4.data[type].records, id, record);
               }
             });
@@ -10758,7 +10355,7 @@
           throw new Error("Could not find a model for '".concat(type, "'"));
         }
 
-        return new ModelKlass(_objectSpread({
+        return new ModelKlass(_objectSpread$2({
           id: id,
           store: store,
           relationships: relationships
@@ -10790,82 +10387,72 @@
 
     }, {
       key: "fetchAll",
-      value: function () {
-        var _fetchAll = _asyncToGenerator(
-        /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee(type, queryParams) {
-          var _this6 = this;
+      value: function fetchAll(type, queryParams) {
+        var _this6 = this;
 
-          var store, url, response, json, records;
-          return regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  store = this;
-                  url = this.fetchUrl(type, queryParams);
-                  _context.next = 4;
-                  return this.fetch(url, {
-                    method: 'GET'
+        var store, url, response, json, records;
+        return regeneratorRuntime.async(function fetchAll$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                store = this;
+                url = this.fetchUrl(type, queryParams);
+                _context.next = 4;
+                return regeneratorRuntime.awrap(this.fetch(url, {
+                  method: 'GET'
+                }));
+
+              case 4:
+                response = _context.sent;
+
+                if (!(response.status === 200)) {
+                  _context.next = 16;
+                  break;
+                }
+
+                this.data[type].cache[url] = [];
+                _context.next = 9;
+                return regeneratorRuntime.awrap(response.json());
+
+              case 9:
+                json = _context.sent;
+
+                if (json.included) {
+                  this.createModelsFromData(json.included);
+                }
+
+                records = [];
+                transaction$$1(function () {
+                  records = json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute2 = dataObject.attributes,
+                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+                        _dataObject$relations2 = dataObject.relationships,
+                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
+                    var ModelKlass = _this6.modelTypeIndex[type];
+                    var record = new ModelKlass(_objectSpread$2({
+                      store: store,
+                      relationships: relationships
+                    }, attributes));
+
+                    _this6.data[type].cache[url].push(id);
+
+                    _this6.data[type].records[id] = record;
+                    return record;
                   });
+                });
+                return _context.abrupt("return", records);
 
-                case 4:
-                  response = _context.sent;
+              case 16:
+                return _context.abrupt("return", Promise.reject(response.status));
 
-                  if (!(response.status === 200)) {
-                    _context.next = 16;
-                    break;
-                  }
-
-                  this.data[type].cache[url] = [];
-                  _context.next = 9;
-                  return response.json();
-
-                case 9:
-                  json = _context.sent;
-
-                  if (json.included) {
-                    this.createModelsFromData(json.included);
-                  }
-
-                  records = [];
-                  transaction$$1(function () {
-                    records = json.data.map(function (dataObject) {
-                      var id = dataObject.id,
-                          _dataObject$attribute2 = dataObject.attributes,
-                          attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                          _dataObject$relations2 = dataObject.relationships,
-                          relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                      var ModelKlass = _this6.modelTypeIndex[type];
-                      var record = new ModelKlass(_objectSpread({
-                        store: store,
-                        relationships: relationships
-                      }, attributes));
-
-                      _this6.data[type].cache[url].push(id);
-
-                      _this6.data[type].records[id] = record;
-                      return record;
-                    });
-                  });
-                  return _context.abrupt("return", records);
-
-                case 16:
-                  return _context.abrupt("return", Promise.reject(response.status));
-
-                case 17:
-                case "end":
-                  return _context.stop();
-              }
+              case 17:
+              case "end":
+                return _context.stop();
             }
-          }, _callee, this);
-        }));
-
-        function fetchAll(_x2, _x3) {
-          return _fetchAll.apply(this, arguments);
-        }
-
-        return fetchAll;
-      }()
+          }
+        }, null, this);
+      }
       /**
        * fetches record by `id`.
        *
@@ -10877,63 +10464,53 @@
 
     }, {
       key: "fetchOne",
-      value: function () {
-        var _fetchOne = _asyncToGenerator(
-        /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
-          var url, response, json, data, included, record;
-          return regeneratorRuntime.wrap(function _callee2$(_context2) {
-            while (1) {
-              switch (_context2.prev = _context2.next) {
-                case 0:
-                  url = this.fetchUrl(type, queryParams, id); // Trigger request
+      value: function fetchOne(type, id, queryParams) {
+        var url, response, json, data, included, record;
+        return regeneratorRuntime.async(function fetchOne$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-                  _context2.next = 3;
-                  return this.fetch(url, {
-                    method: 'GET'
-                  });
+                _context2.next = 3;
+                return regeneratorRuntime.awrap(this.fetch(url, {
+                  method: 'GET'
+                }));
 
-                case 3:
-                  response = _context2.sent;
+              case 3:
+                response = _context2.sent;
 
-                  if (!(response.status === 200)) {
-                    _context2.next = 16;
-                    break;
-                  }
+                if (!(response.status === 200)) {
+                  _context2.next = 16;
+                  break;
+                }
 
-                  _context2.next = 7;
-                  return response.json();
+                _context2.next = 7;
+                return regeneratorRuntime.awrap(response.json());
 
-                case 7:
-                  json = _context2.sent;
-                  data = json.data, included = json.included;
-                  record = this.createOrUpdateModel(data);
-                  this.data[type].cache[url] = [];
-                  this.data[type].cache[url].push(record.id);
+              case 7:
+                json = _context2.sent;
+                data = json.data, included = json.included;
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache[url] = [];
+                this.data[type].cache[url].push(record.id);
 
-                  if (included) {
-                    this.createModelsFromData(included);
-                  }
+                if (included) {
+                  this.createModelsFromData(included);
+                }
 
-                  return _context2.abrupt("return", record);
+                return _context2.abrupt("return", record);
 
-                case 16:
-                  return _context2.abrupt("return", response.status);
+              case 16:
+                return _context2.abrupt("return", response.status);
 
-                case 17:
-                case "end":
-                  return _context2.stop();
-              }
+              case 17:
+              case "end":
+                return _context2.stop();
             }
-          }, _callee2, this);
-        }));
-
-        function fetchOne(_x4, _x5, _x6) {
-          return _fetchOne.apply(this, arguments);
-        }
-
-        return fetchOne;
-      }()
+          }
+        }, null, this);
+      }
     }]);
 
     return Store;
@@ -11560,4 +11137,4 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));

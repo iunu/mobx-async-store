@@ -2,6 +2,7 @@
 import React from 'react'
 import { mount } from 'enzyme'
 import { Provider } from 'mobx-react'
+import { isObservable } from 'mobx'
 
 import { Store, Model, attribute } from 'artemis-data'
 import ExampleApp from './ExampleApp'
@@ -64,10 +65,9 @@ describe('Example React App', () => {
   })
 
   it('can edit an existing model', async () => {
-    expect.assertions(2)
     const todoStore = new AppStore()
 
-    todoStore.add('todos', { title: 'Pay bills' })
+    let todo = todoStore.add('todos', { title: 'Pay bills' })
 
     const wrapper = mount(
       <Provider store={todoStore}>
@@ -83,5 +83,6 @@ describe('Example React App', () => {
       .simulate('change', { target: { value: 'Make payments' } })
 
     expect(wrapper.text()).toMatch('Make payments')
+    expect(isObservable(todo)).toBeTruthy()
   })
 })
