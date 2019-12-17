@@ -8,10 +8,10 @@ import {
   observable
 } from 'mobx'
 
-import moment from 'utils/moment'
+import moment from 'moment'
 
-import ObjectPromiseProxy from 'artemis-data/ObjectPromiseProxy'
-import schema from 'artemis-data/schema'
+import ObjectPromiseProxy from './ObjectPromiseProxy'
+import schema from './schema'
 
 function isPresent (value) {
   return value !== null && value !== undefined && value !== ''

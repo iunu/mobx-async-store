@@ -4,38 +4,38 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
 var _objectSpread = _interopDefault(require('@babel/runtime/helpers/objectSpread'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
 var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
 var _initializerDefineProperty = _interopDefault(require('@babel/runtime/helpers/initializerDefineProperty'));
-var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass'));
 require('@babel/runtime/helpers/initializerWarningHelper');
 var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
-var mobx = require('mobx');
-var jsonapiSerializer = require('jsonapi-serializer');
-var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
-var uuidv1 = _interopDefault(require('uuid/v1'));
-var jqueryParam = _interopDefault(require('jquery-param'));
-var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
-var moment = _interopDefault(require('moment'));
+var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
+var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
 var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
 var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
 var _wrapNativeSuper = _interopDefault(require('@babel/runtime/helpers/wrapNativeSuper'));
+var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
+var mobx = require('mobx');
+var moment = _interopDefault(require('moment'));
+var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
+var uuidv1 = _interopDefault(require('uuid/v1'));
+var jqueryParam = _interopDefault(require('jquery-param'));
 
-function ObjectPromiseProxy(promise, target) {
-  var tmpId = target.id;
+function ObjectPromiseProxy(requestFunc, target) {
+  var promise = requestFunc();
   target.isInFlight = true;
-  var promiseProxy = promise.then(
+  var tmpId = target.id;
+  var result = promise.then(
   /*#__PURE__*/
   function () {
     var _ref = _asyncToGenerator(
     /*#__PURE__*/
     _regeneratorRuntime.mark(function _callee(response) {
-      var status, json, _json$data, attributes, relationships, included;
+      var status, json, _json$data, attributes, relationships, message, _json, errorString;
 
       return _regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -53,7 +53,8 @@ function ObjectPromiseProxy(promise, target) {
 
             case 4:
               json = _context.sent;
-              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships, included = json.included;
+              // Update target model
+              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
               mobx.transaction(function () {
                 Object.keys(attributes).forEach(function (key) {
                   mobx.set(target, key, attributes[key]);
@@ -68,8 +69,8 @@ function ObjectPromiseProxy(promise, target) {
                   });
                 }
 
-                if (included) {
-                  target.store.createModelsFromData(included);
+                if (json.included) {
+                  target.store.createModelsFromData(json.included);
                 }
               }); // Update target isInFlight and isDirty
 
@@ -89,28 +90,57 @@ function ObjectPromiseProxy(promise, target) {
               return _context.abrupt("return", target);
 
             case 14:
-              // TODO: Handle unexpected status codes correctly
-              target.isInFlight = false;
-              target.errors = {
-                status: response.status
-              };
+              if (!(response.status === 503 || response.status === 429)) {
+                _context.next = 18;
+                break;
+              }
+
               return _context.abrupt("return", target);
 
-            case 17:
+            case 18:
+              target.isInFlight = false;
+              message = target.store.genericErrorMessage;
+              _context.prev = 20;
+              _context.next = 23;
+              return response.json();
+
+            case 23:
+              _json = _context.sent;
+              message = parseApiErrors(_json.errors, message);
+              _context.next = 29;
+              break;
+
+            case 27:
+              _context.prev = 27;
+              _context.t0 = _context["catch"](20);
+
+            case 29:
+              // TODO: add all errors from the API response to the target
+              target.errors = _objectSpread({}, target.errors, {
+                status: status,
+                base: [{
+                  message: message
+                }]
+              });
+              errorString = JSON.stringify(target.errors);
+              return _context.abrupt("return", Promise.reject(new Error(errorString)));
+
+            case 32:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee);
+      }, _callee, null, [[20, 27]]);
     }));
 
     return function (_x) {
       return _ref.apply(this, arguments);
     };
   }(), function (error) {
+    // TODO: Handle error states correctly
     target.isInFlight = false;
     target.errors = error;
-    throw error;
+    throw error; // return target
   }); // Define proxied attributes
 
   var attributeNames = Object.keys(target.attributeNames);
@@ -121,86 +151,17 @@ function ObjectPromiseProxy(promise, target) {
     };
     return attrs;
   }, {});
-  Object.defineProperties(promiseProxy, _objectSpread({
+  Object.defineProperties(result, _objectSpread({
     isInFlight: {
       value: target.isInFlight
     }
-  }, tempProperties));
-  return promiseProxy;
+  }, tempProperties)); // Return promise
+
+  return result;
 }
 
-/**
- * Build request url from base url, endpoint, query params, and ids.
- *
- * @method requestUrl
- * @return {String} formatted url string
- */
-
-function requestUrl(baseUrl, endpoint) {
-  var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var id = arguments.length > 3 ? arguments[3] : undefined;
-  var queryParamString = '';
-
-  if (Object.keys(queryParams).length > 0) {
-    queryParamString = "?".concat(jqueryParam(queryParams));
-  }
-
-  var idForPath = '';
-
-  if (id) {
-    idForPath = "/".concat(id);
-  } // Return full url
-
-
-  return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
-}
-function newId() {
-  return "tmp-".concat(uuidv1());
-}
-function dbOrNewId(properties) {
-  return properties.id || newId();
-}
-/**
- * Reducer function for filtering out duplicate records
- * by a key provided. Returns a function that has a accumulator and
- * current record per Array.reduce.
- *
- * @method uniqueByReducer
- * @param {Array} key
- * @return {Function}
- */
-
-function uniqueByReducer(key) {
-  return function (accumulator, current) {
-    return accumulator.some(function (item) {
-      return item[key] === current[key];
-    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
-  };
-}
-/**
- * Returns objects unique by key provided
- *
- * @method uniqueBy
- * @param {Array} array
- * @param {String} key
- * @return {Array}
- */
-
-function uniqueBy(array, key) {
-  return array.reduce(uniqueByReducer(key), []);
-}
-function stringifyIds(object) {
-  Object.keys(object).forEach(function (key) {
-    var property = object[key];
-
-    if (_typeof(property) === 'object') {
-      if (property.id) {
-        property.id = String(property.id);
-      }
-
-      stringifyIds(property);
-    }
-  });
+function parseApiErrors(errors, defaultMessage) {
+  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
 }
 
 /**
@@ -258,12 +219,296 @@ function () {
 
 var schema = new Schema();
 
-var _class, _descriptor, _descriptor2, _class2, _temp;
+var _class, _descriptor, _descriptor2, _temp;
+
+function stringifyIds(object) {
+  Object.keys(object).forEach(function (key) {
+    var property = object[key];
+
+    if (_typeof(property) === 'object') {
+      if (property.id) {
+        property.id = String(property.id);
+      }
+
+      stringifyIds(property);
+    }
+  });
+}
 /**
- * @class Model
+ * Handles getting polymorphic records or only a specific
+ * type if specified.
+ *
+ * @method getRelatedRecords
+ * @param {Object} record the record with the relationship
+ * @param {String} property the related property to set
+ * @param {String} modelType an override of the modelType
  */
 
-var Model = (_class = (_temp = _class2 =
+function getRelatedRecords(record, property) {
+  var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var relationships = record.relationships;
+  var relationType = modelType || property;
+  var references = relationships && relationships[relationType];
+  var relatedRecords = [];
+
+  if (references && references.data) {
+    relatedRecords = references.data.map(function (ref) {
+      var recordType = ref.type;
+      return record.store.getRecord(recordType, ref.id);
+    });
+  }
+
+  return new RelatedRecordsArray(relatedRecords, record, relationType);
+}
+/**
+ * Handles getting polymorphic has_one/belong_to.
+ *
+ * @method getRelatedRecord
+ */
+
+function getRelatedRecord(record, property) {
+  var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  // Get relationships
+  var relationships = record.relationships; // Short circuit if no relationships are present
+
+  if (!relationships) return; // Use property name unless model type is provided
+
+  var relationType = modelType || property;
+  var reference = relationships[relationType]; // Short circuit if matching reference is not found
+
+  if (!reference || !reference.data) return;
+  var _relationships$relati = relationships[relationType].data,
+      id = _relationships$relati.id,
+      type = _relationships$relati.type;
+  var recordType = modelType || type;
+  return record.store.getRecord(recordType, id);
+}
+/**
+ * Handles setting polymorphic has_one/belong_to.
+ * - Validates the related record to make sure it inherits from `Model` class
+ * - Sets the relationship
+ * - Attempts to find an inverse relationship, and if successful adds it as well
+ *
+ * @method setRelatedRecord
+ * @param {Object} record the record with the relationship
+ * @param {Object} relatedRecord the record that will be related
+ * @param {String} property the related property to set
+ * @param {String} modelType an override of the modelType
+ */
+
+function setRelatedRecord(record, relatedRecord, property) {
+  var modelType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+
+  if (relatedRecord && !(relatedRecord instanceof Model)) {
+    throw new Error('Related record must be a valid Model object');
+  }
+
+  var relationships = record.relationships;
+  var relationType = modelType || property;
+  var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
+
+  if (!referenceRecord) {
+    return;
+  }
+
+  var id = referenceRecord.id;
+  var type = referenceRecord.constructor.type;
+  var data = relationships[relationType] && relationships[relationType].data;
+
+  if (!relatedRecord) {
+    delete relationships[relationType];
+  } else if (!data || !(data.type === type && data.id === id)) {
+    relationships[relationType] = {
+      data: {
+        id: id,
+        type: type
+      }
+    };
+  } else {
+    return relatedRecord;
+  } // hack we don't have a reference to the inverse name so we just use the record type.
+  // this may cause problems with polymorphic relationships
+
+
+  var inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type);
+
+  if (inverseRelatedToMany) {
+    var inverseMethod = relatedRecord ? 'add' : 'remove';
+    inverseRelatedToMany[inverseMethod](record);
+  }
+
+  return relatedRecord;
+}
+/**
+ * An array that allows for updating store references and relationships
+ * @class RelatedRecordsArray
+ * @constructor
+ * @param {Array} array the array to extend
+ * @param {Object} record the record with the referenced array
+ * @param {String} property the property on the record that references the array
+ */
+
+var RelatedRecordsArray =
+/*#__PURE__*/
+function (_Array) {
+  _inherits(RelatedRecordsArray, _Array);
+
+  function RelatedRecordsArray(_array, _record, _property) {
+    var _getPrototypeOf2;
+
+    var _this2;
+
+    _classCallCheck(this, RelatedRecordsArray);
+
+    _this2 = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
+
+    _this2.add = function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized(_this2),
+          record = _assertThisInitialize.record,
+          property = _assertThisInitialize.property;
+
+      var recordType = record.constructor.type;
+      var id = relatedRecord.id,
+          type = relatedRecord.constructor.type;
+
+      if (!relatedRecord || !(relatedRecord instanceof Model)) {
+        throw new Error('Related record must be a valid Model object');
+      }
+
+      if (!record.relationships) {
+        record.relationships = {};
+      }
+
+      var relationships = record.relationships;
+
+      if (!relationships[property]) {
+        relationships[property] = {};
+      }
+
+      if (!relationships[property].data) {
+        relationships[property].data = [];
+      }
+
+      var existingRelationships = relationships[property];
+      var alreadyThere = existingRelationships && existingRelationships.data.find(function (model) {
+        return model.id === id && model.type === type;
+      });
+
+      if (!alreadyThere) {
+        relationships[property].data.push({
+          id: id,
+          type: type
+        });
+
+        _this2.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
+
+
+        setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+      }
+
+      record.isDirty = true;
+      return relatedRecord;
+    };
+
+    _this2.remove = function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized(_this2),
+          record = _assertThisInitialize2.record,
+          property = _assertThisInitialize2.property;
+
+      var relationships = record.relationships,
+          recordType = record.constructor.type;
+      var id = relatedRecord.id,
+          type = relatedRecord.constructor.type;
+
+      if (relationships && relationships[property] && relatedRecord) {
+        var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
+          return model.id === id && model.type === type;
+        });
+        relationships[property].data.splice(referenceIndexToRemove, 1);
+
+        var recordIndexToRemove = _this2.findIndex(function (model) {
+          return model.id === id && model.type === type;
+        });
+
+        if (recordIndexToRemove > 0) _this2.splice(recordIndexToRemove, 1);
+
+        if (!relationships[property].data.length) {
+          delete relationships[property];
+        }
+
+        if (!Object.keys(record.relationships).length) {
+          delete record.relationships;
+        } // hack this will only work with singularized relationships.
+
+
+        setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+      }
+
+      record.isDirty = true;
+      return relatedRecord;
+    };
+
+    _this2.replace = function (array) {
+      var _assertThisInitialize3 = _assertThisInitialized(_this2),
+          record = _assertThisInitialize3.record,
+          property = _assertThisInitialize3.property;
+
+      var relationships = record.relationships;
+      mobx.transaction(function () {
+        relationships[property] = {
+          data: []
+        };
+        array.forEach(function (object) {
+          return _this2.add(object);
+        });
+      });
+      record.isDirty = true;
+    };
+
+    _this2.property = _property;
+    _this2.record = _record;
+    return _this2;
+  }
+  /**
+   * Adds a record to the array, and updates references in the store, as well as inverse references
+   * @method add
+   * @param {Object} relatedRecord the record to add to the array
+   * @return {Object} the original relatedRecord
+   */
+
+
+  return RelatedRecordsArray;
+}(_wrapNativeSuper(Array));
+/*
+ * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
+ * An optional argument specifies the data model, if different from the property name.
+ * ```
+ * class Note extends Model {
+ *   @belongsTo todo
+ *   @belongsTo(Facility) greenhouse
+ * }
+ * ```
+ * Polymorphic relationships
+ * Define `belongsTo` with the the associated models
+ * Define `hasMany` as you normally would
+ * ```
+ * class Note extends Model {
+ *   @belongsTo(Todo, ScheduledEvent) notable
+ * }
+ *
+ * class Todo extends Model {
+ *   @hasMany notes
+ * }
+ * ```
+ * @method belongsTo
+ */
+
+/**
+ @class Model
+ */
+
+
+var Model = (_class = (_temp =
 /*#__PURE__*/
 function () {
   /**
@@ -282,6 +527,7 @@ function () {
 
     _initializerDefineProperty(this, "errors", _descriptor2, this);
 
+    this.isPendingSync = false;
     this.previousSnapshot = {};
 
     this._makeObservable(initialAttributes);
@@ -296,6 +542,36 @@ function () {
    *
    * @property type
    * @static
+   */
+
+  /**
+   * The canonical path to the resource on the server. Defined on the class.
+   * Defaults to the underscored version of the class name
+   * @property endpoint
+   * @static
+   */
+
+  /**
+   * True if the instance has been modified from its persisted state
+   * ```
+   * kpi = store.add('kpis', { name: 'A good thing to measure' })
+   * kpi.isDirty
+   * => true
+   * kpi.name
+   * => "A good thing to measure"
+   * await kpi.save()
+   * kpi.isDirty
+   * => false
+   * kpi.name = "Another good thing to measure"
+   * kpi.isDirty
+   * => true
+   * await kpi.save()
+   * kpi.isDirty
+   * => false
+   * ```
+   * @property isDirty
+   * @type {Boolean}
+   * @default false
    */
 
 
@@ -316,14 +592,17 @@ function () {
      * @method rollback
      */
     value: function rollback() {
-      var _this2 = this;
+      var _this3 = this;
 
       mobx.transaction(function () {
-        _this2.attributeNames.forEach(function (key) {
-          _this2[key] = _this2.previousSnapshot[key];
+        var previousSnapshot = _this3.previousSnapshot;
+
+        _this3.attributeNames.forEach(function (key) {
+          _this3[key] = previousSnapshot.attributes[key];
         });
 
-        _this2.errors = {};
+        _this3.relationships = previousSnapshot.relationships;
+        _this3.errors = {};
       });
       this.setPreviousSnapshot();
     }
@@ -337,17 +616,18 @@ function () {
   }, {
     key: "save",
     value: function save() {
+      var _this4 = this;
+
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      this.errors = {};
 
       if (!options.skip_validations && !this.validate()) {
         var errorString = JSON.stringify(this.errors);
         return Promise.reject(new Error(errorString));
       }
 
-      var attributes = options.attributes,
-          queryParams = options.queryParams,
-          relationships = options.relationships;
+      var queryParams = options.queryParams,
+          relationships = options.relationships,
+          attributes = options.attributes;
       var constructor = this.constructor,
           id = this.id,
           isNew = this.isNew;
@@ -364,11 +644,15 @@ function () {
         relationships: relationships,
         attributes: attributes
       }));
-      var response = this.store.fetch(url, {
-        method: method,
-        body: body
-      });
-      return new ObjectPromiseProxy(response, this);
+
+      var requestFunc = function requestFunc() {
+        return _this4.store.fetch(url, {
+          method: method,
+          body: body
+        });
+      };
+
+      return new ObjectPromiseProxy(requestFunc, this);
     }
     /**
      * Checks all validations, adding errors where necessary and returning `false` if any are not valid
@@ -379,17 +663,18 @@ function () {
   }, {
     key: "validate",
     value: function validate() {
-      var _this3 = this;
+      var _this5 = this;
 
+      this.errors = {};
       var attributeNames = this.attributeNames,
           attributeDefinitions = this.attributeDefinitions;
       var validationChecks = attributeNames.map(function (property) {
         var validator = attributeDefinitions[property].validator;
         if (!validator) return true;
-        var validationResult = validator(_this3[property], _this3);
+        var validationResult = validator(_this5[property], _this5);
 
         if (!validationResult.isValid) {
-          _this3.errors[property] = validationResult.errors;
+          _this5.errors[property] = validationResult.errors;
         }
 
         return validationResult.isValid;
@@ -408,7 +693,7 @@ function () {
     key: "destroy",
     value: function destroy() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var type = this.type,
+      var type = this.constructor.type,
           id = this.id,
           snapshot = this.snapshot,
           isNew = this.isNew;
@@ -422,8 +707,8 @@ function () {
           params = _options$params === void 0 ? {} : _options$params,
           _options$skipRemove = options.skipRemove,
           skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
-      this.isInFlight = true;
       var url = this.store.fetchUrl(type, params, id);
+      this.isInFlight = true;
       var promise = this.store.fetch(url, {
         method: 'DELETE'
       });
@@ -557,25 +842,39 @@ function () {
   }, {
     key: "_trackState",
     value: function _trackState() {
-      var _this4 = this;
+      var _this6 = this;
 
-      mobx.reaction(function () {
-        return JSON.stringify(_this4.attributes);
+      this.disposers = [];
+      this.disposers.push(mobx.reaction(function () {
+        return JSON.stringify(_this6.attributes);
       }, function (objectString) {
-        _this4.isDirty = true;
-      });
-      mobx.reaction(function () {
-        return JSON.stringify(_this4.relationships);
+        _this6.isDirty = true;
+      }));
+      this.disposers.push(mobx.reaction(function () {
+        return JSON.stringify(_this6.relationships);
       }, function (relString) {
-        _this4.isDirty = true;
+        _this6.isDirty = true;
+      }));
+    }
+    /**
+     * disposes of track state reactions
+     * @method diposeReactions
+    */
+
+  }, {
+    key: "disposeReactions",
+    value: function disposeReactions() {
+      this.disposers.forEach(function (dispose) {
+        return dispose();
       });
+      this.disposers = [];
     }
     /**
      * shortcut to get the static
      *
      * @method type
      * @return {String} current attributes
-     */
+    */
 
   }, {
     key: "errorForKey",
@@ -607,26 +906,25 @@ function () {
      * @return {Object} data in JSON::API format
      */
     value: function jsonapi() {
+      var _this7 = this;
+
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
           attributeNames = this.attributeNames,
-          attributes = this.attributes,
+          meta = this.meta,
           id = this.id,
-          relationships = this.relationships,
-          store = this.store,
-          type = this.type; // meta = {},
+          type = this.constructor.type;
+      var filteredAttributeNames = attributeNames;
+      var filteredRelationshipNames = [];
 
-      var attributeNamesSubset = options.attributes,
-          relationshipNamesSubset = options.relationships;
-
-      if (attributeNamesSubset) {
-        attributeNames = attributeNames.filter(function (name) {
-          return attributeNamesSubset.includes(name);
+      if (options.attributes) {
+        filteredAttributeNames = attributeNames.filter(function (name) {
+          return options.attributes.includes(name);
         });
       }
 
-      var attributeData = attributeNames.reduce(function (attrs, key) {
-        var value = attributes[key];
+      var attributes = filteredAttributeNames.reduce(function (attrs, key) {
+        var value = _this7[key];
 
         if (value) {
           var DataType = attributeDefinitions[key].dataType;
@@ -635,7 +933,7 @@ function () {
           if (DataType.name === 'Array' || DataType.name === 'Object') {
             attr = mobx.toJS(value);
           } else if (DataType.name === 'Date') {
-            attr = store.moment(value).toISOString();
+            attr = moment(value).toISOString();
           } else {
             attr = DataType(value);
           }
@@ -647,83 +945,49 @@ function () {
 
         return attrs;
       }, {});
-      var relationshipNames = Object.keys(relationships);
+      var data = {
+        type: type,
+        attributes: attributes,
+        id: String(id)
+      };
 
-      if (relationshipNamesSubset) {
-        relationshipNames = relationshipNames.filter(function (name) {
-          return relationshipNamesSubset.includes(name);
+      if (options.relationships) {
+        filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
+          return options.relationships.includes(name);
         });
+        var relationships = filteredRelationshipNames.reduce(function (rels, key) {
+          rels[key] = mobx.toJS(_this7.relationships[key]);
+          stringifyIds(rels[key]);
+          return rels;
+        }, {});
+        data.relationships = relationships;
       }
 
-      var relationshipData = relationshipNames.reduce(function (rels, key) {
-        rels[key] = mobx.toJS(relationships[key].data);
-        stringifyIds(rels[key]);
-        return rels;
-      }, {});
-      var relationshipSerializerConfigs = relationshipNames.reduce(function (relConfig, key) {
-        relConfig[key] = {
-          ref: 'id',
-          included: false
-        };
-        return relConfig;
-      }, {});
-      var ModelSerializer = new jsonapiSerializer.Serializer(type, _objectSpread({
-        attributes: [].concat(_toConsumableArray(attributeNames), _toConsumableArray(relationshipNames)),
-        keyForAttribute: 'underscore_case'
-      }, relationshipSerializerConfigs));
+      if (meta) {
+        data['meta'] = meta;
+      }
 
       if (String(id).match(/tmp/)) {
-        id = null;
+        delete data.id;
       }
 
-      return ModelSerializer.serialize(_objectSpread({
-        id: id,
-        type: type
-      }, attributeData, relationshipData));
+      return {
+        data: data
+      };
     }
-    /**
-     * helper method to update multiple attributes at the same time
-     *
-     * @method updateAttributes
-     * @param {Object} attributes
-     */
-
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
-      var _this5 = this;
+      var _this8 = this;
 
       mobx.transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          mobx.set(_this5, key, attributes[key]);
+          _this8[key] = attributes[key];
         });
       });
     }
   }, {
     key: "isDirty",
-
-    /**
-     * True if the instance has been modified from its persisted state
-     * ```
-     * kpi = store.add('kpis', { name: 'A good thing to measure' })
-     * kpi.isDirty
-     * => true
-     * kpi.name
-     * => "A good thing to measure"
-     * await kpi.save()
-     * kpi.isDirty
-     * => false
-     * kpi.name = "Another good thing to measure"
-     * kpi.isDirty
-     * => true
-     * await kpi.save()
-     * kpi.isDirty
-     * => false
-     * ```
-     * @property isDirty
-     * @type {Boolean}
-     * @default false
-     */
     get: function get() {
       var isNew = this.isNew,
           _isDirty = this._isDirty;
@@ -772,7 +1036,10 @@ function () {
   }, {
     key: "snapshot",
     get: function get() {
-      return this.attributes;
+      return {
+        attributes: this.attributes,
+        relationships: mobx.toJS(this.relationships)
+      };
     }
   }, {
     key: "type",
@@ -789,10 +1056,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this6 = this;
+      var _this9 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = mobx.toJS(_this6[key]);
+        var value = mobx.toJS(_this9[key]);
 
         if (!value) {
           delete attributes[key];
@@ -813,7 +1080,8 @@ function () {
   }, {
     key: "attributeDefinitions",
     get: function get() {
-      return schema.structure[this.type];
+      var type = this.constructor.type;
+      return schema.structure[type];
     }
     /**
      * Getter find the relationship definitions for the model type.
@@ -825,7 +1093,8 @@ function () {
   }, {
     key: "relationshipDefinitions",
     get: function get() {
-      return schema.relations[this.type];
+      var type = this.constructor.type;
+      return schema.relations[type];
     }
     /**
      * Getter to check if the record has errors.
@@ -866,7 +1135,7 @@ function () {
   }]);
 
   return Model;
-}(), _class2.type = 'generic', _class2.endpoint = null, _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [mobx.observable], {
+}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -881,6 +1150,67 @@ function () {
     return {};
   }
 })), _class);
+
+/**
+ * Build request url from base url, endpoint, query params, and ids.
+ *
+ * @method requestUrl
+ * @return {String} formatted url string
+ */
+
+function requestUrl(baseUrl, endpoint) {
+  var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var id = arguments.length > 3 ? arguments[3] : undefined;
+  var queryParamString = '';
+
+  if (Object.keys(queryParams).length > 0) {
+    queryParamString = "?".concat(jqueryParam(queryParams));
+  }
+
+  var idForPath = '';
+
+  if (id) {
+    idForPath = "/".concat(id);
+  } // Return full url
+
+
+  return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
+}
+function newId() {
+  return "tmp-".concat(uuidv1());
+}
+function dbOrNewId(properties) {
+  return properties.id || newId();
+}
+/**
+ * Reducer function for filtering out duplicate records
+ * by a key provided. Returns a function that has a accumulator and
+ * current record per Array.reduce.
+ *
+ * @method uniqueByReducer
+ * @param {Array} key
+ * @return {Function}
+ */
+
+function uniqueByReducer(key) {
+  return function (accumulator, current) {
+    return accumulator.some(function (item) {
+      return item[key] === current[key];
+    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
+  };
+}
+/**
+ * Returns objects unique by key provided
+ *
+ * @method uniqueBy
+ * @param {Array} array
+ * @param {String} key
+ * @return {Array}
+ */
+
+function uniqueBy(array, key) {
+  return array.reduce(uniqueByReducer(key), []);
+}
 
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _descriptor4, _temp$1;
 /**
@@ -1809,7 +2139,7 @@ function relatedToMany(targetOrModelKlass, property, descriptor) {
       return {
         get: function get() {
           var type = targetOrModelKlass.type;
-          return getRelatedRecords(this, property2, type);
+          return getRelatedRecords$1(this, property2, type);
         }
       };
     };
@@ -1821,7 +2151,7 @@ function relatedToMany(targetOrModelKlass, property, descriptor) {
     });
     return {
       get: function get() {
-        return getRelatedRecords(this, property);
+        return getRelatedRecords$1(this, property);
       }
     };
   }
@@ -1844,11 +2174,11 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
       return {
         get: function get() {
           var type = targetOrModelKlass.type;
-          return getRelatedRecord(this, property2, type);
+          return getRelatedRecord$1(this, property2, type);
         },
         set: function set(record) {
           var type = targetOrModelKlass.type;
-          return setRelatedRecord(this, record, property2, type);
+          return setRelatedRecord$1(this, record, property2, type);
         }
       };
     };
@@ -1860,10 +2190,10 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
     });
     return {
       get: function get() {
-        return getRelatedRecord(this, property);
+        return getRelatedRecord$1(this, property);
       },
       set: function set(record) {
-        return setRelatedRecord(this, record, property);
+        return setRelatedRecord$1(this, record, property);
       }
     };
   }
@@ -1878,7 +2208,7 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
  * @param {String} modelType an override of the modelType
  */
 
-function getRelatedRecords(record, property) {
+function getRelatedRecords$1(record, property) {
   var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   var relationships = record.relationships;
   var relationType = modelType || property;
@@ -1892,7 +2222,7 @@ function getRelatedRecords(record, property) {
     });
   }
 
-  return new RelatedRecordsArray(relatedRecords, record, relationType);
+  return new RelatedRecordsArray$1(relatedRecords, record, relationType);
 }
 /**
  * Handles getting polymorphic has_one/belong_to.
@@ -1900,7 +2230,7 @@ function getRelatedRecords(record, property) {
  * @method getRelatedRecord
  */
 
-function getRelatedRecord(record, property) {
+function getRelatedRecord$1(record, property) {
   var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   // Get relationships
   var relationships = record.relationships; // Short circuit if no relationships are present
@@ -1930,7 +2260,7 @@ function getRelatedRecord(record, property) {
  * @param {String} modelType an override of the modelType
  */
 
-function setRelatedRecord(record, relatedRecord, property) {
+function setRelatedRecord$1(record, relatedRecord, property) {
   var modelType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
   if (relatedRecord && !(relatedRecord instanceof Model)) {
@@ -1939,7 +2269,7 @@ function setRelatedRecord(record, relatedRecord, property) {
 
   var relationships = record.relationships;
   var relationType = modelType || property;
-  var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
+  var referenceRecord = relatedRecord || getRelatedRecord$1(record, relationType);
 
   if (!referenceRecord) {
     return;
@@ -1964,7 +2294,7 @@ function setRelatedRecord(record, relatedRecord, property) {
   // this may cause problems with polymorphic relationships
 
 
-  var inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type);
+  var inverseRelatedToMany = getRelatedRecords$1(referenceRecord, null, record.constructor.type);
 
   if (inverseRelatedToMany) {
     var inverseMethod = relatedRecord ? 'add' : 'remove';
@@ -1982,7 +2312,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  * @param {String} property the property on the record that references the array
  */
 
-var RelatedRecordsArray =
+var RelatedRecordsArray$1 =
 /*#__PURE__*/
 function (_Array) {
   _inherits(RelatedRecordsArray, _Array);
@@ -2038,7 +2368,7 @@ function (_Array) {
           _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
 
 
-          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord$1(relatedRecord, record, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2075,7 +2405,7 @@ function (_Array) {
           } // hack this will only work with singularized relationships.
 
 
-          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord$1(relatedRecord, null, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2141,7 +2471,7 @@ function (_Array) {
 
           _this.push(relatedRecord);
 
-          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord$1(relatedRecord, record, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2177,7 +2507,7 @@ function (_Array) {
             delete record.relationships;
           }
 
-          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord$1(relatedRecord, null, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;

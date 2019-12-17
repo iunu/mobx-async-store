@@ -9,7 +9,7 @@ import {
   relatedToMany,
   relatedToOne,
   validates
-} from 'artemis-data'
+} from '../src/main'
 
 import {
   exampleRelatedToManyResponse,
@@ -353,7 +353,7 @@ describe('Model', () => {
   describe('.snapshot', () => {
     it('sets snapshot on initialization', async () => {
       const todo = new Todo({ title: 'Buy Milk' })
-      expect(todo.snapshot).toEqual({
+      expect(todo.previousSnapshot.attributes).toEqual({
         due_at: moment(timestamp).toDate(),
         tags: [],
         title: 'Buy Milk',
@@ -457,12 +457,13 @@ describe('Model', () => {
   describe('.rollback', () => {
     it('rollback restores data to last persisted state ', async () => {
       const todo = new Todo({ title: 'Buy Milk' })
-      expect(todo.snapshot.title).toEqual('Buy Milk')
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
-      expect(todo.snapshot.title).toEqual('Do Laundry')
+      expect(todo.title).toEqual('Do Laundry')
       todo.rollback()
+      console.log('todo', todo)
       expect(todo.title).toEqual('Buy Milk')
-      expect(todo.snapshot.title).toEqual('Buy Milk')
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
     })
 
     it('rollbacks to state after save', async () => {
