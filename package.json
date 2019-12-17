@@ -1,6 +1,6 @@
 {
   "name": "artemis-data",
-  "version": "1.0.4 ",
+  "version": "1.0.3",
   "module": "dist/artemis-data.esm.js",
   "browser": "dist/artemis-data.umd.js",
   "main": "dist/artemis-data.cjs.js",
