@@ -740,10 +740,10 @@ class Model {
    */
   _makeObservable (initialAttributes) {
      const { defaultAttributes } = this
-
+     const attrs = toJS(initialAttributes)
      extendObservable(this, {
        ...defaultAttributes,
-       ...initialAttributes
+       ...attrs
      })
    }
 

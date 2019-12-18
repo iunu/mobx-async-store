@@ -790,7 +790,8 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      mobx.extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+      var attrs = mobx.toJS(initialAttributes);
+      mobx.extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
     }
     /**
      * The current state of defined attributes and relationships of the instance

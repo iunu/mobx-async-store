@@ -9181,7 +9181,8 @@
       key: "_makeObservable",
       value: function _makeObservable(initialAttributes) {
         var defaultAttributes = this.defaultAttributes;
-        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+        var attrs = toJS$$1(initialAttributes);
+        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
       }
       /**
        * The current state of defined attributes and relationships of the instance

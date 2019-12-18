@@ -12,7 +12,7 @@ import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized
 import _inherits from '@babel/runtime/helpers/inherits';
 import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
 import _typeof from '@babel/runtime/helpers/typeof';
-import { transaction, set, computed, observable, extendObservable, reaction, toJS, action } from 'mobx';
+import { transaction, set, computed, observable, toJS, extendObservable, reaction, action } from 'mobx';
 import moment from 'moment';
 import uuidv1 from 'uuid/v1';
 import jqueryParam from 'jquery-param';
@@ -784,7 +784,8 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+      var attrs = toJS(initialAttributes);
+      extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
     }
     /**
      * The current state of defined attributes and relationships of the instance
