@@ -461,7 +461,6 @@ describe('Model', () => {
       todo.title = 'Do Laundry'
       expect(todo.title).toEqual('Do Laundry')
       todo.rollback()
-      console.log('todo', todo)
       expect(todo.title).toEqual('Buy Milk')
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
     })
