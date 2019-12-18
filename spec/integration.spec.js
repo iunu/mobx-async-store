@@ -67,7 +67,7 @@ describe('Example React App', () => {
   it('can edit an existing model', async () => {
     const todoStore = new AppStore()
 
-    let todo = todoStore.add('todos', { title: 'Pay bills' })
+    let todo = todoStore.add('todos', { title: 'Pay bills', options: { trackable_id: 1 } })
 
     const wrapper = mount(
       <Provider store={todoStore}>
@@ -82,6 +82,7 @@ describe('Example React App', () => {
       .last()
       .simulate('change', { target: { value: 'Make payments' } })
 
+    expect(todo.options.trackable_id).toBe(1)
     expect(wrapper.text()).toMatch('Make payments')
     expect(isObservable(todo)).toBeTruthy()
   })
