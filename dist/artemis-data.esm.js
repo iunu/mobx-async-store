@@ -569,7 +569,7 @@ function () {
     key: "rollback",
 
     /**
-     * restores data to its last persisted state
+     * restores data and relationships to their last persisted state
      * ```
      * kpi = store.find('kpis', 5)
      * kpi.name
