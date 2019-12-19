@@ -11,6 +11,7 @@
     "jsonapi-serializer": "^3.6.4",
     "mobx": "5.5.0",
     "moment": "^2.24.0",
+    "pluralize": "^8.0.0",
     "react-native-uuid": "^1.4.9",
     "uuid": "^3.3.2"
   },

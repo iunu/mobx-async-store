@@ -8414,6 +8414,860 @@
   })));
   });
 
+  var rngBrowser = createCommonjsModule(function (module) {
+  // Unique ID creation requires a high quality random # generator.  In the
+  // browser this is a little complicated due to unknown quality of Math.random()
+  // and inconsistent support for the `crypto` API.  We do the best we can via
+  // feature-detection
+
+  // getRandomValues needs to be invoked in a context where "this" is a Crypto
+  // implementation. Also, find the complete implementation of crypto on IE11.
+  var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto)) ||
+                        (typeof(msCrypto) != 'undefined' && typeof window.msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto));
+
+  if (getRandomValues) {
+    // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
+    var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
+
+    module.exports = function whatwgRNG() {
+      getRandomValues(rnds8);
+      return rnds8;
+    };
+  } else {
+    // Math.random()-based (RNG)
+    //
+    // If all else fails, use Math.random().  It's fast, but is of unspecified
+    // quality.
+    var rnds = new Array(16);
+
+    module.exports = function mathRNG() {
+      for (var i = 0, r; i < 16; i++) {
+        if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+        rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+      }
+
+      return rnds;
+    };
+  }
+  });
+
+  /**
+   * Convert array of 16 byte values to UUID string format of the form:
+   * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+   */
+  var byteToHex = [];
+  for (var i = 0; i < 256; ++i) {
+    byteToHex[i] = (i + 0x100).toString(16).substr(1);
+  }
+
+  function bytesToUuid(buf, offset) {
+    var i = offset || 0;
+    var bth = byteToHex;
+    // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
+    return ([bth[buf[i++]], bth[buf[i++]], 
+  	bth[buf[i++]], bth[buf[i++]], '-',
+  	bth[buf[i++]], bth[buf[i++]], '-',
+  	bth[buf[i++]], bth[buf[i++]], '-',
+  	bth[buf[i++]], bth[buf[i++]], '-',
+  	bth[buf[i++]], bth[buf[i++]],
+  	bth[buf[i++]], bth[buf[i++]],
+  	bth[buf[i++]], bth[buf[i++]]]).join('');
+  }
+
+  var bytesToUuid_1 = bytesToUuid;
+
+  // **`v1()` - Generate time-based UUID**
+  //
+  // Inspired by https://github.com/LiosK/UUID.js
+  // and http://docs.python.org/library/uuid.html
+
+  var _nodeId;
+  var _clockseq;
+
+  // Previous uuid creation time
+  var _lastMSecs = 0;
+  var _lastNSecs = 0;
+
+  // See https://github.com/broofa/node-uuid for API details
+  function v1(options, buf, offset) {
+    var i = buf && offset || 0;
+    var b = buf || [];
+
+    options = options || {};
+    var node = options.node || _nodeId;
+    var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
+
+    // node and clockseq need to be initialized to random values if they're not
+    // specified.  We do this lazily to minimize issues related to insufficient
+    // system entropy.  See #189
+    if (node == null || clockseq == null) {
+      var seedBytes = rngBrowser();
+      if (node == null) {
+        // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+        node = _nodeId = [
+          seedBytes[0] | 0x01,
+          seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
+        ];
+      }
+      if (clockseq == null) {
+        // Per 4.2.2, randomize (14 bit) clockseq
+        clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+      }
+    }
+
+    // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+    // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+    // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+    // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+    var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
+
+    // Per 4.2.1.2, use count of uuid's generated during the current clock
+    // cycle to simulate higher resolution clock
+    var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
+
+    // Time since last uuid creation (in msecs)
+    var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+    // Per 4.2.1.2, Bump clockseq on clock regression
+    if (dt < 0 && options.clockseq === undefined) {
+      clockseq = clockseq + 1 & 0x3fff;
+    }
+
+    // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+    // time interval
+    if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
+      nsecs = 0;
+    }
+
+    // Per 4.2.1.2 Throw error if too many uuids are requested
+    if (nsecs >= 10000) {
+      throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+    }
+
+    _lastMSecs = msecs;
+    _lastNSecs = nsecs;
+    _clockseq = clockseq;
+
+    // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+    msecs += 12219292800000;
+
+    // `time_low`
+    var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+    b[i++] = tl >>> 24 & 0xff;
+    b[i++] = tl >>> 16 & 0xff;
+    b[i++] = tl >>> 8 & 0xff;
+    b[i++] = tl & 0xff;
+
+    // `time_mid`
+    var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+    b[i++] = tmh >>> 8 & 0xff;
+    b[i++] = tmh & 0xff;
+
+    // `time_high_and_version`
+    b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+    b[i++] = tmh >>> 16 & 0xff;
+
+    // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+    b[i++] = clockseq >>> 8 | 0x80;
+
+    // `clock_seq_low`
+    b[i++] = clockseq & 0xff;
+
+    // `node`
+    for (var n = 0; n < 6; ++n) {
+      b[i + n] = node[n];
+    }
+
+    return buf ? buf : bytesToUuid_1(b);
+  }
+
+  var v1_1 = v1;
+
+  var jqueryParam = createCommonjsModule(function (module) {
+  /**
+   * @preserve jquery-param (c) 2015 KNOWLEDGECODE | MIT
+   */
+  (function (global) {
+
+      var param = function (a) {
+          var s = [];
+          var add = function (k, v) {
+              v = typeof v === 'function' ? v() : v;
+              v = v === null ? '' : v === undefined ? '' : v;
+              s[s.length] = encodeURIComponent(k) + '=' + encodeURIComponent(v);
+          };
+          var buildParams = function (prefix, obj) {
+              var i, len, key;
+
+              if (prefix) {
+                  if (Array.isArray(obj)) {
+                      for (i = 0, len = obj.length; i < len; i++) {
+                          buildParams(
+                              prefix + '[' + (typeof obj[i] === 'object' && obj[i] ? i : '') + ']',
+                              obj[i]
+                          );
+                      }
+                  } else if (String(obj) === '[object Object]') {
+                      for (key in obj) {
+                          buildParams(prefix + '[' + key + ']', obj[key]);
+                      }
+                  } else {
+                      add(prefix, obj);
+                  }
+              } else if (Array.isArray(obj)) {
+                  for (i = 0, len = obj.length; i < len; i++) {
+                      add(obj[i].name, obj[i].value);
+                  }
+              } else {
+                  for (key in obj) {
+                      buildParams(key, obj[key]);
+                  }
+              }
+              return s;
+          };
+
+          return buildParams('', a).join('&');
+      };
+
+      {
+          module.exports = param;
+      }
+
+  }());
+  });
+
+  var pluralize = createCommonjsModule(function (module, exports) {
+  /* global define */
+
+  (function (root, pluralize) {
+    /* istanbul ignore else */
+    if (typeof require === 'function' && 'object' === 'object' && 'object' === 'object') {
+      // Node.
+      module.exports = pluralize();
+    } else {
+      // Browser global.
+      root.pluralize = pluralize();
+    }
+  })(commonjsGlobal, function () {
+    // Rule storage - pluralize and singularize need to be run sequentially,
+    // while other rules can be optimized using an object for instant lookups.
+    var pluralRules = [];
+    var singularRules = [];
+    var uncountables = {};
+    var irregularPlurals = {};
+    var irregularSingles = {};
+
+    /**
+     * Sanitize a pluralization rule to a usable regular expression.
+     *
+     * @param  {(RegExp|string)} rule
+     * @return {RegExp}
+     */
+    function sanitizeRule (rule) {
+      if (typeof rule === 'string') {
+        return new RegExp('^' + rule + '$', 'i');
+      }
+
+      return rule;
+    }
+
+    /**
+     * Pass in a word token to produce a function that can replicate the case on
+     * another word.
+     *
+     * @param  {string}   word
+     * @param  {string}   token
+     * @return {Function}
+     */
+    function restoreCase (word, token) {
+      // Tokens are an exact match.
+      if (word === token) return token;
+
+      // Lower cased words. E.g. "hello".
+      if (word === word.toLowerCase()) return token.toLowerCase();
+
+      // Upper cased words. E.g. "WHISKY".
+      if (word === word.toUpperCase()) return token.toUpperCase();
+
+      // Title cased words. E.g. "Title".
+      if (word[0] === word[0].toUpperCase()) {
+        return token.charAt(0).toUpperCase() + token.substr(1).toLowerCase();
+      }
+
+      // Lower cased words. E.g. "test".
+      return token.toLowerCase();
+    }
+
+    /**
+     * Interpolate a regexp string.
+     *
+     * @param  {string} str
+     * @param  {Array}  args
+     * @return {string}
+     */
+    function interpolate (str, args) {
+      return str.replace(/\$(\d{1,2})/g, function (match, index) {
+        return args[index] || '';
+      });
+    }
+
+    /**
+     * Replace a word using a rule.
+     *
+     * @param  {string} word
+     * @param  {Array}  rule
+     * @return {string}
+     */
+    function replace (word, rule) {
+      return word.replace(rule[0], function (match, index) {
+        var result = interpolate(rule[1], arguments);
+
+        if (match === '') {
+          return restoreCase(word[index - 1], result);
+        }
+
+        return restoreCase(match, result);
+      });
+    }
+
+    /**
+     * Sanitize a word by passing in the word and sanitization rules.
+     *
+     * @param  {string}   token
+     * @param  {string}   word
+     * @param  {Array}    rules
+     * @return {string}
+     */
+    function sanitizeWord (token, word, rules) {
+      // Empty string or doesn't need fixing.
+      if (!token.length || uncountables.hasOwnProperty(token)) {
+        return word;
+      }
+
+      var len = rules.length;
+
+      // Iterate over the sanitization rules and use the first one to match.
+      while (len--) {
+        var rule = rules[len];
+
+        if (rule[0].test(word)) return replace(word, rule);
+      }
+
+      return word;
+    }
+
+    /**
+     * Replace a word with the updated word.
+     *
+     * @param  {Object}   replaceMap
+     * @param  {Object}   keepMap
+     * @param  {Array}    rules
+     * @return {Function}
+     */
+    function replaceWord (replaceMap, keepMap, rules) {
+      return function (word) {
+        // Get the correct token and case restoration functions.
+        var token = word.toLowerCase();
+
+        // Check against the keep object map.
+        if (keepMap.hasOwnProperty(token)) {
+          return restoreCase(word, token);
+        }
+
+        // Check against the replacement map for a direct word replacement.
+        if (replaceMap.hasOwnProperty(token)) {
+          return restoreCase(word, replaceMap[token]);
+        }
+
+        // Run all the rules against the word.
+        return sanitizeWord(token, word, rules);
+      };
+    }
+
+    /**
+     * Check if a word is part of the map.
+     */
+    function checkWord (replaceMap, keepMap, rules, bool) {
+      return function (word) {
+        var token = word.toLowerCase();
+
+        if (keepMap.hasOwnProperty(token)) return true;
+        if (replaceMap.hasOwnProperty(token)) return false;
+
+        return sanitizeWord(token, token, rules) === token;
+      };
+    }
+
+    /**
+     * Pluralize or singularize a word based on the passed in count.
+     *
+     * @param  {string}  word      The word to pluralize
+     * @param  {number}  count     How many of the word exist
+     * @param  {boolean} inclusive Whether to prefix with the number (e.g. 3 ducks)
+     * @return {string}
+     */
+    function pluralize (word, count, inclusive) {
+      var pluralized = count === 1
+        ? pluralize.singular(word) : pluralize.plural(word);
+
+      return (inclusive ? count + ' ' : '') + pluralized;
+    }
+
+    /**
+     * Pluralize a word.
+     *
+     * @type {Function}
+     */
+    pluralize.plural = replaceWord(
+      irregularSingles, irregularPlurals, pluralRules
+    );
+
+    /**
+     * Check if a word is plural.
+     *
+     * @type {Function}
+     */
+    pluralize.isPlural = checkWord(
+      irregularSingles, irregularPlurals, pluralRules
+    );
+
+    /**
+     * Singularize a word.
+     *
+     * @type {Function}
+     */
+    pluralize.singular = replaceWord(
+      irregularPlurals, irregularSingles, singularRules
+    );
+
+    /**
+     * Check if a word is singular.
+     *
+     * @type {Function}
+     */
+    pluralize.isSingular = checkWord(
+      irregularPlurals, irregularSingles, singularRules
+    );
+
+    /**
+     * Add a pluralization rule to the collection.
+     *
+     * @param {(string|RegExp)} rule
+     * @param {string}          replacement
+     */
+    pluralize.addPluralRule = function (rule, replacement) {
+      pluralRules.push([sanitizeRule(rule), replacement]);
+    };
+
+    /**
+     * Add a singularization rule to the collection.
+     *
+     * @param {(string|RegExp)} rule
+     * @param {string}          replacement
+     */
+    pluralize.addSingularRule = function (rule, replacement) {
+      singularRules.push([sanitizeRule(rule), replacement]);
+    };
+
+    /**
+     * Add an uncountable word rule.
+     *
+     * @param {(string|RegExp)} word
+     */
+    pluralize.addUncountableRule = function (word) {
+      if (typeof word === 'string') {
+        uncountables[word.toLowerCase()] = true;
+        return;
+      }
+
+      // Set singular and plural references for the word.
+      pluralize.addPluralRule(word, '$0');
+      pluralize.addSingularRule(word, '$0');
+    };
+
+    /**
+     * Add an irregular word definition.
+     *
+     * @param {string} single
+     * @param {string} plural
+     */
+    pluralize.addIrregularRule = function (single, plural) {
+      plural = plural.toLowerCase();
+      single = single.toLowerCase();
+
+      irregularSingles[single] = plural;
+      irregularPlurals[plural] = single;
+    };
+
+    /**
+     * Irregular rules.
+     */
+    [
+      // Pronouns.
+      ['I', 'we'],
+      ['me', 'us'],
+      ['he', 'they'],
+      ['she', 'they'],
+      ['them', 'them'],
+      ['myself', 'ourselves'],
+      ['yourself', 'yourselves'],
+      ['itself', 'themselves'],
+      ['herself', 'themselves'],
+      ['himself', 'themselves'],
+      ['themself', 'themselves'],
+      ['is', 'are'],
+      ['was', 'were'],
+      ['has', 'have'],
+      ['this', 'these'],
+      ['that', 'those'],
+      // Words ending in with a consonant and `o`.
+      ['echo', 'echoes'],
+      ['dingo', 'dingoes'],
+      ['volcano', 'volcanoes'],
+      ['tornado', 'tornadoes'],
+      ['torpedo', 'torpedoes'],
+      // Ends with `us`.
+      ['genus', 'genera'],
+      ['viscus', 'viscera'],
+      // Ends with `ma`.
+      ['stigma', 'stigmata'],
+      ['stoma', 'stomata'],
+      ['dogma', 'dogmata'],
+      ['lemma', 'lemmata'],
+      ['schema', 'schemata'],
+      ['anathema', 'anathemata'],
+      // Other irregular rules.
+      ['ox', 'oxen'],
+      ['axe', 'axes'],
+      ['die', 'dice'],
+      ['yes', 'yeses'],
+      ['foot', 'feet'],
+      ['eave', 'eaves'],
+      ['goose', 'geese'],
+      ['tooth', 'teeth'],
+      ['quiz', 'quizzes'],
+      ['human', 'humans'],
+      ['proof', 'proofs'],
+      ['carve', 'carves'],
+      ['valve', 'valves'],
+      ['looey', 'looies'],
+      ['thief', 'thieves'],
+      ['groove', 'grooves'],
+      ['pickaxe', 'pickaxes'],
+      ['passerby', 'passersby']
+    ].forEach(function (rule) {
+      return pluralize.addIrregularRule(rule[0], rule[1]);
+    });
+
+    /**
+     * Pluralization rules.
+     */
+    [
+      [/s?$/i, 's'],
+      [/[^\u0000-\u007F]$/i, '$0'],
+      [/([^aeiou]ese)$/i, '$1'],
+      [/(ax|test)is$/i, '$1es'],
+      [/(alias|[^aou]us|t[lm]as|gas|ris)$/i, '$1es'],
+      [/(e[mn]u)s?$/i, '$1s'],
+      [/([^l]ias|[aeiou]las|[ejzr]as|[iu]am)$/i, '$1'],
+      [/(alumn|syllab|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1i'],
+      [/(alumn|alg|vertebr)(?:a|ae)$/i, '$1ae'],
+      [/(seraph|cherub)(?:im)?$/i, '$1im'],
+      [/(her|at|gr)o$/i, '$1oes'],
+      [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|automat|quor)(?:a|um)$/i, '$1a'],
+      [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)(?:a|on)$/i, '$1a'],
+      [/sis$/i, 'ses'],
+      [/(?:(kni|wi|li)fe|(ar|l|ea|eo|oa|hoo)f)$/i, '$1$2ves'],
+      [/([^aeiouy]|qu)y$/i, '$1ies'],
+      [/([^ch][ieo][ln])ey$/i, '$1ies'],
+      [/(x|ch|ss|sh|zz)$/i, '$1es'],
+      [/(matr|cod|mur|sil|vert|ind|append)(?:ix|ex)$/i, '$1ices'],
+      [/\b((?:tit)?m|l)(?:ice|ouse)$/i, '$1ice'],
+      [/(pe)(?:rson|ople)$/i, '$1ople'],
+      [/(child)(?:ren)?$/i, '$1ren'],
+      [/eaux$/i, '$0'],
+      [/m[ae]n$/i, 'men'],
+      ['thou', 'you']
+    ].forEach(function (rule) {
+      return pluralize.addPluralRule(rule[0], rule[1]);
+    });
+
+    /**
+     * Singularization rules.
+     */
+    [
+      [/s$/i, ''],
+      [/(ss)$/i, '$1'],
+      [/(wi|kni|(?:after|half|high|low|mid|non|night|[^\w]|^)li)ves$/i, '$1fe'],
+      [/(ar|(?:wo|[ae])l|[eo][ao])ves$/i, '$1f'],
+      [/ies$/i, 'y'],
+      [/\b([pl]|zomb|(?:neck|cross)?t|coll|faer|food|gen|goon|group|lass|talk|goal|cut)ies$/i, '$1ie'],
+      [/\b(mon|smil)ies$/i, '$1ey'],
+      [/\b((?:tit)?m|l)ice$/i, '$1ouse'],
+      [/(seraph|cherub)im$/i, '$1'],
+      [/(x|ch|ss|sh|zz|tto|go|cho|alias|[^aou]us|t[lm]as|gas|(?:her|at|gr)o|[aeiou]ris)(?:es)?$/i, '$1'],
+      [/(analy|diagno|parenthe|progno|synop|the|empha|cri|ne)(?:sis|ses)$/i, '$1sis'],
+      [/(movie|twelve|abuse|e[mn]u)s$/i, '$1'],
+      [/(test)(?:is|es)$/i, '$1is'],
+      [/(alumn|syllab|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1us'],
+      [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|quor)a$/i, '$1um'],
+      [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)a$/i, '$1on'],
+      [/(alumn|alg|vertebr)ae$/i, '$1a'],
+      [/(cod|mur|sil|vert|ind)ices$/i, '$1ex'],
+      [/(matr|append)ices$/i, '$1ix'],
+      [/(pe)(rson|ople)$/i, '$1rson'],
+      [/(child)ren$/i, '$1'],
+      [/(eau)x?$/i, '$1'],
+      [/men$/i, 'man']
+    ].forEach(function (rule) {
+      return pluralize.addSingularRule(rule[0], rule[1]);
+    });
+
+    /**
+     * Uncountable rules.
+     */
+    [
+      // Singular words with no plurals.
+      'adulthood',
+      'advice',
+      'agenda',
+      'aid',
+      'aircraft',
+      'alcohol',
+      'ammo',
+      'analytics',
+      'anime',
+      'athletics',
+      'audio',
+      'bison',
+      'blood',
+      'bream',
+      'buffalo',
+      'butter',
+      'carp',
+      'cash',
+      'chassis',
+      'chess',
+      'clothing',
+      'cod',
+      'commerce',
+      'cooperation',
+      'corps',
+      'debris',
+      'diabetes',
+      'digestion',
+      'elk',
+      'energy',
+      'equipment',
+      'excretion',
+      'expertise',
+      'firmware',
+      'flounder',
+      'fun',
+      'gallows',
+      'garbage',
+      'graffiti',
+      'hardware',
+      'headquarters',
+      'health',
+      'herpes',
+      'highjinks',
+      'homework',
+      'housework',
+      'information',
+      'jeans',
+      'justice',
+      'kudos',
+      'labour',
+      'literature',
+      'machinery',
+      'mackerel',
+      'mail',
+      'media',
+      'mews',
+      'moose',
+      'music',
+      'mud',
+      'manga',
+      'news',
+      'only',
+      'personnel',
+      'pike',
+      'plankton',
+      'pliers',
+      'police',
+      'pollution',
+      'premises',
+      'rain',
+      'research',
+      'rice',
+      'salmon',
+      'scissors',
+      'series',
+      'sewage',
+      'shambles',
+      'shrimp',
+      'software',
+      'species',
+      'staff',
+      'swine',
+      'tennis',
+      'traffic',
+      'transportation',
+      'trout',
+      'tuna',
+      'wealth',
+      'welfare',
+      'whiting',
+      'wildebeest',
+      'wildlife',
+      'you',
+      /pok[eé]mon$/i,
+      // Regexes.
+      /[^aeiou]ese$/i, // "chinese", "japanese"
+      /deer$/i, // "deer", "reindeer"
+      /fish$/i, // "fish", "blowfish", "angelfish"
+      /measles$/i,
+      /o[iu]s$/i, // "carnivorous"
+      /pox$/i, // "chickpox", "smallpox"
+      /sheep$/i
+    ].forEach(pluralize.addUncountableRule);
+
+    return pluralize;
+  });
+  });
+
+  var pending = {};
+  var counter = {};
+
+  var incrementor = function incrementor(key) {
+    return function () {
+      var count = (counter[key] || 0) + 1;
+      counter[key] = count;
+      return count;
+    };
+  };
+
+  var decrementor = function decrementor(key) {
+    return function () {
+      var count = (counter[key] || 0) - 1;
+      counter[key] = count;
+      return count;
+    };
+  };
+  /**
+   * Singularizes record type
+   * @method singularizeType
+   * @param {String} recordType type of record
+   * @return {String}
+   */
+
+
+  function singularizeType(recordType) {
+    var typeParts = recordType.split('_');
+    var endPart = typeParts[typeParts.length - 1];
+    typeParts = typeParts.slice(0, -1);
+    endPart = pluralize.singular(endPart);
+    return [].concat(_toConsumableArray(typeParts), [endPart]).join('_');
+  }
+  /**
+   * Build request url from base url, endpoint, query params, and ids.
+   *
+   * @method requestUrl
+   * @return {String} formatted url string
+   */
+
+  function requestUrl(baseUrl, endpoint) {
+    var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var id = arguments.length > 3 ? arguments[3] : undefined;
+    var queryParamString = '';
+
+    if (Object.keys(queryParams).length > 0) {
+      queryParamString = "?".concat(jqueryParam(queryParams));
+    }
+
+    var idForPath = '';
+
+    if (id) {
+      idForPath = "/".concat(id);
+    } // Return full url
+
+
+    return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
+  }
+  function newId() {
+    return "tmp-".concat(v1_1());
+  }
+  function dbOrNewId(properties) {
+    return properties.id || newId();
+  }
+  /**
+   * Avoids making racing requests by blocking a request if an identical one is
+   * already in-flight. Blocked requests will be resolved when the initial request
+   * resolves by cloning the response.
+   *
+   * @method combineRacedRequests
+   * @param {String} key the unique key for the request
+   * @param {Function} fn the function the generates the promise
+   * @return {Promise}
+   */
+
+  function combineRacedRequests(key, fn) {
+    var incrementBlocked = incrementor(key);
+    var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
+
+    incrementBlocked();
+
+    function handleResponse(response) {
+      var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
+      // clone the response before returning so that we can re-use it for the
+      // remaining callers
+
+      if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
+      // this is the last one), we can remove the reference to the pending promise
+      // allowing subsequent requests to proceed unblocked.
+
+      delete pending[key];
+      return response;
+    } // Return pending promise if one already exists
+
+
+    if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
+    // clear out the pending promise for the key
+
+    pending[key] = fn.call();
+    return pending[key].then(handleResponse);
+  }
+  /**
+   * Reducer function for filtering out duplicate records
+   * by a key provided. Returns a function that has a accumulator and
+   * current record per Array.reduce.
+   *
+   * @method uniqueByReducer
+   * @param {Array} key
+   * @return {Function}
+   */
+
+  function uniqueByReducer(key) {
+    return function (accumulator, current) {
+      return accumulator.some(function (item) {
+        return item[key] === current[key];
+      }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
+    };
+  }
+  /**
+   * Returns objects unique by key provided
+   *
+   * @method uniqueBy
+   * @param {Array} array
+   * @param {String} key
+   * @return {Array}
+   */
+
+  function uniqueBy(array, key) {
+    return array.reduce(uniqueByReducer(key), []);
+  }
+
   function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
   function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -8636,12 +9490,18 @@
     var relationships = record.relationships;
     var relationType = modelType || property;
     var references = relationships && relationships[relationType];
-    var relatedRecords = [];
+    var relatedRecords = []; // NOTE: If the record doesn't have a matching references for the relation type
+    // fall back to looking up records by a foreign id i.e record.related_record_id
 
     if (references && references.data) {
       relatedRecords = references.data.map(function (ref) {
         var recordType = ref.type;
         return record.store.getRecord(recordType, ref.id);
+      });
+    } else {
+      var foreignId = "".concat(singularizeType(record.type), "_id");
+      relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
+        return String(rel[foreignId]) === String(record.id);
       });
     }
 
@@ -9532,345 +10392,6 @@
       return {};
     }
   })), _class);
-
-  var rngBrowser = createCommonjsModule(function (module) {
-  // Unique ID creation requires a high quality random # generator.  In the
-  // browser this is a little complicated due to unknown quality of Math.random()
-  // and inconsistent support for the `crypto` API.  We do the best we can via
-  // feature-detection
-
-  // getRandomValues needs to be invoked in a context where "this" is a Crypto
-  // implementation. Also, find the complete implementation of crypto on IE11.
-  var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto)) ||
-                        (typeof(msCrypto) != 'undefined' && typeof window.msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto));
-
-  if (getRandomValues) {
-    // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
-    var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
-
-    module.exports = function whatwgRNG() {
-      getRandomValues(rnds8);
-      return rnds8;
-    };
-  } else {
-    // Math.random()-based (RNG)
-    //
-    // If all else fails, use Math.random().  It's fast, but is of unspecified
-    // quality.
-    var rnds = new Array(16);
-
-    module.exports = function mathRNG() {
-      for (var i = 0, r; i < 16; i++) {
-        if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-        rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-      }
-
-      return rnds;
-    };
-  }
-  });
-
-  /**
-   * Convert array of 16 byte values to UUID string format of the form:
-   * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-   */
-  var byteToHex = [];
-  for (var i = 0; i < 256; ++i) {
-    byteToHex[i] = (i + 0x100).toString(16).substr(1);
-  }
-
-  function bytesToUuid(buf, offset) {
-    var i = offset || 0;
-    var bth = byteToHex;
-    // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-    return ([bth[buf[i++]], bth[buf[i++]], 
-  	bth[buf[i++]], bth[buf[i++]], '-',
-  	bth[buf[i++]], bth[buf[i++]], '-',
-  	bth[buf[i++]], bth[buf[i++]], '-',
-  	bth[buf[i++]], bth[buf[i++]], '-',
-  	bth[buf[i++]], bth[buf[i++]],
-  	bth[buf[i++]], bth[buf[i++]],
-  	bth[buf[i++]], bth[buf[i++]]]).join('');
-  }
-
-  var bytesToUuid_1 = bytesToUuid;
-
-  // **`v1()` - Generate time-based UUID**
-  //
-  // Inspired by https://github.com/LiosK/UUID.js
-  // and http://docs.python.org/library/uuid.html
-
-  var _nodeId;
-  var _clockseq;
-
-  // Previous uuid creation time
-  var _lastMSecs = 0;
-  var _lastNSecs = 0;
-
-  // See https://github.com/broofa/node-uuid for API details
-  function v1(options, buf, offset) {
-    var i = buf && offset || 0;
-    var b = buf || [];
-
-    options = options || {};
-    var node = options.node || _nodeId;
-    var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
-
-    // node and clockseq need to be initialized to random values if they're not
-    // specified.  We do this lazily to minimize issues related to insufficient
-    // system entropy.  See #189
-    if (node == null || clockseq == null) {
-      var seedBytes = rngBrowser();
-      if (node == null) {
-        // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-        node = _nodeId = [
-          seedBytes[0] | 0x01,
-          seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
-        ];
-      }
-      if (clockseq == null) {
-        // Per 4.2.2, randomize (14 bit) clockseq
-        clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
-      }
-    }
-
-    // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-    // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-    // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-    // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-    var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
-
-    // Per 4.2.1.2, use count of uuid's generated during the current clock
-    // cycle to simulate higher resolution clock
-    var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
-
-    // Time since last uuid creation (in msecs)
-    var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
-
-    // Per 4.2.1.2, Bump clockseq on clock regression
-    if (dt < 0 && options.clockseq === undefined) {
-      clockseq = clockseq + 1 & 0x3fff;
-    }
-
-    // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-    // time interval
-    if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-      nsecs = 0;
-    }
-
-    // Per 4.2.1.2 Throw error if too many uuids are requested
-    if (nsecs >= 10000) {
-      throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
-    }
-
-    _lastMSecs = msecs;
-    _lastNSecs = nsecs;
-    _clockseq = clockseq;
-
-    // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-    msecs += 12219292800000;
-
-    // `time_low`
-    var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-    b[i++] = tl >>> 24 & 0xff;
-    b[i++] = tl >>> 16 & 0xff;
-    b[i++] = tl >>> 8 & 0xff;
-    b[i++] = tl & 0xff;
-
-    // `time_mid`
-    var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
-    b[i++] = tmh >>> 8 & 0xff;
-    b[i++] = tmh & 0xff;
-
-    // `time_high_and_version`
-    b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-    b[i++] = tmh >>> 16 & 0xff;
-
-    // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-    b[i++] = clockseq >>> 8 | 0x80;
-
-    // `clock_seq_low`
-    b[i++] = clockseq & 0xff;
-
-    // `node`
-    for (var n = 0; n < 6; ++n) {
-      b[i + n] = node[n];
-    }
-
-    return buf ? buf : bytesToUuid_1(b);
-  }
-
-  var v1_1 = v1;
-
-  var jqueryParam = createCommonjsModule(function (module) {
-  /**
-   * @preserve jquery-param (c) 2015 KNOWLEDGECODE | MIT
-   */
-  (function (global) {
-
-      var param = function (a) {
-          var s = [];
-          var add = function (k, v) {
-              v = typeof v === 'function' ? v() : v;
-              v = v === null ? '' : v === undefined ? '' : v;
-              s[s.length] = encodeURIComponent(k) + '=' + encodeURIComponent(v);
-          };
-          var buildParams = function (prefix, obj) {
-              var i, len, key;
-
-              if (prefix) {
-                  if (Array.isArray(obj)) {
-                      for (i = 0, len = obj.length; i < len; i++) {
-                          buildParams(
-                              prefix + '[' + (typeof obj[i] === 'object' && obj[i] ? i : '') + ']',
-                              obj[i]
-                          );
-                      }
-                  } else if (String(obj) === '[object Object]') {
-                      for (key in obj) {
-                          buildParams(prefix + '[' + key + ']', obj[key]);
-                      }
-                  } else {
-                      add(prefix, obj);
-                  }
-              } else if (Array.isArray(obj)) {
-                  for (i = 0, len = obj.length; i < len; i++) {
-                      add(obj[i].name, obj[i].value);
-                  }
-              } else {
-                  for (key in obj) {
-                      buildParams(key, obj[key]);
-                  }
-              }
-              return s;
-          };
-
-          return buildParams('', a).join('&');
-      };
-
-      {
-          module.exports = param;
-      }
-
-  }());
-  });
-
-  var pending = {};
-  var counter = {};
-
-  var incrementor = function incrementor(key) {
-    return function () {
-      var count = (counter[key] || 0) + 1;
-      counter[key] = count;
-      return count;
-    };
-  };
-
-  var decrementor = function decrementor(key) {
-    return function () {
-      var count = (counter[key] || 0) - 1;
-      counter[key] = count;
-      return count;
-    };
-  };
-  /**
-   * Build request url from base url, endpoint, query params, and ids.
-   *
-   * @method requestUrl
-   * @return {String} formatted url string
-   */
-
-
-  function requestUrl(baseUrl, endpoint) {
-    var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-    var id = arguments.length > 3 ? arguments[3] : undefined;
-    var queryParamString = '';
-
-    if (Object.keys(queryParams).length > 0) {
-      queryParamString = "?".concat(jqueryParam(queryParams));
-    }
-
-    var idForPath = '';
-
-    if (id) {
-      idForPath = "/".concat(id);
-    } // Return full url
-
-
-    return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
-  }
-  function newId() {
-    return "tmp-".concat(v1_1());
-  }
-  function dbOrNewId(properties) {
-    return properties.id || newId();
-  }
-  /**
-   * Avoids making racing requests by blocking a request if an identical one is
-   * already in-flight. Blocked requests will be resolved when the initial request
-   * resolves by cloning the response.
-   *
-   * @method combineRacedRequests
-   * @param {String} key the unique key for the request
-   * @param {Function} fn the function the generates the promise
-   * @return {Promise}
-   */
-
-  function combineRacedRequests(key, fn) {
-    var incrementBlocked = incrementor(key);
-    var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
-
-    incrementBlocked();
-
-    function handleResponse(response) {
-      var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
-      // clone the response before returning so that we can re-use it for the
-      // remaining callers
-
-      if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
-      // this is the last one), we can remove the reference to the pending promise
-      // allowing subsequent requests to proceed unblocked.
-
-      delete pending[key];
-      return response;
-    } // Return pending promise if one already exists
-
-
-    if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
-    // clear out the pending promise for the key
-
-    pending[key] = fn.call();
-    return pending[key].then(handleResponse);
-  }
-  /**
-   * Reducer function for filtering out duplicate records
-   * by a key provided. Returns a function that has a accumulator and
-   * current record per Array.reduce.
-   *
-   * @method uniqueByReducer
-   * @param {Array} key
-   * @return {Function}
-   */
-
-  function uniqueByReducer(key) {
-    return function (accumulator, current) {
-      return accumulator.some(function (item) {
-        return item[key] === current[key];
-      }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
-    };
-  }
-  /**
-   * Returns objects unique by key provided
-   *
-   * @method uniqueBy
-   * @param {Array} array
-   * @param {String} key
-   * @return {Array}
-   */
-
-  function uniqueBy(array, key) {
-    return array.reduce(uniqueByReducer(key), []);
-  }
 
   var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _descriptor4, _temp$1;
 

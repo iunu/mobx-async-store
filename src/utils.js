@@ -1,5 +1,6 @@
 import uuidv1 from 'uuid/v1'
 import jqueryParam from 'jquery-param'
+import pluralize from 'pluralize'
 
 const pending = {}
 const counter = {}
@@ -14,6 +15,22 @@ const decrementor = (key) => () => {
   const count = (counter[key] || 0) - 1
   counter[key] = count
   return count
+}
+
+/**
+ * Singularizes record type
+ * @method singularizeType
+ * @param {String} recordType type of record
+ * @return {String}
+ */
+export function singularizeType (recordType) {
+  let typeParts = recordType.split('_')
+  let endPart = typeParts[typeParts.length - 1]
+
+  typeParts = typeParts.slice(0, -1)
+  endPart = pluralize.singular(endPart)
+
+  return [...typeParts, endPart].join('_')
 }
 
 /**
