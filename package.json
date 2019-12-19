@@ -1,5 +1,5 @@
 {
-  "name": "artemis-data",
+  "name": "mobx-async-store",
   "version": "1.0.3",
   "module": "dist/mobx-async-store.esm.js",
   "browser": "dist/mobx-async-store.umd.js",
