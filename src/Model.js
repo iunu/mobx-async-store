@@ -740,7 +740,7 @@ class Model {
    */
   _makeObservable (initialAttributes) {
      const { defaultAttributes } = this
-     const attrs = toJS(initialAttributes)
+     const attrs = toJS(initialAttributes, { recurseEverything: true })
      extendObservable(this, {
        ...defaultAttributes,
        ...attrs
@@ -765,7 +765,7 @@ class Model {
   get snapshot () {
     return {
       attributes: this.attributes,
-      relationships: toJS(this.relationships)
+      relationships: toJS(this.relationships, { recurseEverything: true })
     }
   }
 
