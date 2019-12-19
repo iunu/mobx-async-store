@@ -49,7 +49,7 @@ export default [
 			'@babel/runtime/helpers/getPrototypeOf',
 			'@babel/runtime/helpers/inherits',
 			'@babel/runtime/helpers/initializerDefineProperty',
-			'@babel/runtime/helpers/initializerWarningHelper',
+			// '@babel/runtime/helpers/initializerWarningHelper',
 			'@babel/runtime/helpers/objectSpread',
 			'@babel/runtime/helpers/possibleConstructorReturn',
 			'@babel/runtime/helpers/typeof',

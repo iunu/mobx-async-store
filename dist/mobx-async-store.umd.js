@@ -9181,7 +9181,9 @@
       key: "_makeObservable",
       value: function _makeObservable(initialAttributes) {
         var defaultAttributes = this.defaultAttributes;
-        var attrs = toJS$$1(initialAttributes);
+        var attrs = toJS$$1(initialAttributes, {
+          recurseEverything: true
+        });
         extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
       }
       /**
@@ -9416,7 +9418,9 @@
       get: function get() {
         return {
           attributes: this.attributes,
-          relationships: toJS$$1(this.relationships)
+          relationships: toJS$$1(this.relationships, {
+            recurseEverything: true
+          })
         };
       }
     }, {
@@ -9910,7 +9914,9 @@
         if (data.constructor.name === 'Array') {
           return _this.addModels(type, data);
         } else {
-          return _this.addModel(type, toJS$$1(data));
+          return _this.addModel(type, toJS$$1(data, {
+            recurseEverything: true
+          }));
         }
       };
 

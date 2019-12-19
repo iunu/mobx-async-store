@@ -784,7 +784,9 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      var attrs = toJS(initialAttributes);
+      var attrs = toJS(initialAttributes, {
+        recurseEverything: true
+      });
       extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
     }
     /**
@@ -1019,7 +1021,9 @@ function () {
     get: function get() {
       return {
         attributes: this.attributes,
-        relationships: toJS(this.relationships)
+        relationships: toJS(this.relationships, {
+          recurseEverything: true
+        })
       };
     }
   }, {
@@ -1291,7 +1295,9 @@ function () {
       if (data.constructor.name === 'Array') {
         return _this.addModels(type, data);
       } else {
-        return _this.addModel(type, toJS(data));
+        return _this.addModel(type, toJS(data, {
+          recurseEverything: true
+        }));
       }
     };
 

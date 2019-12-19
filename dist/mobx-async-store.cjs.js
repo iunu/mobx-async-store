@@ -790,7 +790,9 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      var attrs = mobx.toJS(initialAttributes);
+      var attrs = mobx.toJS(initialAttributes, {
+        recurseEverything: true
+      });
       mobx.extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
     }
     /**
@@ -1025,7 +1027,9 @@ function () {
     get: function get() {
       return {
         attributes: this.attributes,
-        relationships: mobx.toJS(this.relationships)
+        relationships: mobx.toJS(this.relationships, {
+          recurseEverything: true
+        })
       };
     }
   }, {
@@ -1297,7 +1301,9 @@ function () {
       if (data.constructor.name === 'Array') {
         return _this.addModels(type, data);
       } else {
-        return _this.addModel(type, mobx.toJS(data));
+        return _this.addModel(type, mobx.toJS(data, {
+          recurseEverything: true
+        }));
       }
     };
 
