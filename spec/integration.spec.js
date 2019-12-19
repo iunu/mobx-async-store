@@ -3,8 +3,8 @@ import React from 'react'
 import { mount } from 'enzyme'
 import { Provider } from 'mobx-react'
 import { isObservable } from 'mobx'
+import { Store, Model, attribute } from '../src/main'
 
-import { Store, Model, attribute } from 'artemis-data'
 import ExampleApp from './ExampleApp'
 
 class Todo extends Model {

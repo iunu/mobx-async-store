@@ -1,6 +1,6 @@
 /* global fetch */
 import { isObservable, toJS } from 'mobx'
-import { Store, Model, attribute } from 'artemis-data'
+import { Store, Model, attribute } from '../src/main'
 
 class Note extends Model {
   static type = 'notes'

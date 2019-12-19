@@ -1,7 +1,7 @@
 /* global fetch */
 import moment from 'moment'
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, newId, requestUrl, uniqueBy } from './utils'
+import { dbOrNewId, newId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -346,8 +346,10 @@ class Store {
    */
   fetch (url, options = {}) {
     const { defaultFetchOptions } = this
+    const fetchOptions = { ...defaultFetchOptions, ...options }
+    const key = JSON.stringify({ url, fetchOptions })
 
-    return fetch(url, { ...defaultFetchOptions, ...options })
+    return combineRacedRequests(key, () => fetch(url, { ...defaultFetchOptions, ...options }))
   }
 
   /**

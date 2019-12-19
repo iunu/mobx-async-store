@@ -1,9 +1,9 @@
 {
   "name": "artemis-data",
   "version": "1.0.3",
-  "module": "dist/artemis-data.esm.js",
-  "browser": "dist/artemis-data.umd.js",
-  "main": "dist/artemis-data.cjs.js",
+  "module": "dist/mobx-async-store.esm.js",
+  "browser": "dist/mobx-async-store.umd.js",
+  "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
     "browserslist": "^4.7.0",
     "caniuse-lite": "^1.0.30000998",
