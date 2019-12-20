@@ -24,7 +24,7 @@ class Note extends Model {
   static endpoint = 'notes'
 
   @attribute(String) description
-  @relatedToOne todo
+  @relatedToOne organization
 }
 
 function validatesArray (property) {
@@ -58,9 +58,9 @@ function validatesOptions (property, target) {
   }
 }
 
-class Todo extends Model {
-  static type = 'todos'
-  static endpoint = 'todos'
+class Organization extends Model {
+  static type = 'organizations'
+  static endpoint = 'organizations'
 
   @validates
   @attribute(String) title = 'NEW TODO'
@@ -79,7 +79,7 @@ class Todo extends Model {
 
 class AppStore extends Store {
   static types = [
-    Todo,
+    Organization,
     Note
   ]
 }
@@ -101,7 +101,7 @@ const store = new AppStore({
 const mockTodoData = {
   data: {
     id: '1',
-    type: 'todos',
+    type: 'organizations',
     attributes: {
       id: 1,
       title: 'Do taxes',
@@ -120,21 +120,21 @@ describe('Model', () => {
 
   describe('initialization', () => {
     it('attributes default to specified type', () => {
-      const todo = new Todo()
+      const todo = new Organization()
       expect(todo.tags).toBeInstanceOf(Array)
       const note = new Note()
       expect(note.description).toEqual('')
     })
 
     it('attributes can have default values', () => {
-      const todo = new Todo()
+      const todo = new Organization()
       expect(todo.title).toEqual('NEW TODO')
       todo.title = 'test'
       expect(todo.title).toEqual('test')
     })
 
     it('attributes are observable', (done) => {
-      const todo = new Todo({ title: 'one' })
+      const todo = new Organization({ title: 'one' })
       expect(isObservable(todo)).toBe(true)
 
       let runs = 0
@@ -152,12 +152,12 @@ describe('Model', () => {
     })
 
     it('attributes are overridable in constructor', () => {
-      const todo = new Todo({ title: 'Buy Milk' })
+      const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.title).toEqual('Buy Milk')
     })
 
     it('attributes can be set', () => {
-      const todo = new Todo()
+      const todo = new Organization()
       todo.title = 'Do laundry'
       expect(todo.title).toEqual('Do laundry')
       todo.tags.push('chore')
@@ -166,7 +166,7 @@ describe('Model', () => {
     })
 
     it('attributes are observable', (done) => {
-      const todo = new Todo({})
+      const todo = new Organization({})
 
       let runs = 0
       const expected = [undefined, 'one', 'two']
@@ -183,7 +183,7 @@ describe('Model', () => {
     })
 
     it('attributes are observable', () => {
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
 
       expect(todo.options.test).toEqual('one')
     })
@@ -193,9 +193,9 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
-      note.todo = todo
-      expect(note.todo).toEqual(todo)
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      note.organization = todo
+      expect(note.organization).toEqual(todo)
     })
 
     it('relatedToOne relationship can be unset', () => {
@@ -203,13 +203,13 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
 
-      note.todo = todo
-      expect(note.todo).toEqual(todo)
+      note.organization = todo
+      expect(note.organization).toEqual(todo)
 
-      note.todo = null
-      expect(note.todo).toBeFalsy()
+      note.organization = null
+      expect(note.organization).toBeFalsy()
     })
 
     it('relatedToOne relationship adds to inverse', () => {
@@ -217,9 +217,9 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      let todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      let todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
 
-      note.todo = todo
+      note.organization = todo
       expect(todo.notes).toContain(note)
     })
 
@@ -229,13 +229,13 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
 
-      note.todo = todo
+      note.organization = todo
       expect(todo.notes).toContain(note)
 
-      note.todo = null
-      expect(note.todo).toBeFalsy()
+      note.organization = null
+      expect(note.organization).toBeFalsy()
     })
 
     it('builds relatedToMany relationship with existing models', async () => {
@@ -245,7 +245,7 @@ describe('Model', () => {
       })
 
       fetch.mockResponse(exampleRelatedToManyResponse)
-      const todo = await store.findOne('todos', 1)
+      const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
       expect(todo.notes).toHaveLength(1)
@@ -254,7 +254,7 @@ describe('Model', () => {
 
     it('builds relatedToMany relationship with included data', async () => {
       fetch.mockResponse(exampleRelatedToManyIncludedResponse)
-      const todo = await store.findOne('todos', 1)
+      const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
       expect(todo.notes).toHaveLength(1)
@@ -263,7 +263,7 @@ describe('Model', () => {
 
     it('builds aliased relatedToMany relationship', async () => {
       fetch.mockResponse(exampleRelatedToManyIncludedResponse)
-      const todo = await store.findOne('todos', 1)
+      const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
       expect(todo.meeting_notes).toHaveLength(1)
@@ -276,7 +276,7 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
     const { notes } = todo
 
     notes.add(note)
@@ -286,13 +286,13 @@ describe('Model', () => {
   })
 
   it('relatedToMany doesn\'t blow up on empty iteration', () => {
-    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
     expect(todo.notes).toHaveLength(0)
     expect(todo.notes.map(note => note)).toHaveLength(0)
   })
 
   it('relatedToMany doesn\'t blow up after adding to empty array', () => {
-    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
     expect(todo.notes).toHaveLength(0)
     expect(todo.notes.map(note => note)).toHaveLength(0)
 
@@ -311,7 +311,7 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
 
@@ -326,12 +326,12 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
 
     expect(todo.notes).toContain(note)
-    expect(note.todo).toEqual(todo)
+    expect(note.organization).toEqual(todo)
   })
 
   it('relatedToMany models remove inverse relationships', () => {
@@ -339,20 +339,20 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
 
-    expect(note.todo).toEqual(todo)
+    expect(note.organization).toEqual(todo)
 
     todo.notes.remove(note)
 
-    expect(note.todo).toBeFalsy()
+    expect(note.organization).toBeFalsy()
   })
 
   describe('.snapshot', () => {
     it('sets snapshot on initialization', async () => {
-      const todo = new Todo({ title: 'Buy Milk' })
+      const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes).toEqual({
         due_at: moment(timestamp).toDate(),
         tags: [],
@@ -364,11 +364,11 @@ describe('Model', () => {
 
   describe('.jsonapi', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
       expect(todo.jsonapi()).toEqual({
         data: {
           id: '1',
-          type: 'todos',
+          type: 'organizations',
           attributes: {
             due_at: moment(timestamp).toISOString(),
             tags: [],
@@ -385,14 +385,14 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
 
       todo.notes.add(note)
 
       expect(todo.jsonapi({ relationships: ['notes'] })).toEqual({
         data: {
           id: '11',
-          type: 'todos',
+          type: 'organizations',
           attributes: {
             due_at: moment(timestamp).toISOString(),
             tags: [],
@@ -411,12 +411,12 @@ describe('Model', () => {
 
   describe('.isDirty', () => {
     it('is initially false', async () => {
-      const todo = new Todo({ title: 'Buy Milk' })
+      const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.isDirty).toBeFalsy()
     })
 
     it('is set to true if record changes', async () => {
-      const todo = new Todo({ title: 'Buy Milk' })
+      const todo = new Organization({ title: 'Buy Milk' })
       todo.title = 'Do the laundry'
       expect(todo.isDirty).toBe(true)
     })
@@ -424,27 +424,27 @@ describe('Model', () => {
 
   describe('.validate', () => {
     it('validates correct data formats', () => {
-      const todo = new Todo()
+      const todo = new Organization()
       expect(todo.validate()).toBeTruthy()
       expect(Object.keys(todo.errors)).toHaveLength(0)
     })
 
     it('uses default validation to check for presence', () => {
-      const todo = new Todo({ title: '' })
+      const todo = new Organization({ title: '' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.title[0].key).toEqual('blank')
       expect(todo.errors.title[0].message).toEqual('can\'t be blank')
     })
 
     it('uses custom validation', () => {
-      const todo = new Todo({ tags: 'not an array' })
+      const todo = new Organization({ tags: 'not an array' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.tags[0].key).toEqual('must_be_an_array')
       expect(todo.errors.tags[0].message).toEqual('must be an array')
     })
 
     it('uses introspective custom validation', () => {
-      const todo = new Todo({ options: { foo: 'bar', baz: null } })
+      const todo = new Organization({ options: { foo: 'bar', baz: null } })
 
       todo.requiredOptions = ['foo', 'baz']
 
@@ -456,7 +456,7 @@ describe('Model', () => {
 
   describe('.rollback', () => {
     it('rollback restores data to last persisted state ', async () => {
-      const todo = new Todo({ title: 'Buy Milk' })
+      const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
       expect(todo.title).toEqual('Do Laundry')
@@ -469,7 +469,7 @@ describe('Model', () => {
       // expect.assertions(9)
       // Add record to store
       const savedTitle = mockTodoData.data.attributes.title
-      const todo = store.add('todos', { title: savedTitle })
+      const todo = store.add('organizations', { title: savedTitle })
       // Mock the API response
       fetch.mockResponse(mockTodoResponse)
       // Trigger the save function and subsequent request
@@ -494,7 +494,7 @@ describe('Model', () => {
         })
       })
 
-      const todo = store.add('todos', { title: 'Buy Milk' })
+      const todo = store.add('organizations', { title: 'Buy Milk' })
       expect(todo.isInFlight).toBe(false)
 
       todo.save()
@@ -513,7 +513,7 @@ describe('Model', () => {
     it('makes request and updates model in store', async () => {
       // expect.assertions(9)
       // Add record to store
-      const todo = store.add('todos', { title: 'Buy Milk' })
+      const todo = store.add('organizations', { title: 'Buy Milk' })
       // Check the model doesn't have attributes
       // only provided by an API request
       expect(todo).not.toHaveProperty('created_at')
@@ -528,11 +528,11 @@ describe('Model', () => {
       // Assert the request was made with the correct
       // url and fetch options
       expect(fetch.mock.calls).toHaveLength(1)
-      expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos')
+      expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations')
       expect(fetch.mock.calls[0][1].method).toEqual('POST')
       expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
         data: {
-          type: 'todos',
+          type: 'organizations',
           attributes: {
             due_at: moment(timestamp).toDate().toISOString(),
             tags: [],
@@ -553,14 +553,14 @@ describe('Model', () => {
   describe('.delete', () => {
     it('makes request and removes model from the store store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
-      expect(store.findAll('todos', { fromServer: false }))
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      expect(store.findAll('organizations', { fromServer: false }))
         .toHaveLength(1)
       await todo.destroy()
       expect(fetch.mock.calls).toHaveLength(1)
-      expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos/1')
+      expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations/1')
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
-      expect(store.findAll('todos', { fromServer: false }))
+      expect(store.findAll('organizations', { fromServer: false }))
         .toHaveLength(0)
     })
   })

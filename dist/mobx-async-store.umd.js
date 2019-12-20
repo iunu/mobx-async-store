@@ -9272,8 +9272,7 @@
 
   function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
-  function ObjectPromiseProxy(requestFunc, target) {
-    var promise = requestFunc();
+  function ObjectPromiseProxy(promise, target) {
     target.isInFlight = true;
     var tmpId = target.id;
     var result = promise.then(function _callee(response) {
@@ -9332,31 +9331,23 @@
               return _context.abrupt("return", target);
 
             case 14:
-              if (!(response.status === 503 || response.status === 429)) {
-                _context.next = 18;
-                break;
-              }
-
-              return _context.abrupt("return", target);
-
-            case 18:
               target.isInFlight = false;
               message = target.store.genericErrorMessage;
-              _context.prev = 20;
-              _context.next = 23;
+              _context.prev = 16;
+              _context.next = 19;
               return regeneratorRuntime.awrap(response.json());
 
-            case 23:
+            case 19:
               _json = _context.sent;
               message = parseApiErrors(_json.errors, message);
-              _context.next = 29;
+              _context.next = 25;
               break;
 
-            case 27:
-              _context.prev = 27;
-              _context.t0 = _context["catch"](20);
+            case 23:
+              _context.prev = 23;
+              _context.t0 = _context["catch"](16);
 
-            case 29:
+            case 25:
               // TODO: add all errors from the API response to the target
               target.errors = _objectSpread({}, target.errors, {
                 status: status,
@@ -9367,12 +9358,12 @@
               errorString = JSON.stringify(target.errors);
               return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
-            case 32:
+            case 28:
             case "end":
               return _context.stop();
           }
         }
-      }, null, null, [[20, 27]]);
+      }, null, null, [[16, 23]]);
     }, function (error) {
       // TODO: Handle error states correctly
       target.isInFlight = false;
@@ -9774,7 +9765,6 @@
 
       _initializerDefineProperty(this, "errors", _descriptor2, this);
 
-      this.isPendingSync = false;
       this.previousSnapshot = {};
 
       this._makeObservable(initialAttributes);
@@ -9826,7 +9816,7 @@
       key: "rollback",
 
       /**
-       * restores data and relationships to their last persisted state
+       * restores data to its last persisted state
        * ```
        * kpi = store.find('kpis', 5)
        * kpi.name
@@ -9863,8 +9853,6 @@
     }, {
       key: "save",
       value: function save() {
-        var _this4 = this;
-
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
         if (!options.skip_validations && !this.validate()) {
@@ -9891,15 +9879,11 @@
           relationships: relationships,
           attributes: attributes
         }));
-
-        var requestFunc = function requestFunc() {
-          return _this4.store.fetch(url, {
-            method: method,
-            body: body
-          });
-        };
-
-        return new ObjectPromiseProxy(requestFunc, this);
+        var response = this.store.fetch(url, {
+          method: method,
+          body: body
+        });
+        return new ObjectPromiseProxy(response, this);
       }
       /**
        * Checks all validations, adding errors where necessary and returning `false` if any are not valid
@@ -9910,7 +9894,7 @@
     }, {
       key: "validate",
       value: function validate() {
-        var _this5 = this;
+        var _this4 = this;
 
         this.errors = {};
         var attributeNames = this.attributeNames,
@@ -9918,10 +9902,10 @@
         var validationChecks = attributeNames.map(function (property) {
           var validator = attributeDefinitions[property].validator;
           if (!validator) return true;
-          var validationResult = validator(_this5[property], _this5);
+          var validationResult = validator(_this4[property], _this4);
 
           if (!validationResult.isValid) {
-            _this5.errors[property] = validationResult.errors;
+            _this4.errors[property] = validationResult.errors;
           }
 
           return validationResult.isValid;
@@ -9962,6 +9946,7 @@
 
         var _this = this;
 
+        _this.errors = {};
         return promise.then(function _callee(response) {
           var json;
           return regeneratorRuntime.async(function _callee$(_context) {
@@ -10041,10 +10026,7 @@
       key: "_makeObservable",
       value: function _makeObservable(initialAttributes) {
         var defaultAttributes = this.defaultAttributes;
-        var attrs = toJS$$1(initialAttributes, {
-          recurseEverything: true
-        });
-        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, attrs));
+        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
       }
       /**
        * The current state of defined attributes and relationships of the instance
@@ -10082,32 +10064,20 @@
     }, {
       key: "_trackState",
       value: function _trackState() {
-        var _this6 = this;
+        var _this5 = this;
 
-        this.disposers = [];
-        this.disposers.push(reaction$$1(function () {
-          return JSON.stringify(_this6.attributes);
+        reaction$$1(function () {
+          return JSON.stringify(_this5.attributes);
         }, function (objectString) {
-          _this6.isDirty = true;
-        }));
-        this.disposers.push(reaction$$1(function () {
-          return JSON.stringify(_this6.relationships);
-        }, function (relString) {
-          _this6.isDirty = true;
-        }));
-      }
-      /**
-       * disposes of track state reactions
-       * @method diposeReactions
-      */
-
-    }, {
-      key: "disposeReactions",
-      value: function disposeReactions() {
-        this.disposers.forEach(function (dispose) {
-          return dispose();
+          // console.log(objectString)
+          _this5.isDirty = true;
         });
-        this.disposers = [];
+        reaction$$1(function () {
+          return JSON.stringify(_this5.relationships);
+        }, function (relString) {
+          // console.log(relString)
+          _this5.isDirty = true;
+        });
       }
       /**
        * shortcut to get the static
@@ -10146,7 +10116,7 @@
        * @return {Object} data in JSON::API format
        */
       value: function jsonapi() {
-        var _this7 = this;
+        var _this6 = this;
 
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var attributeDefinitions = this.attributeDefinitions,
@@ -10164,7 +10134,7 @@
         }
 
         var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-          var value = _this7[key];
+          var value = _this6[key];
 
           if (value) {
             var DataType = attributeDefinitions[key].dataType;
@@ -10196,7 +10166,7 @@
             return options.relationships.includes(name);
           });
           var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-            rels[key] = toJS$$1(_this7.relationships[key]);
+            rels[key] = toJS$$1(_this6.relationships[key]);
             stringifyIds(rels[key]);
             return rels;
           }, {});
@@ -10218,11 +10188,11 @@
     }, {
       key: "updateAttributes",
       value: function updateAttributes(attributes) {
-        var _this8 = this;
+        var _this7 = this;
 
         transaction$$1(function () {
           Object.keys(attributes).forEach(function (key) {
-            set$$1(_this8, key, attributes[key]);
+            _this7[key] = attributes[key];
           });
         });
       }
@@ -10278,9 +10248,7 @@
       get: function get() {
         return {
           attributes: this.attributes,
-          relationships: toJS$$1(this.relationships, {
-            recurseEverything: true
-          })
+          relationships: toJS$$1(this.relationships)
         };
       }
     }, {
@@ -10298,10 +10266,10 @@
     }, {
       key: "attributes",
       get: function get() {
-        var _this9 = this;
+        var _this8 = this;
 
         return this.attributeNames.reduce(function (attributes, key) {
-          var value = toJS$$1(_this9[key]);
+          var value = toJS$$1(_this8[key]);
 
           if (!value) {
             delete attributes[key];
@@ -10393,7 +10361,7 @@
     }
   })), _class);
 
-  var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _descriptor4, _temp$1;
+  var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
 
   function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -10429,21 +10397,17 @@
 
       _initializerDefineProperty(this, "data", _descriptor$1, this);
 
-      this.moment = moment;
+      this.genericErrorMessage = 'Something went wrong.';
 
       this.add = function (type, data) {
         if (data.constructor.name === 'Array') {
           return _this.addModels(type, data);
         } else {
-          return _this.addModel(type, toJS$$1(data, {
-            recurseEverything: true
-          }));
+          return _this.addModel(type, toJS$$1(data));
         }
       };
 
       _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
-
-      _initializerDefineProperty(this, "newModel", _descriptor3, this);
 
       this.addModels = function (type, data) {
         var records = [];
@@ -10455,7 +10419,7 @@
         return records;
       };
 
-      _initializerDefineProperty(this, "remove", _descriptor4, this);
+      _initializerDefineProperty(this, "remove", _descriptor3, this);
 
       this.findOne = function (type, id) {
         var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
@@ -10783,7 +10747,10 @@
     }, {
       key: "getCachedIds",
       value: function getCachedIds(type, url) {
-        return this.getType(type).cache[url];
+        var ids = this.getType(type).cache[url];
+        if (!ids) return [];
+        var idsSet = new Set(toJS$$1(ids));
+        return Array.from(idsSet);
       }
       /**
        * Gets records from store based on cached query
@@ -10964,11 +10931,11 @@
 
     }, {
       key: "fetchUrl",
-      value: function fetchUrl(type, queryParams, id) {
+      value: function fetchUrl(type, queryParams, id, options) {
         var baseUrl = this.baseUrl,
             modelTypeIndex = this.modelTypeIndex;
         var endpoint = modelTypeIndex[type].endpoint;
-        return requestUrl(baseUrl, endpoint, queryParams, id);
+        return requestUrl(baseUrl, endpoint, queryParams, id, options);
       }
       /**
        * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
@@ -11084,18 +11051,18 @@
               case 7:
                 json = _context2.sent;
                 data = json.data, included = json.included;
-                record = this.createOrUpdateModel(data);
-                this.data[type].cache[url] = [];
-                this.data[type].cache[url].push(record.id);
 
                 if (included) {
                   this.createModelsFromData(included);
                 }
 
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache[url] = [];
+                this.data[type].cache[url].push(record.id);
                 return _context2.abrupt("return", record);
 
               case 16:
-                return _context2.abrupt("return", response.status);
+                return _context2.abrupt("return", null);
 
               case 17:
               case "end":
@@ -11133,30 +11100,17 @@
         return model;
       };
     }
-  }), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "newModel", [action$$1], {
+  }), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [action$$1], {
     configurable: true,
     enumerable: true,
     writable: true,
     initializer: function initializer() {
       var _this8 = this;
 
-      return function (type, attributes) {
-        return _this8.createModel(type, newId(), {
-          attributes: attributes
-        });
-      };
-    }
-  }), _descriptor4 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [action$$1], {
-    configurable: true,
-    enumerable: true,
-    writable: true,
-    initializer: function initializer() {
-      var _this9 = this;
-
       return function (type, id) {
-        var records = _this9.getRecords(type);
+        var records = _this8.getRecords(type);
 
-        _this9.data[type].records = records.reduce(function (hash, record) {
+        _this8.data[type].records = records.reduce(function (hash, record) {
           if (String(record.id) !== String(id)) {
             hash[record.id] = record;
           }

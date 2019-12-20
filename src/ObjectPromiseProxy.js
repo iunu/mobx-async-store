@@ -1,7 +1,6 @@
 import { transaction, set } from 'mobx'
 
-function ObjectPromiseProxy (requestFunc, target) {
-  const promise = requestFunc()
+function ObjectPromiseProxy (promise, target) {
   target.isInFlight = true
   const tmpId = target.id
   const result = promise.then(
@@ -42,11 +41,9 @@ function ObjectPromiseProxy (requestFunc, target) {
           target.store.data[target.type].records[target.id] = target
         })
         return target
-      } else if (response.status === 503 || response.status === 429) {
-        // TODO: Implement offline mode
-        return target
       } else {
         target.isInFlight = false
+
         let message = target.store.genericErrorMessage
         try {
           const json = await response.json()

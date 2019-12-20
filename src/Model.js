@@ -9,7 +9,9 @@ import {
 } from 'mobx'
 
 import moment from 'moment'
+
 import { singularizeType } from './utils'
+
 import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
 
@@ -571,13 +573,6 @@ class Model {
   @observable errors = {}
 
   /**
-   * @property isPendingSync
-   * @type {Boolean}
-   * @default false
-   */
-  isPendingSync = false
-
-  /**
    * The previous state of defined attributes and relationships of the instance
    *
    * @property previousSnapshot
@@ -587,7 +582,7 @@ class Model {
   previousSnapshot = {}
 
   /**
-   * restores data and relationships to their last persisted state
+   * restores data to its last persisted state
    * ```
    * kpi = store.find('kpis', 5)
    * kpi.name
@@ -645,9 +640,9 @@ class Model {
       { relationships, attributes }
     ))
 
-    const requestFunc = () => this.store.fetch(url, { method, body })
+    const response = this.store.fetch(url, { method, body })
 
-    return new ObjectPromiseProxy(requestFunc, this)
+    return new ObjectPromiseProxy(response, this)
   }
 
   /**
@@ -655,6 +650,7 @@ class Model {
    * @method validate
    * @return {Boolean}
    */
+
   validate () {
     this.errors = {}
     const { attributeNames, attributeDefinitions } = this
@@ -695,6 +691,8 @@ class Model {
     this.isInFlight = true
     const promise = this.store.fetch(url, { method: 'DELETE' })
     const _this = this
+    _this.errors = {}
+
     return promise.then(
       async function (response) {
         _this.isInFlight = false
@@ -747,10 +745,10 @@ class Model {
    */
   _makeObservable (initialAttributes) {
      const { defaultAttributes } = this
-     const attrs = toJS(initialAttributes, { recurseEverything: true })
+
      extendObservable(this, {
        ...defaultAttributes,
-       ...attrs
+       ...initialAttributes
      })
    }
 
@@ -772,7 +770,7 @@ class Model {
   get snapshot () {
     return {
       attributes: this.attributes,
-      relationships: toJS(this.relationships, { recurseEverything: true })
+      relationships: toJS(this.relationships)
     }
   }
 
@@ -791,30 +789,21 @@ class Model {
    * @method _trackState
    */
   _trackState () {
-    this.disposers = []
-
-    this.disposers.push(reaction(
+    reaction(
       () => JSON.stringify(this.attributes),
       objectString => {
+        // console.log(objectString)
         this.isDirty = true
       }
-    ))
+    )
 
-    this.disposers.push(reaction(
+    reaction(
       () => JSON.stringify(this.relationships),
       relString => {
+        // console.log(relString)
         this.isDirty = true
       }
-    ))
-  }
-
-  /**
-   * disposes of track state reactions
-   * @method diposeReactions
-  */
-  disposeReactions () {
-    this.disposers.forEach(dispose => dispose())
-    this.disposers = []
+    )
   }
 
   /**
@@ -990,7 +979,7 @@ class Model {
   updateAttributes (attributes) {
     transaction(() => {
       Object.keys(attributes).forEach(key => {
-        set(this, key, attributes[key])
+        this[key] = attributes[key]
       })
     })
   }

@@ -1,7 +1,6 @@
 /* global fetch */
-import moment from 'moment'
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, newId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
+import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -20,7 +19,7 @@ class Store {
    */
   @observable data = {}
 
-  moment = moment
+  genericErrorMessage = 'Something went wrong.'
 
   /**
    * Initializer for Store class
@@ -48,7 +47,7 @@ class Store {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
-      return this.addModel(type, toJS(data, { recurseEverything: true }))
+      return this.addModel(type, toJS(data))
     }
   }
 
@@ -67,11 +66,6 @@ class Store {
     this.data[type].records[id] = model
 
     return model
-  }
-
-  @action
-  newModel = (type, attributes) => {
-    return this.createModel(type, newId(), { attributes })
   }
 
   /**
@@ -462,7 +456,10 @@ class Store {
    * @return {Array} array of ids
    */
   getCachedIds (type, url) {
-    return this.getType(type).cache[url]
+    const ids = this.getType(type).cache[url]
+    if (!ids) return []
+    const idsSet = new Set(toJS(ids))
+    return Array.from(idsSet)
   }
 
   /**
@@ -601,11 +598,11 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  fetchUrl (type, queryParams, id) {
+  fetchUrl (type, queryParams, id, options) {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
-    return requestUrl(baseUrl, endpoint, queryParams, id)
+    return requestUrl(baseUrl, endpoint, queryParams, id, options)
   }
 
   /**
@@ -622,9 +619,7 @@ class Store {
 
     if (response.status === 200) {
       this.data[type].cache[url] = []
-
       const json = await response.json()
-
       if (json.included) {
         this.createModelsFromData(json.included)
       }
@@ -662,22 +657,26 @@ class Store {
     const url = this.fetchUrl(type, queryParams, id)
     // Trigger request
     const response = await this.fetch(url, { method: 'GET' })
+
     // Handle response
     if (response.status === 200) {
       const json = await response.json()
-      const { data, included } = json
-      const record = this.createOrUpdateModel(data)
 
-      this.data[type].cache[url] = []
-      this.data[type].cache[url].push(record.id)
+      const { data, included } = json
 
       if (included) {
         this.createModelsFromData(included)
       }
 
+      const record = this.createOrUpdateModel(data)
+
+      this.data[type].cache[url] = []
+      this.data[type].cache[url].push(record.id)
+
       return record
     } else {
-      return response.status
+      // Return null if record is not found
+      return null
     }
   }
 }

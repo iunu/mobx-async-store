@@ -1,7 +1,7 @@
 export const exampleRelatedToManyResponse = JSON.stringify({
   data: {
     id: '1',
-    type: 'todos',
+    type: 'organizations',
     attributes: {
       id: 1,
       title: 'Do laundry'
@@ -25,7 +25,7 @@ export const exampleRelatedToManyResponse = JSON.stringify({
 export const exampleRelatedToManyIncludedResponse = JSON.stringify({
   data: {
     id: '1',
-    type: 'todos',
+    type: 'organizations',
     attributes: {
       id: 1,
       title: 'Do laundry'
@@ -76,7 +76,7 @@ export const exampleRelatedToOneIncludedResponse = JSON.stringify({
   included: [
     {
       id: '1',
-      type: 'todos',
+      type: 'organizations',
       attributes: {
         id: 1,
         title: 'Do laundry'
