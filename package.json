@@ -9,6 +9,7 @@
     "caniuse-lite": "^1.0.30000998",
     "jquery-param": "^1.0.1",
     "jsonapi-serializer": "^3.6.4",
+    "lodash": "^4.17.15",
     "mobx": "5.5.0",
     "moment": "^2.24.0",
     "pluralize": "^8.0.0",

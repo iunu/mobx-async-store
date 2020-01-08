@@ -376,6 +376,24 @@ describe('Model', () => {
     })
   })
 
+  describe('.dirtyAttributes', () => {
+    it('returns a list of paths for attributes that have been mutated since the last snapshot', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.dirtyAttributes).toHaveLength(0)
+      todo.title = 'Buy Cheese'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('title')
+    })
+
+    it('works on nested attributes', async () => {
+      const todo = new Organization({ title: 'Buy Milk', options: { variety: '2%' } })
+      expect(todo.dirtyAttributes).toHaveLength(0)
+      todo.options.variety = 'Skim'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+    })
+  })
+
   describe('.jsonapi', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })

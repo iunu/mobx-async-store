@@ -141,3 +141,12 @@ export function stringifyIds (object) {
     }
   })
 }
+
+export function walk (value, iteratee, prop, path) {
+  if (value != null && typeof value === 'object') {
+    return Object.keys(value).map((prop) => {
+      return walk(value[prop], iteratee, prop, [path, prop].filter(x => x).join('.'))
+    })
+  }
+  return iteratee(value, path)
+}
