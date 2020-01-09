@@ -6,154 +6,24 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
+var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
 var _initializerDefineProperty = _interopDefault(require('@babel/runtime/helpers/initializerDefineProperty'));
+var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass'));
 require('@babel/runtime/helpers/initializerWarningHelper');
 var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
+var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
+var mobx = require('mobx');
+var moment = _interopDefault(require('moment'));
 var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
-var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
+var uuidv1 = _interopDefault(require('uuid/v1'));
+var jqueryParam = _interopDefault(require('jquery-param'));
+require('pluralize');
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
 var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
 var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
 var _wrapNativeSuper = _interopDefault(require('@babel/runtime/helpers/wrapNativeSuper'));
-var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
-var mobx = require('mobx');
-var moment = _interopDefault(require('moment'));
-var uuidv1 = _interopDefault(require('uuid/v1'));
-var jqueryParam = _interopDefault(require('jquery-param'));
-var pluralize = _interopDefault(require('pluralize'));
-
-var pending = {};
-var counter = {};
-
-var incrementor = function incrementor(key) {
-  return function () {
-    var count = (counter[key] || 0) + 1;
-    counter[key] = count;
-    return count;
-  };
-};
-
-var decrementor = function decrementor(key) {
-  return function () {
-    var count = (counter[key] || 0) - 1;
-    counter[key] = count;
-    return count;
-  };
-};
-/**
- * Singularizes record type
- * @method singularizeType
- * @param {String} recordType type of record
- * @return {String}
- */
-
-
-function singularizeType(recordType) {
-  var typeParts = recordType.split('_');
-  var endPart = typeParts[typeParts.length - 1];
-  typeParts = typeParts.slice(0, -1);
-  endPart = pluralize.singular(endPart);
-  return [].concat(_toConsumableArray(typeParts), [endPart]).join('_');
-}
-/**
- * Build request url from base url, endpoint, query params, and ids.
- *
- * @method requestUrl
- * @return {String} formatted url string
- */
-
-function requestUrl(baseUrl, endpoint) {
-  var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var id = arguments.length > 3 ? arguments[3] : undefined;
-  var queryParamString = '';
-
-  if (Object.keys(queryParams).length > 0) {
-    queryParamString = "?".concat(jqueryParam(queryParams));
-  }
-
-  var idForPath = '';
-
-  if (id) {
-    idForPath = "/".concat(id);
-  } // Return full url
-
-
-  return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
-}
-function newId() {
-  return "tmp-".concat(uuidv1());
-}
-function dbOrNewId(properties) {
-  return properties.id || newId();
-}
-/**
- * Avoids making racing requests by blocking a request if an identical one is
- * already in-flight. Blocked requests will be resolved when the initial request
- * resolves by cloning the response.
- *
- * @method combineRacedRequests
- * @param {String} key the unique key for the request
- * @param {Function} fn the function the generates the promise
- * @return {Promise}
- */
-
-function combineRacedRequests(key, fn) {
-  var incrementBlocked = incrementor(key);
-  var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
-
-  incrementBlocked();
-
-  function handleResponse(response) {
-    var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
-    // clone the response before returning so that we can re-use it for the
-    // remaining callers
-
-    if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
-    // this is the last one), we can remove the reference to the pending promise
-    // allowing subsequent requests to proceed unblocked.
-
-    delete pending[key];
-    return response;
-  } // Return pending promise if one already exists
-
-
-  if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
-  // clear out the pending promise for the key
-
-  pending[key] = fn.call();
-  return pending[key].then(handleResponse);
-}
-/**
- * Reducer function for filtering out duplicate records
- * by a key provided. Returns a function that has a accumulator and
- * current record per Array.reduce.
- *
- * @method uniqueByReducer
- * @param {Array} key
- * @return {Function}
- */
-
-function uniqueByReducer(key) {
-  return function (accumulator, current) {
-    return accumulator.some(function (item) {
-      return item[key] === current[key];
-    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
-  };
-}
-/**
- * Returns objects unique by key provided
- *
- * @method uniqueBy
- * @param {Array} array
- * @param {String} key
- * @return {Array}
- */
-
-function uniqueBy(array, key) {
-  return array.reduce(uniqueByReducer(key), []);
-}
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -162,96 +32,106 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 function ObjectPromiseProxy(promise, target) {
   target.isInFlight = true;
   var tmpId = target.id;
-  var result = promise.then(function _callee(response) {
-    var status, json, _json$data, attributes, relationships, message, _json, errorString;
+  var result = promise.then(
+  /*#__PURE__*/
+  function () {
+    var _ref = _asyncToGenerator(
+    /*#__PURE__*/
+    _regeneratorRuntime.mark(function _callee(response) {
+      var status, json, _json$data, attributes, relationships, message, _json, errorString;
 
-    return _regeneratorRuntime.async(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            status = response.status;
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              status = response.status;
 
-            if (!(status === 200 || status === 201)) {
-              _context.next = 14;
-              break;
-            }
+              if (!(status === 200 || status === 201)) {
+                _context.next = 14;
+                break;
+              }
 
-            _context.next = 4;
-            return _regeneratorRuntime.awrap(response.json());
+              _context.next = 4;
+              return response.json();
 
-          case 4:
-            json = _context.sent;
-            // Update target model
-            _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
-            mobx.transaction(function () {
-              Object.keys(attributes).forEach(function (key) {
-                mobx.set(target, key, attributes[key]);
-              });
-
-              if (relationships) {
-                Object.keys(relationships).forEach(function (key) {
-                  if (!relationships[key].hasOwnProperty('meta')) {
-                    // todo: throw error if relationship is not defined in model
-                    mobx.set(target.relationships, key, relationships[key]);
-                  }
+            case 4:
+              json = _context.sent;
+              // Update target model
+              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
+              mobx.transaction(function () {
+                Object.keys(attributes).forEach(function (key) {
+                  mobx.set(target, key, attributes[key]);
                 });
-              }
 
-              if (json.included) {
-                target.store.createModelsFromData(json.included);
-              }
-            }); // Update target isInFlight and isDirty
+                if (relationships) {
+                  Object.keys(relationships).forEach(function (key) {
+                    if (!relationships[key].hasOwnProperty('meta')) {
+                      // todo: throw error if relationship is not defined in model
+                      mobx.set(target.relationships, key, relationships[key]);
+                    }
+                  });
+                }
 
-            target.isInFlight = false;
-            target.isDirty = false;
-            target.setPreviousSnapshot();
-            mobx.transaction(function () {
-              // NOTE: This resolves an issue where a record is persisted but the
-              // index key is still a temp uuid. We can't simply remove the temp
-              // key because there may be associated records that have the temp
-              // uuid id as its only reference to the newly persisted record.
-              // TODO: Figure out a way to update associated records to use the
-              // newly persisted id.
-              target.store.data[target.type].records[tmpId] = target;
-              target.store.data[target.type].records[target.id] = target;
-            });
-            return _context.abrupt("return", target);
+                if (json.included) {
+                  target.store.createModelsFromData(json.included);
+                }
+              }); // Update target isInFlight and isDirty
 
-          case 14:
-            target.isInFlight = false;
-            message = target.store.genericErrorMessage;
-            _context.prev = 16;
-            _context.next = 19;
-            return _regeneratorRuntime.awrap(response.json());
+              target.isInFlight = false;
+              target.isDirty = false;
+              target.setPreviousSnapshot();
+              mobx.transaction(function () {
+                // NOTE: This resolves an issue where a record is persisted but the
+                // index key is still a temp uuid. We can't simply remove the temp
+                // key because there may be associated records that have the temp
+                // uuid id as its only reference to the newly persisted record.
+                // TODO: Figure out a way to update associated records to use the
+                // newly persisted id.
+                target.store.data[target.type].records[tmpId] = target;
+                target.store.data[target.type].records[target.id] = target;
+              });
+              return _context.abrupt("return", target);
 
-          case 19:
-            _json = _context.sent;
-            message = parseApiErrors(_json.errors, message);
-            _context.next = 25;
-            break;
+            case 14:
+              target.isInFlight = false;
+              message = target.store.genericErrorMessage;
+              _context.prev = 16;
+              _context.next = 19;
+              return response.json();
 
-          case 23:
-            _context.prev = 23;
-            _context.t0 = _context["catch"](16);
+            case 19:
+              _json = _context.sent;
+              message = parseApiErrors(_json.errors, message);
+              _context.next = 25;
+              break;
 
-          case 25:
-            // TODO: add all errors from the API response to the target
-            target.errors = _objectSpread({}, target.errors, {
-              status: status,
-              base: [{
-                message: message
-              }]
-            });
-            errorString = JSON.stringify(target.errors);
-            return _context.abrupt("return", Promise.reject(new Error(errorString)));
+            case 23:
+              _context.prev = 23;
+              _context.t0 = _context["catch"](16);
 
-          case 28:
-          case "end":
-            return _context.stop();
+            case 25:
+              // TODO: add all errors from the API response to the target
+              target.errors = _objectSpread({}, target.errors, {
+                status: status,
+                base: [{
+                  message: message
+                }]
+              });
+              errorString = JSON.stringify(target.errors);
+              return _context.abrupt("return", Promise.reject(new Error(errorString)));
+
+            case 28:
+            case "end":
+              return _context.stop();
+          }
         }
-      }
-    }, null, null, [[16, 23]]);
-  }, function (error) {
+      }, _callee, null, [[16, 23]]);
+    }));
+
+    return function (_x) {
+      return _ref.apply(this, arguments);
+    };
+  }(), function (error) {
     // TODO: Handle error states correctly
     target.isInFlight = false;
     target.errors = error;
@@ -353,257 +233,6 @@ function stringifyIds(object) {
     }
   });
 }
-/**
- * Handles getting polymorphic records or only a specific
- * type if specified.
- *
- * @method getRelatedRecords
- * @param {Object} record the record with the relationship
- * @param {String} property the related property to set
- * @param {String} modelType an override of the modelType
- */
-
-function getRelatedRecords(record, property) {
-  var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-  var relationships = record.relationships;
-  var relationType = modelType || property;
-  var references = relationships && relationships[relationType];
-  var relatedRecords = []; // NOTE: If the record doesn't have a matching references for the relation type
-  // fall back to looking up records by a foreign id i.e record.related_record_id
-
-  if (references && references.data) {
-    relatedRecords = references.data.map(function (ref) {
-      var recordType = ref.type;
-      return record.store.getRecord(recordType, ref.id);
-    });
-  } else {
-    var foreignId = "".concat(singularizeType(record.type), "_id");
-    relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
-      return String(rel[foreignId]) === String(record.id);
-    });
-  }
-
-  return new RelatedRecordsArray(relatedRecords, record, relationType);
-}
-/**
- * Handles getting polymorphic has_one/belong_to.
- *
- * @method getRelatedRecord
- */
-
-function getRelatedRecord(record, property) {
-  var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-  // Get relationships
-  var relationships = record.relationships; // Short circuit if no relationships are present
-
-  if (!relationships) return; // Use property name unless model type is provided
-
-  var relationType = modelType || property;
-  var reference = relationships[relationType]; // Short circuit if matching reference is not found
-
-  if (!reference || !reference.data) return;
-  var _relationships$relati = relationships[relationType].data,
-      id = _relationships$relati.id,
-      type = _relationships$relati.type;
-  var recordType = modelType || type;
-  return record.store.getRecord(recordType, id);
-}
-/**
- * Handles setting polymorphic has_one/belong_to.
- * - Validates the related record to make sure it inherits from `Model` class
- * - Sets the relationship
- * - Attempts to find an inverse relationship, and if successful adds it as well
- *
- * @method setRelatedRecord
- * @param {Object} record the record with the relationship
- * @param {Object} relatedRecord the record that will be related
- * @param {String} property the related property to set
- * @param {String} modelType an override of the modelType
- */
-
-function setRelatedRecord(record, relatedRecord, property) {
-  var modelType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-
-  if (relatedRecord && !(relatedRecord instanceof Model)) {
-    throw new Error('Related record must be a valid Model object');
-  }
-
-  var relationships = record.relationships;
-  var relationType = modelType || property;
-  var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
-
-  if (!referenceRecord) {
-    return;
-  }
-
-  var id = referenceRecord.id;
-  var type = referenceRecord.constructor.type;
-  var data = relationships[relationType] && relationships[relationType].data;
-
-  if (!relatedRecord) {
-    delete relationships[relationType];
-  } else if (!data || !(data.type === type && data.id === id)) {
-    relationships[relationType] = {
-      data: {
-        id: id,
-        type: type
-      }
-    };
-  } else {
-    return relatedRecord;
-  } // hack we don't have a reference to the inverse name so we just use the record type.
-  // this may cause problems with polymorphic relationships
-
-
-  var inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type);
-
-  if (inverseRelatedToMany) {
-    var inverseMethod = relatedRecord ? 'add' : 'remove';
-    inverseRelatedToMany[inverseMethod](record);
-  }
-
-  return relatedRecord;
-}
-/**
- * An array that allows for updating store references and relationships
- * @class RelatedRecordsArray
- * @constructor
- * @param {Array} array the array to extend
- * @param {Object} record the record with the referenced array
- * @param {String} property the property on the record that references the array
- */
-
-var RelatedRecordsArray =
-/*#__PURE__*/
-function (_Array) {
-  _inherits(RelatedRecordsArray, _Array);
-
-  function RelatedRecordsArray(_array, _record, _property) {
-    var _getPrototypeOf2;
-
-    var _this2;
-
-    _classCallCheck(this, RelatedRecordsArray);
-
-    _this2 = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
-
-    _this2.add = function (relatedRecord) {
-      var _assertThisInitialize = _assertThisInitialized(_this2),
-          record = _assertThisInitialize.record,
-          property = _assertThisInitialize.property;
-
-      var recordType = record.constructor.type;
-      var id = relatedRecord.id,
-          type = relatedRecord.constructor.type;
-
-      if (!relatedRecord || !(relatedRecord instanceof Model)) {
-        throw new Error('Related record must be a valid Model object');
-      }
-
-      if (!record.relationships) {
-        record.relationships = {};
-      }
-
-      var relationships = record.relationships;
-
-      if (!relationships[property]) {
-        relationships[property] = {};
-      }
-
-      if (!relationships[property].data) {
-        relationships[property].data = [];
-      }
-
-      var existingRelationships = relationships[property];
-      var alreadyThere = existingRelationships && existingRelationships.data.find(function (model) {
-        return model.id === id && model.type === type;
-      });
-
-      if (!alreadyThere) {
-        relationships[property].data.push({
-          id: id,
-          type: type
-        });
-
-        _this2.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
-
-
-        setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
-      }
-
-      record.isDirty = true;
-      return relatedRecord;
-    };
-
-    _this2.remove = function (relatedRecord) {
-      var _assertThisInitialize2 = _assertThisInitialized(_this2),
-          record = _assertThisInitialize2.record,
-          property = _assertThisInitialize2.property;
-
-      var relationships = record.relationships,
-          recordType = record.constructor.type;
-      var id = relatedRecord.id,
-          type = relatedRecord.constructor.type;
-
-      if (relationships && relationships[property] && relatedRecord) {
-        var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
-          return model.id === id && model.type === type;
-        });
-        relationships[property].data.splice(referenceIndexToRemove, 1);
-
-        var recordIndexToRemove = _this2.findIndex(function (model) {
-          return model.id === id && model.type === type;
-        });
-
-        if (recordIndexToRemove > 0) _this2.splice(recordIndexToRemove, 1);
-
-        if (!relationships[property].data.length) {
-          delete relationships[property];
-        }
-
-        if (!Object.keys(record.relationships).length) {
-          delete record.relationships;
-        } // hack this will only work with singularized relationships.
-
-
-        setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
-      }
-
-      record.isDirty = true;
-      return relatedRecord;
-    };
-
-    _this2.replace = function (array) {
-      var _assertThisInitialize3 = _assertThisInitialized(_this2),
-          record = _assertThisInitialize3.record,
-          property = _assertThisInitialize3.property;
-
-      var relationships = record.relationships;
-      mobx.transaction(function () {
-        relationships[property] = {
-          data: []
-        };
-        array.forEach(function (object) {
-          return _this2.add(object);
-        });
-      });
-      record.isDirty = true;
-    };
-
-    _this2.property = _property;
-    _this2.record = _record;
-    return _this2;
-  }
-  /**
-   * Adds a record to the array, and updates references in the store, as well as inverse references
-   * @method add
-   * @param {Object} relatedRecord the record to add to the array
-   * @return {Object} the original relatedRecord
-   */
-
-
-  return RelatedRecordsArray;
-}(_wrapNativeSuper(Array));
 /*
  * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
  * An optional argument specifies the data model, if different from the property name.
@@ -631,7 +260,6 @@ function (_Array) {
 /**
  @class Model
  */
-
 
 var Model = (_class = (_temp =
 /*#__PURE__*/
@@ -716,17 +344,17 @@ function () {
      * @method rollback
      */
     value: function rollback() {
-      var _this3 = this;
+      var _this2 = this;
 
       mobx.transaction(function () {
-        var previousSnapshot = _this3.previousSnapshot;
+        var previousSnapshot = _this2.previousSnapshot;
 
-        _this3.attributeNames.forEach(function (key) {
-          _this3[key] = previousSnapshot.attributes[key];
+        _this2.attributeNames.forEach(function (key) {
+          _this2[key] = previousSnapshot.attributes[key];
         });
 
-        _this3.relationships = previousSnapshot.relationships;
-        _this3.errors = {};
+        _this2.relationships = previousSnapshot.relationships;
+        _this2.errors = {};
       });
       this.setPreviousSnapshot();
     }
@@ -781,7 +409,7 @@ function () {
   }, {
     key: "validate",
     value: function validate() {
-      var _this4 = this;
+      var _this3 = this;
 
       this.errors = {};
       var attributeNames = this.attributeNames,
@@ -789,10 +417,10 @@ function () {
       var validationChecks = attributeNames.map(function (property) {
         var validator = attributeDefinitions[property].validator;
         if (!validator) return true;
-        var validationResult = validator(_this4[property], _this4);
+        var validationResult = validator(_this3[property], _this3);
 
         if (!validationResult.isValid) {
-          _this4.errors[property] = validationResult.errors;
+          _this3.errors[property] = validationResult.errors;
         }
 
         return validationResult.isValid;
@@ -834,66 +462,76 @@ function () {
       var _this = this;
 
       _this.errors = {};
-      return promise.then(function _callee(response) {
-        var json;
-        return _regeneratorRuntime.async(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _this.isInFlight = false;
+      return promise.then(
+      /*#__PURE__*/
+      function () {
+        var _ref = _asyncToGenerator(
+        /*#__PURE__*/
+        _regeneratorRuntime.mark(function _callee(response) {
+          var json;
+          return _regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _this.isInFlight = false;
 
-                if (!(response.status === 202 || response.status === 204)) {
-                  _context.next = 17;
+                  if (!(response.status === 202 || response.status === 204)) {
+                    _context.next = 17;
+                    break;
+                  }
+
+                  if (!skipRemove) {
+                    _this.store.remove(type, id);
+                  }
+
+                  _context.prev = 3;
+                  _context.next = 6;
+                  return response.json();
+
+                case 6:
+                  json = _context.sent;
+
+                  if (json.data && json.data.attributes) {
+                    Object.keys(json.data.attributes).forEach(function (key) {
+                      mobx.set(_this, key, json.data.attributes[key]);
+                    });
+                  }
+
+                  _context.next = 13;
                   break;
-                }
 
-                if (!skipRemove) {
-                  _this.store.remove(type, id);
-                }
+                case 10:
+                  _context.prev = 10;
+                  _context.t0 = _context["catch"](3);
+                  console.log(_context.t0); // It is text, do you text handling here
 
-                _context.prev = 3;
-                _context.next = 6;
-                return _regeneratorRuntime.awrap(response.json());
+                case 13:
+                  // NOTE: If deleting a record changes other related model
+                  // You can return then in the delete response
+                  if (json && json.included) {
+                    _this.store.createModelsFromData(json.included);
+                  }
 
-              case 6:
-                json = _context.sent;
+                  return _context.abrupt("return", _this);
 
-                if (json.data && json.data.attributes) {
-                  Object.keys(json.data.attributes).forEach(function (key) {
-                    mobx.set(_this, key, json.data.attributes[key]);
-                  });
-                }
+                case 17:
+                  _this.errors = {
+                    status: response.status
+                  };
+                  return _context.abrupt("return", _this);
 
-                _context.next = 13;
-                break;
-
-              case 10:
-                _context.prev = 10;
-                _context.t0 = _context["catch"](3);
-                console.log(_context.t0); // It is text, do you text handling here
-
-              case 13:
-                // NOTE: If deleting a record changes other related model
-                // You can return then in the delete response
-                if (json && json.included) {
-                  _this.store.createModelsFromData(json.included);
-                }
-
-                return _context.abrupt("return", _this);
-
-              case 17:
-                _this.errors = {
-                  status: response.status
-                };
-                return _context.abrupt("return", _this);
-
-              case 19:
-              case "end":
-                return _context.stop();
+                case 19:
+                case "end":
+                  return _context.stop();
+              }
             }
-          }
-        }, null, null, [[3, 10]]);
-      }, function (error) {
+          }, _callee, null, [[3, 10]]);
+        }));
+
+        return function (_x) {
+          return _ref.apply(this, arguments);
+        };
+      }(), function (error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false;
         _this.errors = error;
@@ -951,19 +589,19 @@ function () {
   }, {
     key: "_trackState",
     value: function _trackState() {
-      var _this5 = this;
+      var _this4 = this;
 
       mobx.reaction(function () {
-        return JSON.stringify(_this5.attributes);
+        return JSON.stringify(_this4.attributes);
       }, function (objectString) {
         // console.log(objectString)
-        _this5.isDirty = true;
+        _this4.isDirty = true;
       });
       mobx.reaction(function () {
-        return JSON.stringify(_this5.relationships);
+        return JSON.stringify(_this4.relationships);
       }, function (relString) {
         // console.log(relString)
-        _this5.isDirty = true;
+        _this4.isDirty = true;
       });
     }
     /**
@@ -1003,7 +641,7 @@ function () {
      * @return {Object} data in JSON::API format
      */
     value: function jsonapi() {
-      var _this6 = this;
+      var _this5 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
@@ -1021,7 +659,7 @@ function () {
       }
 
       var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this6[key];
+        var value = _this5[key];
 
         if (value) {
           var DataType = attributeDefinitions[key].dataType;
@@ -1053,7 +691,7 @@ function () {
           return options.relationships.includes(name);
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = mobx.toJS(_this6.relationships[key]);
+          rels[key] = mobx.toJS(_this5.relationships[key]);
           stringifyIds(rels[key]);
           return rels;
         }, {});
@@ -1075,11 +713,11 @@ function () {
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
-      var _this7 = this;
+      var _this6 = this;
 
       mobx.transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          _this7[key] = attributes[key];
+          _this6[key] = attributes[key];
         });
       });
     }
@@ -1153,10 +791,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this8 = this;
+      var _this7 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = mobx.toJS(_this8[key]);
+        var value = mobx.toJS(_this7[key]);
 
         if (!value) {
           delete attributes[key];
@@ -1247,6 +885,122 @@ function () {
     return {};
   }
 })), _class);
+
+var pending = {};
+var counter = {};
+
+var incrementor = function incrementor(key) {
+  return function () {
+    var count = (counter[key] || 0) + 1;
+    counter[key] = count;
+    return count;
+  };
+};
+
+var decrementor = function decrementor(key) {
+  return function () {
+    var count = (counter[key] || 0) - 1;
+    counter[key] = count;
+    return count;
+  };
+};
+/**
+ * Build request url from base url, endpoint, query params, and ids.
+ *
+ * @method requestUrl
+ * @return {String} formatted url string
+ */
+
+function requestUrl(baseUrl, endpoint) {
+  var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var id = arguments.length > 3 ? arguments[3] : undefined;
+  var queryParamString = '';
+
+  if (Object.keys(queryParams).length > 0) {
+    queryParamString = "?".concat(jqueryParam(queryParams));
+  }
+
+  var idForPath = '';
+
+  if (id) {
+    idForPath = "/".concat(id);
+  } // Return full url
+
+
+  return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
+}
+function newId() {
+  return "tmp-".concat(uuidv1());
+}
+function dbOrNewId(properties) {
+  return properties.id || newId();
+}
+/**
+ * Avoids making racing requests by blocking a request if an identical one is
+ * already in-flight. Blocked requests will be resolved when the initial request
+ * resolves by cloning the response.
+ *
+ * @method combineRacedRequests
+ * @param {String} key the unique key for the request
+ * @param {Function} fn the function the generates the promise
+ * @return {Promise}
+ */
+
+function combineRacedRequests(key, fn) {
+  var incrementBlocked = incrementor(key);
+  var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
+
+  incrementBlocked();
+
+  function handleResponse(response) {
+    var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
+    // clone the response before returning so that we can re-use it for the
+    // remaining callers
+
+    if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
+    // this is the last one), we can remove the reference to the pending promise
+    // allowing subsequent requests to proceed unblocked.
+
+    delete pending[key];
+    return response;
+  } // Return pending promise if one already exists
+
+
+  if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
+  // clear out the pending promise for the key
+
+  pending[key] = fn.call();
+  return pending[key].then(handleResponse);
+}
+/**
+ * Reducer function for filtering out duplicate records
+ * by a key provided. Returns a function that has a accumulator and
+ * current record per Array.reduce.
+ *
+ * @method uniqueByReducer
+ * @param {Array} key
+ * @return {Function}
+ */
+
+function uniqueByReducer(key) {
+  return function (accumulator, current) {
+    return accumulator.some(function (item) {
+      return item[key] === current[key];
+    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
+  };
+}
+/**
+ * Returns objects unique by key provided
+ *
+ * @method uniqueBy
+ * @param {Array} array
+ * @param {String} key
+ * @return {Array}
+ */
+
+function uniqueBy(array, key) {
+  return array.reduce(uniqueByReducer(key), []);
+}
 
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
 
@@ -1834,72 +1588,82 @@ function () {
 
   }, {
     key: "fetchAll",
-    value: function fetchAll(type, queryParams) {
-      var _this6 = this;
+    value: function () {
+      var _fetchAll = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(type, queryParams) {
+        var _this6 = this;
 
-      var store, url, response, json, records;
-      return _regeneratorRuntime.async(function fetchAll$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              store = this;
-              url = this.fetchUrl(type, queryParams);
-              _context.next = 4;
-              return _regeneratorRuntime.awrap(this.fetch(url, {
-                method: 'GET'
-              }));
-
-            case 4:
-              response = _context.sent;
-
-              if (!(response.status === 200)) {
-                _context.next = 16;
-                break;
-              }
-
-              this.data[type].cache[url] = [];
-              _context.next = 9;
-              return _regeneratorRuntime.awrap(response.json());
-
-            case 9:
-              json = _context.sent;
-
-              if (json.included) {
-                this.createModelsFromData(json.included);
-              }
-
-              records = [];
-              mobx.transaction(function () {
-                records = json.data.map(function (dataObject) {
-                  var id = dataObject.id,
-                      _dataObject$attribute2 = dataObject.attributes,
-                      attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                      _dataObject$relations2 = dataObject.relationships,
-                      relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                  var ModelKlass = _this6.modelTypeIndex[type];
-                  var record = new ModelKlass(_objectSpread$2({
-                    store: store,
-                    relationships: relationships
-                  }, attributes));
-
-                  _this6.data[type].cache[url].push(id);
-
-                  _this6.data[type].records[id] = record;
-                  return record;
+        var store, url, response, json, records;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                store = this;
+                url = this.fetchUrl(type, queryParams);
+                _context.next = 4;
+                return this.fetch(url, {
+                  method: 'GET'
                 });
-              });
-              return _context.abrupt("return", records);
 
-            case 16:
-              return _context.abrupt("return", Promise.reject(response.status));
+              case 4:
+                response = _context.sent;
 
-            case 17:
-            case "end":
-              return _context.stop();
+                if (!(response.status === 200)) {
+                  _context.next = 16;
+                  break;
+                }
+
+                this.data[type].cache[url] = [];
+                _context.next = 9;
+                return response.json();
+
+              case 9:
+                json = _context.sent;
+
+                if (json.included) {
+                  this.createModelsFromData(json.included);
+                }
+
+                records = [];
+                mobx.transaction(function () {
+                  records = json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute2 = dataObject.attributes,
+                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+                        _dataObject$relations2 = dataObject.relationships,
+                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
+                    var ModelKlass = _this6.modelTypeIndex[type];
+                    var record = new ModelKlass(_objectSpread$2({
+                      store: store,
+                      relationships: relationships
+                    }, attributes));
+
+                    _this6.data[type].cache[url].push(id);
+
+                    _this6.data[type].records[id] = record;
+                    return record;
+                  });
+                });
+                return _context.abrupt("return", records);
+
+              case 16:
+                return _context.abrupt("return", Promise.reject(response.status));
+
+              case 17:
+              case "end":
+                return _context.stop();
+            }
           }
-        }
-      }, null, this);
-    }
+        }, _callee, this);
+      }));
+
+      function fetchAll(_x2, _x3) {
+        return _fetchAll.apply(this, arguments);
+      }
+
+      return fetchAll;
+    }()
     /**
      * fetches record by `id`.
      *
@@ -1911,53 +1675,63 @@ function () {
 
   }, {
     key: "fetchOne",
-    value: function fetchOne(type, id, queryParams) {
-      var url, response, json, data, included, record;
-      return _regeneratorRuntime.async(function fetchOne$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              url = this.fetchUrl(type, queryParams, id); // Trigger request
+    value: function () {
+      var _fetchOne = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
+        var url, response, json, data, included, record;
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-              _context2.next = 3;
-              return _regeneratorRuntime.awrap(this.fetch(url, {
-                method: 'GET'
-              }));
+                _context2.next = 3;
+                return this.fetch(url, {
+                  method: 'GET'
+                });
 
-            case 3:
-              response = _context2.sent;
+              case 3:
+                response = _context2.sent;
 
-              if (!(response.status === 200)) {
-                _context2.next = 16;
-                break;
-              }
+                if (!(response.status === 200)) {
+                  _context2.next = 16;
+                  break;
+                }
 
-              _context2.next = 7;
-              return _regeneratorRuntime.awrap(response.json());
+                _context2.next = 7;
+                return response.json();
 
-            case 7:
-              json = _context2.sent;
-              data = json.data, included = json.included;
+              case 7:
+                json = _context2.sent;
+                data = json.data, included = json.included;
 
-              if (included) {
-                this.createModelsFromData(included);
-              }
+                if (included) {
+                  this.createModelsFromData(included);
+                }
 
-              record = this.createOrUpdateModel(data);
-              this.data[type].cache[url] = [];
-              this.data[type].cache[url].push(record.id);
-              return _context2.abrupt("return", record);
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache[url] = [];
+                this.data[type].cache[url].push(record.id);
+                return _context2.abrupt("return", record);
 
-            case 16:
-              return _context2.abrupt("return", null);
+              case 16:
+                return _context2.abrupt("return", null);
 
-            case 17:
-            case "end":
-              return _context2.stop();
+              case 17:
+              case "end":
+                return _context2.stop();
+            }
           }
-        }
-      }, null, this);
-    }
+        }, _callee2, this);
+      }));
+
+      function fetchOne(_x4, _x5, _x6) {
+        return _fetchOne.apply(this, arguments);
+      }
+
+      return fetchOne;
+    }()
   }]);
 
   return Store;
@@ -2130,6 +1904,7 @@ function validates(target, property) {
   }
 }
 
+var _Symbol$species;
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -2156,7 +1931,7 @@ function relatedToMany(targetOrModelKlass, property, descriptor) {
       return {
         get: function get() {
           var type = targetOrModelKlass.type;
-          return getRelatedRecords$1(this, property2, type);
+          return getRelatedRecords(this, property2, type);
         }
       };
     };
@@ -2168,7 +1943,7 @@ function relatedToMany(targetOrModelKlass, property, descriptor) {
     });
     return {
       get: function get() {
-        return getRelatedRecords$1(this, property);
+        return getRelatedRecords(this, property);
       }
     };
   }
@@ -2191,11 +1966,11 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
       return {
         get: function get() {
           var type = targetOrModelKlass.type;
-          return getRelatedRecord$1(this, property2, type);
+          return getRelatedRecord(this, property2, type);
         },
         set: function set(record) {
           var type = targetOrModelKlass.type;
-          return setRelatedRecord$1(this, record, property2, type);
+          return setRelatedRecord(this, record, property2, type);
         }
       };
     };
@@ -2207,10 +1982,10 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
     });
     return {
       get: function get() {
-        return getRelatedRecord$1(this, property);
+        return getRelatedRecord(this, property);
       },
       set: function set(record) {
-        return setRelatedRecord$1(this, record, property);
+        return setRelatedRecord(this, record, property);
       }
     };
   }
@@ -2225,7 +2000,7 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
  * @param {String} modelType an override of the modelType
  */
 
-function getRelatedRecords$1(record, property) {
+function getRelatedRecords(record, property) {
   var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   var relationships = record.relationships;
   var relationType = modelType || property;
@@ -2239,7 +2014,7 @@ function getRelatedRecords$1(record, property) {
     });
   }
 
-  return new RelatedRecordsArray$1(relatedRecords, record, relationType);
+  return new RelatedRecordsArray(relatedRecords, record, relationType);
 }
 /**
  * Handles getting polymorphic has_one/belong_to.
@@ -2247,7 +2022,7 @@ function getRelatedRecords$1(record, property) {
  * @method getRelatedRecord
  */
 
-function getRelatedRecord$1(record, property) {
+function getRelatedRecord(record, property) {
   var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   // Get relationships
   var relationships = record.relationships; // Short circuit if no relationships are present
@@ -2277,7 +2052,7 @@ function getRelatedRecord$1(record, property) {
  * @param {String} modelType an override of the modelType
  */
 
-function setRelatedRecord$1(record, relatedRecord, property) {
+function setRelatedRecord(record, relatedRecord, property) {
   var modelType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
   if (relatedRecord && !(relatedRecord instanceof Model)) {
@@ -2286,7 +2061,7 @@ function setRelatedRecord$1(record, relatedRecord, property) {
 
   var relationships = record.relationships;
   var relationType = modelType || property;
-  var referenceRecord = relatedRecord || getRelatedRecord$1(record, relationType);
+  var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
 
   if (!referenceRecord) {
     return;
@@ -2311,7 +2086,7 @@ function setRelatedRecord$1(record, relatedRecord, property) {
   // this may cause problems with polymorphic relationships
 
 
-  var inverseRelatedToMany = getRelatedRecords$1(referenceRecord, null, record.constructor.type);
+  var inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type);
 
   if (inverseRelatedToMany) {
     var inverseMethod = relatedRecord ? 'add' : 'remove';
@@ -2329,7 +2104,8 @@ function setRelatedRecord$1(record, relatedRecord, property) {
  * @param {String} property the property on the record that references the array
  */
 
-var RelatedRecordsArray$1 =
+_Symbol$species = Symbol.species;
+var RelatedRecordsArray =
 /*#__PURE__*/
 function (_Array) {
   _inherits(RelatedRecordsArray, _Array);
@@ -2385,7 +2161,7 @@ function (_Array) {
           _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
 
 
-          setRelatedRecord$1(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2422,7 +2198,7 @@ function (_Array) {
           } // hack this will only work with singularized relationships.
 
 
-          setRelatedRecord$1(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2488,7 +2264,7 @@ function (_Array) {
 
           _this.push(relatedRecord);
 
-          setRelatedRecord$1(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2524,7 +2300,7 @@ function (_Array) {
             delete record.relationships;
           }
 
-          setRelatedRecord$1(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
         }
 
         return relatedRecord;
@@ -2551,13 +2327,32 @@ function (_Array) {
     _this.record = _record;
     return _possibleConstructorReturn(_this);
   }
-  /**
-   * Adds a record to the array, and updates references in the store, as well as inverse references
-   * @method add
-   * @param {Object} relatedRecord the record to add to the array
-   * @return {Object} the original relatedRecord
+  /*
+   * This method is used by Array internals to decide
+   * which class to use for resulting derived objects from array manipulation methods
+   * such as `map` or `filter`
+   *
+   * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
+   * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
+   *
+   * For more details, see:
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
    */
 
+
+  _createClass(RelatedRecordsArray, null, [{
+    key: _Symbol$species,
+    get: function get() {
+      return Array;
+    }
+    /**
+     * Adds a record to the array, and updates references in the store, as well as inverse references
+     * @method add
+     * @param {Object} relatedRecord the record to add to the array
+     * @return {Object} the original relatedRecord
+     */
+
+  }]);
 
   return RelatedRecordsArray;
 }(_wrapNativeSuper(Array));
