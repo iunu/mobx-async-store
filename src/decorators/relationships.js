@@ -210,6 +210,21 @@ export class RelatedRecordsArray extends Array {
     this.record = record
   }
 
+  /*
+   * This method is used by Array internals to decide
+   * which class to use for resulting derived objects from array manipulation methods
+   * such as `map` or `filter`
+   *
+   * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
+   * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
+   *
+   * For more details, see:
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
+   */
+  static get [Symbol.species] () {
+    return Array
+  }
+
   /**
    * Adds a record to the array, and updates references in the store, as well as inverse references
    * @method add

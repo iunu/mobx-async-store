@@ -350,6 +350,20 @@ describe('Model', () => {
     expect(note.organization).toBeFalsy()
   })
 
+  it('relationship arrays provide regular arrays for derived objects', () => {
+    const note = store.add('notes', {
+      id: 10,
+      description: 'Example description'
+    })
+    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+
+    todo.notes.add(note)
+
+    expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
+    expect(todo.notes.map((x) => x.id).constructor.name).toEqual('Array')
+    expect(todo.notes.map((x) => x.id)).toEqual([10])
+  })
+
   describe('.snapshot', () => {
     it('sets snapshot on initialization', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
