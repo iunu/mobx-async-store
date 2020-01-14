@@ -101,16 +101,24 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  */
 export function getRelatedRecords (record, property, modelType = null) {
   const { relationships } = record
-  const relationType = modelType || property
-  const references = relationships && relationships[relationType]
 
+  const relationType = modelType || property
+
+  const references = relationships && relationships[relationType]
   let relatedRecords = []
 
+  // NOTE: If the record doesn't have a matching references for the relation type
+  // fall back to looking up records by a foreign id i.e record.related_record_id
   if (references && references.data) {
     relatedRecords = references.data.map(ref => {
       const recordType = ref.type
       return record.store.getRecord(recordType, ref.id)
     })
+  } else {
+    const foreignId = `${singularizeType(record.type)}_id`
+    relatedRecords = record.store
+                           .getRecords(relationType)
+                           .filter(rel => String(rel[foreignId]) === String(record.id))
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType)
