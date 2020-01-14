@@ -19,6 +19,42 @@
     return obj;
   }
 
+  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+    try {
+      var info = gen[key](arg);
+      var value = info.value;
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    if (info.done) {
+      resolve(value);
+    } else {
+      Promise.resolve(value).then(_next, _throw);
+    }
+  }
+
+  function _asyncToGenerator(fn) {
+    return function () {
+      var self = this,
+          args = arguments;
+      return new Promise(function (resolve, reject) {
+        var gen = fn.apply(self, args);
+
+        function _next(value) {
+          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+        }
+
+        function _throw(err) {
+          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+        }
+
+        _next(undefined);
+      });
+    };
+  }
+
   function _initializerDefineProperty(target, property, descriptor, context) {
     if (!descriptor) return;
     Object.defineProperty(target, property, {
@@ -27,6 +63,12 @@
       writable: descriptor.writable,
       value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
     });
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
   }
 
   function _defineProperties(target, props) {
@@ -74,34 +116,6 @@
     return desc;
   }
 
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
-        arr2[i] = arr[i];
-      }
-
-      return arr2;
-    }
-  }
-
-  function _iterableToArray(iter) {
-    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-  }
-
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance");
-  }
-
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-  }
-
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-
   function _typeof(obj) {
     if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
       _typeof = function _typeof(obj) {
@@ -114,121 +128,6 @@
     }
 
     return _typeof(obj);
-  }
-
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-
-    return self;
-  }
-
-  function _possibleConstructorReturn(self, call) {
-    if (call && (_typeof(call) === "object" || typeof call === "function")) {
-      return call;
-    }
-
-    return _assertThisInitialized(self);
-  }
-
-  function _getPrototypeOf(o) {
-    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-      return o.__proto__ || Object.getPrototypeOf(o);
-    };
-    return _getPrototypeOf(o);
-  }
-
-  function _setPrototypeOf(o, p) {
-    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-      o.__proto__ = p;
-      return o;
-    };
-
-    return _setPrototypeOf(o, p);
-  }
-
-  function _inherits(subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) {
-      throw new TypeError("Super expression must either be null or a function");
-    }
-
-    subClass.prototype = Object.create(superClass && superClass.prototype, {
-      constructor: {
-        value: subClass,
-        writable: true,
-        configurable: true
-      }
-    });
-    if (superClass) _setPrototypeOf(subClass, superClass);
-  }
-
-  function _isNativeFunction(fn) {
-    return Function.toString.call(fn).indexOf("[native code]") !== -1;
-  }
-
-  function isNativeReflectConstruct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-
-    try {
-      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function _construct(Parent, args, Class) {
-    if (isNativeReflectConstruct()) {
-      _construct = Reflect.construct;
-    } else {
-      _construct = function _construct(Parent, args, Class) {
-        var a = [null];
-        a.push.apply(a, args);
-        var Constructor = Function.bind.apply(Parent, a);
-        var instance = new Constructor();
-        if (Class) _setPrototypeOf(instance, Class.prototype);
-        return instance;
-      };
-    }
-
-    return _construct.apply(null, arguments);
-  }
-
-  function _wrapNativeSuper(Class) {
-    var _cache = typeof Map === "function" ? new Map() : undefined;
-
-    _wrapNativeSuper = function _wrapNativeSuper(Class) {
-      if (Class === null || !_isNativeFunction(Class)) return Class;
-
-      if (typeof Class !== "function") {
-        throw new TypeError("Super expression must either be null or a function");
-      }
-
-      if (typeof _cache !== "undefined") {
-        if (_cache.has(Class)) return _cache.get(Class);
-
-        _cache.set(Class, Wrapper);
-      }
-
-      function Wrapper() {
-        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
-      }
-
-      Wrapper.prototype = Object.create(Class.prototype, {
-        constructor: {
-          value: Wrapper,
-          enumerable: false,
-          writable: true,
-          configurable: true
-        }
-      });
-      return _setPrototypeOf(Wrapper, Class);
-    };
-
-    return _wrapNativeSuper(Class);
   }
 
   /** MobX - (c) Michel Weststrate 2015 - 2018 - MIT Licensed */
@@ -1457,7 +1356,6 @@
       return MobXGlobals$$1;
   }());
   var canMergeGlobalState = true;
-  var isolateCalled = false;
   var globalState$$1 = (function () {
       var global = getGlobal$$1();
       if (global.__mobxInstanceCount > 0 && !global.__mobxGlobals)
@@ -1466,7 +1364,7 @@
           canMergeGlobalState = false;
       if (!canMergeGlobalState) {
           setTimeout(function () {
-              if (!isolateCalled) {
+              {
                   fail$$1("There are multiple, different versions of MobX active. Make sure MobX is loaded only once or use `configure({ isolateGlobalState: true })`");
               }
           }, 1);
@@ -8414,6 +8312,889 @@
   })));
   });
 
+  function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+  function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+  function ObjectPromiseProxy(promise, target) {
+    target.isInFlight = true;
+    var tmpId = target.id;
+    var result = promise.then(
+    /*#__PURE__*/
+    function () {
+      var _ref = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee(response) {
+        var status, json, _json$data, attributes, relationships, message, _json, errorString;
+
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                status = response.status;
+
+                if (!(status === 200 || status === 201)) {
+                  _context.next = 14;
+                  break;
+                }
+
+                _context.next = 4;
+                return response.json();
+
+              case 4:
+                json = _context.sent;
+                // Update target model
+                _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
+                transaction$$1(function () {
+                  Object.keys(attributes).forEach(function (key) {
+                    set$$1(target, key, attributes[key]);
+                  });
+
+                  if (relationships) {
+                    Object.keys(relationships).forEach(function (key) {
+                      if (!relationships[key].hasOwnProperty('meta')) {
+                        // todo: throw error if relationship is not defined in model
+                        set$$1(target.relationships, key, relationships[key]);
+                      }
+                    });
+                  }
+
+                  if (json.included) {
+                    target.store.createModelsFromData(json.included);
+                  }
+                }); // Update target isInFlight and isDirty
+
+                target.isInFlight = false;
+                target.isDirty = false;
+                target.setPreviousSnapshot();
+                transaction$$1(function () {
+                  // NOTE: This resolves an issue where a record is persisted but the
+                  // index key is still a temp uuid. We can't simply remove the temp
+                  // key because there may be associated records that have the temp
+                  // uuid id as its only reference to the newly persisted record.
+                  // TODO: Figure out a way to update associated records to use the
+                  // newly persisted id.
+                  target.store.data[target.type].records[tmpId] = target;
+                  target.store.data[target.type].records[target.id] = target;
+                });
+                return _context.abrupt("return", target);
+
+              case 14:
+                target.isInFlight = false;
+                message = target.store.genericErrorMessage;
+                _context.prev = 16;
+                _context.next = 19;
+                return response.json();
+
+              case 19:
+                _json = _context.sent;
+                message = parseApiErrors(_json.errors, message);
+                _context.next = 25;
+                break;
+
+              case 23:
+                _context.prev = 23;
+                _context.t0 = _context["catch"](16);
+
+              case 25:
+                // TODO: add all errors from the API response to the target
+                target.errors = _objectSpread({}, target.errors, {
+                  status: status,
+                  base: [{
+                    message: message
+                  }]
+                });
+                errorString = JSON.stringify(target.errors);
+                return _context.abrupt("return", Promise.reject(new Error(errorString)));
+
+              case 28:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, null, [[16, 23]]);
+      }));
+
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }(), function (error) {
+      // TODO: Handle error states correctly
+      target.isInFlight = false;
+      target.errors = error;
+      throw error; // return target
+    }); // Define proxied attributes
+
+    var attributeNames = Object.keys(target.attributeNames);
+    var tempProperties = attributeNames.reduce(function (attrs, key) {
+      attrs[key] = {
+        value: target[key],
+        writable: false
+      };
+      return attrs;
+    }, {});
+    Object.defineProperties(result, _objectSpread({
+      isInFlight: {
+        value: target.isInFlight
+      }
+    }, tempProperties)); // Return promise
+
+    return result;
+  }
+
+  function parseApiErrors(errors, defaultMessage) {
+    return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+  }
+
+  /**
+   * Utility class used to store the schema
+   * of model attribute definitions
+   *
+   * @class Schema
+   */
+  var Schema =
+  /*#__PURE__*/
+  function () {
+    function Schema() {
+      _classCallCheck(this, Schema);
+
+      this.structure = {};
+      this.relations = {};
+    }
+
+    _createClass(Schema, [{
+      key: "addAttribute",
+      value: function addAttribute(_ref) {
+        var type = _ref.type,
+            property = _ref.property,
+            dataType = _ref.dataType,
+            defaultValue = _ref.defaultValue;
+        this.structure[type] = this.structure[type] || {};
+        this.structure[type][property] = {
+          defaultValue: defaultValue,
+          dataType: dataType
+        };
+      }
+    }, {
+      key: "addRelationship",
+      value: function addRelationship(_ref2) {
+        var type = _ref2.type,
+            property = _ref2.property,
+            dataType = _ref2.dataType;
+        this.relations[type] = this.relations[type] || {};
+        this.relations[type][property] = {
+          dataType: dataType
+        };
+      }
+    }, {
+      key: "addValidation",
+      value: function addValidation(_ref3) {
+        var type = _ref3.type,
+            property = _ref3.property,
+            validator = _ref3.validator;
+        this.structure[type][property].validator = validator;
+      }
+    }]);
+
+    return Schema;
+  }();
+
+  var schema = new Schema();
+
+  var _class, _descriptor, _descriptor2, _temp;
+
+  function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+  function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+  function stringifyIds(object) {
+    Object.keys(object).forEach(function (key) {
+      var property = object[key];
+
+      if (_typeof(property) === 'object') {
+        if (property.id) {
+          property.id = String(property.id);
+        }
+
+        stringifyIds(property);
+      }
+    });
+  }
+  /*
+   * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
+   * An optional argument specifies the data model, if different from the property name.
+   * ```
+   * class Note extends Model {
+   *   @belongsTo todo
+   *   @belongsTo(Facility) greenhouse
+   * }
+   * ```
+   * Polymorphic relationships
+   * Define `belongsTo` with the the associated models
+   * Define `hasMany` as you normally would
+   * ```
+   * class Note extends Model {
+   *   @belongsTo(Todo, ScheduledEvent) notable
+   * }
+   *
+   * class Todo extends Model {
+   *   @hasMany notes
+   * }
+   * ```
+   * @method belongsTo
+   */
+
+  /**
+   @class Model
+   */
+
+  var Model = (_class = (_temp =
+  /*#__PURE__*/
+  function () {
+    /**
+     * Initializer for model
+     *
+     * @method constructor
+     */
+    function Model() {
+      var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      _classCallCheck(this, Model);
+
+      _initializerDefineProperty(this, "_isDirty", _descriptor, this);
+
+      this.isInFlight = false;
+
+      _initializerDefineProperty(this, "errors", _descriptor2, this);
+
+      this.previousSnapshot = {};
+
+      this._makeObservable(initialAttributes);
+
+      this.setPreviousSnapshot();
+
+      this._trackState();
+    }
+    /**
+     * The type of the model. Defined on the class. Defaults to the underscored version of the class name
+     * (eg 'calendar_events').
+     *
+     * @property type
+     * @static
+     */
+
+    /**
+     * The canonical path to the resource on the server. Defined on the class.
+     * Defaults to the underscored version of the class name
+     * @property endpoint
+     * @static
+     */
+
+    /**
+     * True if the instance has been modified from its persisted state
+     * ```
+     * kpi = store.add('kpis', { name: 'A good thing to measure' })
+     * kpi.isDirty
+     * => true
+     * kpi.name
+     * => "A good thing to measure"
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * kpi.name = "Another good thing to measure"
+     * kpi.isDirty
+     * => true
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * ```
+     * @property isDirty
+     * @type {Boolean}
+     * @default false
+     */
+
+
+    _createClass(Model, [{
+      key: "rollback",
+
+      /**
+       * restores data to its last persisted state
+       * ```
+       * kpi = store.find('kpis', 5)
+       * kpi.name
+       * => "A good thing to measure"
+       * kpi.name = "Another good thing to measure"
+       * kpi.rollback()
+       * kpi.name
+       * => "A good thing to measure"
+       * ```
+       * @method rollback
+       */
+      value: function rollback() {
+        var _this2 = this;
+
+        transaction$$1(function () {
+          var previousSnapshot = _this2.previousSnapshot;
+
+          _this2.attributeNames.forEach(function (key) {
+            _this2[key] = previousSnapshot.attributes[key];
+          });
+
+          _this2.relationships = previousSnapshot.relationships;
+          _this2.errors = {};
+        });
+        this.setPreviousSnapshot();
+      }
+      /**
+       * creates or updates a record.
+       * @method save
+       * @return {Promise}
+       * @param {Object} options
+       */
+
+    }, {
+      key: "save",
+      value: function save() {
+        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        if (!options.skip_validations && !this.validate()) {
+          var errorString = JSON.stringify(this.errors);
+          return Promise.reject(new Error(errorString));
+        }
+
+        var queryParams = options.queryParams,
+            relationships = options.relationships,
+            attributes = options.attributes;
+        var constructor = this.constructor,
+            id = this.id,
+            isNew = this.isNew;
+        var requestId = id;
+        var method = 'PATCH';
+
+        if (isNew) {
+          method = 'POST';
+          requestId = null;
+        }
+
+        var url = this.store.fetchUrl(constructor.type, queryParams, requestId);
+        var body = JSON.stringify(this.jsonapi({
+          relationships: relationships,
+          attributes: attributes
+        }));
+        var response = this.store.fetch(url, {
+          method: method,
+          body: body
+        });
+        return new ObjectPromiseProxy(response, this);
+      }
+      /**
+       * Checks all validations, adding errors where necessary and returning `false` if any are not valid
+       * @method validate
+       * @return {Boolean}
+       */
+
+    }, {
+      key: "validate",
+      value: function validate() {
+        var _this3 = this;
+
+        this.errors = {};
+        var attributeNames = this.attributeNames,
+            attributeDefinitions = this.attributeDefinitions;
+        var validationChecks = attributeNames.map(function (property) {
+          var validator = attributeDefinitions[property].validator;
+          if (!validator) return true;
+          var validationResult = validator(_this3[property], _this3);
+
+          if (!validationResult.isValid) {
+            _this3.errors[property] = validationResult.errors;
+          }
+
+          return validationResult.isValid;
+        });
+        return validationChecks.every(function (value) {
+          return value;
+        });
+      }
+      /**
+       * deletes a record from the store and server
+       * @method destroy
+       * @return {Promise} an empty promise with any success/error status
+       */
+
+    }, {
+      key: "destroy",
+      value: function destroy() {
+        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        var type = this.constructor.type,
+            id = this.id,
+            snapshot = this.snapshot,
+            isNew = this.isNew;
+
+        if (isNew) {
+          this.store.remove(type, id);
+          return snapshot;
+        }
+
+        var _options$params = options.params,
+            params = _options$params === void 0 ? {} : _options$params,
+            _options$skipRemove = options.skipRemove,
+            skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
+        var url = this.store.fetchUrl(type, params, id);
+        this.isInFlight = true;
+        var promise = this.store.fetch(url, {
+          method: 'DELETE'
+        });
+
+        var _this = this;
+
+        _this.errors = {};
+        return promise.then(
+        /*#__PURE__*/
+        function () {
+          var _ref = _asyncToGenerator(
+          /*#__PURE__*/
+          regeneratorRuntime.mark(function _callee(response) {
+            var json;
+            return regeneratorRuntime.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    _this.isInFlight = false;
+
+                    if (!(response.status === 202 || response.status === 204)) {
+                      _context.next = 17;
+                      break;
+                    }
+
+                    if (!skipRemove) {
+                      _this.store.remove(type, id);
+                    }
+
+                    _context.prev = 3;
+                    _context.next = 6;
+                    return response.json();
+
+                  case 6:
+                    json = _context.sent;
+
+                    if (json.data && json.data.attributes) {
+                      Object.keys(json.data.attributes).forEach(function (key) {
+                        set$$1(_this, key, json.data.attributes[key]);
+                      });
+                    }
+
+                    _context.next = 13;
+                    break;
+
+                  case 10:
+                    _context.prev = 10;
+                    _context.t0 = _context["catch"](3);
+                    console.log(_context.t0); // It is text, do you text handling here
+
+                  case 13:
+                    // NOTE: If deleting a record changes other related model
+                    // You can return then in the delete response
+                    if (json && json.included) {
+                      _this.store.createModelsFromData(json.included);
+                    }
+
+                    return _context.abrupt("return", _this);
+
+                  case 17:
+                    _this.errors = {
+                      status: response.status
+                    };
+                    return _context.abrupt("return", _this);
+
+                  case 19:
+                  case "end":
+                    return _context.stop();
+                }
+              }
+            }, _callee, null, [[3, 10]]);
+          }));
+
+          return function (_x) {
+            return _ref.apply(this, arguments);
+          };
+        }(), function (error) {
+          // TODO: Handle error states correctly
+          _this.isInFlight = false;
+          _this.errors = error;
+          throw error;
+        });
+      }
+      /* Private Methods */
+
+      /**
+       * Magic method that makes changes to records
+       * observable
+       *
+       * @method _makeObservable
+       */
+
+    }, {
+      key: "_makeObservable",
+      value: function _makeObservable(initialAttributes) {
+        var defaultAttributes = this.defaultAttributes;
+        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+      }
+      /**
+       * The current state of defined attributes and relationships of the instance
+       * Really just an alias for attributes
+       * ```
+       * todo = store.find('todos', 5)
+       * todo.title
+       * => "Buy the eggs"
+       * snapshot = todo.snapshot
+       * todo.title = "Buy the eggs and bacon"
+       * snapshot.title
+       * => "Buy the eggs and bacon"
+       * ```
+       * @method snapshot
+       * @return {Object} current attributes
+       */
+
+    }, {
+      key: "setPreviousSnapshot",
+
+      /**
+       * Sets previous snapshot to current snapshot
+       *
+       * @method setPreviousSnapshot
+       */
+      value: function setPreviousSnapshot() {
+        this.previousSnapshot = this.snapshot;
+      }
+      /**
+       * Uses mobx.autorun to track changes to attributes
+       *
+       * @method _trackState
+       */
+
+    }, {
+      key: "_trackState",
+      value: function _trackState() {
+        var _this4 = this;
+
+        reaction$$1(function () {
+          return JSON.stringify(_this4.attributes);
+        }, function (objectString) {
+          // console.log(objectString)
+          _this4.isDirty = true;
+        });
+        reaction$$1(function () {
+          return JSON.stringify(_this4.relationships);
+        }, function (relString) {
+          // console.log(relString)
+          _this4.isDirty = true;
+        });
+      }
+      /**
+       * shortcut to get the static
+       *
+       * @method type
+       * @return {String} current attributes
+      */
+
+    }, {
+      key: "errorForKey",
+
+      /**
+       * Getter to check if the record has errors.
+       *
+       * @method hasErrors
+       * @return {Boolean}
+       */
+      value: function errorForKey(key) {
+        return this.errors[key];
+      }
+      /**
+       * Getter to just get the names of a records attributes.
+       *
+       * @method attributeNames
+       * @return {Array}
+       */
+
+    }, {
+      key: "jsonapi",
+
+      /**
+       * getter method to get data in api compliance format
+       * TODO: Figure out how to handle unpersisted ids
+       *
+       * @method jsonapi
+       * @return {Object} data in JSON::API format
+       */
+      value: function jsonapi() {
+        var _this5 = this;
+
+        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        var attributeDefinitions = this.attributeDefinitions,
+            attributeNames = this.attributeNames,
+            meta = this.meta,
+            id = this.id,
+            type = this.constructor.type;
+        var filteredAttributeNames = attributeNames;
+        var filteredRelationshipNames = [];
+
+        if (options.attributes) {
+          filteredAttributeNames = attributeNames.filter(function (name) {
+            return options.attributes.includes(name);
+          });
+        }
+
+        var attributes = filteredAttributeNames.reduce(function (attrs, key) {
+          var value = _this5[key];
+
+          if (value) {
+            var DataType = attributeDefinitions[key].dataType;
+            var attr;
+
+            if (DataType.name === 'Array' || DataType.name === 'Object') {
+              attr = toJS$$1(value);
+            } else if (DataType.name === 'Date') {
+              attr = moment(value).toISOString();
+            } else {
+              attr = DataType(value);
+            }
+
+            attrs[key] = attr;
+          } else {
+            attrs[key] = value;
+          }
+
+          return attrs;
+        }, {});
+        var data = {
+          type: type,
+          attributes: attributes,
+          id: String(id)
+        };
+
+        if (options.relationships) {
+          filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
+            return options.relationships.includes(name);
+          });
+          var relationships = filteredRelationshipNames.reduce(function (rels, key) {
+            rels[key] = toJS$$1(_this5.relationships[key]);
+            stringifyIds(rels[key]);
+            return rels;
+          }, {});
+          data.relationships = relationships;
+        }
+
+        if (meta) {
+          data['meta'] = meta;
+        }
+
+        if (String(id).match(/tmp/)) {
+          delete data.id;
+        }
+
+        return {
+          data: data
+        };
+      }
+    }, {
+      key: "updateAttributes",
+      value: function updateAttributes(attributes) {
+        var _this6 = this;
+
+        transaction$$1(function () {
+          Object.keys(attributes).forEach(function (key) {
+            _this6[key] = attributes[key];
+          });
+        });
+      }
+    }, {
+      key: "isDirty",
+      get: function get() {
+        var isNew = this.isNew,
+            _isDirty = this._isDirty;
+        return _isDirty || isNew;
+      },
+      set: function set(value) {
+        this._isDirty = value;
+      }
+      /**
+       * Private method. True if the model has been programatically changed,
+       * as opposed to just being new.
+       * @property _isDirty
+       * @type {Boolean}
+       * @default false
+       * @private
+       */
+
+    }, {
+      key: "isNew",
+
+      /**
+       * True if the model has not been sent to the store
+       * @property isNew
+       * @type {Boolean}
+       */
+      get: function get() {
+        var id = this.id;
+        return !!String(id).match(/tmp/);
+      }
+      /**
+       * True if the instance is coming from / going to the server
+       * ```
+       * kpi = store.find('kpis', 5)
+       * // fetch started
+       * kpi.isInFlight
+       * => true
+       * // fetch finished
+       * kpi.isInFlight
+       * => false
+       * ```
+       * @property isInFlight
+       * @type {Boolean}
+       * @default false
+       */
+
+    }, {
+      key: "snapshot",
+      get: function get() {
+        return {
+          attributes: this.attributes,
+          relationships: toJS$$1(this.relationships)
+        };
+      }
+    }, {
+      key: "type",
+      get: function get() {
+        return this.constructor.type;
+      }
+      /**
+       * current attributes of record
+       *
+       * @method attributes
+       * @return {Object} current attributes
+       */
+
+    }, {
+      key: "attributes",
+      get: function get() {
+        var _this7 = this;
+
+        return this.attributeNames.reduce(function (attributes, key) {
+          var value = toJS$$1(_this7[key]);
+
+          if (!value) {
+            delete attributes[key];
+          } else {
+            attributes[key] = value;
+          }
+
+          return attributes;
+        }, {});
+      }
+      /**
+       * Getter find the attribute definition for the model type.
+       *
+       * @method attributeDefinitions
+       * @return {Object}
+       */
+
+    }, {
+      key: "attributeDefinitions",
+      get: function get() {
+        var type = this.constructor.type;
+        return schema.structure[type];
+      }
+      /**
+       * Getter find the relationship definitions for the model type.
+       *
+       * @method relationshipDefinitions
+       * @return {Object}
+       */
+
+    }, {
+      key: "relationshipDefinitions",
+      get: function get() {
+        var type = this.constructor.type;
+        return schema.relations[type];
+      }
+      /**
+       * Getter to check if the record has errors.
+       *
+       * @method hasErrors
+       * @return {Boolean}
+       */
+
+    }, {
+      key: "hasErrors",
+      get: function get() {
+        return Object.keys(this.errors).length > 0;
+      }
+    }, {
+      key: "attributeNames",
+      get: function get() {
+        return Object.keys(this.attributeDefinitions);
+      }
+      /**
+       * getter method to get the default attributes
+       *
+       * @method defaultAttributes
+       * @return {Object}
+       */
+
+    }, {
+      key: "defaultAttributes",
+      get: function get() {
+        var attributeDefinitions = this.attributeDefinitions;
+        return this.attributeNames.reduce(function (defaults, key) {
+          var defaultValue = attributeDefinitions[key].defaultValue;
+          defaults[key] = defaultValue;
+          return defaults;
+        }, {
+          relationships: {}
+        });
+      }
+    }]);
+
+    return Model;
+  }(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [computed$$1], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [observable$$1], {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    initializer: function initializer() {
+      return false;
+    }
+  }), _applyDecoratedDescriptor(_class.prototype, "isNew", [computed$$1], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "errors", [observable$$1], {
+    configurable: true,
+    enumerable: true,
+    writable: true,
+    initializer: function initializer() {
+      return {};
+    }
+  })), _class);
+
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
+        arr2[i] = arr[i];
+      }
+
+      return arr2;
+    }
+  }
+
+  function _iterableToArray(iter) {
+    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+  }
+
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance");
+  }
+
+  function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+  }
+
   var rngBrowser = createCommonjsModule(function (module) {
   // Unique ID creation requires a high quality random # generator.  In the
   // browser this is a little complicated due to unknown quality of Math.random()
@@ -9156,21 +9937,6 @@
     };
   };
   /**
-   * Singularizes record type
-   * @method singularizeType
-   * @param {String} recordType type of record
-   * @return {String}
-   */
-
-
-  function singularizeType(recordType) {
-    var typeParts = recordType.split('_');
-    var endPart = typeParts[typeParts.length - 1];
-    typeParts = typeParts.slice(0, -1);
-    endPart = pluralize.singular(endPart);
-    return [].concat(_toConsumableArray(typeParts), [endPart]).join('_');
-  }
-  /**
    * Build request url from base url, endpoint, query params, and ids.
    *
    * @method requestUrl
@@ -9267,1099 +10033,6 @@
   function uniqueBy(array, key) {
     return array.reduce(uniqueByReducer(key), []);
   }
-
-  function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-  function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-  function ObjectPromiseProxy(promise, target) {
-    target.isInFlight = true;
-    var tmpId = target.id;
-    var result = promise.then(function _callee(response) {
-      var status, json, _json$data, attributes, relationships, message, _json, errorString;
-
-      return regeneratorRuntime.async(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              status = response.status;
-
-              if (!(status === 200 || status === 201)) {
-                _context.next = 14;
-                break;
-              }
-
-              _context.next = 4;
-              return regeneratorRuntime.awrap(response.json());
-
-            case 4:
-              json = _context.sent;
-              // Update target model
-              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
-              transaction$$1(function () {
-                Object.keys(attributes).forEach(function (key) {
-                  set$$1(target, key, attributes[key]);
-                });
-
-                if (relationships) {
-                  Object.keys(relationships).forEach(function (key) {
-                    if (!relationships[key].hasOwnProperty('meta')) {
-                      // todo: throw error if relationship is not defined in model
-                      set$$1(target.relationships, key, relationships[key]);
-                    }
-                  });
-                }
-
-                if (json.included) {
-                  target.store.createModelsFromData(json.included);
-                }
-              }); // Update target isInFlight and isDirty
-
-              target.isInFlight = false;
-              target.isDirty = false;
-              target.setPreviousSnapshot();
-              transaction$$1(function () {
-                // NOTE: This resolves an issue where a record is persisted but the
-                // index key is still a temp uuid. We can't simply remove the temp
-                // key because there may be associated records that have the temp
-                // uuid id as its only reference to the newly persisted record.
-                // TODO: Figure out a way to update associated records to use the
-                // newly persisted id.
-                target.store.data[target.type].records[tmpId] = target;
-                target.store.data[target.type].records[target.id] = target;
-              });
-              return _context.abrupt("return", target);
-
-            case 14:
-              target.isInFlight = false;
-              message = target.store.genericErrorMessage;
-              _context.prev = 16;
-              _context.next = 19;
-              return regeneratorRuntime.awrap(response.json());
-
-            case 19:
-              _json = _context.sent;
-              message = parseApiErrors(_json.errors, message);
-              _context.next = 25;
-              break;
-
-            case 23:
-              _context.prev = 23;
-              _context.t0 = _context["catch"](16);
-
-            case 25:
-              // TODO: add all errors from the API response to the target
-              target.errors = _objectSpread({}, target.errors, {
-                status: status,
-                base: [{
-                  message: message
-                }]
-              });
-              errorString = JSON.stringify(target.errors);
-              return _context.abrupt("return", Promise.reject(new Error(errorString)));
-
-            case 28:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, null, null, [[16, 23]]);
-    }, function (error) {
-      // TODO: Handle error states correctly
-      target.isInFlight = false;
-      target.errors = error;
-      throw error; // return target
-    }); // Define proxied attributes
-
-    var attributeNames = Object.keys(target.attributeNames);
-    var tempProperties = attributeNames.reduce(function (attrs, key) {
-      attrs[key] = {
-        value: target[key],
-        writable: false
-      };
-      return attrs;
-    }, {});
-    Object.defineProperties(result, _objectSpread({
-      isInFlight: {
-        value: target.isInFlight
-      }
-    }, tempProperties)); // Return promise
-
-    return result;
-  }
-
-  function parseApiErrors(errors, defaultMessage) {
-    return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
-  }
-
-  /**
-   * Utility class used to store the schema
-   * of model attribute definitions
-   *
-   * @class Schema
-   */
-  var Schema =
-  /*#__PURE__*/
-  function () {
-    function Schema() {
-      _classCallCheck(this, Schema);
-
-      this.structure = {};
-      this.relations = {};
-    }
-
-    _createClass(Schema, [{
-      key: "addAttribute",
-      value: function addAttribute(_ref) {
-        var type = _ref.type,
-            property = _ref.property,
-            dataType = _ref.dataType,
-            defaultValue = _ref.defaultValue;
-        this.structure[type] = this.structure[type] || {};
-        this.structure[type][property] = {
-          defaultValue: defaultValue,
-          dataType: dataType
-        };
-      }
-    }, {
-      key: "addRelationship",
-      value: function addRelationship(_ref2) {
-        var type = _ref2.type,
-            property = _ref2.property,
-            dataType = _ref2.dataType;
-        this.relations[type] = this.relations[type] || {};
-        this.relations[type][property] = {
-          dataType: dataType
-        };
-      }
-    }, {
-      key: "addValidation",
-      value: function addValidation(_ref3) {
-        var type = _ref3.type,
-            property = _ref3.property,
-            validator = _ref3.validator;
-        this.structure[type][property].validator = validator;
-      }
-    }]);
-
-    return Schema;
-  }();
-
-  var schema = new Schema();
-
-  var _class, _descriptor, _descriptor2, _temp;
-
-  function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-  function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-  function stringifyIds(object) {
-    Object.keys(object).forEach(function (key) {
-      var property = object[key];
-
-      if (_typeof(property) === 'object') {
-        if (property.id) {
-          property.id = String(property.id);
-        }
-
-        stringifyIds(property);
-      }
-    });
-  }
-  /**
-   * Handles getting polymorphic records or only a specific
-   * type if specified.
-   *
-   * @method getRelatedRecords
-   * @param {Object} record the record with the relationship
-   * @param {String} property the related property to set
-   * @param {String} modelType an override of the modelType
-   */
-
-  function getRelatedRecords(record, property) {
-    var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-    var relationships = record.relationships;
-    var relationType = modelType || property;
-    var references = relationships && relationships[relationType];
-    var relatedRecords = []; // NOTE: If the record doesn't have a matching references for the relation type
-    // fall back to looking up records by a foreign id i.e record.related_record_id
-
-    if (references && references.data) {
-      relatedRecords = references.data.map(function (ref) {
-        var recordType = ref.type;
-        return record.store.getRecord(recordType, ref.id);
-      });
-    } else {
-      var foreignId = "".concat(singularizeType(record.type), "_id");
-      relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
-        return String(rel[foreignId]) === String(record.id);
-      });
-    }
-
-    return new RelatedRecordsArray(relatedRecords, record, relationType);
-  }
-  /**
-   * Handles getting polymorphic has_one/belong_to.
-   *
-   * @method getRelatedRecord
-   */
-
-  function getRelatedRecord(record, property) {
-    var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-    // Get relationships
-    var relationships = record.relationships; // Short circuit if no relationships are present
-
-    if (!relationships) return; // Use property name unless model type is provided
-
-    var relationType = modelType || property;
-    var reference = relationships[relationType]; // Short circuit if matching reference is not found
-
-    if (!reference || !reference.data) return;
-    var _relationships$relati = relationships[relationType].data,
-        id = _relationships$relati.id,
-        type = _relationships$relati.type;
-    var recordType = modelType || type;
-    return record.store.getRecord(recordType, id);
-  }
-  /**
-   * Handles setting polymorphic has_one/belong_to.
-   * - Validates the related record to make sure it inherits from `Model` class
-   * - Sets the relationship
-   * - Attempts to find an inverse relationship, and if successful adds it as well
-   *
-   * @method setRelatedRecord
-   * @param {Object} record the record with the relationship
-   * @param {Object} relatedRecord the record that will be related
-   * @param {String} property the related property to set
-   * @param {String} modelType an override of the modelType
-   */
-
-  function setRelatedRecord(record, relatedRecord, property) {
-    var modelType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-
-    if (relatedRecord && !(relatedRecord instanceof Model)) {
-      throw new Error('Related record must be a valid Model object');
-    }
-
-    var relationships = record.relationships;
-    var relationType = modelType || property;
-    var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
-
-    if (!referenceRecord) {
-      return;
-    }
-
-    var id = referenceRecord.id;
-    var type = referenceRecord.constructor.type;
-    var data = relationships[relationType] && relationships[relationType].data;
-
-    if (!relatedRecord) {
-      delete relationships[relationType];
-    } else if (!data || !(data.type === type && data.id === id)) {
-      relationships[relationType] = {
-        data: {
-          id: id,
-          type: type
-        }
-      };
-    } else {
-      return relatedRecord;
-    } // hack we don't have a reference to the inverse name so we just use the record type.
-    // this may cause problems with polymorphic relationships
-
-
-    var inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type);
-
-    if (inverseRelatedToMany) {
-      var inverseMethod = relatedRecord ? 'add' : 'remove';
-      inverseRelatedToMany[inverseMethod](record);
-    }
-
-    return relatedRecord;
-  }
-  /**
-   * An array that allows for updating store references and relationships
-   * @class RelatedRecordsArray
-   * @constructor
-   * @param {Array} array the array to extend
-   * @param {Object} record the record with the referenced array
-   * @param {String} property the property on the record that references the array
-   */
-
-  var RelatedRecordsArray =
-  /*#__PURE__*/
-  function (_Array) {
-    _inherits(RelatedRecordsArray, _Array);
-
-    function RelatedRecordsArray(_array, _record, _property) {
-      var _getPrototypeOf2;
-
-      var _this2;
-
-      _classCallCheck(this, RelatedRecordsArray);
-
-      _this2 = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
-
-      _this2.add = function (relatedRecord) {
-        var _assertThisInitialize = _assertThisInitialized(_this2),
-            record = _assertThisInitialize.record,
-            property = _assertThisInitialize.property;
-
-        var recordType = record.constructor.type;
-        var id = relatedRecord.id,
-            type = relatedRecord.constructor.type;
-
-        if (!relatedRecord || !(relatedRecord instanceof Model)) {
-          throw new Error('Related record must be a valid Model object');
-        }
-
-        if (!record.relationships) {
-          record.relationships = {};
-        }
-
-        var relationships = record.relationships;
-
-        if (!relationships[property]) {
-          relationships[property] = {};
-        }
-
-        if (!relationships[property].data) {
-          relationships[property].data = [];
-        }
-
-        var existingRelationships = relationships[property];
-        var alreadyThere = existingRelationships && existingRelationships.data.find(function (model) {
-          return model.id === id && model.type === type;
-        });
-
-        if (!alreadyThere) {
-          relationships[property].data.push({
-            id: id,
-            type: type
-          });
-
-          _this2.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
-
-
-          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
-        }
-
-        record.isDirty = true;
-        return relatedRecord;
-      };
-
-      _this2.remove = function (relatedRecord) {
-        var _assertThisInitialize2 = _assertThisInitialized(_this2),
-            record = _assertThisInitialize2.record,
-            property = _assertThisInitialize2.property;
-
-        var relationships = record.relationships,
-            recordType = record.constructor.type;
-        var id = relatedRecord.id,
-            type = relatedRecord.constructor.type;
-
-        if (relationships && relationships[property] && relatedRecord) {
-          var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
-            return model.id === id && model.type === type;
-          });
-          relationships[property].data.splice(referenceIndexToRemove, 1);
-
-          var recordIndexToRemove = _this2.findIndex(function (model) {
-            return model.id === id && model.type === type;
-          });
-
-          if (recordIndexToRemove > 0) _this2.splice(recordIndexToRemove, 1);
-
-          if (!relationships[property].data.length) {
-            delete relationships[property];
-          }
-
-          if (!Object.keys(record.relationships).length) {
-            delete record.relationships;
-          } // hack this will only work with singularized relationships.
-
-
-          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
-        }
-
-        record.isDirty = true;
-        return relatedRecord;
-      };
-
-      _this2.replace = function (array) {
-        var _assertThisInitialize3 = _assertThisInitialized(_this2),
-            record = _assertThisInitialize3.record,
-            property = _assertThisInitialize3.property;
-
-        var relationships = record.relationships;
-        transaction$$1(function () {
-          relationships[property] = {
-            data: []
-          };
-          array.forEach(function (object) {
-            return _this2.add(object);
-          });
-        });
-        record.isDirty = true;
-      };
-
-      _this2.property = _property;
-      _this2.record = _record;
-      return _this2;
-    }
-    /**
-     * Adds a record to the array, and updates references in the store, as well as inverse references
-     * @method add
-     * @param {Object} relatedRecord the record to add to the array
-     * @return {Object} the original relatedRecord
-     */
-
-
-    return RelatedRecordsArray;
-  }(_wrapNativeSuper(Array));
-  /*
-   * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
-   * An optional argument specifies the data model, if different from the property name.
-   * ```
-   * class Note extends Model {
-   *   @belongsTo todo
-   *   @belongsTo(Facility) greenhouse
-   * }
-   * ```
-   * Polymorphic relationships
-   * Define `belongsTo` with the the associated models
-   * Define `hasMany` as you normally would
-   * ```
-   * class Note extends Model {
-   *   @belongsTo(Todo, ScheduledEvent) notable
-   * }
-   *
-   * class Todo extends Model {
-   *   @hasMany notes
-   * }
-   * ```
-   * @method belongsTo
-   */
-
-  /**
-   @class Model
-   */
-
-
-  var Model = (_class = (_temp =
-  /*#__PURE__*/
-  function () {
-    /**
-     * Initializer for model
-     *
-     * @method constructor
-     */
-    function Model() {
-      var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-      _classCallCheck(this, Model);
-
-      _initializerDefineProperty(this, "_isDirty", _descriptor, this);
-
-      this.isInFlight = false;
-
-      _initializerDefineProperty(this, "errors", _descriptor2, this);
-
-      this.previousSnapshot = {};
-
-      this._makeObservable(initialAttributes);
-
-      this.setPreviousSnapshot();
-
-      this._trackState();
-    }
-    /**
-     * The type of the model. Defined on the class. Defaults to the underscored version of the class name
-     * (eg 'calendar_events').
-     *
-     * @property type
-     * @static
-     */
-
-    /**
-     * The canonical path to the resource on the server. Defined on the class.
-     * Defaults to the underscored version of the class name
-     * @property endpoint
-     * @static
-     */
-
-    /**
-     * True if the instance has been modified from its persisted state
-     * ```
-     * kpi = store.add('kpis', { name: 'A good thing to measure' })
-     * kpi.isDirty
-     * => true
-     * kpi.name
-     * => "A good thing to measure"
-     * await kpi.save()
-     * kpi.isDirty
-     * => false
-     * kpi.name = "Another good thing to measure"
-     * kpi.isDirty
-     * => true
-     * await kpi.save()
-     * kpi.isDirty
-     * => false
-     * ```
-     * @property isDirty
-     * @type {Boolean}
-     * @default false
-     */
-
-
-    _createClass(Model, [{
-      key: "rollback",
-
-      /**
-       * restores data to its last persisted state
-       * ```
-       * kpi = store.find('kpis', 5)
-       * kpi.name
-       * => "A good thing to measure"
-       * kpi.name = "Another good thing to measure"
-       * kpi.rollback()
-       * kpi.name
-       * => "A good thing to measure"
-       * ```
-       * @method rollback
-       */
-      value: function rollback() {
-        var _this3 = this;
-
-        transaction$$1(function () {
-          var previousSnapshot = _this3.previousSnapshot;
-
-          _this3.attributeNames.forEach(function (key) {
-            _this3[key] = previousSnapshot.attributes[key];
-          });
-
-          _this3.relationships = previousSnapshot.relationships;
-          _this3.errors = {};
-        });
-        this.setPreviousSnapshot();
-      }
-      /**
-       * creates or updates a record.
-       * @method save
-       * @return {Promise}
-       * @param {Object} options
-       */
-
-    }, {
-      key: "save",
-      value: function save() {
-        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-        if (!options.skip_validations && !this.validate()) {
-          var errorString = JSON.stringify(this.errors);
-          return Promise.reject(new Error(errorString));
-        }
-
-        var queryParams = options.queryParams,
-            relationships = options.relationships,
-            attributes = options.attributes;
-        var constructor = this.constructor,
-            id = this.id,
-            isNew = this.isNew;
-        var requestId = id;
-        var method = 'PATCH';
-
-        if (isNew) {
-          method = 'POST';
-          requestId = null;
-        }
-
-        var url = this.store.fetchUrl(constructor.type, queryParams, requestId);
-        var body = JSON.stringify(this.jsonapi({
-          relationships: relationships,
-          attributes: attributes
-        }));
-        var response = this.store.fetch(url, {
-          method: method,
-          body: body
-        });
-        return new ObjectPromiseProxy(response, this);
-      }
-      /**
-       * Checks all validations, adding errors where necessary and returning `false` if any are not valid
-       * @method validate
-       * @return {Boolean}
-       */
-
-    }, {
-      key: "validate",
-      value: function validate() {
-        var _this4 = this;
-
-        this.errors = {};
-        var attributeNames = this.attributeNames,
-            attributeDefinitions = this.attributeDefinitions;
-        var validationChecks = attributeNames.map(function (property) {
-          var validator = attributeDefinitions[property].validator;
-          if (!validator) return true;
-          var validationResult = validator(_this4[property], _this4);
-
-          if (!validationResult.isValid) {
-            _this4.errors[property] = validationResult.errors;
-          }
-
-          return validationResult.isValid;
-        });
-        return validationChecks.every(function (value) {
-          return value;
-        });
-      }
-      /**
-       * deletes a record from the store and server
-       * @method destroy
-       * @return {Promise} an empty promise with any success/error status
-       */
-
-    }, {
-      key: "destroy",
-      value: function destroy() {
-        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var type = this.constructor.type,
-            id = this.id,
-            snapshot = this.snapshot,
-            isNew = this.isNew;
-
-        if (isNew) {
-          this.store.remove(type, id);
-          return snapshot;
-        }
-
-        var _options$params = options.params,
-            params = _options$params === void 0 ? {} : _options$params,
-            _options$skipRemove = options.skipRemove,
-            skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
-        var url = this.store.fetchUrl(type, params, id);
-        this.isInFlight = true;
-        var promise = this.store.fetch(url, {
-          method: 'DELETE'
-        });
-
-        var _this = this;
-
-        _this.errors = {};
-        return promise.then(function _callee(response) {
-          var json;
-          return regeneratorRuntime.async(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  _this.isInFlight = false;
-
-                  if (!(response.status === 202 || response.status === 204)) {
-                    _context.next = 17;
-                    break;
-                  }
-
-                  if (!skipRemove) {
-                    _this.store.remove(type, id);
-                  }
-
-                  _context.prev = 3;
-                  _context.next = 6;
-                  return regeneratorRuntime.awrap(response.json());
-
-                case 6:
-                  json = _context.sent;
-
-                  if (json.data && json.data.attributes) {
-                    Object.keys(json.data.attributes).forEach(function (key) {
-                      set$$1(_this, key, json.data.attributes[key]);
-                    });
-                  }
-
-                  _context.next = 13;
-                  break;
-
-                case 10:
-                  _context.prev = 10;
-                  _context.t0 = _context["catch"](3);
-                  console.log(_context.t0); // It is text, do you text handling here
-
-                case 13:
-                  // NOTE: If deleting a record changes other related model
-                  // You can return then in the delete response
-                  if (json && json.included) {
-                    _this.store.createModelsFromData(json.included);
-                  }
-
-                  return _context.abrupt("return", _this);
-
-                case 17:
-                  _this.errors = {
-                    status: response.status
-                  };
-                  return _context.abrupt("return", _this);
-
-                case 19:
-                case "end":
-                  return _context.stop();
-              }
-            }
-          }, null, null, [[3, 10]]);
-        }, function (error) {
-          // TODO: Handle error states correctly
-          _this.isInFlight = false;
-          _this.errors = error;
-          throw error;
-        });
-      }
-      /* Private Methods */
-
-      /**
-       * Magic method that makes changes to records
-       * observable
-       *
-       * @method _makeObservable
-       */
-
-    }, {
-      key: "_makeObservable",
-      value: function _makeObservable(initialAttributes) {
-        var defaultAttributes = this.defaultAttributes;
-        extendObservable$$1(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
-      }
-      /**
-       * The current state of defined attributes and relationships of the instance
-       * Really just an alias for attributes
-       * ```
-       * todo = store.find('todos', 5)
-       * todo.title
-       * => "Buy the eggs"
-       * snapshot = todo.snapshot
-       * todo.title = "Buy the eggs and bacon"
-       * snapshot.title
-       * => "Buy the eggs and bacon"
-       * ```
-       * @method snapshot
-       * @return {Object} current attributes
-       */
-
-    }, {
-      key: "setPreviousSnapshot",
-
-      /**
-       * Sets previous snapshot to current snapshot
-       *
-       * @method setPreviousSnapshot
-       */
-      value: function setPreviousSnapshot() {
-        this.previousSnapshot = this.snapshot;
-      }
-      /**
-       * Uses mobx.autorun to track changes to attributes
-       *
-       * @method _trackState
-       */
-
-    }, {
-      key: "_trackState",
-      value: function _trackState() {
-        var _this5 = this;
-
-        reaction$$1(function () {
-          return JSON.stringify(_this5.attributes);
-        }, function (objectString) {
-          // console.log(objectString)
-          _this5.isDirty = true;
-        });
-        reaction$$1(function () {
-          return JSON.stringify(_this5.relationships);
-        }, function (relString) {
-          // console.log(relString)
-          _this5.isDirty = true;
-        });
-      }
-      /**
-       * shortcut to get the static
-       *
-       * @method type
-       * @return {String} current attributes
-      */
-
-    }, {
-      key: "errorForKey",
-
-      /**
-       * Getter to check if the record has errors.
-       *
-       * @method hasErrors
-       * @return {Boolean}
-       */
-      value: function errorForKey(key) {
-        return this.errors[key];
-      }
-      /**
-       * Getter to just get the names of a records attributes.
-       *
-       * @method attributeNames
-       * @return {Array}
-       */
-
-    }, {
-      key: "jsonapi",
-
-      /**
-       * getter method to get data in api compliance format
-       * TODO: Figure out how to handle unpersisted ids
-       *
-       * @method jsonapi
-       * @return {Object} data in JSON::API format
-       */
-      value: function jsonapi() {
-        var _this6 = this;
-
-        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var attributeDefinitions = this.attributeDefinitions,
-            attributeNames = this.attributeNames,
-            meta = this.meta,
-            id = this.id,
-            type = this.constructor.type;
-        var filteredAttributeNames = attributeNames;
-        var filteredRelationshipNames = [];
-
-        if (options.attributes) {
-          filteredAttributeNames = attributeNames.filter(function (name) {
-            return options.attributes.includes(name);
-          });
-        }
-
-        var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-          var value = _this6[key];
-
-          if (value) {
-            var DataType = attributeDefinitions[key].dataType;
-            var attr;
-
-            if (DataType.name === 'Array' || DataType.name === 'Object') {
-              attr = toJS$$1(value);
-            } else if (DataType.name === 'Date') {
-              attr = moment(value).toISOString();
-            } else {
-              attr = DataType(value);
-            }
-
-            attrs[key] = attr;
-          } else {
-            attrs[key] = value;
-          }
-
-          return attrs;
-        }, {});
-        var data = {
-          type: type,
-          attributes: attributes,
-          id: String(id)
-        };
-
-        if (options.relationships) {
-          filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
-            return options.relationships.includes(name);
-          });
-          var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-            rels[key] = toJS$$1(_this6.relationships[key]);
-            stringifyIds(rels[key]);
-            return rels;
-          }, {});
-          data.relationships = relationships;
-        }
-
-        if (meta) {
-          data['meta'] = meta;
-        }
-
-        if (String(id).match(/tmp/)) {
-          delete data.id;
-        }
-
-        return {
-          data: data
-        };
-      }
-    }, {
-      key: "updateAttributes",
-      value: function updateAttributes(attributes) {
-        var _this7 = this;
-
-        transaction$$1(function () {
-          Object.keys(attributes).forEach(function (key) {
-            _this7[key] = attributes[key];
-          });
-        });
-      }
-    }, {
-      key: "isDirty",
-      get: function get() {
-        var isNew = this.isNew,
-            _isDirty = this._isDirty;
-        return _isDirty || isNew;
-      },
-      set: function set(value) {
-        this._isDirty = value;
-      }
-      /**
-       * Private method. True if the model has been programatically changed,
-       * as opposed to just being new.
-       * @property _isDirty
-       * @type {Boolean}
-       * @default false
-       * @private
-       */
-
-    }, {
-      key: "isNew",
-
-      /**
-       * True if the model has not been sent to the store
-       * @property isNew
-       * @type {Boolean}
-       */
-      get: function get() {
-        var id = this.id;
-        return !!String(id).match(/tmp/);
-      }
-      /**
-       * True if the instance is coming from / going to the server
-       * ```
-       * kpi = store.find('kpis', 5)
-       * // fetch started
-       * kpi.isInFlight
-       * => true
-       * // fetch finished
-       * kpi.isInFlight
-       * => false
-       * ```
-       * @property isInFlight
-       * @type {Boolean}
-       * @default false
-       */
-
-    }, {
-      key: "snapshot",
-      get: function get() {
-        return {
-          attributes: this.attributes,
-          relationships: toJS$$1(this.relationships)
-        };
-      }
-    }, {
-      key: "type",
-      get: function get() {
-        return this.constructor.type;
-      }
-      /**
-       * current attributes of record
-       *
-       * @method attributes
-       * @return {Object} current attributes
-       */
-
-    }, {
-      key: "attributes",
-      get: function get() {
-        var _this8 = this;
-
-        return this.attributeNames.reduce(function (attributes, key) {
-          var value = toJS$$1(_this8[key]);
-
-          if (!value) {
-            delete attributes[key];
-          } else {
-            attributes[key] = value;
-          }
-
-          return attributes;
-        }, {});
-      }
-      /**
-       * Getter find the attribute definition for the model type.
-       *
-       * @method attributeDefinitions
-       * @return {Object}
-       */
-
-    }, {
-      key: "attributeDefinitions",
-      get: function get() {
-        var type = this.constructor.type;
-        return schema.structure[type];
-      }
-      /**
-       * Getter find the relationship definitions for the model type.
-       *
-       * @method relationshipDefinitions
-       * @return {Object}
-       */
-
-    }, {
-      key: "relationshipDefinitions",
-      get: function get() {
-        var type = this.constructor.type;
-        return schema.relations[type];
-      }
-      /**
-       * Getter to check if the record has errors.
-       *
-       * @method hasErrors
-       * @return {Boolean}
-       */
-
-    }, {
-      key: "hasErrors",
-      get: function get() {
-        return Object.keys(this.errors).length > 0;
-      }
-    }, {
-      key: "attributeNames",
-      get: function get() {
-        return Object.keys(this.attributeDefinitions);
-      }
-      /**
-       * getter method to get the default attributes
-       *
-       * @method defaultAttributes
-       * @return {Object}
-       */
-
-    }, {
-      key: "defaultAttributes",
-      get: function get() {
-        var attributeDefinitions = this.attributeDefinitions;
-        return this.attributeNames.reduce(function (defaults, key) {
-          var defaultValue = attributeDefinitions[key].defaultValue;
-          defaults[key] = defaultValue;
-          return defaults;
-        }, {
-          relationships: {}
-        });
-      }
-    }]);
-
-    return Model;
-  }(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [computed$$1], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [observable$$1], {
-    configurable: true,
-    enumerable: true,
-    writable: true,
-    initializer: function initializer() {
-      return false;
-    }
-  }), _applyDecoratedDescriptor(_class.prototype, "isNew", [computed$$1], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "errors", [observable$$1], {
-    configurable: true,
-    enumerable: true,
-    writable: true,
-    initializer: function initializer() {
-      return {};
-    }
-  })), _class);
 
   var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
 
@@ -10947,72 +10620,82 @@
 
     }, {
       key: "fetchAll",
-      value: function fetchAll(type, queryParams) {
-        var _this6 = this;
+      value: function () {
+        var _fetchAll = _asyncToGenerator(
+        /*#__PURE__*/
+        regeneratorRuntime.mark(function _callee(type, queryParams) {
+          var _this6 = this;
 
-        var store, url, response, json, records;
-        return regeneratorRuntime.async(function fetchAll$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                store = this;
-                url = this.fetchUrl(type, queryParams);
-                _context.next = 4;
-                return regeneratorRuntime.awrap(this.fetch(url, {
-                  method: 'GET'
-                }));
-
-              case 4:
-                response = _context.sent;
-
-                if (!(response.status === 200)) {
-                  _context.next = 16;
-                  break;
-                }
-
-                this.data[type].cache[url] = [];
-                _context.next = 9;
-                return regeneratorRuntime.awrap(response.json());
-
-              case 9:
-                json = _context.sent;
-
-                if (json.included) {
-                  this.createModelsFromData(json.included);
-                }
-
-                records = [];
-                transaction$$1(function () {
-                  records = json.data.map(function (dataObject) {
-                    var id = dataObject.id,
-                        _dataObject$attribute2 = dataObject.attributes,
-                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                        _dataObject$relations2 = dataObject.relationships,
-                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                    var ModelKlass = _this6.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread$2({
-                      store: store,
-                      relationships: relationships
-                    }, attributes));
-
-                    _this6.data[type].cache[url].push(id);
-
-                    _this6.data[type].records[id] = record;
-                    return record;
+          var store, url, response, json, records;
+          return regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  store = this;
+                  url = this.fetchUrl(type, queryParams);
+                  _context.next = 4;
+                  return this.fetch(url, {
+                    method: 'GET'
                   });
-                });
-                return _context.abrupt("return", records);
 
-              case 16:
-                return _context.abrupt("return", Promise.reject(response.status));
+                case 4:
+                  response = _context.sent;
 
-              case 17:
-              case "end":
-                return _context.stop();
+                  if (!(response.status === 200)) {
+                    _context.next = 16;
+                    break;
+                  }
+
+                  this.data[type].cache[url] = [];
+                  _context.next = 9;
+                  return response.json();
+
+                case 9:
+                  json = _context.sent;
+
+                  if (json.included) {
+                    this.createModelsFromData(json.included);
+                  }
+
+                  records = [];
+                  transaction$$1(function () {
+                    records = json.data.map(function (dataObject) {
+                      var id = dataObject.id,
+                          _dataObject$attribute2 = dataObject.attributes,
+                          attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+                          _dataObject$relations2 = dataObject.relationships,
+                          relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
+                      var ModelKlass = _this6.modelTypeIndex[type];
+                      var record = new ModelKlass(_objectSpread$2({
+                        store: store,
+                        relationships: relationships
+                      }, attributes));
+
+                      _this6.data[type].cache[url].push(id);
+
+                      _this6.data[type].records[id] = record;
+                      return record;
+                    });
+                  });
+                  return _context.abrupt("return", records);
+
+                case 16:
+                  return _context.abrupt("return", Promise.reject(response.status));
+
+                case 17:
+                case "end":
+                  return _context.stop();
+              }
             }
-          }
-        }, null, this);
-      }
+          }, _callee, this);
+        }));
+
+        function fetchAll(_x2, _x3) {
+          return _fetchAll.apply(this, arguments);
+        }
+
+        return fetchAll;
+      }()
       /**
        * fetches record by `id`.
        *
@@ -11024,53 +10707,63 @@
 
     }, {
       key: "fetchOne",
-      value: function fetchOne(type, id, queryParams) {
-        var url, response, json, data, included, record;
-        return regeneratorRuntime.async(function fetchOne$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                url = this.fetchUrl(type, queryParams, id); // Trigger request
+      value: function () {
+        var _fetchOne = _asyncToGenerator(
+        /*#__PURE__*/
+        regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
+          var url, response, json, data, included, record;
+          return regeneratorRuntime.wrap(function _callee2$(_context2) {
+            while (1) {
+              switch (_context2.prev = _context2.next) {
+                case 0:
+                  url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-                _context2.next = 3;
-                return regeneratorRuntime.awrap(this.fetch(url, {
-                  method: 'GET'
-                }));
+                  _context2.next = 3;
+                  return this.fetch(url, {
+                    method: 'GET'
+                  });
 
-              case 3:
-                response = _context2.sent;
+                case 3:
+                  response = _context2.sent;
 
-                if (!(response.status === 200)) {
-                  _context2.next = 16;
-                  break;
-                }
+                  if (!(response.status === 200)) {
+                    _context2.next = 16;
+                    break;
+                  }
 
-                _context2.next = 7;
-                return regeneratorRuntime.awrap(response.json());
+                  _context2.next = 7;
+                  return response.json();
 
-              case 7:
-                json = _context2.sent;
-                data = json.data, included = json.included;
+                case 7:
+                  json = _context2.sent;
+                  data = json.data, included = json.included;
 
-                if (included) {
-                  this.createModelsFromData(included);
-                }
+                  if (included) {
+                    this.createModelsFromData(included);
+                  }
 
-                record = this.createOrUpdateModel(data);
-                this.data[type].cache[url] = [];
-                this.data[type].cache[url].push(record.id);
-                return _context2.abrupt("return", record);
+                  record = this.createOrUpdateModel(data);
+                  this.data[type].cache[url] = [];
+                  this.data[type].cache[url].push(record.id);
+                  return _context2.abrupt("return", record);
 
-              case 16:
-                return _context2.abrupt("return", null);
+                case 16:
+                  return _context2.abrupt("return", null);
 
-              case 17:
-              case "end":
-                return _context2.stop();
+                case 17:
+                case "end":
+                  return _context2.stop();
+              }
             }
-          }
-        }, null, this);
-      }
+          }, _callee2, this);
+        }));
+
+        function fetchOne(_x4, _x5, _x6) {
+          return _fetchOne.apply(this, arguments);
+        }
+
+        return fetchOne;
+      }()
     }]);
 
     return Store;
@@ -11243,6 +10936,122 @@
     }
   }
 
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+      return call;
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _isNativeFunction(fn) {
+    return Function.toString.call(fn).indexOf("[native code]") !== -1;
+  }
+
+  function isNativeReflectConstruct() {
+    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+    if (Reflect.construct.sham) return false;
+    if (typeof Proxy === "function") return true;
+
+    try {
+      Date.prototype.toString.call(Reflect.construct(Date, [], function () {}));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function _construct(Parent, args, Class) {
+    if (isNativeReflectConstruct()) {
+      _construct = Reflect.construct;
+    } else {
+      _construct = function _construct(Parent, args, Class) {
+        var a = [null];
+        a.push.apply(a, args);
+        var Constructor = Function.bind.apply(Parent, a);
+        var instance = new Constructor();
+        if (Class) _setPrototypeOf(instance, Class.prototype);
+        return instance;
+      };
+    }
+
+    return _construct.apply(null, arguments);
+  }
+
+  function _wrapNativeSuper(Class) {
+    var _cache = typeof Map === "function" ? new Map() : undefined;
+
+    _wrapNativeSuper = function _wrapNativeSuper(Class) {
+      if (Class === null || !_isNativeFunction(Class)) return Class;
+
+      if (typeof Class !== "function") {
+        throw new TypeError("Super expression must either be null or a function");
+      }
+
+      if (typeof _cache !== "undefined") {
+        if (_cache.has(Class)) return _cache.get(Class);
+
+        _cache.set(Class, Wrapper);
+      }
+
+      function Wrapper() {
+        return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+      }
+
+      Wrapper.prototype = Object.create(Class.prototype, {
+        constructor: {
+          value: Wrapper,
+          enumerable: false,
+          writable: true,
+          configurable: true
+        }
+      });
+      return _setPrototypeOf(Wrapper, Class);
+    };
+
+    return _wrapNativeSuper(Class);
+  }
+
+  var _Symbol$species;
   /*
    * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
    * An optional argument specifies the data model, if different from the property name
@@ -11269,7 +11078,7 @@
         return {
           get: function get() {
             var type = targetOrModelKlass.type;
-            return getRelatedRecords$1(this, property2, type);
+            return getRelatedRecords(this, property2, type);
           }
         };
       };
@@ -11281,7 +11090,7 @@
       });
       return {
         get: function get() {
-          return getRelatedRecords$1(this, property);
+          return getRelatedRecords(this, property);
         }
       };
     }
@@ -11304,11 +11113,11 @@
         return {
           get: function get() {
             var type = targetOrModelKlass.type;
-            return getRelatedRecord$1(this, property2, type);
+            return getRelatedRecord(this, property2, type);
           },
           set: function set(record) {
             var type = targetOrModelKlass.type;
-            return setRelatedRecord$1(this, record, property2, type);
+            return setRelatedRecord(this, record, property2, type);
           }
         };
       };
@@ -11320,10 +11129,10 @@
       });
       return {
         get: function get() {
-          return getRelatedRecord$1(this, property);
+          return getRelatedRecord(this, property);
         },
         set: function set(record) {
-          return setRelatedRecord$1(this, record, property);
+          return setRelatedRecord(this, record, property);
         }
       };
     }
@@ -11338,7 +11147,7 @@
    * @param {String} modelType an override of the modelType
    */
 
-  function getRelatedRecords$1(record, property) {
+  function getRelatedRecords(record, property) {
     var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     var relationships = record.relationships;
     var relationType = modelType || property;
@@ -11352,7 +11161,7 @@
       });
     }
 
-    return new RelatedRecordsArray$1(relatedRecords, record, relationType);
+    return new RelatedRecordsArray(relatedRecords, record, relationType);
   }
   /**
    * Handles getting polymorphic has_one/belong_to.
@@ -11360,7 +11169,7 @@
    * @method getRelatedRecord
    */
 
-  function getRelatedRecord$1(record, property) {
+  function getRelatedRecord(record, property) {
     var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     // Get relationships
     var relationships = record.relationships; // Short circuit if no relationships are present
@@ -11390,7 +11199,7 @@
    * @param {String} modelType an override of the modelType
    */
 
-  function setRelatedRecord$1(record, relatedRecord, property) {
+  function setRelatedRecord(record, relatedRecord, property) {
     var modelType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
     if (relatedRecord && !(relatedRecord instanceof Model)) {
@@ -11399,7 +11208,7 @@
 
     var relationships = record.relationships;
     var relationType = modelType || property;
-    var referenceRecord = relatedRecord || getRelatedRecord$1(record, relationType);
+    var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
 
     if (!referenceRecord) {
       return;
@@ -11424,7 +11233,7 @@
     // this may cause problems with polymorphic relationships
 
 
-    var inverseRelatedToMany = getRelatedRecords$1(referenceRecord, null, record.constructor.type);
+    var inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type);
 
     if (inverseRelatedToMany) {
       var inverseMethod = relatedRecord ? 'add' : 'remove';
@@ -11442,7 +11251,8 @@
    * @param {String} property the property on the record that references the array
    */
 
-  var RelatedRecordsArray$1 =
+  _Symbol$species = Symbol.species;
+  var RelatedRecordsArray =
   /*#__PURE__*/
   function (_Array) {
     _inherits(RelatedRecordsArray, _Array);
@@ -11498,7 +11308,7 @@
             _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
 
 
-            setRelatedRecord$1(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+            setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
           }
 
           return relatedRecord;
@@ -11535,7 +11345,7 @@
             } // hack this will only work with singularized relationships.
 
 
-            setRelatedRecord$1(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+            setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
           }
 
           return relatedRecord;
@@ -11601,7 +11411,7 @@
 
             _this.push(relatedRecord);
 
-            setRelatedRecord$1(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+            setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
           }
 
           return relatedRecord;
@@ -11637,7 +11447,7 @@
               delete record.relationships;
             }
 
-            setRelatedRecord$1(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+            setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
           }
 
           return relatedRecord;
@@ -11664,13 +11474,32 @@
       _this.record = _record;
       return _possibleConstructorReturn(_this);
     }
-    /**
-     * Adds a record to the array, and updates references in the store, as well as inverse references
-     * @method add
-     * @param {Object} relatedRecord the record to add to the array
-     * @return {Object} the original relatedRecord
+    /*
+     * This method is used by Array internals to decide
+     * which class to use for resulting derived objects from array manipulation methods
+     * such as `map` or `filter`
+     *
+     * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
+     * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
+     *
+     * For more details, see:
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
      */
 
+
+    _createClass(RelatedRecordsArray, null, [{
+      key: _Symbol$species,
+      get: function get() {
+        return Array;
+      }
+      /**
+       * Adds a record to the array, and updates references in the store, as well as inverse references
+       * @method add
+       * @param {Object} relatedRecord the record to add to the array
+       * @return {Object} the original relatedRecord
+       */
+
+    }]);
 
     return RelatedRecordsArray;
   }(_wrapNativeSuper(Array));
