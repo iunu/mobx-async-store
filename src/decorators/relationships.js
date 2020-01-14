@@ -205,16 +205,10 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
  * @param {Object} record the record with the referenced array
  * @param {String} property the property on the record that references the array
  */
+
 export class RelatedRecordsArray extends Array {
   constructor (array, record, property) {
-    // Invalid attempt to spread non-iterable instance
-    // https://github.com/babel/babel/issues/7258
-    if (!array || !array.length || array.length === 0) {
-      super()
-    } else {
-      super(...array)
-    }
-
+    super(...array)
     this.property = property
     this.record = record
   }
@@ -272,6 +266,8 @@ export class RelatedRecordsArray extends Array {
       setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1))
     }
 
+    record.isDirty = true
+
     return relatedRecord
   }
 
@@ -304,6 +300,9 @@ export class RelatedRecordsArray extends Array {
       // hack this will only work with singularized relationships.
       setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1))
     }
+
+    record.isDirty = true
+
     return relatedRecord
   }
 
@@ -315,5 +314,7 @@ export class RelatedRecordsArray extends Array {
       relationships[property] = { data: [] }
       array.forEach(object => this.add(object))
     })
+
+    record.isDirty = true
   }
 }

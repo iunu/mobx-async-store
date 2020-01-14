@@ -2085,221 +2085,120 @@ function (_Array) {
   _inherits(RelatedRecordsArray, _Array);
 
   function RelatedRecordsArray(_array, _record, _property) {
+    var _getPrototypeOf2;
+
     var _this;
 
     _classCallCheck(this, RelatedRecordsArray);
 
-    // Invalid attempt to spread non-iterable instance
-    // https://github.com/babel/babel/issues/7258
-    if (!_array || !_array.length || _array.length === 0) {
-      _this = _possibleConstructorReturn(this, _getPrototypeOf(RelatedRecordsArray).call(this));
+    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
 
-      _this.add = function (relatedRecord) {
-        var _assertThisInitialize = _assertThisInitialized(_this),
-            record = _assertThisInitialize.record,
-            property = _assertThisInitialize.property;
+    _this.add = function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized(_this),
+          record = _assertThisInitialize.record,
+          property = _assertThisInitialize.property;
 
-        var recordType = record.constructor.type;
-        var id = relatedRecord.id,
-            type = relatedRecord.constructor.type;
+      var recordType = record.constructor.type;
+      var id = relatedRecord.id,
+          type = relatedRecord.constructor.type;
 
-        if (!relatedRecord || !(relatedRecord instanceof Model)) {
-          throw new Error('Related record must be a valid Model object');
-        }
+      if (!relatedRecord || !(relatedRecord instanceof Model)) {
+        throw new Error('Related record must be a valid Model object');
+      }
 
-        if (!record.relationships) {
-          record.relationships = {};
-        }
+      if (!record.relationships) {
+        record.relationships = {};
+      }
 
-        var relationships = record.relationships;
+      var relationships = record.relationships;
 
-        if (!relationships[property]) {
-          relationships[property] = {};
-        }
+      if (!relationships[property]) {
+        relationships[property] = {};
+      }
 
-        if (!relationships[property].data) {
-          relationships[property].data = [];
-        }
+      if (!relationships[property].data) {
+        relationships[property].data = [];
+      }
 
-        var existingRelationships = relationships[property];
-        var alreadyThere = existingRelationships && existingRelationships.data.find(function (model) {
+      var existingRelationships = relationships[property];
+      var alreadyThere = existingRelationships && existingRelationships.data.find(function (model) {
+        return model.id === id && model.type === type;
+      });
+
+      if (!alreadyThere) {
+        relationships[property].data.push({
+          id: id,
+          type: type
+        });
+
+        _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
+
+
+        setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+      }
+
+      record.isDirty = true;
+      return relatedRecord;
+    };
+
+    _this.remove = function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized(_this),
+          record = _assertThisInitialize2.record,
+          property = _assertThisInitialize2.property;
+
+      var relationships = record.relationships,
+          recordType = record.constructor.type;
+      var id = relatedRecord.id,
+          type = relatedRecord.constructor.type;
+
+      if (relationships && relationships[property] && relatedRecord) {
+        var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
+          return model.id === id && model.type === type;
+        });
+        relationships[property].data.splice(referenceIndexToRemove, 1);
+
+        var recordIndexToRemove = _this.findIndex(function (model) {
           return model.id === id && model.type === type;
         });
 
-        if (!alreadyThere) {
-          relationships[property].data.push({
-            id: id,
-            type: type
-          });
+        if (recordIndexToRemove > 0) _this.splice(recordIndexToRemove, 1);
 
-          _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
-
-
-          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
+        if (!relationships[property].data.length) {
+          delete relationships[property];
         }
 
-        return relatedRecord;
-      };
-
-      _this.remove = function (relatedRecord) {
-        var _assertThisInitialize2 = _assertThisInitialized(_this),
-            record = _assertThisInitialize2.record,
-            property = _assertThisInitialize2.property;
-
-        var relationships = record.relationships,
-            recordType = record.constructor.type;
-        var id = relatedRecord.id,
-            type = relatedRecord.constructor.type;
-
-        if (relationships && relationships[property] && relatedRecord) {
-          var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
-            return model.id === id && model.type === type;
-          });
-          relationships[property].data.splice(referenceIndexToRemove, 1);
-
-          var recordIndexToRemove = _this.findIndex(function (model) {
-            return model.id === id && model.type === type;
-          });
-
-          if (recordIndexToRemove > 0) _this.splice(recordIndexToRemove, 1);
-
-          if (!relationships[property].data.length) {
-            delete relationships[property];
-          }
-
-          if (!Object.keys(record.relationships).length) {
-            delete record.relationships;
-          } // hack this will only work with singularized relationships.
+        if (!Object.keys(record.relationships).length) {
+          delete record.relationships;
+        } // hack this will only work with singularized relationships.
 
 
-          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
-        }
+        setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
+      }
 
-        return relatedRecord;
-      };
+      record.isDirty = true;
+      return relatedRecord;
+    };
 
-      _this.replace = function (array) {
-        var _assertThisInitialize3 = _assertThisInitialized(_this),
-            record = _assertThisInitialize3.record,
-            property = _assertThisInitialize3.property;
+    _this.replace = function (array) {
+      var _assertThisInitialize3 = _assertThisInitialized(_this),
+          record = _assertThisInitialize3.record,
+          property = _assertThisInitialize3.property;
 
-        var relationships = record.relationships;
-        transaction(function () {
-          relationships[property] = {
-            data: []
-          };
-          array.forEach(function (object) {
-            return _this.add(object);
-          });
+      var relationships = record.relationships;
+      transaction(function () {
+        relationships[property] = {
+          data: []
+        };
+        array.forEach(function (object) {
+          return _this.add(object);
         });
-      };
-    } else {
-      var _getPrototypeOf2;
-
-      _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
-
-      _this.add = function (relatedRecord) {
-        var _assertThisInitialize = _assertThisInitialized(_this),
-            record = _assertThisInitialize.record,
-            property = _assertThisInitialize.property;
-
-        var recordType = record.constructor.type;
-        var id = relatedRecord.id,
-            type = relatedRecord.constructor.type;
-
-        if (!relatedRecord || !(relatedRecord instanceof Model)) {
-          throw new Error('Related record must be a valid Model object');
-        }
-
-        if (!record.relationships) {
-          record.relationships = {};
-        }
-
-        var relationships = record.relationships;
-
-        if (!relationships[property]) {
-          relationships[property] = {};
-        }
-
-        if (!relationships[property].data) {
-          relationships[property].data = [];
-        }
-
-        var existingRelationships = relationships[property];
-        var alreadyThere = existingRelationships && existingRelationships.data.find(function (model) {
-          return model.id === id && model.type === type;
-        });
-
-        if (!alreadyThere) {
-          relationships[property].data.push({
-            id: id,
-            type: type
-          });
-
-          _this.push(relatedRecord);
-
-          setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
-        }
-
-        return relatedRecord;
-      };
-
-      _this.remove = function (relatedRecord) {
-        var _assertThisInitialize2 = _assertThisInitialized(_this),
-            record = _assertThisInitialize2.record,
-            property = _assertThisInitialize2.property;
-
-        var relationships = record.relationships,
-            recordType = record.constructor.type;
-        var id = relatedRecord.id,
-            type = relatedRecord.constructor.type;
-
-        if (relationships && relationships[property] && relatedRecord) {
-          var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
-            return model.id === id && model.type === type;
-          });
-          relationships[property].data.splice(referenceIndexToRemove, 1);
-
-          var recordIndexToRemove = _this.findIndex(function (model) {
-            return model.id === id && model.type === type;
-          });
-
-          if (recordIndexToRemove > 0) _this.splice(recordIndexToRemove, 1);
-
-          if (!relationships[property].data.length) {
-            delete relationships[property];
-          }
-
-          if (!Object.keys(record.relationships).length) {
-            delete record.relationships;
-          }
-
-          setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
-        }
-
-        return relatedRecord;
-      };
-
-      _this.replace = function (array) {
-        var _assertThisInitialize3 = _assertThisInitialized(_this),
-            record = _assertThisInitialize3.record,
-            property = _assertThisInitialize3.property;
-
-        var relationships = record.relationships;
-        transaction(function () {
-          relationships[property] = {
-            data: []
-          };
-          array.forEach(function (object) {
-            return _this.add(object);
-          });
-        });
-      };
-    }
+      });
+      record.isDirty = true;
+    };
 
     _this.property = _property;
     _this.record = _record;
-    return _possibleConstructorReturn(_this);
+    return _this;
   }
   /*
    * This method is used by Array internals to decide
