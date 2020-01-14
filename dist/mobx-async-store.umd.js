@@ -19,42 +19,6 @@
     return obj;
   }
 
-  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-    try {
-      var info = gen[key](arg);
-      var value = info.value;
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (info.done) {
-      resolve(value);
-    } else {
-      Promise.resolve(value).then(_next, _throw);
-    }
-  }
-
-  function _asyncToGenerator(fn) {
-    return function () {
-      var self = this,
-          args = arguments;
-      return new Promise(function (resolve, reject) {
-        var gen = fn.apply(self, args);
-
-        function _next(value) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-        }
-
-        function _throw(err) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-        }
-
-        _next(undefined);
-      });
-    };
-  }
-
   function _initializerDefineProperty(target, property, descriptor, context) {
     if (!descriptor) return;
     Object.defineProperty(target, property, {
@@ -1356,6 +1320,7 @@
       return MobXGlobals$$1;
   }());
   var canMergeGlobalState = true;
+  var isolateCalled = false;
   var globalState$$1 = (function () {
       var global = getGlobal$$1();
       if (global.__mobxInstanceCount > 0 && !global.__mobxGlobals)
@@ -1364,7 +1329,7 @@
           canMergeGlobalState = false;
       if (!canMergeGlobalState) {
           setTimeout(function () {
-              {
+              if (!isolateCalled) {
                   fail$$1("There are multiple, different versions of MobX active. Make sure MobX is loaded only once or use `configure({ isolateGlobalState: true })`");
               }
           }, 1);
@@ -8319,106 +8284,96 @@
   function ObjectPromiseProxy(promise, target) {
     target.isInFlight = true;
     var tmpId = target.id;
-    var result = promise.then(
-    /*#__PURE__*/
-    function () {
-      var _ref = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee(response) {
-        var status, json, _json$data, attributes, relationships, message, _json, errorString;
+    var result = promise.then(function _callee(response) {
+      var status, json, _json$data, attributes, relationships, message, _json, errorString;
 
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                status = response.status;
+      return regeneratorRuntime.async(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              status = response.status;
 
-                if (!(status === 200 || status === 201)) {
-                  _context.next = 14;
-                  break;
+              if (!(status === 200 || status === 201)) {
+                _context.next = 14;
+                break;
+              }
+
+              _context.next = 4;
+              return regeneratorRuntime.awrap(response.json());
+
+            case 4:
+              json = _context.sent;
+              // Update target model
+              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
+              transaction$$1(function () {
+                Object.keys(attributes).forEach(function (key) {
+                  set$$1(target, key, attributes[key]);
+                });
+
+                if (relationships) {
+                  Object.keys(relationships).forEach(function (key) {
+                    if (!relationships[key].hasOwnProperty('meta')) {
+                      // todo: throw error if relationship is not defined in model
+                      set$$1(target.relationships, key, relationships[key]);
+                    }
+                  });
                 }
 
-                _context.next = 4;
-                return response.json();
+                if (json.included) {
+                  target.store.createModelsFromData(json.included);
+                }
+              }); // Update target isInFlight and isDirty
 
-              case 4:
-                json = _context.sent;
-                // Update target model
-                _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
-                transaction$$1(function () {
-                  Object.keys(attributes).forEach(function (key) {
-                    set$$1(target, key, attributes[key]);
-                  });
+              target.isInFlight = false;
+              target.isDirty = false;
+              target.setPreviousSnapshot();
+              transaction$$1(function () {
+                // NOTE: This resolves an issue where a record is persisted but the
+                // index key is still a temp uuid. We can't simply remove the temp
+                // key because there may be associated records that have the temp
+                // uuid id as its only reference to the newly persisted record.
+                // TODO: Figure out a way to update associated records to use the
+                // newly persisted id.
+                target.store.data[target.type].records[tmpId] = target;
+                target.store.data[target.type].records[target.id] = target;
+              });
+              return _context.abrupt("return", target);
 
-                  if (relationships) {
-                    Object.keys(relationships).forEach(function (key) {
-                      if (!relationships[key].hasOwnProperty('meta')) {
-                        // todo: throw error if relationship is not defined in model
-                        set$$1(target.relationships, key, relationships[key]);
-                      }
-                    });
-                  }
+            case 14:
+              target.isInFlight = false;
+              message = target.store.genericErrorMessage;
+              _context.prev = 16;
+              _context.next = 19;
+              return regeneratorRuntime.awrap(response.json());
 
-                  if (json.included) {
-                    target.store.createModelsFromData(json.included);
-                  }
-                }); // Update target isInFlight and isDirty
+            case 19:
+              _json = _context.sent;
+              message = parseApiErrors(_json.errors, message);
+              _context.next = 25;
+              break;
 
-                target.isInFlight = false;
-                target.isDirty = false;
-                target.setPreviousSnapshot();
-                transaction$$1(function () {
-                  // NOTE: This resolves an issue where a record is persisted but the
-                  // index key is still a temp uuid. We can't simply remove the temp
-                  // key because there may be associated records that have the temp
-                  // uuid id as its only reference to the newly persisted record.
-                  // TODO: Figure out a way to update associated records to use the
-                  // newly persisted id.
-                  target.store.data[target.type].records[tmpId] = target;
-                  target.store.data[target.type].records[target.id] = target;
-                });
-                return _context.abrupt("return", target);
+            case 23:
+              _context.prev = 23;
+              _context.t0 = _context["catch"](16);
 
-              case 14:
-                target.isInFlight = false;
-                message = target.store.genericErrorMessage;
-                _context.prev = 16;
-                _context.next = 19;
-                return response.json();
+            case 25:
+              // TODO: add all errors from the API response to the target
+              target.errors = _objectSpread({}, target.errors, {
+                status: status,
+                base: [{
+                  message: message
+                }]
+              });
+              errorString = JSON.stringify(target.errors);
+              return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
-              case 19:
-                _json = _context.sent;
-                message = parseApiErrors(_json.errors, message);
-                _context.next = 25;
-                break;
-
-              case 23:
-                _context.prev = 23;
-                _context.t0 = _context["catch"](16);
-
-              case 25:
-                // TODO: add all errors from the API response to the target
-                target.errors = _objectSpread({}, target.errors, {
-                  status: status,
-                  base: [{
-                    message: message
-                  }]
-                });
-                errorString = JSON.stringify(target.errors);
-                return _context.abrupt("return", Promise.reject(new Error(errorString)));
-
-              case 28:
-              case "end":
-                return _context.stop();
-            }
+            case 28:
+            case "end":
+              return _context.stop();
           }
-        }, _callee, null, [[16, 23]]);
-      }));
-
-      return function (_x) {
-        return _ref.apply(this, arguments);
-      };
-    }(), function (error) {
+        }
+      }, null, null, [[16, 23]]);
+    }, function (error) {
       // TODO: Handle error states correctly
       target.isInFlight = false;
       target.errors = error;
@@ -8749,76 +8704,66 @@
         var _this = this;
 
         _this.errors = {};
-        return promise.then(
-        /*#__PURE__*/
-        function () {
-          var _ref = _asyncToGenerator(
-          /*#__PURE__*/
-          regeneratorRuntime.mark(function _callee(response) {
-            var json;
-            return regeneratorRuntime.wrap(function _callee$(_context) {
-              while (1) {
-                switch (_context.prev = _context.next) {
-                  case 0:
-                    _this.isInFlight = false;
+        return promise.then(function _callee(response) {
+          var json;
+          return regeneratorRuntime.async(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _this.isInFlight = false;
 
-                    if (!(response.status === 202 || response.status === 204)) {
-                      _context.next = 17;
-                      break;
-                    }
-
-                    if (!skipRemove) {
-                      _this.store.remove(type, id);
-                    }
-
-                    _context.prev = 3;
-                    _context.next = 6;
-                    return response.json();
-
-                  case 6:
-                    json = _context.sent;
-
-                    if (json.data && json.data.attributes) {
-                      Object.keys(json.data.attributes).forEach(function (key) {
-                        set$$1(_this, key, json.data.attributes[key]);
-                      });
-                    }
-
-                    _context.next = 13;
+                  if (!(response.status === 202 || response.status === 204)) {
+                    _context.next = 17;
                     break;
+                  }
 
-                  case 10:
-                    _context.prev = 10;
-                    _context.t0 = _context["catch"](3);
-                    console.log(_context.t0); // It is text, do you text handling here
+                  if (!skipRemove) {
+                    _this.store.remove(type, id);
+                  }
 
-                  case 13:
-                    // NOTE: If deleting a record changes other related model
-                    // You can return then in the delete response
-                    if (json && json.included) {
-                      _this.store.createModelsFromData(json.included);
-                    }
+                  _context.prev = 3;
+                  _context.next = 6;
+                  return regeneratorRuntime.awrap(response.json());
 
-                    return _context.abrupt("return", _this);
+                case 6:
+                  json = _context.sent;
 
-                  case 17:
-                    _this.errors = {
-                      status: response.status
-                    };
-                    return _context.abrupt("return", _this);
+                  if (json.data && json.data.attributes) {
+                    Object.keys(json.data.attributes).forEach(function (key) {
+                      set$$1(_this, key, json.data.attributes[key]);
+                    });
+                  }
 
-                  case 19:
-                  case "end":
-                    return _context.stop();
-                }
+                  _context.next = 13;
+                  break;
+
+                case 10:
+                  _context.prev = 10;
+                  _context.t0 = _context["catch"](3);
+                  console.log(_context.t0); // It is text, do you text handling here
+
+                case 13:
+                  // NOTE: If deleting a record changes other related model
+                  // You can return then in the delete response
+                  if (json && json.included) {
+                    _this.store.createModelsFromData(json.included);
+                  }
+
+                  return _context.abrupt("return", _this);
+
+                case 17:
+                  _this.errors = {
+                    status: response.status
+                  };
+                  return _context.abrupt("return", _this);
+
+                case 19:
+                case "end":
+                  return _context.stop();
               }
-            }, _callee, null, [[3, 10]]);
-          }));
-
-          return function (_x) {
-            return _ref.apply(this, arguments);
-          };
-        }(), function (error) {
+            }
+          }, null, null, [[3, 10]]);
+        }, function (error) {
           // TODO: Handle error states correctly
           _this.isInFlight = false;
           _this.errors = error;
@@ -9937,6 +9882,21 @@
     };
   };
   /**
+   * Singularizes record type
+   * @method singularizeType
+   * @param {String} recordType type of record
+   * @return {String}
+   */
+
+
+  function singularizeType(recordType) {
+    var typeParts = recordType.split('_');
+    var endPart = typeParts[typeParts.length - 1];
+    typeParts = typeParts.slice(0, -1);
+    endPart = pluralize.singular(endPart);
+    return [].concat(_toConsumableArray(typeParts), [endPart]).join('_');
+  }
+  /**
    * Build request url from base url, endpoint, query params, and ids.
    *
    * @method requestUrl
@@ -10620,82 +10580,72 @@
 
     }, {
       key: "fetchAll",
-      value: function () {
-        var _fetchAll = _asyncToGenerator(
-        /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee(type, queryParams) {
-          var _this6 = this;
+      value: function fetchAll(type, queryParams) {
+        var _this6 = this;
 
-          var store, url, response, json, records;
-          return regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  store = this;
-                  url = this.fetchUrl(type, queryParams);
-                  _context.next = 4;
-                  return this.fetch(url, {
-                    method: 'GET'
+        var store, url, response, json, records;
+        return regeneratorRuntime.async(function fetchAll$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                store = this;
+                url = this.fetchUrl(type, queryParams);
+                _context.next = 4;
+                return regeneratorRuntime.awrap(this.fetch(url, {
+                  method: 'GET'
+                }));
+
+              case 4:
+                response = _context.sent;
+
+                if (!(response.status === 200)) {
+                  _context.next = 16;
+                  break;
+                }
+
+                this.data[type].cache[url] = [];
+                _context.next = 9;
+                return regeneratorRuntime.awrap(response.json());
+
+              case 9:
+                json = _context.sent;
+
+                if (json.included) {
+                  this.createModelsFromData(json.included);
+                }
+
+                records = [];
+                transaction$$1(function () {
+                  records = json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute2 = dataObject.attributes,
+                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+                        _dataObject$relations2 = dataObject.relationships,
+                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
+                    var ModelKlass = _this6.modelTypeIndex[type];
+                    var record = new ModelKlass(_objectSpread$2({
+                      store: store,
+                      relationships: relationships
+                    }, attributes));
+
+                    _this6.data[type].cache[url].push(id);
+
+                    _this6.data[type].records[id] = record;
+                    return record;
                   });
+                });
+                return _context.abrupt("return", records);
 
-                case 4:
-                  response = _context.sent;
+              case 16:
+                return _context.abrupt("return", Promise.reject(response.status));
 
-                  if (!(response.status === 200)) {
-                    _context.next = 16;
-                    break;
-                  }
-
-                  this.data[type].cache[url] = [];
-                  _context.next = 9;
-                  return response.json();
-
-                case 9:
-                  json = _context.sent;
-
-                  if (json.included) {
-                    this.createModelsFromData(json.included);
-                  }
-
-                  records = [];
-                  transaction$$1(function () {
-                    records = json.data.map(function (dataObject) {
-                      var id = dataObject.id,
-                          _dataObject$attribute2 = dataObject.attributes,
-                          attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                          _dataObject$relations2 = dataObject.relationships,
-                          relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                      var ModelKlass = _this6.modelTypeIndex[type];
-                      var record = new ModelKlass(_objectSpread$2({
-                        store: store,
-                        relationships: relationships
-                      }, attributes));
-
-                      _this6.data[type].cache[url].push(id);
-
-                      _this6.data[type].records[id] = record;
-                      return record;
-                    });
-                  });
-                  return _context.abrupt("return", records);
-
-                case 16:
-                  return _context.abrupt("return", Promise.reject(response.status));
-
-                case 17:
-                case "end":
-                  return _context.stop();
-              }
+              case 17:
+              case "end":
+                return _context.stop();
             }
-          }, _callee, this);
-        }));
-
-        function fetchAll(_x2, _x3) {
-          return _fetchAll.apply(this, arguments);
-        }
-
-        return fetchAll;
-      }()
+          }
+        }, null, this);
+      }
       /**
        * fetches record by `id`.
        *
@@ -10707,63 +10657,53 @@
 
     }, {
       key: "fetchOne",
-      value: function () {
-        var _fetchOne = _asyncToGenerator(
-        /*#__PURE__*/
-        regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
-          var url, response, json, data, included, record;
-          return regeneratorRuntime.wrap(function _callee2$(_context2) {
-            while (1) {
-              switch (_context2.prev = _context2.next) {
-                case 0:
-                  url = this.fetchUrl(type, queryParams, id); // Trigger request
+      value: function fetchOne(type, id, queryParams) {
+        var url, response, json, data, included, record;
+        return regeneratorRuntime.async(function fetchOne$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-                  _context2.next = 3;
-                  return this.fetch(url, {
-                    method: 'GET'
-                  });
+                _context2.next = 3;
+                return regeneratorRuntime.awrap(this.fetch(url, {
+                  method: 'GET'
+                }));
 
-                case 3:
-                  response = _context2.sent;
+              case 3:
+                response = _context2.sent;
 
-                  if (!(response.status === 200)) {
-                    _context2.next = 16;
-                    break;
-                  }
+                if (!(response.status === 200)) {
+                  _context2.next = 16;
+                  break;
+                }
 
-                  _context2.next = 7;
-                  return response.json();
+                _context2.next = 7;
+                return regeneratorRuntime.awrap(response.json());
 
-                case 7:
-                  json = _context2.sent;
-                  data = json.data, included = json.included;
+              case 7:
+                json = _context2.sent;
+                data = json.data, included = json.included;
 
-                  if (included) {
-                    this.createModelsFromData(included);
-                  }
+                if (included) {
+                  this.createModelsFromData(included);
+                }
 
-                  record = this.createOrUpdateModel(data);
-                  this.data[type].cache[url] = [];
-                  this.data[type].cache[url].push(record.id);
-                  return _context2.abrupt("return", record);
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache[url] = [];
+                this.data[type].cache[url].push(record.id);
+                return _context2.abrupt("return", record);
 
-                case 16:
-                  return _context2.abrupt("return", null);
+              case 16:
+                return _context2.abrupt("return", null);
 
-                case 17:
-                case "end":
-                  return _context2.stop();
-              }
+              case 17:
+              case "end":
+                return _context2.stop();
             }
-          }, _callee2, this);
-        }));
-
-        function fetchOne(_x4, _x5, _x6) {
-          return _fetchOne.apply(this, arguments);
-        }
-
-        return fetchOne;
-      }()
+          }
+        }, null, this);
+      }
     }]);
 
     return Store;
@@ -11152,12 +11092,18 @@
     var relationships = record.relationships;
     var relationType = modelType || property;
     var references = relationships && relationships[relationType];
-    var relatedRecords = [];
+    var relatedRecords = []; // NOTE: If the record doesn't have a matching references for the relation type
+    // fall back to looking up records by a foreign id i.e record.related_record_id
 
     if (references && references.data) {
       relatedRecords = references.data.map(function (ref) {
         var recordType = ref.type;
         return record.store.getRecord(recordType, ref.id);
+      });
+    } else {
+      var foreignId = "".concat(singularizeType(record.type), "_id");
+      relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
+        return String(rel[foreignId]) === String(record.id);
       });
     }
 
