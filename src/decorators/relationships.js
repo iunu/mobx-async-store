@@ -1,7 +1,7 @@
 import { transaction } from 'mobx'
 import Model from '../Model'
 import schema from '../schema'
-import { singularizeType } from '../utils';
+import { singularizeType } from '../utils'
 
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
