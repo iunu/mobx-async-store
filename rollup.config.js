@@ -1,7 +1,8 @@
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import babel from 'rollup-plugin-babel';
-import pkg from './package.json';
+/* eslint-disable no-tabs */
+import resolve from 'rollup-plugin-node-resolve'
+import commonjs from 'rollup-plugin-commonjs'
+import babel from 'rollup-plugin-babel'
+import pkg from './package.json'
 
 export default [
 	// browser-friendly UMD build
@@ -25,10 +26,8 @@ export default [
 			}), // so Rollup can find `ms`
 			commonjs({
 				include: 'node_modules/**',
-				ignore: [
-          'crypto', 'util', 'buffer'
-				]
-			}), // so Rollup can convert `ms` to an ES module
+				ignore: ['crypto', 'util', 'buffer']
+			}) // so Rollup can convert `ms` to an ES module
 		]
 	},
 
@@ -59,9 +58,9 @@ export default [
 			'mobx',
 			'moment',
 			'uuid/v1',
-      '@babel/runtime/helpers/assertThisInitialized',
-      '@babel/runtime/helpers/toConsumableArray',
-      '@babel/runtime/helpers/wrapNativeSuper'
+			'@babel/runtime/helpers/assertThisInitialized',
+			'@babel/runtime/helpers/toConsumableArray',
+			'@babel/runtime/helpers/wrapNativeSuper'
 		],
 		output: [
 			{ file: pkg.main, format: 'cjs' },
@@ -75,4 +74,4 @@ export default [
 			})
 		]
 	}
-];
+]

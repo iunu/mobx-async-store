@@ -1,9 +1,7 @@
 {
   "name": "mobx-async-store",
   "version": "1.0.4",
-  "module": "dist/mobx-async-store.esm.js",
-  "browser": "dist/mobx-async-store.umd.js",
-  "main": "dist/mobx-async-store.cjs.js",
+  "main": "src/main.js",
   "dependencies": {
     "browserslist": "^4.7.0",
     "caniuse-lite": "^1.0.30000998",
@@ -49,8 +47,6 @@
     "rollup-plugin-node-resolve": "^4.0.0"
   },
   "scripts": {
-    "build": "rollup -c",
-    "watch": "rollup -c -w",
     "test": "jest --verbose",
     "lint": "node_modules/.bin/eslint src spec"
   },
