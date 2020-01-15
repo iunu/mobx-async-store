@@ -10,8 +10,12 @@ import {
 
 import moment from 'moment'
 
+import { walk } from './utils'
+
 import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
+import dig from 'lodash/get'
+import flattenDeep from 'lodash/flattenDeep'
 
 function isPresent (value) {
   return value !== null && value !== undefined && value !== ''
@@ -482,6 +486,28 @@ class Model {
    */
   setPreviousSnapshot () {
     this.previousSnapshot = this.snapshot
+  }
+
+  /**
+   * a list of any property paths which have been changed since the previous
+   * snapshot
+   * ```
+   * const todo = new Todo({ title: 'Buy Milk' })
+   * todo.dirtyAttributes
+   * => []
+   * todo.title = 'Buy Cheese'
+   * todo.dirtyAttributes
+   * => ['title']
+   * ```
+   * @method dirtyAttributes
+   * @return {Array} dirty attribute paths
+   */
+
+  get dirtyAttributes () {
+    return flattenDeep(walk(this.previousSnapshot.attributes, (prevValue, path) => {
+      const currValue = dig(this.snapshot.attributes, path)
+      return prevValue === currValue ? undefined : path
+    })).filter((x) => x)
   }
 
   /**

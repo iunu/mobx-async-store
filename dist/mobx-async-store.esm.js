@@ -12,11 +12,155 @@ import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import uuidv1 from 'uuid/v1';
 import jqueryParam from 'jquery-param';
 import pluralize from 'pluralize';
+import dig from 'lodash/get';
+import flattenDeep from 'lodash/flattenDeep';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
+
+var pending = {};
+var counter = {};
+
+var incrementor = function incrementor(key) {
+  return function () {
+    var count = (counter[key] || 0) + 1;
+    counter[key] = count;
+    return count;
+  };
+};
+
+var decrementor = function decrementor(key) {
+  return function () {
+    var count = (counter[key] || 0) - 1;
+    counter[key] = count;
+    return count;
+  };
+};
+/**
+ * Singularizes record type
+ * @method singularizeType
+ * @param {String} recordType type of record
+ * @return {String}
+ */
+
+
+function singularizeType(recordType) {
+  var typeParts = recordType.split('_');
+  var endPart = typeParts[typeParts.length - 1];
+  typeParts = typeParts.slice(0, -1);
+  endPart = pluralize.singular(endPart);
+  return [].concat(_toConsumableArray(typeParts), [endPart]).join('_');
+}
+/**
+ * Build request url from base url, endpoint, query params, and ids.
+ *
+ * @method requestUrl
+ * @return {String} formatted url string
+ */
+
+function requestUrl(baseUrl, endpoint) {
+  var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  var id = arguments.length > 3 ? arguments[3] : undefined;
+  var queryParamString = '';
+
+  if (Object.keys(queryParams).length > 0) {
+    queryParamString = "?".concat(jqueryParam(queryParams));
+  }
+
+  var idForPath = '';
+
+  if (id) {
+    idForPath = "/".concat(id);
+  } // Return full url
+
+
+  return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
+}
+function newId() {
+  return "tmp-".concat(uuidv1());
+}
+function dbOrNewId(properties) {
+  return properties.id || newId();
+}
+/**
+ * Avoids making racing requests by blocking a request if an identical one is
+ * already in-flight. Blocked requests will be resolved when the initial request
+ * resolves by cloning the response.
+ *
+ * @method combineRacedRequests
+ * @param {String} key the unique key for the request
+ * @param {Function} fn the function the generates the promise
+ * @return {Promise}
+ */
+
+function combineRacedRequests(key, fn) {
+  var incrementBlocked = incrementor(key);
+  var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
+
+  incrementBlocked();
+
+  function handleResponse(response) {
+    var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
+    // clone the response before returning so that we can re-use it for the
+    // remaining callers
+
+    if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
+    // this is the last one), we can remove the reference to the pending promise
+    // allowing subsequent requests to proceed unblocked.
+
+    delete pending[key];
+    return response;
+  } // Return pending promise if one already exists
+
+
+  if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
+  // clear out the pending promise for the key
+
+  pending[key] = fn.call();
+  return pending[key].then(handleResponse);
+}
+/**
+ * Reducer function for filtering out duplicate records
+ * by a key provided. Returns a function that has a accumulator and
+ * current record per Array.reduce.
+ *
+ * @method uniqueByReducer
+ * @param {Array} key
+ * @return {Function}
+ */
+
+function uniqueByReducer(key) {
+  return function (accumulator, current) {
+    return accumulator.some(function (item) {
+      return item[key] === current[key];
+    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
+  };
+}
+/**
+ * Returns objects unique by key provided
+ *
+ * @method uniqueBy
+ * @param {Array} array
+ * @param {String} key
+ * @return {Array}
+ */
+
+function uniqueBy(array, key) {
+  return array.reduce(uniqueByReducer(key), []);
+}
+function walk(value, iteratee, prop, path) {
+  if (value != null && _typeof(value) === 'object') {
+    return Object.keys(value).map(function (prop) {
+      return walk(value[prop], iteratee, prop, [path, prop].filter(function (x) {
+        return x;
+      }).join('.'));
+    });
+  }
+
+  return iteratee(value, path);
+}
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -554,13 +698,28 @@ function () {
       this.previousSnapshot = this.snapshot;
     }
     /**
-     * Uses mobx.autorun to track changes to attributes
-     *
-     * @method _trackState
+     * a list of any property paths which have been changed since the previous
+     * snapshot
+     * ```
+     * const todo = new Todo({ title: 'Buy Milk' })
+     * todo.dirtyAttributes
+     * => []
+     * todo.title = 'Buy Cheese'
+     * todo.dirtyAttributes
+     * => ['title']
+     * ```
+     * @method dirtyAttributes
+     * @return {Array} dirty attribute paths
      */
 
   }, {
     key: "_trackState",
+
+    /**
+     * Uses mobx.autorun to track changes to attributes
+     *
+     * @method _trackState
+     */
     value: function _trackState() {
       var _this4 = this;
 
@@ -750,6 +909,18 @@ function () {
       };
     }
   }, {
+    key: "dirtyAttributes",
+    get: function get() {
+      var _this7 = this;
+
+      return flattenDeep(walk(this.previousSnapshot.attributes, function (prevValue, path) {
+        var currValue = dig(_this7.snapshot.attributes, path);
+        return prevValue === currValue ? undefined : path;
+      })).filter(function (x) {
+        return x;
+      });
+    }
+  }, {
     key: "type",
     get: function get() {
       return this.constructor.type;
@@ -764,10 +935,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this7 = this;
+      var _this8 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = toJS(_this7[key]);
+        var value = toJS(_this8[key]);
 
         if (!value) {
           delete attributes[key];
@@ -858,137 +1029,6 @@ function () {
     return {};
   }
 })), _class);
-
-var pending = {};
-var counter = {};
-
-var incrementor = function incrementor(key) {
-  return function () {
-    var count = (counter[key] || 0) + 1;
-    counter[key] = count;
-    return count;
-  };
-};
-
-var decrementor = function decrementor(key) {
-  return function () {
-    var count = (counter[key] || 0) - 1;
-    counter[key] = count;
-    return count;
-  };
-};
-/**
- * Singularizes record type
- * @method singularizeType
- * @param {String} recordType type of record
- * @return {String}
- */
-
-
-function singularizeType(recordType) {
-  var typeParts = recordType.split('_');
-  var endPart = typeParts[typeParts.length - 1];
-  typeParts = typeParts.slice(0, -1);
-  endPart = pluralize.singular(endPart);
-  return [].concat(_toConsumableArray(typeParts), [endPart]).join('_');
-}
-/**
- * Build request url from base url, endpoint, query params, and ids.
- *
- * @method requestUrl
- * @return {String} formatted url string
- */
-
-function requestUrl(baseUrl, endpoint) {
-  var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  var id = arguments.length > 3 ? arguments[3] : undefined;
-  var queryParamString = '';
-
-  if (Object.keys(queryParams).length > 0) {
-    queryParamString = "?".concat(jqueryParam(queryParams));
-  }
-
-  var idForPath = '';
-
-  if (id) {
-    idForPath = "/".concat(id);
-  } // Return full url
-
-
-  return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
-}
-function newId() {
-  return "tmp-".concat(uuidv1());
-}
-function dbOrNewId(properties) {
-  return properties.id || newId();
-}
-/**
- * Avoids making racing requests by blocking a request if an identical one is
- * already in-flight. Blocked requests will be resolved when the initial request
- * resolves by cloning the response.
- *
- * @method combineRacedRequests
- * @param {String} key the unique key for the request
- * @param {Function} fn the function the generates the promise
- * @return {Promise}
- */
-
-function combineRacedRequests(key, fn) {
-  var incrementBlocked = incrementor(key);
-  var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
-
-  incrementBlocked();
-
-  function handleResponse(response) {
-    var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
-    // clone the response before returning so that we can re-use it for the
-    // remaining callers
-
-    if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
-    // this is the last one), we can remove the reference to the pending promise
-    // allowing subsequent requests to proceed unblocked.
-
-    delete pending[key];
-    return response;
-  } // Return pending promise if one already exists
-
-
-  if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
-  // clear out the pending promise for the key
-
-  pending[key] = fn.call();
-  return pending[key].then(handleResponse);
-}
-/**
- * Reducer function for filtering out duplicate records
- * by a key provided. Returns a function that has a accumulator and
- * current record per Array.reduce.
- *
- * @method uniqueByReducer
- * @param {Array} key
- * @return {Function}
- */
-
-function uniqueByReducer(key) {
-  return function (accumulator, current) {
-    return accumulator.some(function (item) {
-      return item[key] === current[key];
-    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
-  };
-}
-/**
- * Returns objects unique by key provided
- *
- * @method uniqueBy
- * @param {Array} array
- * @param {String} key
- * @return {Array}
- */
-
-function uniqueBy(array, key) {
-  return array.reduce(uniqueByReducer(key), []);
-}
 
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
 
