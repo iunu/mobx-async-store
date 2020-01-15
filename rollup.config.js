@@ -1,35 +1,33 @@
 /* eslint-disable no-tabs */
-import resolve from 'rollup-plugin-node-resolve'
-import commonjs from 'rollup-plugin-commonjs'
 import babel from 'rollup-plugin-babel'
 import pkg from './package.json'
 
 export default [
 	// browser-friendly UMD build
-	{
-		input: 'src/main.js',
-		output: {
-			name: 'artemisData',
-			file: pkg.browser,
-			format: 'umd'
-		},
-		plugins: [
-			babel({
-				exclude: ['node_modules/**'],
-				runtimeHelpers: true,
-				plugins: [
-					['@babel/transform-runtime', { regenerator: false, useESModules: true }]
-				]
-			}),
-			resolve({
-				browser: true
-			}), // so Rollup can find `ms`
-			commonjs({
-				include: 'node_modules/**',
-				ignore: ['crypto', 'util', 'buffer']
-			}) // so Rollup can convert `ms` to an ES module
-		]
-	},
+	// {
+	// 	input: 'src/main.js',
+	// 	output: {
+	// 		name: 'artemisData',
+	// 		file: pkg.browser,
+	// 		format: 'cjs'
+	// 	},
+	// 	plugins: [
+	// 		babel({
+	// 			exclude: ['node_modules/**'],
+	// 			runtimeHelpers: true,
+	// 			plugins: [
+	// 				['@babel/transform-runtime', { regenerator: false, useESModules: true }]
+	// 			]
+	// 		}),
+	// 		resolve({
+	// 			browser: true
+	// 		}), // so Rollup can find `ms`
+	// 		commonjs({
+	// 			include: 'node_modules/**',
+	// 			ignore: ['crypto', 'util', 'buffer']
+	// 		}) // so Rollup can convert `ms` to an ES module
+	// 	]
+	// },
 
 	// CommonJS (for Node) and ES module (for bundlers) build.
 	// (We could have three entries in the configuration array
