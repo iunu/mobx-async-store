@@ -234,7 +234,6 @@ class Model {
    * @default false
    * @private
    */
-
   @observable _isDirty = false
 
   /**

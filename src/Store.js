@@ -1,6 +1,7 @@
 /* global fetch */
-import { action, observable, transaction, set, toJS } from 'mobx'
+import { action, observable, transaction, set, toJS, observe } from 'mobx'
 import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
+import OfflineService from './OfflineService'
 
 /**
  * Defines the Artemis Data Store class.
@@ -19,6 +20,18 @@ class Store {
    */
   @observable data = {}
 
+  /**
+     * The queue for all requests needing to be retried
+     * when network becomes available again
+     *
+     * @property offline
+     * @type {Boolean}
+     * @default false
+    */
+   @observable offlineStatus = {
+     offline: false
+   }
+
   genericErrorMessage = 'Something went wrong.'
 
   /**
@@ -28,6 +41,31 @@ class Store {
    */
   constructor (options) {
     this.init(options)
+    this.OfflineService = new OfflineService([])
+    observe(this.offlineStatus, this.handleOfflineChange)
+  }
+
+  /**
+     * handles the change from offline to online again
+     * in order to trigger the queue service to enqueue
+     * @method handleStoreOfflineChange
+     * @return {}
+     * @param {Object} change
+  */
+  handleStoreOfflineChange = (change) => {
+    const { name, object } = change
+    // if offline is false
+    this.OfflineService.setOffline(object[name].offline)
+  }
+
+  /**
+     * updates the stores offline status
+     * @method setOffline
+     * @return {}
+     * @param {Boolean} value
+  */
+  setOffline (value) {
+    this.offlineStatus = value
   }
 
   /**

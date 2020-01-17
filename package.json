@@ -14,6 +14,7 @@
     "moment": "^2.24.0",
     "pluralize": "^8.0.0",
     "react-native-uuid": "^1.4.9",
+    "url": "^0.11.0",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
