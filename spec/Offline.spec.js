@@ -13,7 +13,8 @@ const mockFetchPromise = Promise.resolve({ // 3
 const mockFailedPromise = Promise.resolve({ // 3
     json: () => {
         return {
-                ok: false
+                ok: false,
+                statusText: '500 server error'
         }
     }
 })
@@ -48,14 +49,11 @@ describe('Test suite for Offline service/Queue class', () => {
     })
 
     it('Should add to pending if fetch was not successful', () => {
-        jest.useFakeTimers()
+        jest.runAllTimers()
 
         jest.spyOn(global, 'fetch').mockImplementation(() => mockFailedPromise)
 
-        let fakeCb = (err, data) => {
-            console.log('data', data)
-            console.log('error', err)
-        }
+        let fakeCb = jest.fn()
 
         let fullRequest = {
             url: 'https://google.com/a',
@@ -76,10 +74,7 @@ describe('Test suite for Offline service/Queue class', () => {
         offlineService.offlineRetry = jest.fn()
         offlineService.isFlushing = true
 
-        let fakeCb = (err, data) => {
-            console.log('data', data)
-            console.log('error', err)
-        }
+        let fakeCb = jest.fn()
 
         let fullRequest = {
             url: 'https://google.com/a',
@@ -91,24 +86,6 @@ describe('Test suite for Offline service/Queue class', () => {
         offlineService.request(fullRequest, fakeCb)
         offlineService.request(fullRequest, fakeCb)
         expect(offlineService.pending.length).toBe(2)
-    })
-
-    it('Should call flush if pending and offline status changes from false to true', () => {
-        jest.useFakeTimers()
-        jest.spyOn(global, 'fetch').mockImplementation(() => mockFetchPromise)
-
-        let fakeCb = jest.fn()
-        let fullRequest = {
-            url: 'https://google.com/a',
-            options: {
-                method: 'POST',
-                body: { test: true }
-            }
-        }
-        offlineService.pending = [{ cb: fakeCb, fullRequest }]
-        offlineService.offlineRetry()
-        expect(setTimeout).toHaveBeenCalled()
-        expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1000)
     })
 
     it('Should trigger a request when flushing', () => {

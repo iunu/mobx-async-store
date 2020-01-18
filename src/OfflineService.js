@@ -7,7 +7,6 @@ import { observable } from 'mobx'
  * @class Schema
  */
 export default class OfflineService {
-    timer = null
     /**
      * The queue for all requests needing to be retried
      * when network becomes available again
@@ -62,14 +61,9 @@ export default class OfflineService {
 
     offlineRetry () {
         this.isFlushing = true
-        this.timer = setTimeout(this.flush, 1000)
+        this.flush()
     }
 
-    stopTimer = () => {
-        clearInterval(this.timer)
-        this.timer = null
-        this.isFlushing = false
-    }
     /**
      * Request is the function that fires the request or pushes
      * that request to the queue.
@@ -79,26 +73,34 @@ export default class OfflineService {
      * @param {Object} methodName
      * @return {Object} { method, body }
     */
-    flush () {
-        console.log('this.pending', this.pending.length)
-
-        if (this.pending.length === 0) {
-            this.stopTimer()
-        }
-        return this.pending.reduce((acc, request, index) => {
+    async flush () {
+        let len = this.pending.length
+        let failed = false
+        for (let i = 0; i < len && !failed; i++) {
+            let request = this.pending[i]
             const { url, options } = request.fullRequest
-            fetch(url, { ...options }).then(incomingData => {
+            await fetch(url, { ...options }).then(incomingData => {
                 let res = incomingData.json()
                 if (res.ok) {
-                    this.pending.splice(index, index + 1)
-                    if (!this.pending.length) {
-                        this.stopTimer()
-                    }
+                    this.pending.splice(i, i + 1)
                     request.cb(null, res)
+                } else {
+                    // need to handle failed auth here, status code
+                    // hash would be helpful?
+                    failed = true
+                    request.cb({error: res.statusText, status: 'offline'}, { data: null })
                 }
+            }).catch(() => {
+                failed = true
                 request.cb({error: 'Request failed', status: 'offline'}, { data: null })
             })
-        }, [])
+        }
+
+        if (failed) {
+            setTimeout(this.flush, 1000)
+        } else {
+            this.isFlushing = false
+        }
     }
 
     handleResponse = () => {
