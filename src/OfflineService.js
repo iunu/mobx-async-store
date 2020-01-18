@@ -34,11 +34,10 @@ export default class OfflineService {
      * @param {Function} cb
      * @return {Object} { method, body }
     */
-    request = ({ url, options }, cb) => {
+    request = ({ url, options }) => {
         if (this.isFlushing) {
             this.pending.push(
                 {
-                    cb,
                     fullRequest: {
                         url,
                         options
@@ -46,14 +45,13 @@ export default class OfflineService {
                 }
             )
         } else {
-            fetch(url, { ...options }).then((res, err) => {
-                let data = res.json()
+            return fetch(url, { ...options }).then(async (res, err) => {
+                let data = await res.json()
                 if (data.ok) {
-                    cb(null, data)
+                    return data
                 } else {
-                    this.pending.push({ cb: cb, fullRequest: { url, options } })
-                    this.offlineRetry()
-                    cb(null, { error: 'There was an error' })
+                    this.pending.push({ fullRequest: { url, options } })
+                    return this.offlineRetry()
                 }
             })
         }
@@ -61,7 +59,7 @@ export default class OfflineService {
 
     offlineRetry () {
         this.isFlushing = true
-        this.flush()
+        return this.flush()
     }
 
     /**
@@ -76,34 +74,33 @@ export default class OfflineService {
     async flush () {
         let len = this.pending.length
         let failed = false
+        let results = []
+
         for (let i = 0; i < len && !failed; i++) {
             let request = this.pending[i]
             const { url, options } = request.fullRequest
-            await fetch(url, { ...options }).then(incomingData => {
+            results.push(fetch(url, { ...options }).then(incomingData => {
                 let res = incomingData.json()
                 if (res.ok) {
                     this.pending.splice(i, i + 1)
-                    request.cb(null, res)
+                    return res
                 } else {
                     // need to handle failed auth here, status code
                     // hash would be helpful?
                     failed = true
-                    request.cb({error: res.statusText, status: 'offline'}, { data: null })
+                    return {error: res.statusText, status: 'offline', data: null}
                 }
             }).catch(() => {
                 failed = true
-                request.cb({error: 'Request failed', status: 'offline'}, { data: null })
-            })
+                return {error: 'Request failed', status: 'offline', data: null}
+            }))
         }
 
         if (failed) {
             setTimeout(this.flush, 1000)
         } else {
             this.isFlushing = false
+            return Promise.all(results)
         }
-    }
-
-    handleResponse = () => {
-
     }
 }

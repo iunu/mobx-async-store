@@ -1079,56 +1079,70 @@ function () {
 
     _classCallCheck(this, OfflineService);
 
-    this.timer = null;
-
     _initializerDefineProperty(this, "pending", _descriptor$1, this);
 
     _initializerDefineProperty(this, "isFlushing", _descriptor2$1, this);
 
-    this.request = function (_ref, cb) {
+    this.request = function (_ref) {
       var url = _ref.url,
           options = _ref.options;
 
       if (_this.isFlushing) {
         _this.pending.push({
-          cb: cb,
           fullRequest: {
             url: url,
             options: options
           }
         });
       } else {
-        fetch(url, _objectSpread$2({}, options)).then(function (res, err) {
-          var data = res.json();
+        return fetch(url, _objectSpread$2({}, options)).then(
+        /*#__PURE__*/
+        function () {
+          var _ref2 = _asyncToGenerator(
+          /*#__PURE__*/
+          _regeneratorRuntime.mark(function _callee(res, err) {
+            var data;
+            return _regeneratorRuntime.wrap(function _callee$(_context) {
+              while (1) {
+                switch (_context.prev = _context.next) {
+                  case 0:
+                    _context.next = 2;
+                    return res.json();
 
-          if (data.ok) {
-            cb(null, data);
-          } else {
-            _this.pending.push({
-              cb: cb,
-              fullRequest: {
-                url: url,
-                options: options
+                  case 2:
+                    data = _context.sent;
+
+                    if (!data.ok) {
+                      _context.next = 7;
+                      break;
+                    }
+
+                    return _context.abrupt("return", data);
+
+                  case 7:
+                    _this.pending.push({
+                      fullRequest: {
+                        url: url,
+                        options: options
+                      }
+                    });
+
+                    return _context.abrupt("return", _this.offlineRetry());
+
+                  case 9:
+                  case "end":
+                    return _context.stop();
+                }
               }
-            });
+            }, _callee);
+          }));
 
-            _this.offlineRetry();
-
-            cb(null, {
-              error: 'There was an error'
-            });
-          }
-        });
+          return function (_x, _x2) {
+            return _ref2.apply(this, arguments);
+          };
+        }());
       }
     };
-
-    this.stopTimer = function () {
-      clearInterval(_this.timer);
-      _this.timer = null;
-      _this.isFlushing = false;
-    };
-
-    this.handleResponse = function () {};
 
     this.flush = this.flush.bind(this);
     this.offlineRetry = this.offlineRetry.bind(this);
@@ -1149,11 +1163,8 @@ function () {
     key: "offlineRetry",
     value: function offlineRetry() {
       this.isFlushing = true;
-      this.timer = setTimeout(this.flush, 1000);
+      return this.flush();
     }
-  }, {
-    key: "flush",
-
     /**
      * Request is the function that fires the request or pushes
      * that request to the queue.
@@ -1163,41 +1174,88 @@ function () {
      * @param {Object} methodName
      * @return {Object} { method, body }
     */
-    value: function flush() {
-      var _this2 = this;
 
-      console.log('this.pending', this.pending.length);
+  }, {
+    key: "flush",
+    value: function () {
+      var _flush = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee2() {
+        var _this2 = this;
 
-      if (this.pending.length === 0) {
-        this.stopTimer();
+        var len, failed, results, _loop, i;
+
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                len = this.pending.length;
+                failed = false;
+                results = [];
+
+                _loop = function _loop(i) {
+                  var request = _this2.pending[i];
+                  var _request$fullRequest = request.fullRequest,
+                      url = _request$fullRequest.url,
+                      options = _request$fullRequest.options;
+                  results.push(fetch(url, _objectSpread$2({}, options)).then(function (incomingData) {
+                    var res = incomingData.json();
+
+                    if (res.ok) {
+                      _this2.pending.splice(i, i + 1);
+
+                      return res;
+                    } else {
+                      // need to handle failed auth here, status code
+                      // hash would be helpful?
+                      failed = true;
+                      return {
+                        error: res.statusText,
+                        status: 'offline',
+                        data: null
+                      };
+                    }
+                  }).catch(function () {
+                    failed = true;
+                    return {
+                      error: 'Request failed',
+                      status: 'offline',
+                      data: null
+                    };
+                  }));
+                };
+
+                for (i = 0; i < len && !failed; i++) {
+                  _loop(i);
+                }
+
+                if (!failed) {
+                  _context2.next = 9;
+                  break;
+                }
+
+                setTimeout(this.flush, 1000);
+                _context2.next = 11;
+                break;
+
+              case 9:
+                this.isFlushing = false;
+                return _context2.abrupt("return", Promise.all(results));
+
+              case 11:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function flush() {
+        return _flush.apply(this, arguments);
       }
 
-      return this.pending.reduce(function (acc, request, index) {
-        var _request$fullRequest = request.fullRequest,
-            url = _request$fullRequest.url,
-            options = _request$fullRequest.options;
-        fetch(url, _objectSpread$2({}, options)).then(function (incomingData) {
-          var res = incomingData.json();
-
-          if (res.ok) {
-            _this2.pending.splice(index, index + 1);
-
-            if (!_this2.pending.length) {
-              _this2.stopTimer();
-            }
-
-            request.cb(null, res);
-          }
-
-          request.cb({
-            error: 'Request failed',
-            status: 'offline'
-          }, {
-            data: null
-          });
-        });
-      }, []);
-    }
+      return flush;
+    }()
   }]);
 
   return OfflineService;
@@ -1337,8 +1395,34 @@ function () {
       }
     };
 
+    this.handleData = function (response, url, type) {
+      if (response.error) {
+        return response.error;
+      }
+
+      if (response.status === 200) {
+        var data = response.data,
+            included = response.included;
+
+        if (included) {
+          _this.createModelsFromData(included);
+        }
+
+        var record = _this.createOrUpdateModel(data);
+
+        _this.data[type].cache[url] = [];
+
+        _this.data[type].cache[url].push(record.id);
+
+        return record;
+      } else {
+        // Return null if record is not found
+        return null;
+      }
+    };
+
     this.init(_options);
-    this.OfflineService = new OfflineService([]);
+    this.OfflineService = new OfflineService();
   }
   /**
    * Adds an instance or an array of instances to the store.
@@ -1895,46 +1979,40 @@ function () {
       var _fetchOne = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
-        var url, response, json, data, included, record;
+        var _this7 = this;
+
+        var url, req, response;
         return _regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-                _context2.next = 3;
-                return this.fetch(url, {
-                  method: 'GET'
-                });
+                req = {
+                  url: url,
+                  options: {
+                    method: 'GET'
+                  }
+                };
+                _context2.next = 4;
+                return this.OfflineService.request(req);
 
-              case 3:
+              case 4:
                 response = _context2.sent;
 
-                if (!(response.status === 200)) {
-                  _context2.next = 16;
+                if (!response.length) {
+                  _context2.next = 9;
                   break;
                 }
 
-                _context2.next = 7;
-                return response.json();
+                return _context2.abrupt("return", response.forEach(function (res) {
+                  return _this7.handleData(res, url, type);
+                }));
 
-              case 7:
-                json = _context2.sent;
-                data = json.data, included = json.included;
+              case 9:
+                return _context2.abrupt("return", this.handleData(response, url, type));
 
-                if (included) {
-                  this.createModelsFromData(included);
-                }
-
-                record = this.createOrUpdateModel(data);
-                this.data[type].cache[url] = [];
-                this.data[type].cache[url].push(record.id);
-                return _context2.abrupt("return", record);
-
-              case 16:
-                return _context2.abrupt("return", null);
-
-              case 17:
+              case 10:
               case "end":
                 return _context2.stop();
             }
@@ -1947,7 +2025,8 @@ function () {
       }
 
       return fetchOne;
-    }()
+    }() // Handle response
+
   }]);
 
   return Store;
@@ -1963,17 +2042,17 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this7 = this;
+    var _this8 = this;
 
     return function (type, attributes) {
       var id = dbOrNewId(attributes);
 
-      var model = _this7.createModel(type, id, {
+      var model = _this8.createModel(type, id, {
         attributes: attributes
       }); // Add the model to the type records index
 
 
-      _this7.data[type].records[id] = model;
+      _this8.data[type].records[id] = model;
       return model;
     };
   }
@@ -1982,12 +2061,12 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this8 = this;
+    var _this9 = this;
 
     return function (type, id) {
-      var records = _this8.getRecords(type);
+      var records = _this9.getRecords(type);
 
-      _this8.data[type].records = records.reduce(function (hash, record) {
+      _this9.data[type].records = records.reduce(function (hash, record) {
         if (String(record.id) !== String(id)) {
           hash[record.id] = record;
         }

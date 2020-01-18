@@ -29,7 +29,7 @@ class Store {
    */
   constructor (options) {
     this.init(options)
-    this.OfflineService = new OfflineService([])
+    this.OfflineService = new OfflineService()
   }
 
   /**
@@ -658,29 +658,44 @@ class Store {
   async fetchOne (type, id, queryParams) {
     const url = this.fetchUrl(type, queryParams, id)
     // Trigger request
-    const response = await this.fetch(url, { method: 'GET' })
+    let req = {
+      url,
+      options: {
+        method: 'GET'
+      }
+    }
+
+    let response = await this.OfflineService.request(req)
+    if (response.length) {
+      return response.forEach(res => {
+        return this.handleData(res, url, type)
+      })
+    } else {
+        return this.handleData(response, url, type)
+      }
+    }
 
     // Handle response
-    if (response.status === 200) {
-      const json = await response.json()
-
-      const { data, included } = json
-
-      if (included) {
-        this.createModelsFromData(included)
+    handleData = (response, url, type) => {
+      if (response.error) {
+        return response.error
       }
+      if (response.status === 200) {
+        const { data, included } = response
 
-      const record = this.createOrUpdateModel(data)
+        if (included) {
+          this.createModelsFromData(included)
+        }
+        const record = this.createOrUpdateModel(data)
 
-      this.data[type].cache[url] = []
-      this.data[type].cache[url].push(record.id)
-
-      return record
-    } else {
-      // Return null if record is not found
-      return null
+        this.data[type].cache[url] = []
+        this.data[type].cache[url].push(record.id)
+        return record
+      } else {
+        // Return null if record is not found
+        return null
+      }
     }
-  }
 }
 
 export default Store

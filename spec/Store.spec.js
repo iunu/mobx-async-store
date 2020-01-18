@@ -28,6 +28,7 @@ const mockBaseUrl = '/example_api'
 const mockFetchOptions = {
   // credentials: 'includes',
   headers: {
+    'status': 200,
     'Content-Type': 'application/vnd.api+json',
     'Accepts': 'application/json'
   }
@@ -39,6 +40,7 @@ const store = new AppStore({
 })
 
 const mockTodoData = {
+  status: 200,
   data: {
     id: '1',
     type: 'todos',
@@ -49,7 +51,7 @@ const mockTodoData = {
   }
 }
 
-const mockTodoResponse = JSON.stringify(mockTodoData)
+const mockTodoResponse = JSON.stringify({...mockTodoData, ok: true})
 
 const mockTodosResponse = JSON.stringify({
   data: [

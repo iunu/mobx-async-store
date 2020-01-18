@@ -19,10 +19,14 @@ export const exampleRelatedToManyResponse = JSON.stringify({
   },
   jsonapi: {
     version: '1.0'
-  }
+  },
+  ok: true,
+  status: 200
 })
 
 export const exampleRelatedToManyIncludedResponse = JSON.stringify({
+  ok: true,
+  status: 200,
   data: {
     id: '1',
     type: 'organizations',
@@ -56,6 +60,8 @@ export const exampleRelatedToManyIncludedResponse = JSON.stringify({
 })
 
 export const exampleRelatedToOneIncludedResponse = JSON.stringify({
+  ok: true,
+  status: 200,
   data: {
     id: '1',
     type: 'notes',

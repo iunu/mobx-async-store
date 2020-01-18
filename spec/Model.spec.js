@@ -110,7 +110,7 @@ const mockTodoData = {
   }
 }
 
-const mockTodoResponse = JSON.stringify(mockTodoData)
+const mockTodoResponse = JSON.stringify({...mockTodoData, ok: true})
 
 describe('Model', () => {
   beforeEach(() => {
