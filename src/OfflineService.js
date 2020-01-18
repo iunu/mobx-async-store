@@ -1,5 +1,5 @@
 /* global fetch */
-import { observable, observe } from 'mobx'
+import { observable } from 'mobx'
 /**
  * Class that enqueus requests and retries them when
  * network becomes available again
@@ -7,6 +7,7 @@ import { observable, observe } from 'mobx'
  * @class Schema
  */
 export default class OfflineService {
+    timer = null
     /**
      * The queue for all requests needing to be retried
      * when network becomes available again
@@ -17,73 +18,85 @@ export default class OfflineService {
     */
     @observable pending = []
 
-    /**
-     * The queue for all requests needing to be retried
-     * when network becomes available again
-     *
-     * @property offline
-     * @type {Boolean}
-     * @default false
-    */
-    @observable offlineStatus = {
-        offline: false
-    }
+    @observable isFlushing = false
 
     constructor () {
-        this.pending = []
         this.flush = this.flush.bind(this)
-        observe(this.offlineStatus, this.handleOfflineChange, false)
-    }
-
-    setOffline (value) {
-        this.offlineStatus.offline = value
+        this.offlineRetry = this.offlineRetry.bind(this)
     }
 
     /**
-     * handles the change from offline to online again
-     * in order to trigger the queue to start flushing
-     * @method handleOfflineChange
-     * @return {}
-     * @param {Object} change
-   */
-    handleOfflineChange = (change) => {
-        const { name, object } = change
-
-        // if offline is false
-        if (!object[name].offline && this.pending.length) {
-            this.flush()
-        }
-    }
-
-    /**
-     * We don't want all models to be accessible while offline
-     * this can double check that only paths we want can be
-     * be queued while offline
-     *
-     * @property WHITE_LISTED_ENDPOINTS
-     * @type {Array}
-     * @default []
+     * Request is the function that fires the request or pushes
+     * that request to the queue.
+     * @method request
+     * @param {String} methodName
+     * @param {String} url
+     * @param {String} body
+     * @param {Function} cb
+     * @return {Object} { method, body }
     */
-    request = (methodName, incomingUrl, { method, body }) => {
-        if (this.offlineStatus.offline) this.pending.push({methodName, fullRequest: fetch(incomingUrl, { method, body })})
-        let data = fetch(incomingUrl, { method, body })
-        return {
-            methodName,
-            data
+    request = ({ url, options }, cb) => {
+        if (this.isFlushing) {
+            this.pending.push(
+                {
+                    cb,
+                    fullRequest: {
+                        url,
+                        options
+                    }
+                }
+            )
+        } else {
+            fetch(url, { ...options }).then((res, err) => {
+                let data = res.json()
+                if (data.ok) {
+                    cb(null, data)
+                } else {
+                    this.pending.push({ cb: cb, fullRequest: { url, options } })
+                    this.offlineRetry()
+                    cb(null, { error: 'There was an error' })
+                }
+            })
         }
     }
 
+    offlineRetry () {
+        this.isFlushing = true
+        this.timer = setTimeout(this.flush, 1000)
+    }
+
+    stopTimer = () => {
+        clearInterval(this.timer)
+        this.timer = null
+        this.isFlushing = false
+    }
+    /**
+     * Request is the function that fires the request or pushes
+     * that request to the queue.
+     * @method request
+     * @param {String} methodName
+     * @param {String} url the properties to use
+     * @param {Object} methodName
+     * @return {Object} { method, body }
+    */
     flush () {
-        return this.pending.reduce((request, index) => {
-            return request.fullRequest().then(res => {
+        console.log('this.pending', this.pending.length)
+
+        if (this.pending.length === 0) {
+            this.stopTimer()
+        }
+        return this.pending.reduce((acc, request, index) => {
+            const { url, options } = request.fullRequest
+            fetch(url, { ...options }).then(incomingData => {
+                let res = incomingData.json()
                 if (res.ok) {
                     this.pending.splice(index, index + 1)
-                    return res
+                    if (!this.pending.length) {
+                        this.stopTimer()
+                    }
+                    request.cb(null, res)
                 }
-                return {
-                    method: request.methodName,
-                    data: res.json()
-                }
+                request.cb({error: 'Request failed', status: 'offline'}, { data: null })
             })
         }, [])
     }

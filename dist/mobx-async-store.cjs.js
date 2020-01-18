@@ -6,6 +6,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
+var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
 var _initializerDefineProperty = _interopDefault(require('@babel/runtime/helpers/initializerDefineProperty'));
 var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass'));
@@ -175,96 +176,106 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 function ObjectPromiseProxy(promise, target) {
   target.isInFlight = true;
   var tmpId = target.id;
-  var result = promise.then(function _callee(response) {
-    var status, json, _json$data, attributes, relationships, message, _json, errorString;
+  var result = promise.then(
+  /*#__PURE__*/
+  function () {
+    var _ref = _asyncToGenerator(
+    /*#__PURE__*/
+    _regeneratorRuntime.mark(function _callee(response) {
+      var status, json, _json$data, attributes, relationships, message, _json, errorString;
 
-    return _regeneratorRuntime.async(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            status = response.status;
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              status = response.status;
 
-            if (!(status === 200 || status === 201)) {
-              _context.next = 14;
-              break;
-            }
+              if (!(status === 200 || status === 201)) {
+                _context.next = 14;
+                break;
+              }
 
-            _context.next = 4;
-            return _regeneratorRuntime.awrap(response.json());
+              _context.next = 4;
+              return response.json();
 
-          case 4:
-            json = _context.sent;
-            // Update target model
-            _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
-            mobx.transaction(function () {
-              Object.keys(attributes).forEach(function (key) {
-                mobx.set(target, key, attributes[key]);
-              });
-
-              if (relationships) {
-                Object.keys(relationships).forEach(function (key) {
-                  if (!relationships[key].hasOwnProperty('meta')) {
-                    // todo: throw error if relationship is not defined in model
-                    mobx.set(target.relationships, key, relationships[key]);
-                  }
+            case 4:
+              json = _context.sent;
+              // Update target model
+              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
+              mobx.transaction(function () {
+                Object.keys(attributes).forEach(function (key) {
+                  mobx.set(target, key, attributes[key]);
                 });
-              }
 
-              if (json.included) {
-                target.store.createModelsFromData(json.included);
-              }
-            }); // Update target isInFlight and isDirty
+                if (relationships) {
+                  Object.keys(relationships).forEach(function (key) {
+                    if (!relationships[key].hasOwnProperty('meta')) {
+                      // todo: throw error if relationship is not defined in model
+                      mobx.set(target.relationships, key, relationships[key]);
+                    }
+                  });
+                }
 
-            target.isInFlight = false;
-            target.isDirty = false;
-            target.setPreviousSnapshot();
-            mobx.transaction(function () {
-              // NOTE: This resolves an issue where a record is persisted but the
-              // index key is still a temp uuid. We can't simply remove the temp
-              // key because there may be associated records that have the temp
-              // uuid id as its only reference to the newly persisted record.
-              // TODO: Figure out a way to update associated records to use the
-              // newly persisted id.
-              target.store.data[target.type].records[tmpId] = target;
-              target.store.data[target.type].records[target.id] = target;
-            });
-            return _context.abrupt("return", target);
+                if (json.included) {
+                  target.store.createModelsFromData(json.included);
+                }
+              }); // Update target isInFlight and isDirty
 
-          case 14:
-            target.isInFlight = false;
-            message = target.store.genericErrorMessage;
-            _context.prev = 16;
-            _context.next = 19;
-            return _regeneratorRuntime.awrap(response.json());
+              target.isInFlight = false;
+              target.isDirty = false;
+              target.setPreviousSnapshot();
+              mobx.transaction(function () {
+                // NOTE: This resolves an issue where a record is persisted but the
+                // index key is still a temp uuid. We can't simply remove the temp
+                // key because there may be associated records that have the temp
+                // uuid id as its only reference to the newly persisted record.
+                // TODO: Figure out a way to update associated records to use the
+                // newly persisted id.
+                target.store.data[target.type].records[tmpId] = target;
+                target.store.data[target.type].records[target.id] = target;
+              });
+              return _context.abrupt("return", target);
 
-          case 19:
-            _json = _context.sent;
-            message = parseApiErrors(_json.errors, message);
-            _context.next = 25;
-            break;
+            case 14:
+              target.isInFlight = false;
+              message = target.store.genericErrorMessage;
+              _context.prev = 16;
+              _context.next = 19;
+              return response.json();
 
-          case 23:
-            _context.prev = 23;
-            _context.t0 = _context["catch"](16);
+            case 19:
+              _json = _context.sent;
+              message = parseApiErrors(_json.errors, message);
+              _context.next = 25;
+              break;
 
-          case 25:
-            // TODO: add all errors from the API response to the target
-            target.errors = _objectSpread({}, target.errors, {
-              status: status,
-              base: [{
-                message: message
-              }]
-            });
-            errorString = JSON.stringify(target.errors);
-            return _context.abrupt("return", Promise.reject(new Error(errorString)));
+            case 23:
+              _context.prev = 23;
+              _context.t0 = _context["catch"](16);
 
-          case 28:
-          case "end":
-            return _context.stop();
+            case 25:
+              // TODO: add all errors from the API response to the target
+              target.errors = _objectSpread({}, target.errors, {
+                status: status,
+                base: [{
+                  message: message
+                }]
+              });
+              errorString = JSON.stringify(target.errors);
+              return _context.abrupt("return", Promise.reject(new Error(errorString)));
+
+            case 28:
+            case "end":
+              return _context.stop();
+          }
         }
-      }
-    }, null, null, [[16, 23]]);
-  }, function (error) {
+      }, _callee, null, [[16, 23]]);
+    }));
+
+    return function (_x) {
+      return _ref.apply(this, arguments);
+    };
+  }(), function (error) {
     // TODO: Handle error states correctly
     target.isInFlight = false;
     target.errors = error;
@@ -595,66 +606,76 @@ function () {
       var _this = this;
 
       _this.errors = {};
-      return promise.then(function _callee(response) {
-        var json;
-        return _regeneratorRuntime.async(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _this.isInFlight = false;
+      return promise.then(
+      /*#__PURE__*/
+      function () {
+        var _ref = _asyncToGenerator(
+        /*#__PURE__*/
+        _regeneratorRuntime.mark(function _callee(response) {
+          var json;
+          return _regeneratorRuntime.wrap(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  _this.isInFlight = false;
 
-                if (!(response.status === 202 || response.status === 204)) {
-                  _context.next = 17;
+                  if (!(response.status === 202 || response.status === 204)) {
+                    _context.next = 17;
+                    break;
+                  }
+
+                  if (!skipRemove) {
+                    _this.store.remove(type, id);
+                  }
+
+                  _context.prev = 3;
+                  _context.next = 6;
+                  return response.json();
+
+                case 6:
+                  json = _context.sent;
+
+                  if (json.data && json.data.attributes) {
+                    Object.keys(json.data.attributes).forEach(function (key) {
+                      mobx.set(_this, key, json.data.attributes[key]);
+                    });
+                  }
+
+                  _context.next = 13;
                   break;
-                }
 
-                if (!skipRemove) {
-                  _this.store.remove(type, id);
-                }
+                case 10:
+                  _context.prev = 10;
+                  _context.t0 = _context["catch"](3);
+                  console.log(_context.t0); // It is text, do you text handling here
 
-                _context.prev = 3;
-                _context.next = 6;
-                return _regeneratorRuntime.awrap(response.json());
+                case 13:
+                  // NOTE: If deleting a record changes other related model
+                  // You can return then in the delete response
+                  if (json && json.included) {
+                    _this.store.createModelsFromData(json.included);
+                  }
 
-              case 6:
-                json = _context.sent;
+                  return _context.abrupt("return", _this);
 
-                if (json.data && json.data.attributes) {
-                  Object.keys(json.data.attributes).forEach(function (key) {
-                    mobx.set(_this, key, json.data.attributes[key]);
-                  });
-                }
+                case 17:
+                  _this.errors = {
+                    status: response.status
+                  };
+                  return _context.abrupt("return", _this);
 
-                _context.next = 13;
-                break;
-
-              case 10:
-                _context.prev = 10;
-                _context.t0 = _context["catch"](3);
-                console.log(_context.t0); // It is text, do you text handling here
-
-              case 13:
-                // NOTE: If deleting a record changes other related model
-                // You can return then in the delete response
-                if (json && json.included) {
-                  _this.store.createModelsFromData(json.included);
-                }
-
-                return _context.abrupt("return", _this);
-
-              case 17:
-                _this.errors = {
-                  status: response.status
-                };
-                return _context.abrupt("return", _this);
-
-              case 19:
-              case "end":
-                return _context.stop();
+                case 19:
+                case "end":
+                  return _context.stop();
+              }
             }
-          }
-        }, null, null, [[3, 10]]);
-      }, function (error) {
+          }, _callee, null, [[3, 10]]);
+        }));
+
+        return function (_x) {
+          return _ref.apply(this, arguments);
+        };
+      }(), function (error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false;
         _this.errors = error;
@@ -1036,11 +1057,177 @@ function () {
   }
 })), _class);
 
-var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
+var _class$1, _descriptor$1, _descriptor2$1, _temp$1;
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+/**
+ * Class that enqueus requests and retries them when
+ * network becomes available again
+ *
+ * @class Schema
+ */
+
+var OfflineService = (_class$1 = (_temp$1 =
+/*#__PURE__*/
+function () {
+  /**
+   * The queue for all requests needing to be retried
+   * when network becomes available again
+   *
+   * @property pending
+   * @type {Array}
+   * @default []
+  */
+  function OfflineService() {
+    var _this = this;
+
+    _classCallCheck(this, OfflineService);
+
+    this.timer = null;
+
+    _initializerDefineProperty(this, "pending", _descriptor$1, this);
+
+    _initializerDefineProperty(this, "isFlushing", _descriptor2$1, this);
+
+    this.request = function (_ref, cb) {
+      var url = _ref.url,
+          options = _ref.options;
+
+      if (_this.isFlushing) {
+        _this.pending.push({
+          cb: cb,
+          fullRequest: {
+            url: url,
+            options: options
+          }
+        });
+      } else {
+        fetch(url, _objectSpread$2({}, options)).then(function (res, err) {
+          var data = res.json();
+
+          if (data.ok) {
+            cb(null, data);
+          } else {
+            _this.pending.push({
+              cb: cb,
+              fullRequest: {
+                url: url,
+                options: options
+              }
+            });
+
+            _this.offlineRetry();
+
+            cb(null, {
+              error: 'There was an error'
+            });
+          }
+        });
+      }
+    };
+
+    this.stopTimer = function () {
+      clearInterval(_this.timer);
+      _this.timer = null;
+      _this.isFlushing = false;
+    };
+
+    this.handleResponse = function () {};
+
+    this.flush = this.flush.bind(this);
+    this.offlineRetry = this.offlineRetry.bind(this);
+  }
+  /**
+   * Request is the function that fires the request or pushes
+   * that request to the queue.
+   * @method request
+   * @param {String} methodName
+   * @param {String} url
+   * @param {String} body
+   * @param {Function} cb
+   * @return {Object} { method, body }
+  */
+
+
+  _createClass(OfflineService, [{
+    key: "offlineRetry",
+    value: function offlineRetry() {
+      this.isFlushing = true;
+      this.timer = setTimeout(this.flush, 1000);
+    }
+  }, {
+    key: "flush",
+
+    /**
+     * Request is the function that fires the request or pushes
+     * that request to the queue.
+     * @method request
+     * @param {String} methodName
+     * @param {String} url the properties to use
+     * @param {Object} methodName
+     * @return {Object} { method, body }
+    */
+    value: function flush() {
+      var _this2 = this;
+
+      console.log('this.pending', this.pending.length);
+
+      if (this.pending.length === 0) {
+        this.stopTimer();
+      }
+
+      return this.pending.reduce(function (acc, request, index) {
+        var _request$fullRequest = request.fullRequest,
+            url = _request$fullRequest.url,
+            options = _request$fullRequest.options;
+        fetch(url, _objectSpread$2({}, options)).then(function (incomingData) {
+          var res = incomingData.json();
+
+          if (res.ok) {
+            _this2.pending.splice(index, index + 1);
+
+            if (!_this2.pending.length) {
+              _this2.stopTimer();
+            }
+
+            request.cb(null, res);
+          }
+
+          request.cb({
+            error: 'Request failed',
+            status: 'offline'
+          }, {
+            data: null
+          });
+        });
+      }, []);
+    }
+  }]);
+
+  return OfflineService;
+}(), _temp$1), (_descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "pending", [mobx.observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return [];
+  }
+}), _descriptor2$1 = _applyDecoratedDescriptor(_class$1.prototype, "isFlushing", [mobx.observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return false;
+  }
+})), _class$1);
+
+var _class$2, _descriptor$2, _descriptor2$2, _descriptor3, _temp$2;
+
+function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Defines the Artemis Data Store class.
  *
@@ -1048,7 +1235,7 @@ function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { 
  * @constructor
  */
 
-var Store = (_class$1 = (_temp$1 =
+var Store = (_class$2 = (_temp$2 =
 /*#__PURE__*/
 function () {
   /**
@@ -1070,7 +1257,7 @@ function () {
 
     _classCallCheck(this, Store);
 
-    _initializerDefineProperty(this, "data", _descriptor$1, this);
+    _initializerDefineProperty(this, "data", _descriptor$2, this);
 
     this.genericErrorMessage = 'Something went wrong.';
 
@@ -1082,7 +1269,7 @@ function () {
       }
     };
 
-    _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
+    _initializerDefineProperty(this, "addModel", _descriptor2$2, this);
 
     this.addModels = function (type, data) {
       var records = [];
@@ -1157,6 +1344,7 @@ function () {
     };
 
     this.init(_options);
+    this.OfflineService = new OfflineService([]);
   }
   /**
    * Adds an instance or an array of instances to the store.
@@ -1290,14 +1478,14 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions;
 
-      var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
+      var fetchOptions = _objectSpread$3({}, defaultFetchOptions, {}, options);
 
       var key = JSON.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
       return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
+        return fetch(url, _objectSpread$3({}, defaultFetchOptions, {}, options));
       });
     })
     /**
@@ -1529,7 +1717,7 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              mobx.set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
+              mobx.set(record, 'relationships', _objectSpread$3({}, record.relationships, _defineProperty({}, key, relationships[key])));
               mobx.set(_this4.data[type].records, id, record);
             }
           });
@@ -1590,7 +1778,7 @@ function () {
         throw new Error("Could not find a model for '".concat(type, "'"));
       }
 
-      return new ModelKlass(_objectSpread$2({
+      return new ModelKlass(_objectSpread$3({
         id: id,
         store: store,
         relationships: relationships
@@ -1622,72 +1810,82 @@ function () {
 
   }, {
     key: "fetchAll",
-    value: function fetchAll(type, queryParams) {
-      var _this6 = this;
+    value: function () {
+      var _fetchAll = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(type, queryParams) {
+        var _this6 = this;
 
-      var store, url, response, json, records;
-      return _regeneratorRuntime.async(function fetchAll$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              store = this;
-              url = this.fetchUrl(type, queryParams);
-              _context.next = 4;
-              return _regeneratorRuntime.awrap(this.fetch(url, {
-                method: 'GET'
-              }));
-
-            case 4:
-              response = _context.sent;
-
-              if (!(response.status === 200)) {
-                _context.next = 16;
-                break;
-              }
-
-              this.data[type].cache[url] = [];
-              _context.next = 9;
-              return _regeneratorRuntime.awrap(response.json());
-
-            case 9:
-              json = _context.sent;
-
-              if (json.included) {
-                this.createModelsFromData(json.included);
-              }
-
-              records = [];
-              mobx.transaction(function () {
-                records = json.data.map(function (dataObject) {
-                  var id = dataObject.id,
-                      _dataObject$attribute2 = dataObject.attributes,
-                      attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                      _dataObject$relations2 = dataObject.relationships,
-                      relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                  var ModelKlass = _this6.modelTypeIndex[type];
-                  var record = new ModelKlass(_objectSpread$2({
-                    store: store,
-                    relationships: relationships
-                  }, attributes));
-
-                  _this6.data[type].cache[url].push(id);
-
-                  _this6.data[type].records[id] = record;
-                  return record;
+        var store, url, response, json, records;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                store = this;
+                url = this.fetchUrl(type, queryParams);
+                _context.next = 4;
+                return this.fetch(url, {
+                  method: 'GET'
                 });
-              });
-              return _context.abrupt("return", records);
 
-            case 16:
-              return _context.abrupt("return", Promise.reject(response.status));
+              case 4:
+                response = _context.sent;
 
-            case 17:
-            case "end":
-              return _context.stop();
+                if (!(response.status === 200)) {
+                  _context.next = 16;
+                  break;
+                }
+
+                this.data[type].cache[url] = [];
+                _context.next = 9;
+                return response.json();
+
+              case 9:
+                json = _context.sent;
+
+                if (json.included) {
+                  this.createModelsFromData(json.included);
+                }
+
+                records = [];
+                mobx.transaction(function () {
+                  records = json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute2 = dataObject.attributes,
+                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+                        _dataObject$relations2 = dataObject.relationships,
+                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
+                    var ModelKlass = _this6.modelTypeIndex[type];
+                    var record = new ModelKlass(_objectSpread$3({
+                      store: store,
+                      relationships: relationships
+                    }, attributes));
+
+                    _this6.data[type].cache[url].push(id);
+
+                    _this6.data[type].records[id] = record;
+                    return record;
+                  });
+                });
+                return _context.abrupt("return", records);
+
+              case 16:
+                return _context.abrupt("return", Promise.reject(response.status));
+
+              case 17:
+              case "end":
+                return _context.stop();
+            }
           }
-        }
-      }, null, this);
-    }
+        }, _callee, this);
+      }));
+
+      function fetchAll(_x2, _x3) {
+        return _fetchAll.apply(this, arguments);
+      }
+
+      return fetchAll;
+    }()
     /**
      * fetches record by `id`.
      *
@@ -1699,64 +1897,74 @@ function () {
 
   }, {
     key: "fetchOne",
-    value: function fetchOne(type, id, queryParams) {
-      var url, response, json, data, included, record;
-      return _regeneratorRuntime.async(function fetchOne$(_context2) {
-        while (1) {
-          switch (_context2.prev = _context2.next) {
-            case 0:
-              url = this.fetchUrl(type, queryParams, id); // Trigger request
+    value: function () {
+      var _fetchOne = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
+        var url, response, json, data, included, record;
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-              _context2.next = 3;
-              return _regeneratorRuntime.awrap(this.fetch(url, {
-                method: 'GET'
-              }));
+                _context2.next = 3;
+                return this.fetch(url, {
+                  method: 'GET'
+                });
 
-            case 3:
-              response = _context2.sent;
+              case 3:
+                response = _context2.sent;
 
-              if (!(response.status === 200)) {
-                _context2.next = 16;
-                break;
-              }
+                if (!(response.status === 200)) {
+                  _context2.next = 16;
+                  break;
+                }
 
-              _context2.next = 7;
-              return _regeneratorRuntime.awrap(response.json());
+                _context2.next = 7;
+                return response.json();
 
-            case 7:
-              json = _context2.sent;
-              data = json.data, included = json.included;
+              case 7:
+                json = _context2.sent;
+                data = json.data, included = json.included;
 
-              if (included) {
-                this.createModelsFromData(included);
-              }
+                if (included) {
+                  this.createModelsFromData(included);
+                }
 
-              record = this.createOrUpdateModel(data);
-              this.data[type].cache[url] = [];
-              this.data[type].cache[url].push(record.id);
-              return _context2.abrupt("return", record);
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache[url] = [];
+                this.data[type].cache[url].push(record.id);
+                return _context2.abrupt("return", record);
 
-            case 16:
-              return _context2.abrupt("return", null);
+              case 16:
+                return _context2.abrupt("return", null);
 
-            case 17:
-            case "end":
-              return _context2.stop();
+              case 17:
+              case "end":
+                return _context2.stop();
+            }
           }
-        }
-      }, null, this);
-    }
+        }, _callee2, this);
+      }));
+
+      function fetchOne(_x4, _x5, _x6) {
+        return _fetchOne.apply(this, arguments);
+      }
+
+      return fetchOne;
+    }()
   }]);
 
   return Store;
-}(), _temp$1), (_descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "data", [mobx.observable], {
+}(), _temp$2), (_descriptor$2 = _applyDecoratedDescriptor(_class$2.prototype, "data", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2$1 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
+}), _descriptor2$2 = _applyDecoratedDescriptor(_class$2.prototype, "addModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -1775,7 +1983,7 @@ function () {
       return model;
     };
   }
-}), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [mobx.action], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class$2.prototype, "remove", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -1794,7 +2002,7 @@ function () {
       }, {});
     };
   }
-})), _class$1);
+})), _class$2);
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`

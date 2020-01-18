@@ -1,51 +1,132 @@
-/* global fetch */  
+// eslint-disable-next-line no-unused-vars
+/* global fetch */
+
 import OfflineService from '../src/OfflineService'
 
 const mockFetchPromise = Promise.resolve({ // 3
-    json: () => { return { status: true } }
+    json: () => {
+        return {
+                ok: true
+        }
+    }
+})
+const mockFailedPromise = Promise.resolve({ // 3
+    json: () => {
+        return {
+                ok: false
+        }
+    }
 })
 
-jest.spyOn(global, 'fetch').mockImplementation(() => mockFetchPromise)
-
+jest.useFakeTimers()
 describe('Test suite for Offline service/Queue class', () => {
     let offlineService
     beforeEach(() => {
-        offlineService = new OfflineService([])
+        offlineService = new OfflineService()
     })
+
     it('Should instantiate', () => {
         expect(offlineService).toBeTruthy()
     })
 
-    it('Should allow offline status to be updated', () => {
-        expect(offlineService).toBeTruthy()
-        expect(offlineService.offlineStatus.offline).toBe(false)
-        offlineService.setOffline(true)
-        expect(offlineService.offlineStatus.offline).toBe(true)
+    it('Should fire a fetch to see if request was successfull', () => {
+        jest.useFakeTimers()
+
+        jest.spyOn(global, 'fetch').mockImplementation(() => mockFetchPromise)
+        let fakeCb = jest.fn()
+
+        let fullRequest = {
+            url: 'https://google.com/a',
+            options: {
+                method: 'POST',
+                body: { test: true }
+            }
+        }
+        offlineService.request(fullRequest, fakeCb)
+        expect(global.fetch).toHaveBeenCalled()
+        expect(global.fetch).toHaveBeenLastCalledWith(fullRequest.url, { ...fullRequest.options })
     })
 
-    it('Should not call flush if no pending and offline status changes from false to true', () => {
-        offlineService.flush = jest.fn()
-        offlineService.setOffline(true)
-        offlineService.setOffline(false)
-        expect(offlineService.flush).not.toHaveBeenCalled()
+    it('Should add to pending if fetch was not successful', () => {
+        jest.useFakeTimers()
+
+        jest.spyOn(global, 'fetch').mockImplementation(() => mockFailedPromise)
+
+        let fakeCb = (err, data) => {
+            console.log('data', data)
+            console.log('error', err)
+        }
+
+        let fullRequest = {
+            url: 'https://google.com/a',
+            options: {
+                method: 'POST',
+                body: { test: true }
+            }
+        }
+        offlineService.request(fullRequest, fakeCb)
+        expect(global.fetch).toHaveBeenCalled()
+        expect(global.fetch).toHaveBeenLastCalledWith(fullRequest.url, { ...fullRequest.options })
+    })
+
+    it('Should add to pending if flushing is true', async () => {
+        jest.useFakeTimers()
+
+        jest.spyOn(global, 'fetch').mockImplementation(() => mockFailedPromise)
+        offlineService.offlineRetry = jest.fn()
+        offlineService.isFlushing = true
+
+        let fakeCb = (err, data) => {
+            console.log('data', data)
+            console.log('error', err)
+        }
+
+        let fullRequest = {
+            url: 'https://google.com/a',
+            options: {
+                method: 'POST',
+                body: { test: true }
+            }
+        }
+        offlineService.request(fullRequest, fakeCb)
+        offlineService.request(fullRequest, fakeCb)
+        expect(offlineService.pending.length).toBe(2)
     })
 
     it('Should call flush if pending and offline status changes from false to true', () => {
-        offlineService.flush = jest.fn()
-        expect(offlineService.offlineStatus.offline).toBe(false)
-        offlineService.setOffline(true)
-        offlineService.pending = [1]
-        offlineService.setOffline(false)
-        expect(offlineService.flush).toHaveBeenCalledTimes(1)
+        jest.useFakeTimers()
+        jest.spyOn(global, 'fetch').mockImplementation(() => mockFetchPromise)
+
+        let fakeCb = jest.fn()
+        let fullRequest = {
+            url: 'https://google.com/a',
+            options: {
+                method: 'POST',
+                body: { test: true }
+            }
+        }
+        offlineService.pending = [{ cb: fakeCb, fullRequest }]
+        offlineService.offlineRetry()
+        expect(setTimeout).toHaveBeenCalled()
+        expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1000)
     })
 
-    it('Flush should resolve all pending items', () => {
-        expect(offlineService.offlineStatus.offline).toBe(false)
-        offlineService.setOffline(true)
-        offlineService.pending = [fetch('https://google.com/a', { method: 'GET' })]
-        offlineService.setOffline(false)
-        expect(global.fetch).toHaveBeenCalledTimes(1)
-        expect(global.fetch.mock.calls[0]).toEqual(["https://google.com/a", {"method": "GET"}])
-        
+    it('Should trigger a request when flushing', () => {
+        jest.spyOn(global, 'fetch').mockImplementation(() => mockFetchPromise)
+
+        offlineService.flush = jest.fn()
+        jest.runAllTimers()
+        let fakeCb = jest.fn()
+        let fullRequest = {
+            url: 'https://google.com/a',
+            options: {
+                method: 'POST',
+                body: { test: true }
+            }
+        }
+        offlineService.pending = [{ cb: fakeCb, fullRequest }]
+        offlineService.offlineRetry()
+        expect(global.fetch).toHaveBeenCalled()
+        expect(global.fetch).toHaveBeenLastCalledWith(fullRequest.url, { ...fullRequest.options })
     })
 })
