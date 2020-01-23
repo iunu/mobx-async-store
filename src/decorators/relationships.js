@@ -111,7 +111,8 @@ export function getRelatedRecords (record, property, modelType = null) {
   // NOTE: If the record doesn't have a matching references for the relation type
   // fall back to looking up records by a foreign id i.e record.related_record_id
   if (references && references.data) {
-    relatedRecords = references.data.map(ref => {
+    // Ignore any records of unknown types
+    relatedRecords = references.data.filter(ref => record.store.getType(ref.type)).map(ref => {
       const recordType = ref.type
       return record.store.getRecord(recordType, ref.id)
     })
