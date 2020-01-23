@@ -22,6 +22,34 @@ export const exampleRelatedToManyResponse = JSON.stringify({
   }
 })
 
+export const exampleRelatedToManyWithNoiseResponse = JSON.stringify({
+  data: {
+    id: '1',
+    type: 'organizations',
+    attributes: {
+      id: 1,
+      title: 'Do laundry'
+    },
+    relationships: {
+      notes: {
+        data: [
+          {
+            type: 'notes',
+            id: '1'
+          },
+          {
+            type: 'unexpected_noise',
+            id: '1'
+          }
+        ]
+      }
+    }
+  },
+  jsonapi: {
+    version: '1.0'
+  }
+})
+
 export const exampleRelatedToManyIncludedResponse = JSON.stringify({
   data: {
     id: '1',
@@ -47,6 +75,50 @@ export const exampleRelatedToManyIncludedResponse = JSON.stringify({
       type: 'notes',
       attributes: {
         description: 'Use fabric softener'
+      }
+    }
+  ],
+  jsonapi: {
+    version: '1.0'
+  }
+})
+
+export const exampleRelatedToManyIncludedWithNoiseResponse = JSON.stringify({
+  data: {
+    id: '1',
+    type: 'organizations',
+    attributes: {
+      id: 1,
+      title: 'Do laundry'
+    },
+    relationships: {
+      notes: {
+        data: [
+          {
+            type: 'notes',
+            id: '1'
+          },
+          {
+            type: 'unexpected_noise',
+            id: '1'
+          }
+        ]
+      }
+    }
+  },
+  included: [
+    {
+      id: '1',
+      type: 'notes',
+      attributes: {
+        description: 'Use fabric softener'
+      }
+    },
+    {
+      id: '1',
+      type: 'unexpected_noise',
+      attributes: {
+        description: 'The store does not know about this type'
       }
     }
   ],

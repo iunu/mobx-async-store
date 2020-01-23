@@ -564,7 +564,14 @@ class Store {
     let records = []
 
     transaction(() => {
-      records = data.forEach(dataObject => this.createOrUpdateModel(dataObject))
+      records = data.forEach(dataObject => {
+        // Only build objects for which we have a type defined.
+        // And ignore silently anything else included in the JSON response.
+        // TODO: Put some console message in development mode
+        if (this.getType(dataObject.type)) {
+          this.createOrUpdateModel(dataObject)
+        }
+      })
     })
 
     return records

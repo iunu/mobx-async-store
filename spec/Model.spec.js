@@ -13,7 +13,9 @@ import {
 
 import {
   exampleRelatedToManyResponse,
-  exampleRelatedToManyIncludedResponse
+  exampleRelatedToManyWithNoiseResponse,
+  exampleRelatedToManyIncludedResponse,
+  exampleRelatedToManyIncludedWithNoiseResponse
 } from './fixtures/exampleRelationalResponses'
 
 // YYYY-MM-DD
@@ -268,6 +270,23 @@ describe('Model', () => {
       expect(todo.title).toEqual('Do laundry')
       expect(todo.meeting_notes).toHaveLength(1)
       expect(todo.meeting_notes[0].description).toEqual('Use fabric softener')
+    })
+
+    it('ignores unexpected types in relationship data', async () => {
+      fetch.mockResponse(exampleRelatedToManyWithNoiseResponse)
+      const todo = await store.findOne('organizations', 1)
+
+      expect(todo.title).toEqual('Do laundry')
+      expect(todo.notes).toHaveLength(1)
+    })
+
+    it('ignores unexpected types in included data', async () => {
+      fetch.mockResponse(exampleRelatedToManyIncludedWithNoiseResponse)
+      const todo = await store.findOne('organizations', 1)
+
+      expect(todo.title).toEqual('Do laundry')
+      expect(todo.notes).toHaveLength(1)
+      expect(todo.notes[0].description).toEqual('Use fabric softener')
     })
   })
 
