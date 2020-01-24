@@ -26,9 +26,8 @@ function ObjectPromiseProxy (promise, target) {
             target.store.createModelsFromData(json.included)
           }
         })
-        // Update target isInFlight and isDirty
+        // Update target isInFlight
         target.isInFlight = false
-        target.isDirty = false
         target.setPreviousSnapshot()
         transaction(() => {
           // NOTE: This resolves an issue where a record is persisted but the

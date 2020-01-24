@@ -267,8 +267,6 @@ export class RelatedRecordsArray extends Array {
       setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1))
     }
 
-    record.isDirty = true
-
     return relatedRecord
   }
 
@@ -302,8 +300,6 @@ export class RelatedRecordsArray extends Array {
       setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1))
     }
 
-    record.isDirty = true
-
     return relatedRecord
   }
 
@@ -315,7 +311,5 @@ export class RelatedRecordsArray extends Array {
       relationships[property] = { data: [] }
       array.forEach(object => this.add(object))
     })
-
-    record.isDirty = true
   }
 }

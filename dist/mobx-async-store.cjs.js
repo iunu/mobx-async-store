@@ -191,7 +191,7 @@ function ObjectPromiseProxy(promise, target) {
               status = response.status;
 
               if (!(status === 200 || status === 201)) {
-                _context.next = 14;
+                _context.next = 13;
                 break;
               }
 
@@ -219,10 +219,9 @@ function ObjectPromiseProxy(promise, target) {
                 if (json.included) {
                   target.store.createModelsFromData(json.included);
                 }
-              }); // Update target isInFlight and isDirty
+              }); // Update target isInFlight
 
               target.isInFlight = false;
-              target.isDirty = false;
               target.setPreviousSnapshot();
               mobx.transaction(function () {
                 // NOTE: This resolves an issue where a record is persisted but the
@@ -236,24 +235,24 @@ function ObjectPromiseProxy(promise, target) {
               });
               return _context.abrupt("return", target);
 
-            case 14:
+            case 13:
               target.isInFlight = false;
               message = target.store.genericErrorMessage;
-              _context.prev = 16;
-              _context.next = 19;
+              _context.prev = 15;
+              _context.next = 18;
               return response.json();
 
-            case 19:
+            case 18:
               _json = _context.sent;
               message = parseApiErrors(_json.errors, message);
-              _context.next = 25;
+              _context.next = 24;
               break;
 
-            case 23:
-              _context.prev = 23;
-              _context.t0 = _context["catch"](16);
+            case 22:
+              _context.prev = 22;
+              _context.t0 = _context["catch"](15);
 
-            case 25:
+            case 24:
               // TODO: add all errors from the API response to the target
               target.errors = _objectSpread({}, target.errors, {
                 status: status,
@@ -264,12 +263,12 @@ function ObjectPromiseProxy(promise, target) {
               errorString = JSON.stringify(target.errors);
               return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
-            case 28:
+            case 27:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[16, 23]]);
+      }, _callee, null, [[15, 22]]);
     }));
 
     return function (_x) {
@@ -358,7 +357,7 @@ function () {
 
 var schema = new Schema();
 
-var _class, _descriptor, _descriptor2, _temp;
+var _class, _descriptor, _temp;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -418,19 +417,15 @@ function () {
 
     _classCallCheck(this, Model);
 
-    _initializerDefineProperty(this, "_isDirty", _descriptor, this);
-
     this.isInFlight = false;
 
-    _initializerDefineProperty(this, "errors", _descriptor2, this);
+    _initializerDefineProperty(this, "errors", _descriptor, this);
 
     this.previousSnapshot = {};
 
     this._makeObservable(initialAttributes);
 
     this.setPreviousSnapshot();
-
-    this._trackState();
   }
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -740,37 +735,6 @@ function () {
      */
 
   }, {
-    key: "_trackState",
-
-    /**
-     * Uses mobx.autorun to track changes to attributes
-     *
-     * @method _trackState
-     */
-    value: function _trackState() {
-      var _this4 = this;
-
-      mobx.reaction(function () {
-        return JSON.stringify(_this4.attributes);
-      }, function (objectString) {
-        // console.log(objectString)
-        _this4.isDirty = true;
-      });
-      mobx.reaction(function () {
-        return JSON.stringify(_this4.relationships);
-      }, function (relString) {
-        // console.log(relString)
-        _this4.isDirty = true;
-      });
-    }
-    /**
-     * shortcut to get the static
-     *
-     * @method type
-     * @return {String} current attributes
-    */
-
-  }, {
     key: "errorForKey",
 
     /**
@@ -800,7 +764,7 @@ function () {
      * @return {Object} data in JSON::API format
      */
     value: function jsonapi() {
-      var _this5 = this;
+      var _this4 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
@@ -818,7 +782,7 @@ function () {
       }
 
       var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this5[key];
+        var value = _this4[key];
 
         if (value) {
           var DataType = attributeDefinitions[key].dataType;
@@ -850,7 +814,7 @@ function () {
           return options.relationships.includes(name);
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = mobx.toJS(_this5.relationships[key]);
+          rels[key] = mobx.toJS(_this4.relationships[key]);
           stringifyIds(rels[key]);
           return rels;
         }, {});
@@ -872,41 +836,27 @@ function () {
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
-      var _this6 = this;
+      var _this5 = this;
 
       mobx.transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          _this6[key] = attributes[key];
+          _this5[key] = attributes[key];
         });
       });
     }
   }, {
     key: "isDirty",
     get: function get() {
-      var isNew = this.isNew,
-          _isDirty = this._isDirty;
-      return _isDirty || isNew;
-    },
-    set: function set(value) {
-      this._isDirty = value;
+      return this.dirtyAttributes.length > 0;
     }
-    /**
-     * Private method. True if the model has been programatically changed,
-     * as opposed to just being new.
-     * @property _isDirty
-     * @type {Boolean}
-     * @default false
-     * @private
-     */
-
-  }, {
-    key: "isNew",
-
     /**
      * True if the model has not been sent to the store
      * @property isNew
      * @type {Boolean}
      */
+
+  }, {
+    key: "isNew",
     get: function get() {
       var id = this.id;
       return !!String(id).match(/tmp/);
@@ -938,15 +888,22 @@ function () {
   }, {
     key: "dirtyAttributes",
     get: function get() {
-      var _this7 = this;
+      var _this6 = this;
 
       return flattenDeep(walk(this.previousSnapshot.attributes, function (prevValue, path) {
-        var currValue = dig(_this7.snapshot.attributes, path);
+        var currValue = dig(_this6.snapshot.attributes, path);
         return prevValue === currValue ? undefined : path;
       })).filter(function (x) {
         return x;
       });
     }
+    /**
+     * shortcut to get the static
+     *
+     * @method type
+     * @return {String} current attributes
+    */
+
   }, {
     key: "type",
     get: function get() {
@@ -962,10 +919,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this8 = this;
+      var _this7 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = mobx.toJS(_this8[key]);
+        var value = mobx.toJS(_this7[key]);
 
         if (!value) {
           delete attributes[key];
@@ -1041,14 +998,7 @@ function () {
   }]);
 
   return Model;
-}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isDirty", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isDirty"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "_isDirty", [mobx.observable], {
-  configurable: true,
-  enumerable: true,
-  writable: true,
-  initializer: function initializer() {
-    return false;
-  }
-}), _applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
+}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -1057,7 +1007,7 @@ function () {
   }
 })), _class);
 
-var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
+var _class$1, _descriptor$1, _descriptor2, _descriptor3, _temp$1;
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -1103,7 +1053,7 @@ function () {
       }
     };
 
-    _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
+    _initializerDefineProperty(this, "addModel", _descriptor2, this);
 
     this.addModels = function (type, data) {
       var records = [];
@@ -1802,7 +1752,7 @@ function () {
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2$1 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
+}), _descriptor2 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2232,7 +2182,6 @@ function (_Array) {
         setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
       }
 
-      record.isDirty = true;
       return relatedRecord;
     };
 
@@ -2270,7 +2219,6 @@ function (_Array) {
         setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
       }
 
-      record.isDirty = true;
       return relatedRecord;
     };
 
@@ -2288,7 +2236,6 @@ function (_Array) {
           return _this.add(object);
         });
       });
-      record.isDirty = true;
     };
 
     _this.property = _property;

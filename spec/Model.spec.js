@@ -463,13 +463,21 @@ describe('Model', () => {
   describe('.isDirty', () => {
     it('is initially false', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
-      expect(todo.isDirty).toBeFalsy()
+      expect(todo.isDirty).toBe(false)
     })
 
     it('is set to true if record changes', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       todo.title = 'Do the laundry'
       expect(todo.isDirty).toBe(true)
+    })
+
+    it('is set back to false if changed back to original value', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      todo.title = 'Do the laundry'
+      expect(todo.isDirty).toBe(true)
+      todo.title = 'Buy Milk'
+      expect(todo.isDirty).toBe(false)
     })
   })
 
