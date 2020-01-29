@@ -2319,4 +2319,4 @@ function (_Array) {
   return RelatedRecordsArray;
 }(_wrapNativeSuper(Array));
 
-export { Model, Store, attribute, relatedToMany, relatedToOne, validates };
+export { Model, ObjectPromiseProxy, Store, attribute, relatedToMany, relatedToOne, validates };

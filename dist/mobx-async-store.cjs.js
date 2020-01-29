@@ -2326,6 +2326,7 @@ function (_Array) {
 }(_wrapNativeSuper(Array));
 
 exports.Model = Model;
+exports.ObjectPromiseProxy = ObjectPromiseProxy;
 exports.Store = Store;
 exports.attribute = attribute;
 exports.relatedToMany = relatedToMany;
