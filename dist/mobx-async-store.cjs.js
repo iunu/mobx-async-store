@@ -4,7 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var _objectSpread = _interopDefault(require('@babel/runtime/helpers/objectSpread'));
+var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
 var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
 var _initializerDefineProperty = _interopDefault(require('@babel/runtime/helpers/initializerDefineProperty'));
@@ -21,7 +21,6 @@ var jqueryParam = _interopDefault(require('jquery-param'));
 var pluralize = _interopDefault(require('pluralize'));
 var dig = _interopDefault(require('lodash/get'));
 var flattenDeep = _interopDefault(require('lodash/flattenDeep'));
-var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
 var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
@@ -169,6 +168,10 @@ function walk(value, iteratee, prop, path) {
 
   return iteratee(value, path);
 }
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function ObjectPromiseProxy(promise, target) {
   target.isInFlight = true;
@@ -356,6 +359,10 @@ function () {
 var schema = new Schema();
 
 var _class, _descriptor, _descriptor2, _temp;
+
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function stringifyIds(object) {
   Object.keys(object).forEach(function (key) {
@@ -688,7 +695,7 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      mobx.extendObservable(this, _objectSpread({}, defaultAttributes, initialAttributes));
+      mobx.extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
     }
     /**
      * The current state of defined attributes and relationships of the instance
@@ -1051,6 +1058,10 @@ function () {
 })), _class);
 
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
+
+function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Defines the Artemis Data Store class.
  *
@@ -1300,14 +1311,14 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions;
 
-      var fetchOptions = _objectSpread({}, defaultFetchOptions, options);
+      var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
 
       var key = JSON.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
       return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread({}, defaultFetchOptions, options));
+        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
       });
     })
     /**
@@ -1539,7 +1550,7 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              mobx.set(record, 'relationships', _objectSpread({}, record.relationships, _defineProperty({}, key, relationships[key])));
+              mobx.set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
               mobx.set(_this4.data[type].records, id, record);
             }
           });
@@ -1605,7 +1616,7 @@ function () {
         throw new Error("Could not find a model for '".concat(type, "'"));
       }
 
-      return new ModelKlass(_objectSpread({
+      return new ModelKlass(_objectSpread$2({
         id: id,
         store: store,
         relationships: relationships
@@ -1683,7 +1694,7 @@ function () {
                         _dataObject$relations2 = dataObject.relationships,
                         relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
                     var ModelKlass = _this6.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread({
+                    var record = new ModelKlass(_objectSpread$2({
                       store: store,
                       relationships: relationships
                     }, attributes));
@@ -1953,6 +1964,7 @@ function validates(target, property) {
   }
 }
 
+var _Symbol$species;
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -2161,7 +2173,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  * @param {String} property the property on the record that references the array
  */
 
-var _Symbol$species = Symbol.species;
+_Symbol$species = Symbol.species;
 var RelatedRecordsArray =
 /*#__PURE__*/
 function (_Array) {
