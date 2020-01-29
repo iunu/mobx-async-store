@@ -3,7 +3,7 @@
     "description": "Asyc Data Store for mobx",
     "url": "https://github.com/artemis-ag/mobx-async-store",
     "options": {
-        "outdir": "./doc",
+        "outdir": "./docs",
         "paths": "./src"
     }
 }
