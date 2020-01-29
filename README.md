@@ -1,6 +1,6 @@
 # mobx-async-store
 
-Mobx-based store for async data fetching and state management.
+Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/
 
 # Caution
 
