@@ -1,9 +1,9 @@
 {
-    "name": "Artemis Data",
-    "description": "Data Management for Artemis",
-    "url": "https://portal.agrilyst.com/",
+    "name": "mobx-async-store",
+    "description": "Asyc Data Store for mobx",
+    "url": "https://github.com/artemis-ag/mobx-async-store",
     "options": {
-        "outdir": "./doc/yuidoc",
+        "outdir": "./doc",
         "paths": "./src"
     }
 }
