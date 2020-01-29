@@ -4,18 +4,18 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
 var _defineProperty = _interopDefault(require('@babel/runtime/helpers/defineProperty'));
 var _regeneratorRuntime = _interopDefault(require('@babel/runtime/regenerator'));
 var _asyncToGenerator = _interopDefault(require('@babel/runtime/helpers/asyncToGenerator'));
 var _initializerDefineProperty = _interopDefault(require('@babel/runtime/helpers/initializerDefineProperty'));
 var _classCallCheck = _interopDefault(require('@babel/runtime/helpers/classCallCheck'));
 var _createClass = _interopDefault(require('@babel/runtime/helpers/createClass'));
-require('@babel/runtime/helpers/initializerWarningHelper');
 var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/applyDecoratedDescriptor'));
+require('@babel/runtime/helpers/initializerWarningHelper');
 var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
 var mobx = require('mobx');
 var moment = _interopDefault(require('moment'));
-var _toConsumableArray = _interopDefault(require('@babel/runtime/helpers/toConsumableArray'));
 var uuidv1 = _interopDefault(require('uuid/v1'));
 var jqueryParam = _interopDefault(require('jquery-param'));
 var pluralize = _interopDefault(require('pluralize'));
@@ -357,7 +357,7 @@ function () {
 
 var schema = new Schema();
 
-var _class, _descriptor, _temp;
+var _class, _descriptor, _descriptor2, _temp;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -417,9 +417,11 @@ function () {
 
     _classCallCheck(this, Model);
 
+    _initializerDefineProperty(this, "_dirtyRelationships", _descriptor, this);
+
     this.isInFlight = false;
 
-    _initializerDefineProperty(this, "errors", _descriptor, this);
+    _initializerDefineProperty(this, "errors", _descriptor2, this);
 
     this.previousSnapshot = {};
 
@@ -440,29 +442,6 @@ function () {
    * Defaults to the underscored version of the class name
    * @property endpoint
    * @static
-   */
-
-  /**
-   * True if the instance has been modified from its persisted state
-   * ```
-   * kpi = store.add('kpis', { name: 'A good thing to measure' })
-   * kpi.isDirty
-   * => true
-   * kpi.name
-   * => "A good thing to measure"
-   * await kpi.save()
-   * kpi.isDirty
-   * => false
-   * kpi.name = "Another good thing to measure"
-   * kpi.isDirty
-   * => true
-   * await kpi.save()
-   * kpi.isDirty
-   * => false
-   * ```
-   * @property isDirty
-   * @type {Boolean}
-   * @default false
    */
 
 
@@ -717,6 +696,7 @@ function () {
      * @method setPreviousSnapshot
      */
     value: function setPreviousSnapshot() {
+      this._dirtyRelationships = new Set();
       this.previousSnapshot = this.snapshot;
     }
     /**
@@ -846,6 +826,39 @@ function () {
     }
   }, {
     key: "isDirty",
+
+    /**
+     * True if the instance has been modified from its persisted state
+     *
+     * NOTE that isDirty does _NOT_ track changes to the related objects
+     * but it _does_ track changes to the relationships themselves.
+     *
+     * For example, adding or removing a related object will mark this record as dirty,
+     * but changing a related object's properties will not mark this record as dirty.
+     *
+     * The caller is reponsible for asking related objects about their
+     * own dirty state.
+     *
+     * ```
+     * kpi = store.add('kpis', { name: 'A good thing to measure' })
+     * kpi.isDirty
+     * => true
+     * kpi.name
+     * => "A good thing to measure"
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * kpi.name = "Another good thing to measure"
+     * kpi.isDirty
+     * => true
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * ```
+     * @property isDirty
+     * @type {Boolean}
+     * @default false
+     */
     get: function get() {
       return this.dirtyAttributes.length > 0;
     }
@@ -890,12 +903,16 @@ function () {
     get: function get() {
       var _this6 = this;
 
-      return flattenDeep(walk(this.previousSnapshot.attributes, function (prevValue, path) {
+      var relationships = Array.from(this._dirtyRelationships).map(function (property) {
+        return "relationships.".concat(property);
+      });
+      var attributes = flattenDeep(walk(this.previousSnapshot.attributes, function (prevValue, path) {
         var currValue = dig(_this6.snapshot.attributes, path);
         return prevValue === currValue ? undefined : path;
       })).filter(function (x) {
         return x;
       });
+      return [].concat(_toConsumableArray(relationships), _toConsumableArray(attributes));
     }
     /**
      * shortcut to get the static
@@ -998,7 +1015,14 @@ function () {
   }]);
 
   return Model;
-}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
+}(), _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "_dirtyRelationships", [mobx.observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return new Set();
+  }
+}), _applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -1007,7 +1031,7 @@ function () {
   }
 })), _class);
 
-var _class$1, _descriptor$1, _descriptor2, _descriptor3, _temp$1;
+var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -1053,7 +1077,7 @@ function () {
       }
     };
 
-    _initializerDefineProperty(this, "addModel", _descriptor2, this);
+    _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
 
     this.addModels = function (type, data) {
       var records = [];
@@ -1752,7 +1776,7 @@ function () {
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
+}), _descriptor2$1 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2176,7 +2200,9 @@ function (_Array) {
           type: type
         });
 
-        _this.push(relatedRecord); // setting the inverse - hack this will only work with singularized relationships.
+        _this.push(relatedRecord);
+
+        record._dirtyRelationships.add(property); // setting the inverse - hack this will only work with singularized relationships.
 
 
         setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1));
@@ -2213,7 +2239,9 @@ function (_Array) {
 
         if (!Object.keys(record.relationships).length) {
           delete record.relationships;
-        } // hack this will only work with singularized relationships.
+        }
+
+        record._dirtyRelationships.add(property); // hack this will only work with singularized relationships.
 
 
         setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1));
@@ -2235,6 +2263,8 @@ function (_Array) {
         array.forEach(function (object) {
           return _this.add(object);
         });
+
+        record._dirtyRelationships.add(property);
       });
     };
 
