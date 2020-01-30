@@ -411,6 +411,59 @@ describe('Model', () => {
       expect(todo.dirtyAttributes).toHaveLength(1)
       expect(todo.dirtyAttributes[0]).toEqual('options.variety')
     })
+
+    it('tracks removed to relationships', async () => {
+      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      todo.notes.add(note)
+      todo.setPreviousSnapshot()
+      expect(todo.dirtyAttributes).toEqual([])
+      todo.notes.remove(note)
+      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+    })
+
+    it('tracks added relationship', async () => {
+      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      expect(todo.dirtyAttributes).toEqual([])
+      todo.notes.add(note)
+      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+    })
+
+    it('does NOT revert to empty after adding and then removing a relationship', async () => {
+      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      expect(todo.dirtyAttributes).toEqual([])
+      todo.notes.add(note)
+      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+      todo.notes.remove(note)
+      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+    })
+
+    it('does NOT track changes to the related objects themselves', async () => {
+      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      todo.notes.add(note)
+      todo.setPreviousSnapshot()
+      note.description = 'something different'
+      expect(todo.dirtyAttributes).toEqual([])
+    })
   })
 
   describe('.jsonapi', () => {
@@ -463,12 +516,32 @@ describe('Model', () => {
   describe('.isDirty', () => {
     it('is initially false', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
-      expect(todo.isDirty).toBeFalsy()
+      expect(todo.isDirty).toBe(false)
     })
 
     it('is set to true if record changes', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       todo.title = 'Do the laundry'
+      expect(todo.isDirty).toBe(true)
+    })
+
+    it('is set back to false if changed back to original value', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      todo.title = 'Do the laundry'
+      expect(todo.isDirty).toBe(true)
+      todo.title = 'Buy Milk'
+      expect(todo.isDirty).toBe(false)
+    })
+
+    it('is set to true if a relationship is added', async () => {
+      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      expect(todo.isDirty).toBe(false)
+      todo.notes.add(note)
       expect(todo.isDirty).toBe(true)
     })
   })

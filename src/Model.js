@@ -1,5 +1,4 @@
 import {
-  reaction,
   computed,
   extendObservable,
   set,
@@ -178,7 +177,6 @@ class Model {
   constructor (initialAttributes = {}) {
     this._makeObservable(initialAttributes)
     this.setPreviousSnapshot()
-    this._trackState()
   }
 
   /**
@@ -196,8 +194,20 @@ class Model {
    * @static
    */
 
+   @observable _dirtyRelationships = new Set()
+
   /**
    * True if the instance has been modified from its persisted state
+   *
+   * NOTE that isDirty does _NOT_ track changes to the related objects
+   * but it _does_ track changes to the relationships themselves.
+   *
+   * For example, adding or removing a related object will mark this record as dirty,
+   * but changing a related object's properties will not mark this record as dirty.
+   *
+   * The caller is reponsible for asking related objects about their
+   * own dirty state.
+   *
    * ```
    * kpi = store.add('kpis', { name: 'A good thing to measure' })
    * kpi.isDirty
@@ -218,24 +228,9 @@ class Model {
    * @type {Boolean}
    * @default false
    */
-  @computed get isDirty () {
-    const { isNew, _isDirty } = this
-    return _isDirty || isNew
+  get isDirty () {
+    return this.dirtyAttributes.length > 0
   }
-  set isDirty (value) {
-    this._isDirty = value
-  }
-
-  /**
-   * Private method. True if the model has been programatically changed,
-   * as opposed to just being new.
-   * @property _isDirty
-   * @type {Boolean}
-   * @default false
-   * @private
-   */
-
-  @observable _isDirty = false
 
   /**
    * True if the model has not been sent to the store
@@ -485,6 +480,7 @@ class Model {
    * @method setPreviousSnapshot
    */
   setPreviousSnapshot () {
+    this._dirtyRelationships = new Set()
     this.previousSnapshot = this.snapshot
   }
 
@@ -504,33 +500,12 @@ class Model {
    */
 
   get dirtyAttributes () {
-    return flattenDeep(walk(this.previousSnapshot.attributes, (prevValue, path) => {
+    const relationships = Array.from(this._dirtyRelationships).map((property) => `relationships.${property}`)
+    const attributes = flattenDeep(walk(this.previousSnapshot.attributes, (prevValue, path) => {
       const currValue = dig(this.snapshot.attributes, path)
       return prevValue === currValue ? undefined : path
     })).filter((x) => x)
-  }
-
-  /**
-   * Uses mobx.autorun to track changes to attributes
-   *
-   * @method _trackState
-   */
-  _trackState () {
-    reaction(
-      () => JSON.stringify(this.attributes),
-      objectString => {
-        // console.log(objectString)
-        this.isDirty = true
-      }
-    )
-
-    reaction(
-      () => JSON.stringify(this.relationships),
-      relString => {
-        // console.log(relString)
-        this.isDirty = true
-      }
-    )
+    return [...relationships, ...attributes]
   }
 
   /**

@@ -263,11 +263,10 @@ export class RelatedRecordsArray extends Array {
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
       this.push(relatedRecord)
+      record._dirtyRelationships.add(property)
       // setting the inverse - hack this will only work with singularized relationships.
       setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1))
     }
-
-    record.isDirty = true
 
     return relatedRecord
   }
@@ -298,11 +297,11 @@ export class RelatedRecordsArray extends Array {
         delete record.relationships
       }
 
+      record._dirtyRelationships.add(property)
+
       // hack this will only work with singularized relationships.
       setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1))
     }
-
-    record.isDirty = true
 
     return relatedRecord
   }
@@ -314,8 +313,7 @@ export class RelatedRecordsArray extends Array {
     transaction(() => {
       relationships[property] = { data: [] }
       array.forEach(object => this.add(object))
+      record._dirtyRelationships.add(property)
     })
-
-    record.isDirty = true
   }
 }
