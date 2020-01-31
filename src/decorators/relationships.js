@@ -284,10 +284,10 @@ export class RelatedRecordsArray extends Array {
 
     if (relationships && relationships[property] && relatedRecord) {
       const referenceIndexToRemove = relationships[property].data.findIndex((model) => model.id === id && model.type === type)
-      relationships[property].data.splice(referenceIndexToRemove, 1)
+      if (referenceIndexToRemove >= 0) relationships[property].data.splice(referenceIndexToRemove, 1)
 
       const recordIndexToRemove = this.findIndex((model) => model.id === id && model.type === type)
-      if (recordIndexToRemove > 0) this.splice(recordIndexToRemove, 1)
+      if (recordIndexToRemove >= 0) this.splice(recordIndexToRemove, 1)
 
       if (!relationships[property].data.length) {
         delete relationships[property]
