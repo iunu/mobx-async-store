@@ -239,7 +239,9 @@ class Model {
    */
   @computed get isNew () {
     const { id } = this
-    return !!String(id).match(/tmp/)
+    if (!id) return true
+    if (String(id).indexOf('tmp') === -1) return false
+    return true
   }
 
   /**
