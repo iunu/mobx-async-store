@@ -583,7 +583,7 @@ class Store {
       throw new Error(`Could not find a model for '${type}'`)
     }
 
-    return new ModelKlass({ id, store, relationships, ...attributes })
+    return new ModelKlass({ store, relationships, ...attributes, id: id.toString() })
   }
 
   /**

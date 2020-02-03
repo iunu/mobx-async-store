@@ -1600,10 +1600,11 @@ function () {
       }
 
       return new ModelKlass(_objectSpread$2({
-        id: id,
         store: store,
         relationships: relationships
-      }, attributes));
+      }, attributes, {
+        id: id.toString()
+      }));
     }
     /**
      * Builds fetch url based

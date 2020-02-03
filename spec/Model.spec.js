@@ -407,7 +407,7 @@ describe('Model', () => {
 
     expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
     expect(todo.notes.map((x) => x.id).constructor.name).toEqual('Array')
-    expect(todo.notes.map((x) => x.id)).toEqual([10])
+    expect(todo.notes.map((x) => x.id)).toEqual(['10'])
   })
 
   describe('.snapshot', () => {
