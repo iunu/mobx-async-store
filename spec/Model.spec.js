@@ -290,6 +290,33 @@ describe('Model', () => {
     })
   })
 
+  describe('isNew', () => {
+    it('is true if id contains "tmp"', () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.isNew).toBe(true)
+    })
+
+    it('is false if id does not contain "tmp"', () => {
+      const todo = new Organization({ id: 7, title: 'Buy Milk' })
+      expect(todo.isNew).toBe(false)
+    })
+
+    it('is false when added to store with an id', () => {
+      const note = store.add('notes', { id: 10, description: 'heyo' })
+      expect(note.isNew).toBe(false)
+    })
+
+    it('is true when added to store without an id', () => {
+      const note = store.add('notes', { description: 'heyo' })
+      expect(note.isNew).toBe(true)
+    })
+
+    it('is true when added to store with an id which includes "tmp"', () => {
+      const note = store.add('notes', { id: 'tmp-0', description: 'heyo' })
+      expect(note.isNew).toBe(true)
+    })
+  })
+
   it('relatedToMany models can be added', () => {
     const note = store.add('notes', {
       id: 10,
