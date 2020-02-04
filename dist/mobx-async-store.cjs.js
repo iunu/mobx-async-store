@@ -1566,7 +1566,7 @@ function () {
 
       var records = [];
       mobx.transaction(function () {
-        records = data.forEach(function (dataObject) {
+        records = data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
