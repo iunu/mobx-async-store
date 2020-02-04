@@ -633,6 +633,47 @@ describe('Model', () => {
     })
   })
 
+  describe('.clone', () => {
+    let original
+    let clone
+
+    beforeEach(() => {
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+      original = store.add('organizations', {
+        id: 11,
+        title: 'Buy Milk',
+        options: { color: 'green' }
+      })
+      original.notes.add(note)
+      clone = original.clone()
+    })
+
+    it('deeply copies the model instance ', () => {
+      expect(clone.id).toEqual(original.id)
+      expect(clone.title).toEqual(original.title)
+      expect(clone.options.color).toEqual(original.options.color)
+    })
+
+    it('does not mutate the original object when mutating the clone', () => {
+      clone.title = 'Buy Cheese'
+      expect(clone.title).not.toEqual(original.title)
+      clone.options.color = 'blue'
+      expect(clone.options.color).not.toEqual(original.options.color)
+    })
+
+    it('cloned objects still refer to original relationships', () => {
+      expect(original.notes[0].id).toEqual(clone.notes[0].id)
+    })
+
+    it('relationship targets are not cloned, they are referenced', () => {
+      original.notes[0].description = 'Update!'
+      expect(original.notes[0].description).toEqual(clone.notes[0].description)
+    })
+  })
+
   describe('.save', () => {
     xit('handles in flight behavior', (done) => {
       // expect.assertions(3)
