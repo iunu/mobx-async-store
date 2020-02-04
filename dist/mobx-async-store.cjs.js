@@ -1093,13 +1093,11 @@ function () {
     _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
 
     this.addModels = function (type, data) {
-      var records = [];
-      mobx.transaction(function () {
-        records = data.map(function (obj) {
+      return mobx.transaction(function () {
+        return data.map(function (obj) {
           return _this.addModel(type, obj);
         });
       });
-      return records;
     };
 
     _initializerDefineProperty(this, "remove", _descriptor3, this);
@@ -1564,18 +1562,16 @@ function () {
     value: function createModelsFromData(data) {
       var _this5 = this;
 
-      var records = [];
-      mobx.transaction(function () {
-        records = data.forEach(function (dataObject) {
+      return mobx.transaction(function () {
+        return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
           if (_this5.getType(dataObject.type)) {
-            _this5.createOrUpdateModel(dataObject);
+            return _this5.createOrUpdateModel(dataObject);
           }
         });
       });
-      return records;
     }
     /**
      * Helper to create a new model
@@ -1641,7 +1637,7 @@ function () {
       _regeneratorRuntime.mark(function _callee(type, queryParams) {
         var _this6 = this;
 
-        var store, url, response, json, records;
+        var store, url, response, json;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -1657,7 +1653,7 @@ function () {
                 response = _context.sent;
 
                 if (!(response.status === 200)) {
-                  _context.next = 16;
+                  _context.next = 14;
                   break;
                 }
 
@@ -1672,9 +1668,8 @@ function () {
                   this.createModelsFromData(json.included);
                 }
 
-                records = [];
-                mobx.transaction(function () {
-                  records = json.data.map(function (dataObject) {
+                return _context.abrupt("return", mobx.transaction(function () {
+                  return json.data.map(function (dataObject) {
                     var id = dataObject.id,
                         _dataObject$attribute2 = dataObject.attributes,
                         attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
@@ -1691,13 +1686,12 @@ function () {
                     _this6.data[type].records[id] = record;
                     return record;
                   });
-                });
-                return _context.abrupt("return", records);
+                }));
 
-              case 16:
+              case 14:
                 return _context.abrupt("return", Promise.reject(response.status));
 
-              case 17:
+              case 15:
               case "end":
                 return _context.stop();
             }

@@ -386,4 +386,32 @@ describe('Store', () => {
       })
     })
   })
+
+  describe('createModelsFromData', () => {
+    it('creates a list of model objs from a list of data objs', () => {
+      const dataObjs = [
+        { id: 1, type: 'todos', attributes: { title: 'hello!' }, relationships: {} },
+        { id: 2, type: 'todos', attributes: { title: 'see ya!' }, relationships: {} }
+      ]
+      const todos = store.createModelsFromData(dataObjs)
+      expect(todos).toHaveLength(2)
+      expect(todos[0].type).toEqual('todos')
+      expect(todos[1].type).toEqual('todos')
+      expect(todos[0].id).toEqual(1)
+      expect(todos[1].id).toEqual(2)
+      expect(todos[0].title).toEqual('hello!')
+      expect(todos[1].title).toEqual('see ya!')
+    })
+
+    it('skips objs with an unknown type', () => {
+      const dataObjs = [
+        { id: 1, type: 'todos', attributes: { title: 'hello!' }, relationships: {} },
+        { id: 2, type: 'unknown', attributes: { title: 'see ya!' }, relationships: {} }
+      ]
+      const todos = store.createModelsFromData(dataObjs)
+      expect(todos).toHaveLength(2)
+      expect(todos[0].type).toEqual('todos')
+      expect(typeof todos[1]).toBe('undefined')
+    })
+  })
 })
