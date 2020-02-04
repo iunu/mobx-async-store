@@ -402,5 +402,16 @@ describe('Store', () => {
       expect(todos[0].title).toEqual('hello!')
       expect(todos[1].title).toEqual('see ya!')
     })
+
+    it('skips objs with an unknown type', () => {
+      const dataObjs = [
+        { id: 1, type: 'todos', attributes: { title: 'hello!' }, relationships: {} },
+        { id: 2, type: 'unknown', attributes: { title: 'see ya!' }, relationships: {} }
+      ]
+      const todos = store.createModelsFromData(dataObjs)
+      expect(todos).toHaveLength(2)
+      expect(todos[0].type).toEqual('todos')
+      expect(typeof todos[1]).toBe('undefined')
+    })
   })
 })
