@@ -19,6 +19,7 @@ var moment = _interopDefault(require('moment'));
 var uuidv1 = _interopDefault(require('uuid/v1'));
 var jqueryParam = _interopDefault(require('jquery-param'));
 var pluralize = _interopDefault(require('pluralize'));
+var cloneDeep = _interopDefault(require('lodash/cloneDeep'));
 var dig = _interopDefault(require('lodash/get'));
 var flattenDeep = _interopDefault(require('lodash/flattenDeep'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
@@ -825,6 +826,16 @@ function () {
       });
     }
   }, {
+    key: "clone",
+    value: function clone() {
+      var attributes = cloneDeep(this.snapshot.attributes);
+      var relationships = this.relationships;
+      return this.store.createModel(this.type, this.id, {
+        attributes: attributes,
+        relationships: relationships
+      });
+    }
+  }, {
     key: "isDirty",
 
     /**
@@ -872,7 +883,9 @@ function () {
     key: "isNew",
     get: function get() {
       var id = this.id;
-      return !!String(id).match(/tmp/);
+      if (!id) return true;
+      if (String(id).indexOf('tmp') === -1) return false;
+      return true;
     }
     /**
      * True if the instance is coming from / going to the server

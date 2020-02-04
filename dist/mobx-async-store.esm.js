@@ -13,6 +13,7 @@ import moment from 'moment';
 import uuidv1 from 'uuid/v1';
 import jqueryParam from 'jquery-param';
 import pluralize from 'pluralize';
+import cloneDeep from 'lodash/cloneDeep';
 import dig from 'lodash/get';
 import flattenDeep from 'lodash/flattenDeep';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
@@ -819,6 +820,16 @@ function () {
       });
     }
   }, {
+    key: "clone",
+    value: function clone() {
+      var attributes = cloneDeep(this.snapshot.attributes);
+      var relationships = this.relationships;
+      return this.store.createModel(this.type, this.id, {
+        attributes: attributes,
+        relationships: relationships
+      });
+    }
+  }, {
     key: "isDirty",
 
     /**
@@ -866,7 +877,9 @@ function () {
     key: "isNew",
     get: function get() {
       var id = this.id;
-      return !!String(id).match(/tmp/);
+      if (!id) return true;
+      if (String(id).indexOf('tmp') === -1) return false;
+      return true;
     }
     /**
      * True if the instance is coming from / going to the server
