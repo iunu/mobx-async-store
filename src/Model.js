@@ -13,6 +13,7 @@ import { walk } from './utils'
 
 import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
+import cloneDeep from 'lodash/cloneDeep'
 import dig from 'lodash/get'
 import flattenDeep from 'lodash/flattenDeep'
 
@@ -686,6 +687,12 @@ class Model {
         this[key] = attributes[key]
       })
     })
+  }
+
+  clone () {
+    const attributes = cloneDeep(this.snapshot.attributes)
+    const relationships = this.relationships
+    return this.store.createModel(this.type, this.id, { attributes, relationships })
   }
 }
 
