@@ -75,13 +75,7 @@ class Store {
    * @return {Array} array of ArtemisData records
    */
   addModels = (type, data) => {
-    let records = []
-
-    transaction(() => {
-      records = data.map(obj => this.addModel(type, obj))
-    })
-
-    return records
+    return transaction(() => data.map((obj) => this.addModel(type, obj)))
   }
 
   /**
@@ -561,20 +555,14 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
-    let records = []
-
-    transaction(() => {
-      records = data.map(dataObject => {
-        // Only build objects for which we have a type defined.
-        // And ignore silently anything else included in the JSON response.
-        // TODO: Put some console message in development mode
-        if (this.getType(dataObject.type)) {
-          return this.createOrUpdateModel(dataObject)
-        }
-      })
-    })
-
-    return records
+    return transaction(() => data.map(dataObject => {
+      // Only build objects for which we have a type defined.
+      // And ignore silently anything else included in the JSON response.
+      // TODO: Put some console message in development mode
+      if (this.getType(dataObject.type)) {
+        return this.createOrUpdateModel(dataObject)
+      }
+    }))
   }
 
   /**
@@ -631,22 +619,16 @@ class Store {
         this.createModelsFromData(json.included)
       }
 
-      let records = []
+      return transaction(() => json.data.map((dataObject) => {
+        const { id, attributes = {}, relationships = {} } = dataObject
+        const ModelKlass = this.modelTypeIndex[type]
+        const record = new ModelKlass({ store, relationships, ...attributes })
 
-      transaction(() => {
-        records = json.data.map(dataObject => {
-          const { id, attributes = {}, relationships = {} } = dataObject
-          const ModelKlass = this.modelTypeIndex[type]
-          const record = new ModelKlass({ store, relationships, ...attributes })
+        this.data[type].cache[url].push(id)
+        this.data[type].records[id] = record
 
-          this.data[type].cache[url].push(id)
-          this.data[type].records[id] = record
-
-          return record
-        })
-      })
-
-      return records
+        return record
+      }))
     } else {
       return Promise.reject(response.status)
     }
