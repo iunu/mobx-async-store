@@ -354,11 +354,9 @@ describe('Model', () => {
 
   it('relatedToMany models can be removed', () => {
     const note1 = store.add('notes', {
-      id: 10,
       description: 'Example description'
     })
     const note2 = store.add('notes', {
-      id: 11,
       description: 'Another note'
     })
     const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
@@ -374,14 +372,12 @@ describe('Model', () => {
 
   it('relatedToMany models remove reference to record', () => {
     const note1 = store.add('notes', {
-      id: 10,
       description: 'Example description'
     })
     const note2 = store.add('notes', {
-      id: 11,
       description: 'Another note'
     })
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', { title: 'Buy Milk' })
 
     todo.notes.add(note1)
     todo.notes.add(note2)
