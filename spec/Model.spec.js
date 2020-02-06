@@ -353,18 +353,38 @@ describe('Model', () => {
   })
 
   it('relatedToMany models can be removed', () => {
-    const note = store.add('notes', {
-      id: 10,
+    const note1 = store.add('notes', {
       description: 'Example description'
+    })
+    const note2 = store.add('notes', {
+      description: 'Another note'
     })
     const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
 
-    todo.notes.add(note)
+    const notes = todo.notes
+    notes.add(note1)
+    notes.add(note2)
 
-    expect(todo.notes).toContain(note)
+    notes.remove(note1)
+    expect(notes).not.toContain(note1)
+    expect(notes).toContain(note2)
+  })
 
-    todo.notes.remove(note)
-    expect(todo.notes).not.toContain(note)
+  it('relatedToMany models remove reference to record', () => {
+    const note1 = store.add('notes', {
+      description: 'Example description'
+    })
+    const note2 = store.add('notes', {
+      description: 'Another note'
+    })
+    const todo = store.add('organizations', { title: 'Buy Milk' })
+
+    todo.notes.add(note1)
+    todo.notes.add(note2)
+    todo.notes.remove(note1)
+
+    expect(todo.notes).not.toContain(note1)
+    expect(todo.notes).toContain(note2)
   })
 
   it('relatedToMany models adds inverse relationships', () => {

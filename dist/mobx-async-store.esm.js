@@ -2224,15 +2224,15 @@ function (_Array) {
 
       if (relationships && relationships[property] && relatedRecord) {
         var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
-          return model.id === id && model.type === type;
+          return model.id.toString() === id.toString() && model.type === type;
         });
-        relationships[property].data.splice(referenceIndexToRemove, 1);
+        if (referenceIndexToRemove >= 0) relationships[property].data.splice(referenceIndexToRemove, 1);
 
         var recordIndexToRemove = _this.findIndex(function (model) {
-          return model.id === id && model.type === type;
+          return model.id.toString() === id.toString() && model.type === type;
         });
 
-        if (recordIndexToRemove > 0) _this.splice(recordIndexToRemove, 1);
+        if (recordIndexToRemove >= 0) _this.splice(recordIndexToRemove, 1);
 
         if (!relationships[property].data.length) {
           delete relationships[property];
