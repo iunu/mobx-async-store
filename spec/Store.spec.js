@@ -107,10 +107,10 @@ describe('Store', () => {
   it('sets model type index', () => {
     expect.assertions(1)
     expect(store.modelTypeIndex).toEqual({
-      'todos': Todo,
-      'notes': Note,
-      'categories': Category,
-      'tags': Tag
+      todos: Todo,
+      notes: Note,
+      categories: Category,
+      tags: Tag
     })
   })
 
