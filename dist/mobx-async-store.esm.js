@@ -2073,13 +2073,13 @@ function getRelatedRecord(record, property) {
 
   if (!relationships) return; // Use property name unless model type is provided
 
-  var relationType = modelType || property;
+  var relationType = modelType ? singularizeType(modelType) : property;
   var reference = relationships[relationType]; // Short circuit if matching reference is not found
 
   if (!reference || !reference.data) return;
-  var _relationships$relati = relationships[relationType].data,
-      id = _relationships$relati.id,
-      type = _relationships$relati.type;
+  var _reference$data = reference.data,
+      id = _reference$data.id,
+      type = _reference$data.type;
   var recordType = modelType || type;
   return record.store.getRecord(recordType, id);
 }
