@@ -1,12 +1,29 @@
 /* global fetch */
 import { isObservable, toJS } from 'mobx'
-import { Store, Model, attribute } from '../src/main'
+import { Store, Model, attribute, relatedToOne, relatedToMany } from '../src/main'
+
+class Tag extends Model {
+  static type = 'tags'
+  static endpoint = 'tags'
+
+  @attribute(String) label = ''
+  @relatedToOne todo
+}
+
+class Category extends Model {
+  static type = 'categories'
+  static endpoint = 'categories'
+
+  @attribute(String) name = ''
+  @relatedToOne todo
+}
 
 class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
   @attribute(String) text = ''
+  @relatedToOne todo
 }
 
 class Todo extends Model {
@@ -14,12 +31,18 @@ class Todo extends Model {
   static endpoint = 'todos'
 
   @attribute(String) title = ''
+  @relatedToMany(Note) user_notes
+  @relatedToOne(Note) instructions
+  @relatedToOne category
+  @relatedToMany tags
 }
 
 class AppStore extends Store {
   static types = [
     Note,
-    Todo
+    Todo,
+    Tag,
+    Category
   ]
 }
 
@@ -84,8 +107,10 @@ describe('Store', () => {
   it('sets model type index', () => {
     expect.assertions(1)
     expect(store.modelTypeIndex).toEqual({
-      'todos': Todo,
-      'notes': Note
+      todos: Todo,
+      notes: Note,
+      categories: Category,
+      tags: Tag
     })
   })
 
@@ -93,7 +118,9 @@ describe('Store', () => {
     expect.assertions(1)
     expect(toJS(store.data)).toEqual({
       todos: { cache: {}, records: {} },
-      notes: { cache: {}, records: {} }
+      notes: { cache: {}, records: {} },
+      categories: { cache: {}, records: {} },
+      tags: { cache: {}, records: {} }
     })
   })
 
@@ -387,6 +414,70 @@ describe('Store', () => {
     })
   })
 
+  describe('createModel', () => {
+    it('creates a model obj with attributes', () => {
+      const todoData = {
+        attributes: { title: 'hello!' }
+      }
+      const todo = store.createModel('todos', 1, todoData)
+      expect(todo.id).toEqual(1)
+      expect(todo.title).toEqual(todoData.attributes.title)
+    })
+
+    it('creates a model obj with relatedToOne property', () => {
+      const category = store.add('categories', { id: 5, name: 'Cat5' })
+      const todoData = {
+        attributes: { title: 'hello!' },
+        relationships: {
+          category: { data: { id: '5', type: 'categories' } }
+        }
+      }
+      const todo = store.createModel('todos', 1, todoData)
+      expect(todo.category.id).toEqual(category.id)
+      expect(todo.category.name).toEqual(category.name)
+    })
+
+    it('creates a model with relatedToMany property', () => {
+      const tag = store.add('tags', { id: 3, label: 'Tag #3' })
+      const todoData = {
+        attributes: { title: 'hello!' },
+        relationships: {
+          tags: { data: [{ id: '3', type: 'tags' }] }
+        }
+      }
+      const todo = store.createModel('todos', 1, todoData)
+      expect(todo.id).toEqual(1)
+      expect(todo.tags[0].id).toEqual(tag.id)
+      expect(todo.tags[0].label).toEqual(tag.label)
+    })
+
+    it('creates a model with aliased relatedToOne property', () => {
+      const note = store.add('notes', { id: 17, text: 'Example text' })
+      const todoData = {
+        attributes: { title: 'hello!' },
+        relationships: {
+          note: { data: { id: '17', type: 'notes' } }
+        }
+      }
+      const todo = store.createModel('todos', 1, todoData)
+      expect(todo.instructions.id).toEqual(note.id)
+      expect(todo.instructions.text).toEqual(note.text)
+    })
+
+    it('creates a model with aliased relatedToMany property', () => {
+      const note = store.add('notes', { id: 3, text: 'hi' })
+      const todoData = {
+        attributes: { title: 'hello!' },
+        relationships: {
+          notes: { data: [{ id: '3', type: 'notes' }] }
+        }
+      }
+      const todo = store.createModel('todos', 1, todoData)
+      expect(todo.user_notes[0].id).toEqual(note.id)
+      expect(todo.user_notes[0].text).toEqual(note.text)
+    })
+  })
+
   describe('createModelsFromData', () => {
     it('creates a list of model objs from a list of data objs', () => {
       const dataObjs = [
@@ -397,10 +488,10 @@ describe('Store', () => {
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(todos[1].type).toEqual('todos')
-      expect(todos[0].id).toEqual(1)
-      expect(todos[1].id).toEqual(2)
-      expect(todos[0].title).toEqual('hello!')
-      expect(todos[1].title).toEqual('see ya!')
+      expect(todos[0].id).toEqual(dataObjs[0].id)
+      expect(todos[1].id).toEqual(dataObjs[1].id)
+      expect(todos[0].title).toEqual(dataObjs[0].attributes.title)
+      expect(todos[1].title).toEqual(dataObjs[1].attributes.title)
     })
 
     it('skips objs with an unknown type', () => {
