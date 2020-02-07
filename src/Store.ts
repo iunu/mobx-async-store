@@ -20,7 +20,9 @@ class Store {
   @observable data = {}
 
   genericErrorMessage = 'Something went wrong.'
-
+  baseUrl:string
+  defaultFetchOptions:any
+  modelTypeIndex: any[]
   /**
    * Initializer for Store class
    *
@@ -129,7 +131,7 @@ class Store {
    * @param id
    * @param {Object} options
    */
-  findOne = (type, id, options = {}) => {
+  findOne = (type:any, id:any, options:any = {}) => {
     const { fromServer, queryParams } = options
 
     if (fromServer === true) {
@@ -215,7 +217,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  findAll = (type, options = {}) => {
+  findAll = (type:any, options:any = {}) => {
     const { fromServer, queryParams } = options
 
     if (fromServer === true) {
@@ -288,7 +290,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
-  initializeNetworkConfiguration (options = {}) {
+  initializeNetworkConfiguration (options:any = {}) {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
   }
@@ -301,6 +303,7 @@ class Store {
    */
   initializeModelTypeIndex () {
     const { types } = this.constructor
+    console.log('types', types);
     this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
       modelTypeIndex[modelKlass.type] = modelKlass
       return modelTypeIndex
@@ -377,7 +380,7 @@ class Store {
    * @param {Number} id
    * @return {Object} record
    */
-  getRecord (type, id) {
+  getRecord (type, id, queryParams?) {
     if (!this.getType(type)) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
@@ -418,7 +421,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getCachedRecord (type, id, queryParams) {
+  getCachedRecord (type, id?, queryParams?) {
     const cachedRecords = this.getCachedRecords(type, queryParams, id)
 
     return cachedRecords && cachedRecords[0]
@@ -432,7 +435,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getCachedRecords (type, queryParams, id) {
+  getCachedRecords (type, queryParams?, id?) {
     // Get the url the request would use
     const url = this.fetchUrl(type, queryParams, id)
     // Get the matching ids from the response
@@ -593,7 +596,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  fetchUrl (type, queryParams, id, options) {
+  fetchUrl (type, queryParams, id?, options?) {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
