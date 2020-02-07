@@ -421,11 +421,11 @@ describe('Store', () => {
       }
       const todo = store.createModel('todos', 1, todoData)
       expect(todo.id).toEqual(1)
-      expect(todo.title).toEqual('hello!')
+      expect(todo.title).toEqual(todoData.attributes.title)
     })
 
     it('creates a model obj with relatedToOne property', () => {
-      store.add('categories', { id: 5, name: 'Cat5' })
+      const category = store.add('categories', { id: 5, name: 'Cat5' })
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
@@ -433,12 +433,12 @@ describe('Store', () => {
         }
       }
       const todo = store.createModel('todos', 1, todoData)
-      expect(todo.category.id).toEqual(5)
-      expect(todo.category.name).toEqual('Cat5')
+      expect(todo.category.id).toEqual(category.id)
+      expect(todo.category.name).toEqual(category.name)
     })
 
     it('creates a model with relatedToMany property', () => {
-      store.add('tags', { id: 3, label: 'Tag #3' })
+      const tag = store.add('tags', { id: 3, label: 'Tag #3' })
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
@@ -447,12 +447,12 @@ describe('Store', () => {
       }
       const todo = store.createModel('todos', 1, todoData)
       expect(todo.id).toEqual(1)
-      expect(todo.tags[0].id).toEqual(3)
-      expect(todo.tags[0].label).toEqual('Tag #3')
+      expect(todo.tags[0].id).toEqual(tag.id)
+      expect(todo.tags[0].label).toEqual(tag.label)
     })
 
     it('creates a model with aliased relatedToOne property', () => {
-      store.add('notes', { id: 17, text: 'Example text' })
+      const note = store.add('notes', { id: 17, text: 'Example text' })
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
@@ -460,12 +460,12 @@ describe('Store', () => {
         }
       }
       const todo = store.createModel('todos', 1, todoData)
-      expect(todo.instructions.id).toEqual(17)
-      expect(todo.instructions.text).toEqual('Example text')
+      expect(todo.instructions.id).toEqual(note.id)
+      expect(todo.instructions.text).toEqual(note.text)
     })
 
     it('creates a model with aliased relatedToMany property', () => {
-      store.add('notes', { id: 3, text: 'hi' })
+      const note = store.add('notes', { id: 3, text: 'hi' })
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
@@ -473,8 +473,8 @@ describe('Store', () => {
         }
       }
       const todo = store.createModel('todos', 1, todoData)
-      expect(todo.user_notes[0].id).toEqual(3)
-      expect(todo.user_notes[0].text).toEqual('hi')
+      expect(todo.user_notes[0].id).toEqual(note.id)
+      expect(todo.user_notes[0].text).toEqual(note.text)
     })
   })
 
@@ -488,10 +488,10 @@ describe('Store', () => {
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(todos[1].type).toEqual('todos')
-      expect(todos[0].id).toEqual(1)
-      expect(todos[1].id).toEqual(2)
-      expect(todos[0].title).toEqual('hello!')
-      expect(todos[1].title).toEqual('see ya!')
+      expect(todos[0].id).toEqual(dataObjs[0].id)
+      expect(todos[1].id).toEqual(dataObjs[1].id)
+      expect(todos[0].title).toEqual(dataObjs[0].attributes.title)
+      expect(todos[1].title).toEqual(dataObjs[1].attributes.title)
     })
 
     it('skips objs with an unknown type', () => {
