@@ -5,6 +5,7 @@
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
+    "@types/uuid": "^3.4.7",
     "browserslist": "^4.7.0",
     "caniuse-lite": "^1.0.30000998",
     "jquery-param": "^1.0.1",
@@ -24,6 +25,7 @@
     "@babel/preset-env": "^7.2.3",
     "@babel/preset-react": "^7.0.0",
     "@babel/runtime": "^7.4.3",
+    "@types/jest": "^25.1.2",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "8",
     "enzyme": "^3.9.0",
@@ -36,7 +38,7 @@
     "eslint-plugin-react": "^7.12.4",
     "eslint-plugin-standard": "^3.0.1",
     "jest": "^24.7.1",
-    "jest-fetch-mock": "^2.1.2",
+    "jest-fetch-mock": "^3.0.1",
     "mobx": "5.5.0",
     "mobx-react": "^5.4.3",
     "moment": "^2.24.0",
@@ -47,6 +49,7 @@
     "rollup-plugin-babel": "^4.2.0",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.0",
+    "ts-jest": "^25.2.0",
     "typescript": "^3.7.5"
   },
   "scripts": {
@@ -61,7 +64,7 @@
       "./setupJest.js"
     ],
     "transform": {
-      "^.+\\.js?$": "babel-jest"
+      "^.+\\.(ts|tsx)$": "ts-jest"
     },
     "testPathIgnorePatterns": [
       "/tests/fixtures/",

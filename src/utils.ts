@@ -39,7 +39,7 @@ export function singularizeType (recordType) {
  * @method requestUrl
  * @return {String} formatted url string
  */
-export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
+export function requestUrl (baseUrl, endpoint, queryParams = {}, id, options?) {
   let queryParamString = ''
   if (Object.keys(queryParams).length > 0) {
     queryParamString = `?${jqueryParam(queryParams)}`

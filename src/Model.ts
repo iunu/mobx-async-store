@@ -16,6 +16,7 @@ import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 import dig from 'lodash/get'
 import flattenDeep from 'lodash/flattenDeep'
+import Store from './Store';
 
 function isPresent (value) {
   return value !== null && value !== undefined && value !== ''
@@ -53,7 +54,7 @@ function stringifyIds (object) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor (descriptor, DataType) {
+function defaultValueForDescriptor (descriptor?, DataType?) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
@@ -67,40 +68,6 @@ function defaultValueForDescriptor (descriptor, DataType) {
   if (DataType.name === 'Array') return []
 
   return null
-}
-
-/**
- * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
- * This can be a Javascript primitive or another class. `id` cannot be defined as it is assumed to exist.
- * Attributes can be defined with a default.
- * ```
- * class Todo extends Model {
- *   @attribute(Date) start_time = moment()
- * }
- * ```
- * @method attribute
- */
-export function attribute (dataType = (obj) => obj) {
-  return function (target, property, descriptor) {
-    const { type } = target.constructor
-    const defaultValue = defaultValueForDescriptor(descriptor, dataType)
-    // Update the schema
-    schema.addAttribute({
-      dataType,
-      defaultValue,
-      property,
-      type
-    })
-    // Return custom descriptor
-    return {
-      get () {
-        return defaultValue
-      },
-      set (value) {
-        set(target, property, value)
-      }
-    }
-  }
 }
 
 /**
@@ -124,7 +91,7 @@ export function attribute (dataType = (obj) => obj) {
      validator = target
 
      return function (target, property) {
-       const { type } = target.constructor
+       const { type } = target
 
        schema.addValidation({
          property,
@@ -133,7 +100,7 @@ export function attribute (dataType = (obj) => obj) {
        })
      }
    } else {
-     const { type } = target.constructor
+     const { type } = target
      schema.addValidation({
        property,
        type,
@@ -187,6 +154,11 @@ class Model {
    * @property type
    * @static
    */
+  store: Store
+
+  type: any
+
+  public meta: any
 
   /**
    * The canonical path to the resource on the server. Defined on the class.
@@ -282,7 +254,12 @@ class Model {
    * @type {Object}
    * @default {}
    */
-  previousSnapshot = {}
+  previousSnapshot:any = {}
+
+  id: any
+
+  relationships: any
+  
 
   /**
    * restores data to its last persisted state
@@ -315,7 +292,7 @@ class Model {
    * @return {Promise}
    * @param {Object} options
    */
-  save (options = {}) {
+  save (options:any = {}) {
     if (!options.skip_validations && !this.validate()) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -337,7 +314,7 @@ class Model {
       requestId = null
     }
 
-    const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
+    const url = this.store.fetchUrl(this.type, queryParams, requestId)
 
     const body = JSON.stringify(this.jsonapi(
       { relationships, attributes }
@@ -345,7 +322,7 @@ class Model {
 
     const response = this.store.fetch(url, { method, body })
 
-    return new ObjectPromiseProxy(response, this)
+    return ObjectPromiseProxy(response, this)
   }
 
   /**
@@ -378,9 +355,9 @@ class Model {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy (options = {}) {
+  destroy (options:any = {}) {
     const {
-      constructor: { type }, id, snapshot, isNew
+      type, id, snapshot, isNew
     } = this
 
     if (isNew) {
@@ -448,7 +425,6 @@ class Model {
    */
   _makeObservable (initialAttributes) {
      const { defaultAttributes } = this
-
      extendObservable(this, {
        ...defaultAttributes,
        ...initialAttributes
@@ -507,18 +483,8 @@ class Model {
     const attributes = flattenDeep(walk(this.previousSnapshot.attributes, (prevValue, path) => {
       const currValue = dig(this.snapshot.attributes, path)
       return prevValue === currValue ? undefined : path
-    })).filter((x) => x)
+    }, null, null)).filter((x) => x)
     return [...relationships, ...attributes]
-  }
-
-  /**
-   * shortcut to get the static
-   *
-   * @method type
-   * @return {String} current attributes
-  */
-  get type () {
-    return this.constructor.type
   }
 
   /**
@@ -546,8 +512,7 @@ class Model {
    * @return {Object}
    */
   get attributeDefinitions () {
-    const { type } = this.constructor
-    return schema.structure[type]
+    return schema.structure[this.type]
   }
 
   /**
@@ -557,8 +522,7 @@ class Model {
    * @return {Object}
    */
   get relationshipDefinitions () {
-    const { type } = this.constructor
-    return schema.relations[type]
+    return schema.relations[this.type]
   }
 
   /**
@@ -615,13 +579,13 @@ class Model {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  jsonapi (options = {}) {
+  jsonapi (options:any = {}) {
     const {
       attributeDefinitions,
       attributeNames,
       meta,
       id,
-      constructor: { type }
+      type
     } = this
 
     let filteredAttributeNames = attributeNames
@@ -654,7 +618,8 @@ class Model {
     const data = {
       type,
       attributes,
-      id: String(id)
+      id: String(id),
+      relationships: null
     }
 
     if (options.relationships) {

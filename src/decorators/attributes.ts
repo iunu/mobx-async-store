@@ -9,7 +9,7 @@ import schema from '../schema'
  * @param value
  * @return {Boolean}
  */
-export function isPresent (value) {
+export function isPresent (value):any {
   return value !== null && value !== undefined && value !== ''
 }
 
@@ -18,7 +18,7 @@ export function isPresent (value) {
  * @method validatePresence
  * @param value
  */
-function validatePresence (value) {
+function validatePresence (value):any {
   return {
     isValid: isPresent(value),
     errors: [{
@@ -32,7 +32,10 @@ function validatePresence (value) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor (descriptor, DataType) {
+function defaultValueForDescriptor (descriptor, DataType?):any {
+  if(!descriptor){
+    return null
+  }
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
@@ -59,9 +62,9 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * ```
  * @method attribute
  */
-export function attribute (dataType = (obj) => obj) {
+export function attribute (dataType = (obj) => obj):any {
   return function (target, property, descriptor) {
-    const { type } = target.constructor
+    const { type } = target
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
     // Update the schema
     schema.addAttribute({
@@ -102,7 +105,7 @@ export function validates (target, property) {
      validator = target
 
      return function (target, property) {
-       const { type } = target.constructor
+       const { type } = target
 
        schema.addValidation({
          property,
@@ -111,7 +114,7 @@ export function validates (target, property) {
        })
      }
    } else {
-     const { type } = target.constructor
+     const { type } = target
      schema.addValidation({
        property,
        type,

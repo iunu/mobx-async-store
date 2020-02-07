@@ -1,9 +1,10 @@
-/* global fetch */
+import GlobalFetch from 'jest-fetch-mock';
 import { isObservable, toJS } from 'mobx'
 import { Store, Model, attribute, relatedToOne, relatedToMany } from '../src/main'
 
+const fetch:any = GlobalFetch
 class Tag extends Model {
-  static type = 'tags'
+  type = 'tags'
   static endpoint = 'tags'
 
   @attribute(String) label = ''
@@ -11,7 +12,7 @@ class Tag extends Model {
 }
 
 class Category extends Model {
-  static type = 'categories'
+  type = 'categories'
   static endpoint = 'categories'
 
   @attribute(String) name = ''
@@ -19,7 +20,7 @@ class Category extends Model {
 }
 
 class Note extends Model {
-  static type = 'notes'
+  type = 'notes'
   static endpoint = 'notes'
 
   @attribute(String) text = ''
@@ -27,7 +28,7 @@ class Note extends Model {
 }
 
 class Todo extends Model {
-  static type = 'todos'
+  type = 'todos'
   static endpoint = 'todos'
 
   @attribute(String) title = ''
@@ -35,15 +36,6 @@ class Todo extends Model {
   @relatedToOne(Note) instructions
   @relatedToOne category
   @relatedToMany tags
-}
-
-class AppStore extends Store {
-  static types = [
-    Note,
-    Todo,
-    Tag,
-    Category
-  ]
 }
 
 const mockBaseUrl = '/example_api'
@@ -56,9 +48,15 @@ const mockFetchOptions = {
   }
 }
 
-const store = new AppStore({
+const store = new Store({
   baseUrl: mockBaseUrl,
-  defaultFetchOptions: mockFetchOptions
+  defaultFetchOptions: mockFetchOptions,
+  types: [
+    Note,
+    Todo,
+    Tag,
+    Category
+  ]
 })
 
 const mockTodoData = {
@@ -142,7 +140,7 @@ describe('Store', () => {
       const examples = store.add('todos', exampleData)
       expect(examples).toHaveLength(2)
 
-      const foundExamples = store.findAll('todos', exampleData, { fromServer: false })
+      const foundExamples = store.findAll('todos', exampleData)
       expect(foundExamples).toHaveLength(2)
     })
   })
@@ -473,6 +471,7 @@ describe('Store', () => {
         }
       }
       const todo = store.createModel('todos', 1, todoData)
+      console.log('notes', todo.user_notes[0])
       expect(todo.user_notes[0].id).toEqual(note.id)
       expect(todo.user_notes[0].text).toEqual(note.text)
     })

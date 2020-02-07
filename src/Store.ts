@@ -17,12 +17,13 @@ class Store {
    * @type {Object}
    * @default {}
    */
-  @observable data = {}
+  @observable data:any = {}
 
   genericErrorMessage = 'Something went wrong.'
   baseUrl:string
   defaultFetchOptions:any
   modelTypeIndex: any[]
+  types: any[] = []
   /**
    * Initializer for Store class
    *
@@ -63,10 +64,9 @@ class Store {
   addModel = (type, attributes) => {
     const id = dbOrNewId(attributes)
     const model = this.createModel(type, id, { attributes })
-
+  
     // Add the model to the type records index
     this.data[type].records[id] = model
-
     return model
   }
 
@@ -262,7 +262,7 @@ class Store {
    *
    * @method reset
    */
-  reset (type) {
+  reset (type?) {
     if (type) {
       this.data[type] = { records: {}, cache: {} }
     } else {
@@ -279,6 +279,9 @@ class Store {
    * @param {Object} options passed to constructor
    */
   init (options) {
+    if(options.types){
+      this.types = options.types
+    }
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
@@ -302,10 +305,9 @@ class Store {
    * @param {Object} options for nextwork config
    */
   initializeModelTypeIndex () {
-    const { types } = this.constructor
-    console.log('types', types);
-    this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
-      modelTypeIndex[modelKlass.type] = modelKlass
+    this.modelTypeIndex = this.types.reduce((modelTypeIndex, modelKlass) => {
+      let configClass = new modelKlass()
+      modelTypeIndex[configClass.type] = modelKlass
       return modelTypeIndex
     }, {})
   }
@@ -319,12 +321,11 @@ class Store {
    * @method initializeObservableDataProperty
    */
   initializeObservableDataProperty () {
-    const { types } = this.constructor
-
     // NOTE: Is there a performance cost to setting
     // each property individually?
-    types.forEach(modelKlass => {
-      this.data[modelKlass.type] = { records: {}, cache: {} }
+    this.types.forEach(modelKlass => {
+      let blankClass = new modelKlass()
+      this.data[blankClass.type] = { records: {}, cache: {} }
     })
   }
 
@@ -384,9 +385,7 @@ class Store {
     if (!this.getType(type)) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
-
     const record = this.getType(type).records[id]
-
     if (!record || record === 'undefined') return
 
     return record
@@ -400,6 +399,7 @@ class Store {
    * @return {Array} array of objects
    */
   getRecords (type) {
+    console.log('type in getRecords', type)
     const records = Object.values(this.getType(type).records)
                           .filter(value => value && value !== 'undefined')
 
@@ -586,7 +586,9 @@ class Store {
       throw new Error(`Could not find a model for '${type}'`)
     }
 
-    return new ModelKlass({ id, store, relationships, ...attributes })
+    let item = new ModelKlass({ id, store, relationships, ...attributes })
+    return item
+
   }
 
   /**
