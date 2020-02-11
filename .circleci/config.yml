@@ -51,6 +51,21 @@ jobs:
           name: Run Jest
           command: node_modules/.bin/jest spec
 
+  verify_build:
+    docker:
+      - image: circleci/node:10.15.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules from cache
+          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+      - run:
+          name: Build
+          command: yarn build
+      - run:
+          name: Verify build up-to-date
+          command: git diff --quiet --exit-code ./dist
+
 workflows:
   version: 2
   run_tests:
@@ -61,5 +76,8 @@ workflows:
           requires:
             - yarn_install
       - jest:
+          requires:
+            - yarn_install
+      - verify_build:
           requires:
             - yarn_install
