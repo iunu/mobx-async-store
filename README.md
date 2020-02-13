@@ -2,12 +2,17 @@
 
 Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/
 
+Currently we are in Alpha, this is not stable for production unless you have thoroughly
+vetted any and all limitations.
+
 # Caution
 
 This library is experimental and not advised for use in production use.
 
 # TODO
 - [ ] Add documentation
+- [ ] Add capability for middleware
+- [ ] Add better store management
 - [ ] Add test coverage badges
 - [ ] Publish to npm/yarn registries
 
