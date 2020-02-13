@@ -60,7 +60,7 @@
     "build": "rollup -c",
     "watch": "rollup -c -w",
     "test": "jest --verbose",
-    "lint": "node_modules/.bin/eslint src spec"
+    "lint": "eslint src spec"
   },
   "jest": {
     "automock": false,
@@ -81,5 +81,19 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "description": "Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/artemis-ag/mobx-async-store.git"
+  },
+  "author": "Artemis Ag",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/artemis-ag/mobx-async-store/issues"
+  },
+  "homepage": "https://github.com/artemis-ag/mobx-async-store#readme"
 }
