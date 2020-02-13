@@ -60,6 +60,9 @@
     "build": "rollup -c",
     "watch": "rollup -c -w",
     "test": "jest --verbose",
+    "release:patch": "npm version patch",
+    "release:minor": "npm version minor",
+    "release:major": "npm version major",
     "lint": "eslint src spec"
   },
   "jest": {
