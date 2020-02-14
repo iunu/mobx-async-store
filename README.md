@@ -107,6 +107,7 @@ import AppStore from './AppStore'
 
 const store = new AppStore({
   baseUrl: 'https//api.example.com',
+  loggerEnabled: true | false,
   defaultFetchOptions: {
     credentials: 'include',
     headers: {
@@ -117,6 +118,9 @@ const store = new AppStore({
   }
 })
 
+// Inbound request transformers or outbound transformers...
+store.inboundPipe.use((data) => data)
+store.outboundPipe.use((data) => data)
 ```
 
 ### Fetching multiple records with `Store#findAll`
