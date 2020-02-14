@@ -2,5 +2,7 @@ node_modules/
 npm-debug.log
 yarn-error.log
 package-lock.json
-
+/coverage/lcov-report
+/coverage/coverage-summary.json
+/coverage/lcov.info
 .DS_Store
