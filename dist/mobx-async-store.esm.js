@@ -1468,7 +1468,7 @@ function () {
       this.initializeObservableDataProperty(); // Everything afterwards is configuration and setup of
       // pipes and the logger (if logger is enabled)
 
-      this.loggerEnabled = options.loggerEnabled;
+      this.loggerEnabled = options && options.loggerEnabled;
       this.inboundPipe = new MiddlewarePipe();
       this.outboundPipe = new MiddlewarePipe({
         reversed: true
