@@ -1,3 +1,7 @@
+![Statements Covered!](./coverage/badge-statements.svg)
+![Lines Covered!](./coverage/badge-lines.svg)
+![Functions Covered!](./coverage/badge-functions.svg)
+
 # mobx-async-store
 
 Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/

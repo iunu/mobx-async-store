@@ -7,6 +7,7 @@
   "dependencies": {
     "browserslist": "^4.7.0",
     "caniuse-lite": "^1.0.30000998",
+    "jest-coverage-badges": "^1.1.2",
     "jquery-param": "^1.0.1",
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.15",
@@ -52,10 +53,17 @@
     "build": "rollup -c",
     "watch": "rollup -c -w",
     "test": "jest --verbose",
+    "test:coverage": "npm test -- --coverage",
+    "test:badges": "npm run test:coverage  && jest-coverage-badges",
     "lint": "node_modules/.bin/eslint src spec"
   },
   "jest": {
     "automock": false,
+    "coverageReporters": [
+      "json-summary", 
+      "text",
+      "lcov"
+    ],
     "setupFiles": [
       "./setupJest.js"
     ],
