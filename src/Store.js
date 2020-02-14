@@ -1,7 +1,8 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
-
+import MiddlewarePipe from './MiddlewarePipe'
+import JSON from 'circular-json'
 /**
  * Defines the Artemis Data Store class.
  *
@@ -21,6 +22,12 @@ class Store {
 
   genericErrorMessage = 'Something went wrong.'
 
+  // Generic inbound pipe
+  inboundPipe = null
+
+  // Generic outbound pipe
+  outboundPipe = null
+  loggerEnabled = false
   /**
    * Initializer for Store class
    *
@@ -28,8 +35,8 @@ class Store {
    */
   constructor (options) {
     this.init(options)
+    this.fetchUrl = this.fetchUrl.bind(this)
   }
-
   /**
    * Adds an instance or an array of instances to the store.
    * ```
@@ -280,6 +287,36 @@ class Store {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
+
+    // Everything afterwards is configuration and setup of
+    // pipes and the logger (if logger is enabled)
+    this.loggerEnabled = options.loggerEnabled
+    this.inboundPipe = new MiddlewarePipe()
+    this.outboundPipe = new MiddlewarePipe({ reversed: true })
+    this.outboundPipe.use(this.fetchMiddleWare)
+    this.inboundPipe.use(this.inboundMiddleware)
+  }
+
+  /**
+   * Entry point for configuring the store
+   *
+   * @method outboundMiddleware
+   * @param {Function} fn passed to constructor
+   */
+  outboundMiddleware (fn) {
+    this._logger({action: 'added a function to outbound pipe', info: fn})
+    this.outboundPipe.use(fn)
+  }
+
+  /**
+   * Entry point for configuring the store
+   *
+   * @method inboundMiddleware
+   * @param {Function} fn passed to constructor
+   */
+  inboundMiddleware (fn) {
+    this._logger({action: 'added a function to inbound pipe', info: fn})
+    this.inboundPipe.use(fn)
   }
 
   /**
@@ -291,6 +328,19 @@ class Store {
   initializeNetworkConfiguration (options = {}) {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
+    this._logger({action: 'initializeNetworkConfiguration', info: options})
+  }
+
+  /**
+   * Logger for the dataStore if you wish to have one.
+   *
+   * @method _logger
+   * @param {Object} {action info, message}, action taken, info associated, message associated
+   */
+  _logger = ({action, info, message}) => {
+    if (this.loggerEnabled) {
+      console.info(`action: ${action} ${info && 'result: ' + JSON.stringify(info)} ${message && 'message: ' + message}`)
+    }
   }
 
   /**
@@ -320,6 +370,8 @@ class Store {
 
     // NOTE: Is there a performance cost to setting
     // each property individually?
+    this._logger({action: 'initializeObservableDataProperty', info: types})
+
     types.forEach(modelKlass => {
       this.data[modelKlass.type] = { records: {}, cache: {} }
     })
@@ -336,7 +388,13 @@ class Store {
     const { defaultFetchOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const key = JSON.stringify({ url, fetchOptions })
-
+    this._logger({
+      action: 'fetch',
+      info: {
+          url,
+          ...{ ...defaultFetchOptions, ...options }
+        }
+      })
     return combineRacedRequests(key, () => fetch(url, { ...defaultFetchOptions, ...options }))
   }
 
@@ -363,8 +421,10 @@ class Store {
    */
   getMatchingRecord (type, id, queryParams) {
     if (queryParams) {
+      this._logger({action: 'getMatchingRecord.getCachedRecord', info: { type, id, queryParams }})
       return this.getCachedRecord(type, id, queryParams)
     } else {
+      this._logger({action: 'getMatchingRecord.getRecord', info: { type, id }})
       return this.getRecord(type, id)
     }
   }
@@ -378,11 +438,13 @@ class Store {
    * @return {Object} record
    */
   getRecord (type, id) {
+    this._logger({action: 'getRecord', info: { type, id }})
     if (!this.getType(type)) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
 
     const record = this.getType(type).records[id]
+    this._logger({action: 'getRecord.record', info: { record }})
 
     if (!record || record === 'undefined') return
 
@@ -397,8 +459,11 @@ class Store {
    * @return {Array} array of objects
    */
   getRecords (type) {
+    this._logger({action: 'getRecords', info: { type }})
+
     const records = Object.values(this.getType(type).records)
                           .filter(value => value && value !== 'undefined')
+    this._logger({action: 'getRecords.records', info: { type, records }})
 
     // NOTE: Handles a scenario where the store keeps around a reference
     // to a newly persisted record by its temp uuid. This is required
@@ -419,8 +484,9 @@ class Store {
    * @return {Array} array or records
    */
   getCachedRecord (type, id, queryParams) {
+    this._logger({action: 'getCachedRecord', info: { type, id, queryParams }})
     const cachedRecords = this.getCachedRecords(type, queryParams, id)
-
+    this._logger({action: 'getCachedRecord.cachedRecords', info: { type, id, queryParams, cachedRecords }})
     return cachedRecords && cachedRecords[0]
   }
 
@@ -519,8 +585,10 @@ class Store {
    */
   createOrUpdateModel (dataObject) {
     const { attributes = {}, id, relationships = {}, type } = dataObject
+    this._logger({action: 'createOrUpdateModel', info: { dataObject }})
 
     let record = this.getRecord(type, id)
+    this._logger({action: 'createOrUpdateModel.record', info: { record }})
 
     if (record) {
       // Update existing object attributes
@@ -541,6 +609,8 @@ class Store {
         })
       }
     } else {
+      this._logger({action: 'createOrUpdateModel.createModel', info: { type, id, attributes, relationships }})
+
       record = this.createModel(type, id, { attributes, relationships })
       this.data[type].records[record.id] = record
     }
@@ -555,6 +625,8 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
+    this._logger({action: 'createModelsFromData', info: { data }})
+
     return transaction(() => data.map(dataObject => {
       // Only build objects for which we have a type defined.
       // And ignore silently anything else included in the JSON response.
@@ -593,7 +665,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  fetchUrl (type, queryParams, id, options) {
+  fetchUrl = (type, queryParams, id, options) => {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
@@ -601,16 +673,28 @@ class Store {
   }
 
   /**
-   * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
+   * This is the initiator for the inboundPipe on every returning response
    *
-   * @method fetchAll
-   * @param {String} type the type to find
-   * @param {Object} options
+   * @method fetchMiddleWare
+   * @param {Object} { type, queryParams }
    */
-  async fetchAll (type, queryParams) {
-    const store = this
+  fetchMiddleWare = async ({ type, queryParams }) => {
     const url = this.fetchUrl(type, queryParams)
+    this._logger({action: 'fetchMiddleWare', info: { url }})
     const response = await this.fetch(url, { method: 'GET' })
+    this._logger({action: 'fetchMiddleWare.response', info: { response }})
+
+    return this.inboundPipe.process({ response, type, url })
+  }
+
+  /**
+   * This is the json api inbound middleware that joe originall created
+   *
+   * @method inboundMiddleware
+   * @param {Object} { response, type, url }
+   */
+  inboundMiddleware = async ({ response, type, url }) => {
+    const store = this
 
     if (response.status === 200) {
       this.data[type].cache[url] = []
@@ -635,6 +719,19 @@ class Store {
   }
 
   /**
+   * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
+   *
+   * @method fetchAll
+   * @param {String} type the type to find
+   * @param {Object} options
+   */
+  async fetchAll (type, queryParams) {
+    this._logger({action: 'fetchAll', info: { type, queryParams }})
+
+    return this.outboundPipe.process({type, queryParams})
+  }
+
+  /**
    * fetches record by `id`.
    *
    * @async
@@ -645,7 +742,10 @@ class Store {
   async fetchOne (type, id, queryParams) {
     const url = this.fetchUrl(type, queryParams, id)
     // Trigger request
+    this._logger({action: 'fetchOne', info: { type, id, queryParams }})
+
     const response = await this.fetch(url, { method: 'GET' })
+    this._logger({action: 'fetchOne.response', info: { response }})
 
     // Handle response
     if (response.status === 200) {

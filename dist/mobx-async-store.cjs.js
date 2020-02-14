@@ -22,6 +22,7 @@ var pluralize = _interopDefault(require('pluralize'));
 var cloneDeep = _interopDefault(require('lodash/cloneDeep'));
 var dig = _interopDefault(require('lodash/get'));
 var flattenDeep = _interopDefault(require('lodash/flattenDeep'));
+var JSON$1 = _interopDefault(require('circular-json'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
 var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
@@ -1044,6 +1045,116 @@ function () {
   }
 })), _class);
 
+var MiddlewarePipe =
+/*#__PURE__*/
+function () {
+  function MiddlewarePipe(options) {
+    _classCallCheck(this, MiddlewarePipe);
+
+    this.stack = [];
+    this.reversed = false;
+    this.reversed = options && options.reversed;
+  }
+
+  _createClass(MiddlewarePipe, [{
+    key: "use",
+    value: function use(fn) {
+      if (Array.isArray(fn)) {
+        this.stack = fn.map(function (item, index) {
+          console.log('index', index);
+          return {
+            index: index,
+            fn: item
+          };
+        });
+      } else {
+        this.stack.push({
+          index: this.stack.length,
+          fn: fn
+        });
+      }
+    }
+  }, {
+    key: "process",
+    value: function () {
+      var _process = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(raw_request) {
+        var inbound_data, limit, currStack, i;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                inbound_data = raw_request;
+                limit = 100;
+
+                if (this.stack.length) {
+                  _context.next = 4;
+                  break;
+                }
+
+                return _context.abrupt("return", Promise.resolve(inbound_data));
+
+              case 4:
+                // if a pipe needs to be first in line for process
+                currStack = this.reversed ? this.stack.reverse() : this.stack;
+                i = 0;
+
+              case 6:
+                if (!(i < currStack.length)) {
+                  _context.next = 21;
+                  break;
+                }
+
+                _context.prev = 7;
+                _context.next = 10;
+                return currStack[i].fn(inbound_data);
+
+              case 10:
+                inbound_data = _context.sent;
+                _context.next = 16;
+                break;
+
+              case 13:
+                _context.prev = 13;
+                _context.t0 = _context["catch"](7);
+                throw new Error(_context.t0);
+
+              case 16:
+                if (!(i >= limit)) {
+                  _context.next = 18;
+                  break;
+                }
+
+                return _context.abrupt("break", 21);
+
+              case 18:
+                i++;
+                _context.next = 6;
+                break;
+
+              case 21:
+                return _context.abrupt("return", Promise.resolve(inbound_data));
+
+              case 22:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, this, [[7, 13]]);
+      }));
+
+      function process(_x) {
+        return _process.apply(this, arguments);
+      }
+
+      return process;
+    }()
+  }]);
+
+  return MiddlewarePipe;
+}();
+
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -1067,6 +1178,8 @@ function () {
    * @type {Object}
    * @default {}
    */
+  // Generic inbound pipe
+  // Generic outbound pipe
 
   /**
    * Initializer for Store class
@@ -1081,6 +1194,9 @@ function () {
     _initializerDefineProperty(this, "data", _descriptor$1, this);
 
     this.genericErrorMessage = 'Something went wrong.';
+    this.inboundPipe = null;
+    this.outboundPipe = null;
+    this.loggerEnabled = false;
 
     this.add = function (type, data) {
       if (data.constructor.name === 'Array') {
@@ -1162,7 +1278,146 @@ function () {
       }
     };
 
+    this._logger = function (_ref) {
+      var action = _ref.action,
+          info = _ref.info,
+          message = _ref.message;
+
+      if (_this.loggerEnabled) {
+        console.info("action: ".concat(action, " ").concat(info && 'result: ' + JSON$1.stringify(info), " ").concat(message && 'message: ' + message));
+      }
+    };
+
+    this.fetchUrl = function (type, queryParams, id, options) {
+      var baseUrl = _this.baseUrl,
+          modelTypeIndex = _this.modelTypeIndex;
+      var endpoint = modelTypeIndex[type].endpoint;
+      return requestUrl(baseUrl, endpoint, queryParams, id, options);
+    };
+
+    this.fetchMiddleWare =
+    /*#__PURE__*/
+    function () {
+      var _ref3 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(_ref2) {
+        var type, queryParams, url, response;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                type = _ref2.type, queryParams = _ref2.queryParams;
+                url = _this.fetchUrl(type, queryParams);
+
+                _this._logger({
+                  action: 'fetchMiddleWare',
+                  info: {
+                    url: url
+                  }
+                });
+
+                _context.next = 5;
+                return _this.fetch(url, {
+                  method: 'GET'
+                });
+
+              case 5:
+                response = _context.sent;
+
+                _this._logger({
+                  action: 'fetchMiddleWare.response',
+                  info: {
+                    response: response
+                  }
+                });
+
+                return _context.abrupt("return", _this.inboundPipe.process({
+                  response: response,
+                  type: type,
+                  url: url
+                }));
+
+              case 8:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }));
+
+      return function (_x2) {
+        return _ref3.apply(this, arguments);
+      };
+    }();
+
+    this.inboundMiddleware =
+    /*#__PURE__*/
+    function () {
+      var _ref5 = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee2(_ref4) {
+        var response, type, url, store, json;
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                response = _ref4.response, type = _ref4.type, url = _ref4.url;
+                store = _this;
+
+                if (!(response.status === 200)) {
+                  _context2.next = 11;
+                  break;
+                }
+
+                _this.data[type].cache[url] = [];
+                _context2.next = 6;
+                return response.json();
+
+              case 6:
+                json = _context2.sent;
+
+                if (json.included) {
+                  _this.createModelsFromData(json.included);
+                }
+
+                return _context2.abrupt("return", mobx.transaction(function () {
+                  return json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute = dataObject.attributes,
+                        attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
+                        _dataObject$relations = dataObject.relationships,
+                        relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
+                    var ModelKlass = _this.modelTypeIndex[type];
+                    var record = new ModelKlass(_objectSpread$2({
+                      store: store,
+                      relationships: relationships
+                    }, attributes));
+
+                    _this.data[type].cache[url].push(id);
+
+                    _this.data[type].records[id] = record;
+                    return record;
+                  });
+                }));
+
+              case 11:
+                return _context2.abrupt("return", Promise.reject(response.status));
+
+              case 12:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2);
+      }));
+
+      return function (_x3) {
+        return _ref5.apply(this, arguments);
+      };
+    }();
+
     this.init(_options);
+    this.fetchUrl = this.fetchUrl.bind(this);
   }
   /**
    * Adds an instance or an array of instances to the store.
@@ -1216,7 +1471,50 @@ function () {
     value: function init(options) {
       this.initializeNetworkConfiguration(options);
       this.initializeModelTypeIndex();
-      this.initializeObservableDataProperty();
+      this.initializeObservableDataProperty(); // Everything afterwards is configuration and setup of
+      // pipes and the logger (if logger is enabled)
+
+      this.loggerEnabled = options.loggerEnabled;
+      this.inboundPipe = new MiddlewarePipe();
+      this.outboundPipe = new MiddlewarePipe({
+        reversed: true
+      });
+      this.outboundPipe.use(this.fetchMiddleWare);
+      this.inboundPipe.use(this.inboundMiddleware);
+    }
+    /**
+     * Entry point for configuring the store
+     *
+     * @method outboundMiddleware
+     * @param {Function} fn passed to constructor
+     */
+
+  }, {
+    key: "outboundMiddleware",
+    value: function outboundMiddleware(fn) {
+      this._logger({
+        action: 'added a function to outbound pipe',
+        info: fn
+      });
+
+      this.outboundPipe.use(fn);
+    }
+    /**
+     * Entry point for configuring the store
+     *
+     * @method inboundMiddleware
+     * @param {Function} fn passed to constructor
+     */
+
+  }, {
+    key: "inboundMiddleware",
+    value: function inboundMiddleware(fn) {
+      this._logger({
+        action: 'added a function to inbound pipe',
+        info: fn
+      });
+
+      this.inboundPipe.use(fn);
     }
     /**
      * Entry point for configuring the store
@@ -1231,16 +1529,28 @@ function () {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       this.baseUrl = options.baseUrl || '';
       this.defaultFetchOptions = options.defaultFetchOptions || {};
+
+      this._logger({
+        action: 'initializeNetworkConfiguration',
+        info: options
+      });
     }
+    /**
+     * Logger for the dataStore if you wish to have one.
+     *
+     * @method _logger
+     * @param {Object} {action info, message}, action taken, info associated, message associated
+     */
+
+  }, {
+    key: "initializeModelTypeIndex",
+
     /**
      * Entry point for configuring the store
      *
      * @method initializeNetworkConfiguration
      * @param {Object} options for nextwork config
      */
-
-  }, {
-    key: "initializeModelTypeIndex",
     value: function initializeModelTypeIndex() {
       var types = this.constructor.types;
       this.modelTypeIndex = types.reduce(function (modelTypeIndex, modelKlass) {
@@ -1264,6 +1574,11 @@ function () {
 
       var types = this.constructor.types; // NOTE: Is there a performance cost to setting
       // each property individually?
+
+      this._logger({
+        action: 'initializeObservableDataProperty',
+        info: types
+      });
 
       types.forEach(function (modelKlass) {
         _this2.data[modelKlass.type] = {
@@ -1298,10 +1613,18 @@ function () {
 
       var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
 
-      var key = JSON.stringify({
+      var key = JSON$1.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
+
+      this._logger({
+        action: 'fetch',
+        info: _objectSpread$2({
+          url: url
+        }, _objectSpread$2({}, defaultFetchOptions, {}, options))
+      });
+
       return combineRacedRequests(key, function () {
         return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
       });
@@ -1334,8 +1657,25 @@ function () {
     key: "getMatchingRecord",
     value: function getMatchingRecord(type, id, queryParams) {
       if (queryParams) {
+        this._logger({
+          action: 'getMatchingRecord.getCachedRecord',
+          info: {
+            type: type,
+            id: id,
+            queryParams: queryParams
+          }
+        });
+
         return this.getCachedRecord(type, id, queryParams);
       } else {
+        this._logger({
+          action: 'getMatchingRecord.getRecord',
+          info: {
+            type: type,
+            id: id
+          }
+        });
+
         return this.getRecord(type, id);
       }
     }
@@ -1351,11 +1691,27 @@ function () {
   }, {
     key: "getRecord",
     value: function getRecord(type, id) {
+      this._logger({
+        action: 'getRecord',
+        info: {
+          type: type,
+          id: id
+        }
+      });
+
       if (!this.getType(type)) {
         throw new Error("Could not find a collection for type '".concat(type, "'"));
       }
 
       var record = this.getType(type).records[id];
+
+      this._logger({
+        action: 'getRecord.record',
+        info: {
+          record: record
+        }
+      });
+
       if (!record || record === 'undefined') return;
       return record;
     }
@@ -1370,14 +1726,30 @@ function () {
   }, {
     key: "getRecords",
     value: function getRecords(type) {
+      this._logger({
+        action: 'getRecords',
+        info: {
+          type: type
+        }
+      });
+
       var records = Object.values(this.getType(type).records).filter(function (value) {
         return value && value !== 'undefined';
+      });
+
+      this._logger({
+        action: 'getRecords.records',
+        info: {
+          type: type,
+          records: records
+        }
       }); // NOTE: Handles a scenario where the store keeps around a reference
       // to a newly persisted record by its temp uuid. This is required
       // because we can't simply remove the temp uuid reference because other
       // related models may be still using the temp uuid in their relationships
       // data object. However, when we are listing out records we want them
       // to be unique by the persisted id (which is updated after a Model.save)
+
 
       return uniqueBy(records, 'id');
     }
@@ -1394,7 +1766,27 @@ function () {
   }, {
     key: "getCachedRecord",
     value: function getCachedRecord(type, id, queryParams) {
+      this._logger({
+        action: 'getCachedRecord',
+        info: {
+          type: type,
+          id: id,
+          queryParams: queryParams
+        }
+      });
+
       var cachedRecords = this.getCachedRecords(type, queryParams, id);
+
+      this._logger({
+        action: 'getCachedRecord.cachedRecords',
+        info: {
+          type: type,
+          id: id,
+          queryParams: queryParams,
+          cachedRecords: cachedRecords
+        }
+      });
+
       return cachedRecords && cachedRecords[0];
     }
     /**
@@ -1515,13 +1907,28 @@ function () {
     value: function createOrUpdateModel(dataObject) {
       var _this4 = this;
 
-      var _dataObject$attribute = dataObject.attributes,
-          attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
+      var _dataObject$attribute2 = dataObject.attributes,
+          attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
           id = dataObject.id,
-          _dataObject$relations = dataObject.relationships,
-          relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations,
+          _dataObject$relations2 = dataObject.relationships,
+          relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2,
           type = dataObject.type;
+
+      this._logger({
+        action: 'createOrUpdateModel',
+        info: {
+          dataObject: dataObject
+        }
+      });
+
       var record = this.getRecord(type, id);
+
+      this._logger({
+        action: 'createOrUpdateModel.record',
+        info: {
+          record: record
+        }
+      });
 
       if (record) {
         // Update existing object attributes
@@ -1541,6 +1948,16 @@ function () {
           });
         }
       } else {
+        this._logger({
+          action: 'createOrUpdateModel.createModel',
+          info: {
+            type: type,
+            id: id,
+            attributes: attributes,
+            relationships: relationships
+          }
+        });
+
         record = this.createModel(type, id, {
           attributes: attributes,
           relationships: relationships
@@ -1561,6 +1978,13 @@ function () {
     key: "createModelsFromData",
     value: function createModelsFromData(data) {
       var _this5 = this;
+
+      this._logger({
+        action: 'createModelsFromData',
+        info: {
+          data: data
+        }
+      });
 
       return mobx.transaction(function () {
         return data.map(function (dataObject) {
@@ -1614,13 +2038,8 @@ function () {
      */
 
   }, {
-    key: "fetchUrl",
-    value: function fetchUrl(type, queryParams, id, options) {
-      var baseUrl = this.baseUrl,
-          modelTypeIndex = this.modelTypeIndex;
-      var endpoint = modelTypeIndex[type].endpoint;
-      return requestUrl(baseUrl, endpoint, queryParams, id, options);
-    }
+    key: "fetchAll",
+
     /**
      * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
      *
@@ -1628,78 +2047,36 @@ function () {
      * @param {String} type the type to find
      * @param {Object} options
      */
-
-  }, {
-    key: "fetchAll",
     value: function () {
       var _fetchAll = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee(type, queryParams) {
-        var _this6 = this;
-
-        var store, url, response, json;
-        return _regeneratorRuntime.wrap(function _callee$(_context) {
+      _regeneratorRuntime.mark(function _callee3(type, queryParams) {
+        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context.prev = _context.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                store = this;
-                url = this.fetchUrl(type, queryParams);
-                _context.next = 4;
-                return this.fetch(url, {
-                  method: 'GET'
+                this._logger({
+                  action: 'fetchAll',
+                  info: {
+                    type: type,
+                    queryParams: queryParams
+                  }
                 });
 
-              case 4:
-                response = _context.sent;
-
-                if (!(response.status === 200)) {
-                  _context.next = 14;
-                  break;
-                }
-
-                this.data[type].cache[url] = [];
-                _context.next = 9;
-                return response.json();
-
-              case 9:
-                json = _context.sent;
-
-                if (json.included) {
-                  this.createModelsFromData(json.included);
-                }
-
-                return _context.abrupt("return", mobx.transaction(function () {
-                  return json.data.map(function (dataObject) {
-                    var id = dataObject.id,
-                        _dataObject$attribute2 = dataObject.attributes,
-                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                        _dataObject$relations2 = dataObject.relationships,
-                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                    var ModelKlass = _this6.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread$2({
-                      store: store,
-                      relationships: relationships
-                    }, attributes));
-
-                    _this6.data[type].cache[url].push(id);
-
-                    _this6.data[type].records[id] = record;
-                    return record;
-                  });
+                return _context3.abrupt("return", this.outboundPipe.process({
+                  type: type,
+                  queryParams: queryParams
                 }));
 
-              case 14:
-                return _context.abrupt("return", Promise.reject(response.status));
-
-              case 15:
+              case 2:
               case "end":
-                return _context.stop();
+                return _context3.stop();
             }
           }
-        }, _callee, this);
+        }, _callee3, this);
       }));
 
-      function fetchAll(_x2, _x3) {
+      function fetchAll(_x4, _x5) {
         return _fetchAll.apply(this, arguments);
       }
 
@@ -1719,32 +2096,49 @@ function () {
     value: function () {
       var _fetchOne = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
+      _regeneratorRuntime.mark(function _callee4(type, id, queryParams) {
         var url, response, json, data, included, record;
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+        return _regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
                 url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-                _context2.next = 3;
+                this._logger({
+                  action: 'fetchOne',
+                  info: {
+                    type: type,
+                    id: id,
+                    queryParams: queryParams
+                  }
+                });
+
+                _context4.next = 4;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
-              case 3:
-                response = _context2.sent;
+              case 4:
+                response = _context4.sent;
+
+                this._logger({
+                  action: 'fetchOne.response',
+                  info: {
+                    response: response
+                  }
+                }); // Handle response
+
 
                 if (!(response.status === 200)) {
-                  _context2.next = 16;
+                  _context4.next = 18;
                   break;
                 }
 
-                _context2.next = 7;
+                _context4.next = 9;
                 return response.json();
 
-              case 7:
-                json = _context2.sent;
+              case 9:
+                json = _context4.sent;
                 data = json.data, included = json.included;
 
                 if (included) {
@@ -1754,20 +2148,20 @@ function () {
                 record = this.createOrUpdateModel(data);
                 this.data[type].cache[url] = [];
                 this.data[type].cache[url].push(record.id);
-                return _context2.abrupt("return", record);
+                return _context4.abrupt("return", record);
 
-              case 16:
-                return _context2.abrupt("return", null);
+              case 18:
+                return _context4.abrupt("return", null);
 
-              case 17:
+              case 19:
               case "end":
-                return _context2.stop();
+                return _context4.stop();
             }
           }
-        }, _callee2, this);
+        }, _callee4, this);
       }));
 
-      function fetchOne(_x4, _x5, _x6) {
+      function fetchOne(_x6, _x7, _x8) {
         return _fetchOne.apply(this, arguments);
       }
 
@@ -1788,17 +2182,17 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this7 = this;
+    var _this6 = this;
 
     return function (type, attributes) {
       var id = dbOrNewId(attributes);
 
-      var model = _this7.createModel(type, id, {
+      var model = _this6.createModel(type, id, {
         attributes: attributes
       }); // Add the model to the type records index
 
 
-      _this7.data[type].records[id] = model;
+      _this6.data[type].records[id] = model;
       return model;
     };
   }
@@ -1807,12 +2201,12 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this8 = this;
+    var _this7 = this;
 
     return function (type, id) {
-      var records = _this8.getRecords(type);
+      var records = _this7.getRecords(type);
 
-      _this8.data[type].records = records.reduce(function (hash, record) {
+      _this7.data[type].records = records.reduce(function (hash, record) {
         if (String(record.id) !== String(id)) {
           hash[record.id] = record;
         }

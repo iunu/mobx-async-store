@@ -504,5 +504,47 @@ describe('Store', () => {
       expect(todos[0].type).toEqual('todos')
       expect(typeof todos[1]).toBe('undefined')
     })
+
+    describe('Store middleware integration', () => {
+      it('Should instantiate inbound and outbound pipes and process data correctly', async () => {
+        const exampleData = {
+          data: [
+          { title: 'Buy Milk' },
+          { title: 'Do laundry' }
+        ]
+      }
+
+        fetch.mockResponse(JSON.stringify(exampleData), { status: 200 })
+
+        // inbound pipe ingests data coming from the request
+        let exampleInboundPipe = (data) => {
+          data[1].outboundKey = 'also cool'
+          return data
+        }
+        let key = 'awesome-key'
+
+        // outbound pipe ingests data going into a request, before its made
+        // i am mutating the query params and adding a key, in this instance
+        let exampleOutboundPipe = (data) => {
+          data.queryParams.newKey = key
+          return data
+        }
+
+        store.inboundPipe.use(exampleInboundPipe)
+        store.outboundPipe.use(exampleOutboundPipe)
+        let todos = await store.findAll('todos', {
+          queryParams: {
+            user_id: 'cool'
+          }
+        }, { fromServer: true })
+
+        // This checks if i succesffuly mutated the outbound data after it has been parsed
+        // and _before_ it was received by the frontend
+        expect(todos[1].outboundKey).toBe('also cool')
+
+        // this checks if i successfully mutated the key _before_ it was sent to fetch
+        expect(fetch.mock.calls[0][0]).toMatch(key)
+      })
+    })
   })
 })
