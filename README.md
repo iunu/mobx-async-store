@@ -1,3 +1,7 @@
+![Statements Covered!](./coverage/badge-statements.svg)
+![Lines Covered!](./coverage/badge-lines.svg)
+![Functions Covered!](./coverage/badge-functions.svg)
+
 # mobx-async-store
 
 Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/
@@ -7,9 +11,7 @@ Mobx-based store for async data fetching and state management. https://artemis-a
 This library is experimental and not advised for use in production use.
 
 # TODO
-- [ ] Add documentation
-- [ ] Add test coverage badges
-- [ ] Publish to npm/yarn registries
+- [ ] Improve documentation
 
 ## Table of Contents
 - Introduction
