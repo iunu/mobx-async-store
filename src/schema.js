@@ -23,7 +23,8 @@ class Schema {
   }
 
   addValidation ({ type, property, validator }) {
-    this.structure[type][property].validator = validator
+    const propertyType = this.structure[type][property] ? 'structure' : 'relations'
+    this[propertyType][type][property].validator = validator
   }
 }
 

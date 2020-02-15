@@ -37,6 +37,22 @@ function validatePresence (value) {
   }
 }
 
+function validateProperties (model, propertyNames, propertyDefinitions) {
+  return propertyNames.map((property) => {
+    const { validator } = propertyDefinitions[property]
+
+    if (!validator) return true
+
+    const validationResult = validator(model[property], model)
+
+    if (!validationResult.isValid) {
+      model.errors[property] = validationResult.errors
+    }
+
+    return validationResult.isValid
+  })
+}
+
 function stringifyIds (object) {
   Object.keys(object).forEach(key => {
     const property = object[key]
@@ -356,21 +372,11 @@ class Model {
 
   validate () {
     this.errors = {}
-    const { attributeNames, attributeDefinitions } = this
-    const validationChecks = attributeNames.map((property) => {
-      const { validator } = attributeDefinitions[property]
+    const { attributeNames, attributeDefinitions, relationshipNames, relationshipDefinitions } = this
+    const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
+    const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
 
-      if (!validator) return true
-
-      const validationResult = validator(this[property], this)
-
-      if (!validationResult.isValid) {
-        this.errors[property] = validationResult.errors
-      }
-
-      return validationResult.isValid
-    })
-    return validationChecks.every(value => value)
+    return validAttributes.concat(validRelationships).every(value => value)
   }
 
   /**
@@ -589,6 +595,16 @@ class Model {
    */
   get attributeNames () {
     return Object.keys(this.attributeDefinitions)
+  }
+
+  /**
+   * Getter to just get the names of a records relationships.
+   *
+   * @method relationshipNames
+   * @return {Array}
+   */
+  get relationshipNames () {
+    return Object.keys(this.relationshipDefinitions)
   }
 
   /**
