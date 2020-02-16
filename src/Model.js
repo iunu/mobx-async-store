@@ -366,13 +366,22 @@ class Model {
 
   /**
    * Checks all validations, adding errors where necessary and returning `false` if any are not valid
+   * options:
+   *  - attributes - an array of names of attributes to validate
+   *  - relationships - an array of names of relationships to validate
+   *
    * @method validate
+   * @param {Object} options
    * @return {Boolean}
    */
 
-  validate () {
+  validate (options = {}) {
     this.errors = {}
-    const { attributeNames, attributeDefinitions, relationshipNames, relationshipDefinitions } = this
+    const { attributeDefinitions, relationshipDefinitions } = this
+
+    const attributeNames = options.attributes || this.attributeNames
+    const relationshipNames = options.relationships || this.relationshipNames
+
     const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
     const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
 
