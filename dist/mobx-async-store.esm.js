@@ -343,7 +343,8 @@ function () {
       var type = _ref3.type,
           property = _ref3.property,
           validator = _ref3.validator;
-      this.structure[type][property].validator = validator;
+      var propertyType = this.structure[type][property] ? 'structure' : 'relations';
+      this[propertyType][type][property].validator = validator;
     }
   }]);
 
@@ -357,6 +358,20 @@ var _class, _descriptor, _descriptor2, _temp;
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function validateProperties(model, propertyNames, propertyDefinitions) {
+  return propertyNames.map(function (property) {
+    var validator = propertyDefinitions[property].validator;
+    if (!validator) return true;
+    var validationResult = validator(model[property], model);
+
+    if (!validationResult.isValid) {
+      model.errors[property] = validationResult.errors;
+    }
+
+    return validationResult.isValid;
+  });
+}
 
 function stringifyIds(object) {
   Object.keys(object).forEach(function (key) {
@@ -515,30 +530,27 @@ function () {
     }
     /**
      * Checks all validations, adding errors where necessary and returning `false` if any are not valid
+     * options:
+     *  - attributes - an array of names of attributes to validate
+     *  - relationships - an array of names of relationships to validate
+     *
      * @method validate
+     * @param {Object} options
      * @return {Boolean}
      */
 
   }, {
     key: "validate",
     value: function validate() {
-      var _this3 = this;
-
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       this.errors = {};
-      var attributeNames = this.attributeNames,
-          attributeDefinitions = this.attributeDefinitions;
-      var validationChecks = attributeNames.map(function (property) {
-        var validator = attributeDefinitions[property].validator;
-        if (!validator) return true;
-        var validationResult = validator(_this3[property], _this3);
-
-        if (!validationResult.isValid) {
-          _this3.errors[property] = validationResult.errors;
-        }
-
-        return validationResult.isValid;
-      });
-      return validationChecks.every(function (value) {
+      var attributeDefinitions = this.attributeDefinitions,
+          relationshipDefinitions = this.relationshipDefinitions;
+      var attributeNames = options.attributes || this.attributeNames;
+      var relationshipNames = options.relationships || this.relationshipNames;
+      var validAttributes = validateProperties(this, attributeNames, attributeDefinitions);
+      var validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions);
+      return validAttributes.concat(validRelationships).every(function (value) {
         return value;
       });
     }
@@ -739,7 +751,7 @@ function () {
      * @return {Object} data in JSON::API format
      */
     value: function jsonapi() {
-      var _this4 = this;
+      var _this3 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
@@ -757,7 +769,7 @@ function () {
       }
 
       var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this4[key];
+        var value = _this3[key];
 
         if (value) {
           var DataType = attributeDefinitions[key].dataType;
@@ -789,7 +801,7 @@ function () {
           return options.relationships.includes(name);
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = toJS(_this4.relationships[key]);
+          rels[key] = toJS(_this3.relationships[key]);
           stringifyIds(rels[key]);
           return rels;
         }, {});
@@ -811,11 +823,11 @@ function () {
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
-      var _this5 = this;
+      var _this4 = this;
 
       transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          _this5[key] = attributes[key];
+          _this4[key] = attributes[key];
         });
       });
     }
@@ -908,13 +920,13 @@ function () {
   }, {
     key: "dirtyAttributes",
     get: function get() {
-      var _this6 = this;
+      var _this5 = this;
 
       var relationships = Array.from(this._dirtyRelationships).map(function (property) {
         return "relationships.".concat(property);
       });
       var attributes = flattenDeep(walk(this.previousSnapshot.attributes, function (prevValue, path) {
-        var currValue = dig(_this6.snapshot.attributes, path);
+        var currValue = dig(_this5.snapshot.attributes, path);
         return prevValue === currValue ? undefined : path;
       })).filter(function (x) {
         return x;
@@ -943,10 +955,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this7 = this;
+      var _this6 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = toJS(_this7[key]);
+        var value = toJS(_this6[key]);
 
         if (!value) {
           delete attributes[key];
@@ -999,6 +1011,18 @@ function () {
     key: "attributeNames",
     get: function get() {
       return Object.keys(this.attributeDefinitions);
+    }
+    /**
+     * Getter to just get the names of a records relationships.
+     *
+     * @method relationshipNames
+     * @return {Array}
+     */
+
+  }, {
+    key: "relationshipNames",
+    get: function get() {
+      return Object.keys(this.relationshipDefinitions);
     }
     /**
      * getter method to get the default attributes
