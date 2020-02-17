@@ -447,12 +447,21 @@ class Model {
    * @method _makeObservable
    */
   _makeObservable (initialAttributes) {
-     const { defaultAttributes } = this
+     const { defaultAttributes, attributeNames } = this
+     // Make sure to also include id, relationships, and store
+     const names = [...attributeNames, 'id', 'relationships', 'store']
 
-     extendObservable(this, {
-       ...defaultAttributes,
-       ...initialAttributes
-     })
+     // NOTE: Discuss behavior or attribute defaults
+     const attributes = names.reduce((accum, name) => {
+       if (isPresent(initialAttributes[name])) {
+         accum[name] = initialAttributes[name]
+       } else {
+         accum[name] = defaultAttributes[name]
+       }
+       return accum
+     }, {})
+
+     extendObservable(this, attributes)
    }
 
   /**
