@@ -177,7 +177,7 @@ function ObjectPromiseProxy(promise, target) {
     var _ref = _asyncToGenerator(
     /*#__PURE__*/
     _regeneratorRuntime.mark(function _callee(response) {
-      var status, json, _json$data, attributes, relationships, message, _json, errorString;
+      var status, json, _json$data, id, attributes, relationships, message, _json, errorString;
 
       return _regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -196,8 +196,9 @@ function ObjectPromiseProxy(promise, target) {
             case 4:
               json = _context.sent;
               // Update target model
-              _json$data = json.data, attributes = _json$data.attributes, relationships = _json$data.relationships;
+              _json$data = json.data, id = _json$data.id, attributes = _json$data.attributes, relationships = _json$data.relationships;
               transaction(function () {
+                set(target, 'id', id);
                 Object.keys(attributes).forEach(function (key) {
                   set(target, key, attributes[key]);
                 });
