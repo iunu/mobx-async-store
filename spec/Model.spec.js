@@ -119,7 +119,6 @@ const mockTodoData = {
     id: '1',
     type: 'organizations',
     attributes: {
-      id: 1,
       title: 'Do taxes',
       created_at: timestamp.format('YYYY-MM-DD')
     }
@@ -800,7 +799,7 @@ describe('Model', () => {
       })
       // Check that the id is now what was provider
       // from the server
-      expect(todo.id).toEqual(1)
+      expect(todo.id).toEqual('1')
       // Check that the `created_at` attribute is populated
       expect(todo.created_at)
         .toEqual(timestamp.format('YYYY-MM-DD'))
