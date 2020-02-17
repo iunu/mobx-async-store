@@ -26,6 +26,8 @@ class Note extends Model {
   static endpoint = 'notes'
 
   @attribute(String) description
+
+  @validates
   @relatedToOne organization
 }
 
@@ -35,6 +37,16 @@ function validatesArray (property) {
     errors: [{
       key: 'must_be_an_array',
       message: 'must be an array'
+    }]
+  }
+}
+
+function validatesArrayPresence (property) {
+  return {
+    isValid: Array.isArray(property) && property.length > 0,
+    errors: [{
+      key: 'empty',
+      message: 'must have at least one record'
     }]
   }
 }
@@ -76,6 +88,8 @@ class Organization extends Model {
   @attribute(Object) options = {}
 
   @relatedToMany(Note) meeting_notes
+
+  @validates(validatesArrayPresence)
   @relatedToMany notes
 }
 
@@ -595,27 +609,48 @@ describe('Model', () => {
 
   describe('.validate', () => {
     it('validates correct data formats', () => {
-      const todo = new Organization()
+      const note = store.add('notes', {
+        id: 10,
+        description: 'Example description'
+      })
+      const todo = store.add('organizations', { title: 'Good title' })
+      todo.notes.add(note)
+
       expect(todo.validate()).toBeTruthy()
       expect(Object.keys(todo.errors)).toHaveLength(0)
     })
 
-    it('uses default validation to check for presence', () => {
-      const todo = new Organization({ title: '' })
+    it('uses default validation to check for presence of attribute', () => {
+      const todo = store.add('organizations', { title: '' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.title[0].key).toEqual('blank')
       expect(todo.errors.title[0].message).toEqual('can\'t be blank')
     })
 
+    it('uses default validation to check for presence of relationship', () => {
+      const note = store.add('notes', { description: 'Example description' })
+      expect(note.validate()).toBeFalsy()
+      expect(note.errors.organization[0].key).toEqual('blank')
+      expect(note.errors.organization[0].message).toEqual('can\'t be blank')
+    })
+
+    it('validates for a non-empty many relationship', () => {
+      const todo = store.add('organizations', {})
+      expect(todo.validate()).toBeFalsy()
+      console.log(todo.errors)
+      expect(todo.errors.notes[0].key).toEqual('empty')
+      expect(todo.errors.notes[0].message).toEqual('must have at least one record')
+    })
+
     it('uses custom validation', () => {
-      const todo = new Organization({ tags: 'not an array' })
+      const todo = store.add('organizations', { tags: 'not an array' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.tags[0].key).toEqual('must_be_an_array')
       expect(todo.errors.tags[0].message).toEqual('must be an array')
     })
 
     it('uses introspective custom validation', () => {
-      const todo = new Organization({ options: { foo: 'bar', baz: null } })
+      const todo = store.add('organizations', { options: { foo: 'bar', baz: null } })
 
       todo.requiredOptions = ['foo', 'baz']
 
@@ -639,8 +674,13 @@ describe('Model', () => {
     it('rollbacks to state after save', async () => {
       // expect.assertions(9)
       // Add record to store
+      const note = store.add('notes', {
+        id: 10,
+        description: 'Example description'
+      })
       const savedTitle = mockTodoData.data.attributes.title
       const todo = store.add('organizations', { title: savedTitle })
+      todo.notes.add(note)
       // Mock the API response
       fetch.mockResponse(mockTodoResponse)
       // Trigger the save function and subsequent request
@@ -723,9 +763,14 @@ describe('Model', () => {
     })
 
     it('makes request and updates model in store', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: 'Example description'
+      })
       // expect.assertions(9)
       // Add record to store
       const todo = store.add('organizations', { title: 'Buy Milk' })
+      todo.notes.add(note)
       // Check the model doesn't have attributes
       // only provided by an API request
       expect(todo).not.toHaveProperty('created_at')

@@ -37,6 +37,31 @@ function validatePresence (value) {
   }
 }
 
+/**
+ * Maps the passed-in property names through and runs validations against those properties
+ * @method validateProperties
+ * @param {Object} model the model to check
+ * @param {Array} propertyNames the names of the model properties to check
+ * @param {Object} propertyDefinitions a hash map containing validators by property
+ * @return {Array} an array of booleans representing results of validations
+ */
+
+function validateProperties (model, propertyNames, propertyDefinitions) {
+  return propertyNames.map((property) => {
+    const { validator } = propertyDefinitions[property]
+
+    if (!validator) return true
+
+    const validationResult = validator(model[property], model)
+
+    if (!validationResult.isValid) {
+      model.errors[property] = validationResult.errors
+    }
+
+    return validationResult.isValid
+  })
+}
+
 function stringifyIds (object) {
   Object.keys(object).forEach(key => {
     const property = object[key]
@@ -350,27 +375,26 @@ class Model {
 
   /**
    * Checks all validations, adding errors where necessary and returning `false` if any are not valid
+   * Default is to check all validations, but they can be selectively run via options:
+   *  - attributes - an array of names of attributes to validate
+   *  - relationships - an array of names of relationships to validate
+   *
    * @method validate
+   * @param {Object} options
    * @return {Boolean}
    */
 
-  validate () {
+  validate (options = {}) {
     this.errors = {}
-    const { attributeNames, attributeDefinitions } = this
-    const validationChecks = attributeNames.map((property) => {
-      const { validator } = attributeDefinitions[property]
+    const { attributeDefinitions, relationshipDefinitions } = this
 
-      if (!validator) return true
+    const attributeNames = options.attributes || this.attributeNames
+    const relationshipNames = options.relationships || this.relationshipNames
 
-      const validationResult = validator(this[property], this)
+    const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
+    const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
 
-      if (!validationResult.isValid) {
-        this.errors[property] = validationResult.errors
-      }
-
-      return validationResult.isValid
-    })
-    return validationChecks.every(value => value)
+    return validAttributes.concat(validRelationships).every(value => value)
   }
 
   /**
@@ -589,6 +613,16 @@ class Model {
    */
   get attributeNames () {
     return Object.keys(this.attributeDefinitions)
+  }
+
+  /**
+   * Getter to just get the names of a records relationships.
+   *
+   * @method relationshipNames
+   * @return {Array}
+   */
+  get relationshipNames () {
+    return Object.keys(this.relationshipDefinitions)
   }
 
   /**
