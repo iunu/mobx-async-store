@@ -664,7 +664,8 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes,
-          attributeNames = this.attributeNames;
+          attributeNames = this.attributeNames; // Make sure to also include id, relationships, and store
+
       var names = [].concat(_toConsumableArray(attributeNames), ['id', 'relationships', 'store']); // NOTE: Discuss behavior or attribute defaults
 
       var attributes = names.reduce(function (accum, name) {
