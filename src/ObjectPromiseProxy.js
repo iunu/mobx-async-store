@@ -9,8 +9,10 @@ function ObjectPromiseProxy (promise, target) {
       if (status === 200 || status === 201) {
         const json = await response.json()
         // Update target model
-        const { attributes, relationships } = json.data
+        const { id, attributes, relationships } = json.data
         transaction(() => {
+          set(target, 'id', id)
+
           Object.keys(attributes).forEach(key => {
             set(target, key, attributes[key])
           })
