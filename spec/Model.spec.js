@@ -26,6 +26,8 @@ class Note extends Model {
   static endpoint = 'notes'
 
   @attribute(String) description
+
+  @validates
   @relatedToOne organization
 }
 
@@ -618,11 +620,18 @@ describe('Model', () => {
       expect(Object.keys(todo.errors)).toHaveLength(0)
     })
 
-    it('uses default validation to check for presence', () => {
+    it('uses default validation to check for presence of attribute', () => {
       const todo = store.add('organizations', { title: '' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.title[0].key).toEqual('blank')
       expect(todo.errors.title[0].message).toEqual('can\'t be blank')
+    })
+
+    it('uses default validation to check for presence of relationship', () => {
+      const note = store.add('notes', { description: 'Example description' })
+      expect(note.validate()).toBeFalsy()
+      expect(note.errors.organization[0].key).toEqual('blank')
+      expect(note.errors.organization[0].message).toEqual('can\'t be blank')
     })
 
     it('validates for a non-empty many relationship', () => {
