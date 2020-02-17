@@ -343,14 +343,24 @@ function () {
         dataType: dataType
       };
     }
+    /**
+     * Adds a validation to either the schema `structure` (for attributes) or `relations` (for relationships)
+     * @method addValidation
+     * @param {Object} options includes `type`, `property`, and `validator`
+     */
+
   }, {
     key: "addValidation",
     value: function addValidation(_ref3) {
       var type = _ref3.type,
           property = _ref3.property,
           validator = _ref3.validator;
-      var propertyType = this.structure[type][property] ? 'structure' : 'relations';
-      this[propertyType][type][property].validator = validator;
+
+      if (this.structure[type][property]) {
+        this.structure[type][property].validator = validator;
+      } else {
+        this.relations[type][property].validator = validator;
+      }
     }
   }]);
 
@@ -364,6 +374,15 @@ var _class, _descriptor, _descriptor2, _temp;
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+/**
+ * Maps the passed-in property names through and runs validations against those properties
+ * @method validateProperties
+ * @param {Object} model the model to check
+ * @param {Array} propertyNames the names of the model properties to check
+ * @param {Object} propertyDefinitions a hash map containing validators by property
+ * @return {Array} an array of booleans representing results of validations
+ */
+
 
 function validateProperties(model, propertyNames, propertyDefinitions) {
   return propertyNames.map(function (property) {
@@ -536,7 +555,7 @@ function () {
     }
     /**
      * Checks all validations, adding errors where necessary and returning `false` if any are not valid
-     * options:
+     * Default is to check all validations, but they can be selectively run via options:
      *  - attributes - an array of names of attributes to validate
      *  - relationships - an array of names of relationships to validate
      *

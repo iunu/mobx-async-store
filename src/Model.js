@@ -37,6 +37,15 @@ function validatePresence (value) {
   }
 }
 
+/**
+ * Maps the passed-in property names through and runs validations against those properties
+ * @method validateProperties
+ * @param {Object} model the model to check
+ * @param {Array} propertyNames the names of the model properties to check
+ * @param {Object} propertyDefinitions a hash map containing validators by property
+ * @return {Array} an array of booleans representing results of validations
+ */
+
 function validateProperties (model, propertyNames, propertyDefinitions) {
   return propertyNames.map((property) => {
     const { validator } = propertyDefinitions[property]
@@ -366,7 +375,7 @@ class Model {
 
   /**
    * Checks all validations, adding errors where necessary and returning `false` if any are not valid
-   * options:
+   * Default is to check all validations, but they can be selectively run via options:
    *  - attributes - an array of names of attributes to validate
    *  - relationships - an array of names of relationships to validate
    *

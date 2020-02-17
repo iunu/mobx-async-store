@@ -22,9 +22,17 @@ class Schema {
     }
   }
 
+  /**
+   * Adds a validation to either the schema `structure` (for attributes) or `relations` (for relationships)
+   * @method addValidation
+   * @param {Object} options includes `type`, `property`, and `validator`
+   */
   addValidation ({ type, property, validator }) {
-    const propertyType = this.structure[type][property] ? 'structure' : 'relations'
-    this[propertyType][type][property].validator = validator
+    if (this.structure[type][property]) {
+      this.structure[type][property].validator = validator
+    } else {
+      this.relations[type][property].validator = validator
+    }
   }
 }
 
