@@ -46,8 +46,9 @@ function ObjectPromiseProxy (promise, target) {
         target.isInFlight = false
 
         let message = target.store.genericErrorMessage
+        let json = {}
         try {
-          const json = await response.json()
+          json = await response.json()
           message = parseApiErrors(json.errors, message)
         } catch (error) {
           // 500 doesn't return a parsable response
@@ -56,7 +57,8 @@ function ObjectPromiseProxy (promise, target) {
         target.errors = {
           ...target.errors,
           status: status,
-          base: [{ message: message }]
+          base: [{ message: message }],
+          server: json.errors
         }
 
         const errorString = JSON.stringify(target.errors)

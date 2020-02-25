@@ -127,6 +127,14 @@ const mockTodoData = {
 
 const mockTodoResponse = JSON.stringify(mockTodoData)
 
+const mockNoteDataWithErrors = {
+  errors: {
+    description: ["can't be blank"]
+  }
+}
+
+const mockNoteWithErrorResponse = JSON.stringify(mockNoteDataWithErrors)
+
 describe('Model', () => {
   beforeEach(() => {
     fetch.resetMocks()
@@ -803,6 +811,34 @@ describe('Model', () => {
       // Check that the `created_at` attribute is populated
       expect(todo.created_at)
         .toEqual(timestamp.format('YYYY-MM-DD'))
+    })
+
+    it('includes all model errors from the server', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: ''
+      })
+      const todo = store.add('organizations', { title: 'Good title' })
+      todo.notes.add(note)
+
+      // Mock the API response
+      fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
+
+      // Trigger the save function and subsequent request
+      try {
+        await note.save()
+      } catch(errors) {
+        // Assert that errors are set on the record object
+        expect(note.errors).toEqual({
+          status: 422,
+          base: [
+            { message: "Something went wrong." }
+          ],
+          server: {
+            description: ["can't be blank"]
+          }
+        })
+      }
     })
   })
 
