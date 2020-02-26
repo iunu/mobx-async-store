@@ -827,15 +827,15 @@ describe('Model', () => {
       // Trigger the save function and subsequent request
       try {
         await note.save()
-      } catch(errors) {
+      } catch (errors) {
         // Assert that errors are set on the record object
         expect(note.errors).toEqual({
           status: 422,
           base: [
-            { message: "Something went wrong." }
+            { message: 'Something went wrong.' }
           ],
           server: {
-            description: ["can't be blank"]
+            description: ['can\'t be blank']
           }
         })
       }
