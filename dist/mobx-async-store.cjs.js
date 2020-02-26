@@ -240,37 +240,39 @@ function ObjectPromiseProxy(promise, target) {
             case 13:
               target.isInFlight = false;
               message = target.store.genericErrorMessage;
-              _context.prev = 15;
-              _context.next = 18;
+              _json = {};
+              _context.prev = 16;
+              _context.next = 19;
               return response.json();
 
-            case 18:
+            case 19:
               _json = _context.sent;
               message = parseApiErrors(_json.errors, message);
-              _context.next = 24;
+              _context.next = 25;
               break;
 
-            case 22:
-              _context.prev = 22;
-              _context.t0 = _context["catch"](15);
+            case 23:
+              _context.prev = 23;
+              _context.t0 = _context["catch"](16);
 
-            case 24:
+            case 25:
               // TODO: add all errors from the API response to the target
               target.errors = _objectSpread({}, target.errors, {
                 status: status,
                 base: [{
                   message: message
-                }]
+                }],
+                server: _json.errors
               });
               errorString = JSON.stringify(target.errors);
               return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
-            case 27:
+            case 28:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[15, 22]]);
+      }, _callee, null, [[16, 23]]);
     }));
 
     return function (_x) {
