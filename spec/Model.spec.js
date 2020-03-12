@@ -863,19 +863,6 @@ describe('Model', () => {
       expect(todo.isPersisted).toBe(true)
     })
 
-    it('sets isPersisted = true on related records when save succeeds', async () => {
-      const note = store.add('notes', {
-        id: 10,
-        description: 'Example description'
-      })
-      const todo = store.add('organizations', { title: 'Buy Milk' })
-      todo.notes.add(note)
-      fetch.mockResponse(mockTodoResponse)
-      expect(note.isPersisted).toBe(false)
-      await todo.save()
-      expect(note.isPersisted).toBe(true)
-    })
-
     it('includes all model errors from the server', async () => {
       const note = store.add('notes', {
         id: 10,
@@ -906,12 +893,10 @@ describe('Model', () => {
 
     it('does not set isPersisted after save fails', async () => {
       const note = store.add('notes', {
-        id: 10,
         description: ''
       })
-      const todo = store.add('organizations', { title: 'Good title' })
-      todo.notes.add(note)
 
+      expect(note.isPersisted).toBe(false)
       // Mock the API response
       fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
 
