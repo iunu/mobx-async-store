@@ -254,12 +254,16 @@ class Model {
    * ```
    * @property isDirty
    * @type {Boolean}
-   * @default false
    */
   get isDirty () {
     return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0
   }
 
+  /**
+   * have any changes been made since this record was last persisted?
+   * @property isPersisted
+   * @type {Boolean}
+   */
   get isPersisted () {
     if (this.isDirty) return false
     return this.previousSnapshot.persisted
@@ -499,7 +503,19 @@ class Model {
       ...initialAttributes
     })
 
-    this.disposers = Object.keys(this.attributes).map((attr) => {
+    this._listenForChanges()
+  }
+
+  /**
+   * sets up a reaction for each top-level attribute so we can compare
+   * values after each mutation and keep track of dirty attr states
+   * if an attr is different than the last snapshot, add it to the
+   * _dirtyAttributes set
+   * if it's the same as the last snapshot, make sure it's _not_ in the
+   * _dirtyAttributes set
+   */
+  _listenForChanges () {
+    this._disposers = Object.keys(this.attributes).map((attr) => {
       return reaction(() => this.attributes[attr], (value) => {
         const previousValue = this.previousSnapshot.attributes[attr]
         if (isEqual(previousValue, value)) {
@@ -522,8 +538,12 @@ class Model {
     })
   }
 
+  /**
+   * call this when destroying an object to make sure that we clean up
+   * any event listeners and don't leak memory
+   */
   dispose () {
-    this.disposers.forEach((dispose) => dispose())
+    this._disposers.forEach((dispose) => dispose())
   }
 
   /**
