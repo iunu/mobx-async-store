@@ -30,7 +30,9 @@ function ObjectPromiseProxy (promise, target) {
         })
         // Update target isInFlight
         target.isInFlight = false
+        target.isPersisted = true
         target.setPreviousSnapshot()
+
         transaction(() => {
           // NOTE: This resolves an issue where a record is persisted but the
           // index key is still a temp uuid. We can't simply remove the temp
@@ -41,6 +43,7 @@ function ObjectPromiseProxy (promise, target) {
           target.store.data[target.type].records[tmpId] = target
           target.store.data[target.type].records[target.id] = target
         })
+
         return target
       } else {
         target.isInFlight = false

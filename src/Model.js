@@ -206,6 +206,16 @@ class Model {
   }
 
   /**
+   * Property used to capture the state of the record between being fetched and saved.
+   *
+   * @property isPersisted
+   * @type Boolean
+   * @default false
+   */
+  isPersisted = false
+
+
+  /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
    * (eg 'calendar_events').
    *

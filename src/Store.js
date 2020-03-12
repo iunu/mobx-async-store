@@ -623,7 +623,7 @@ class Store {
         const { id, attributes = {}, relationships = {} } = dataObject
         const ModelKlass = this.modelTypeIndex[type]
         const record = new ModelKlass({ store, relationships, ...attributes })
-
+        record.isPersisted = true
         this.data[type].cache[url].push(id)
         this.data[type].records[id] = record
 
@@ -659,6 +659,7 @@ class Store {
 
       const record = this.createOrUpdateModel(data)
 
+      record.isPersisted = true
       this.data[type].cache[url] = []
       this.data[type].cache[url].push(record.id)
 
