@@ -451,7 +451,7 @@ describe('Model', () => {
     expect(todo.notes.map((x) => x.id)).toEqual([10])
   })
 
-  describe('.snapshot', () => {
+  describe('.previousSnapshot', () => {
     it('sets snapshot on initialization', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes).toEqual({
@@ -460,6 +460,21 @@ describe('Model', () => {
         title: 'Buy Milk',
         options: {}
       })
+    })
+  })
+
+  describe('.isPersisted', () => {
+    it('is false on initialization', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.isPersisted).toBe(false)
+    })
+
+    it('is false after attribute mutation', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      todo.isPersisted = true
+      expect(todo.isPersisted).toBe(true)
+      todo.title = 'Buy something else'
+      expect(todo.isPersisted).toBe(false)
     })
   })
 
@@ -813,6 +828,32 @@ describe('Model', () => {
         .toEqual(timestamp.format('YYYY-MM-DD'))
     })
 
+    it('sets isPersisted = true when save succeeds', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: 'Example description'
+      })
+      const todo = store.add('organizations', { title: 'Buy Milk' })
+      todo.notes.add(note)
+      fetch.mockResponse(mockTodoResponse)
+      expect(todo.isPersisted).toBe(false)
+      await todo.save()
+      expect(todo.isPersisted).toBe(true)
+    })
+
+    it('sets isPersisted = true on related records when save succeeds', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: 'Example description'
+      })
+      const todo = store.add('organizations', { title: 'Buy Milk' })
+      todo.notes.add(note)
+      fetch.mockResponse(mockTodoResponse)
+      expect(note.isPersisted).toBe(false)
+      await todo.save()
+      expect(note.isPersisted).toBe(true)
+    })
+
     it('includes all model errors from the server', async () => {
       const note = store.add('notes', {
         id: 10,
@@ -838,6 +879,25 @@ describe('Model', () => {
             description: ['can\'t be blank']
           }
         })
+      }
+    })
+
+    it('does not set isPersisted after save fails', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: ''
+      })
+      const todo = store.add('organizations', { title: 'Good title' })
+      todo.notes.add(note)
+
+      // Mock the API response
+      fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
+
+      // Trigger the save function and subsequent request
+      try {
+        await note.save()
+      } catch (errors) {
+        expect(note.isPersisted).toBe(false)
       }
     })
   })
