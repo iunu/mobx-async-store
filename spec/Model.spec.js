@@ -476,6 +476,14 @@ describe('Model', () => {
       todo.title = 'Buy something else'
       expect(todo.isPersisted).toBe(false)
     })
+
+    it('is false after nested attribute mutation', async () => {
+      const todo = new Organization({ title: 'Buy Milk', options: { color: 'red' } })
+      todo.isPersisted = true
+      expect(todo.isPersisted).toBe(true)
+      todo.options.color = 'blue'
+      expect(todo.isPersisted).toBe(false)
+    })
   })
 
   describe('.dirtyAttributes', () => {
