@@ -375,6 +375,20 @@ class Model {
       { relationships, attributes }
     ))
 
+    if (relationships) {
+      relationships.forEach((rel) => {
+        if (Array.isArray(this[rel])) {
+          this[rel].forEach((item, i) => {
+            if (item.isNew) {
+              throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}[${i}]"`)
+            }
+          })
+        } else if (this[rel].isNew) {
+          throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}"`)
+        }
+      })
+    }
+
     const response = this.store.fetch(url, { method, body })
 
     return new ObjectPromiseProxy(response, this)
