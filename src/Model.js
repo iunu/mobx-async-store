@@ -312,7 +312,7 @@ class Model {
   @observable errors = {}
 
   /**
-   * The previous state of defined attributes and relationships of the instance
+   * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
    *
    * @property snapshots
    * @type {Array<Snapshot>}
