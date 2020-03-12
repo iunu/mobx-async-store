@@ -513,6 +513,7 @@ class Model {
    * _dirtyAttributes set
    * if it's the same as the last snapshot, make sure it's _not_ in the
    * _dirtyAttributes set
+   * @method _listenForChanges
    */
   _listenForChanges () {
     this._disposers = Object.keys(this.attributes).map((attr) => {
@@ -541,6 +542,7 @@ class Model {
   /**
    * call this when destroying an object to make sure that we clean up
    * any event listeners and don't leak memory
+   * @method dispose
    */
   dispose () {
     this._disposers.forEach((dispose) => dispose())
