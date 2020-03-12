@@ -203,7 +203,7 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     this._makeObservable(initialAttributes)
-    this._takeSnapshot()
+    this._takeSnapshot(!this.isNew)
   }
 
   /**
