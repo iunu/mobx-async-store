@@ -1,7 +1,7 @@
 import {
   computed,
   extendObservable,
-  intercept,
+  reaction,
   set,
   toJS,
   transaction,
@@ -10,13 +10,13 @@ import {
 
 import moment from 'moment'
 
-import { walk } from './utils'
+import { diff } from './utils'
 
 import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
-import dig from 'lodash/get'
-import flattenDeep from 'lodash/flattenDeep'
+import isEqual from 'lodash/isEqual'
+import isObject from 'lodash/isObject'
 
 function isPresent (value) {
   return value !== null && value !== undefined && value !== ''
@@ -203,17 +203,8 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     this._makeObservable(initialAttributes)
-    this.setPreviousSnapshot()
+    this._takeSnapshot()
   }
-
-  /**
-   * Property used to capture the state of the record between being fetched and saved.
-   *
-   * @property isPersisted
-   * @type Boolean
-   * @default false
-   */
-  isPersisted = false
 
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -231,6 +222,7 @@ class Model {
    */
 
    @observable _dirtyRelationships = new Set()
+   @observable _dirtyAttributes = new Set()
 
   /**
    * True if the instance has been modified from its persisted state
@@ -265,7 +257,12 @@ class Model {
    * @default false
    */
   get isDirty () {
-    return this.dirtyAttributes.length > 0
+    return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0
+  }
+
+  get isPersisted () {
+    if (this.isDirty) return false
+    return this.previousSnapshot.persisted
   }
 
   /**
@@ -313,11 +310,11 @@ class Model {
   /**
    * The previous state of defined attributes and relationships of the instance
    *
-   * @property previousSnapshot
-   * @type {Object}
-   * @default {}
+   * @property snapshots
+   * @type {Array<Snapshot>}
+   * @default []
    */
-  previousSnapshot = {}
+  snapshots = []
 
   /**
    * restores data to its last persisted state
@@ -341,7 +338,7 @@ class Model {
       this.relationships = previousSnapshot.relationships
       this.errors = {}
     })
-    this.setPreviousSnapshot()
+    this._takeSnapshot()
   }
 
   /**
@@ -481,20 +478,39 @@ class Model {
    * @method _makeObservable
    */
   _makeObservable (initialAttributes) {
-     const { defaultAttributes, attributeDefinitions } = this
+    const { defaultAttributes } = this
 
-     extendObservable(this, {
-       ...defaultAttributes,
-       ...initialAttributes
-     })
+    extendObservable(this, {
+      ...defaultAttributes,
+      ...initialAttributes
+    })
 
-     Object.keys(attributeDefinitions).map((attr) => {
-      intercept(this, attr, (change) => {
-        this.isPersisted = false
-        return change
+    this.disposers = Object.keys(this.attributes).map((attr) => {
+      return reaction(() => this.attributes[attr], (value) => {
+        const previousValue = this.previousSnapshot.attributes[attr]
+        if (isEqual(previousValue, value)) {
+          this._dirtyAttributes.delete(attr)
+        } else if (isObject(value)) { // handles Objects and Arrays
+          // clear out any dirty attrs that start with this attr prefix
+          // then we can reset them if they are still (or newly) dirty
+          Array.from(this._dirtyAttributes).forEach((path) => {
+            if (path.indexOf(`${attr}.`) === 0) {
+              this._dirtyAttributes.delete(path)
+            }
+          })
+          diff(previousValue, value).forEach((property) => {
+            this._dirtyAttributes.add(`${attr}.${property}`)
+          })
+        } else {
+          this._dirtyAttributes.add(attr)
+        }
       })
-     })
-   }
+    })
+  }
+
+  dispose () {
+    this.disposers.forEach((dispose) => dispose())
+  }
 
   /**
    * The current state of defined attributes and relationships of the instance
@@ -524,8 +540,32 @@ class Model {
    * @method setPreviousSnapshot
    */
   setPreviousSnapshot () {
-    this._dirtyRelationships = new Set()
-    this.previousSnapshot = this.snapshot
+    this._takeSnapshot()
+  }
+
+  get previousSnapshot () {
+    const length = this.snapshots.length
+    if (length === 0) throw new Error('Invariant violated: model has no snapshots')
+    return this.snapshots[length - 1]
+  }
+
+  _takeSnapshot (persisted = false) {
+    this._dirtyRelationships.clear()
+    this._dirtyAttributes.clear()
+    const { attributes, relationships } = this.snapshot
+    if (persisted) {
+      this.snapshots = [{
+        persisted: true,
+        attributes,
+        relationships
+      }]
+    } else {
+      this.snapshots.push({
+        persisted: false,
+        attributes,
+        relationships
+      })
+    }
   }
 
   /**
@@ -543,14 +583,11 @@ class Model {
    * @return {Array} dirty attribute paths
    */
 
-  get dirtyAttributes () {
+   get dirtyAttributes () {
     const relationships = Array.from(this._dirtyRelationships).map((property) => `relationships.${property}`)
-    const attributes = flattenDeep(walk(this.previousSnapshot.attributes, (prevValue, path) => {
-      const currValue = dig(this.snapshot.attributes, path)
-      return prevValue === currValue ? undefined : path
-    })).filter((x) => x)
+    const attributes = Array.from(this._dirtyAttributes)
     return [...relationships, ...attributes]
-  }
+   }
 
   /**
    * shortcut to get the static

@@ -1,6 +1,8 @@
 import uuidv1 from 'uuid/v1'
 import jqueryParam from 'jquery-param'
 import pluralize from 'pluralize'
+import dig from 'lodash/get'
+import flattenDeep from 'lodash/flattenDeep'
 
 const pending = {}
 const counter = {}
@@ -149,4 +151,11 @@ export function walk (value, iteratee, prop, path) {
     })
   }
   return iteratee(value, path)
+}
+
+export function diff (a = {}, b = {}) {
+  return flattenDeep(walk(a, (prevValue, path) => {
+    const currValue = dig(b, path)
+    return prevValue === currValue ? undefined : path
+  })).filter((x) => x)
 }

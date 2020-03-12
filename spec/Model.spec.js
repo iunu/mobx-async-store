@@ -471,7 +471,7 @@ describe('Model', () => {
 
     it('is false after attribute mutation', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
-      todo.isPersisted = true
+      todo._takeSnapshot(true)
       expect(todo.isPersisted).toBe(true)
       todo.title = 'Buy something else'
       expect(todo.isPersisted).toBe(false)
@@ -479,7 +479,7 @@ describe('Model', () => {
 
     it('is false after nested attribute mutation', async () => {
       const todo = new Organization({ title: 'Buy Milk', options: { color: 'red' } })
-      todo.isPersisted = true
+      todo._takeSnapshot(true)
       expect(todo.isPersisted).toBe(true)
       todo.options.color = 'blue'
       expect(todo.isPersisted).toBe(false)
@@ -501,6 +501,21 @@ describe('Model', () => {
       todo.options.variety = 'Skim'
       expect(todo.dirtyAttributes).toHaveLength(1)
       expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+    })
+
+    it('tracks sibling changes on nested attributes', async () => {
+      const todo = new Organization({ title: 'Buy Milk', options: { size: 'Quart', variety: '2%' } })
+      expect(todo.dirtyAttributes).toHaveLength(0)
+      todo.options.variety = 'Skim'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+      todo.options.size = 'Gallon'
+      expect(todo.dirtyAttributes).toHaveLength(2)
+      expect(todo.dirtyAttributes.includes('options.variety')).toBe(true)
+      expect(todo.dirtyAttributes.includes('options.size')).toBe(true)
+      todo.options.variety = '2%'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.size')
     })
 
     it('tracks removed to relationships', async () => {
@@ -667,7 +682,6 @@ describe('Model', () => {
     it('validates for a non-empty many relationship', () => {
       const todo = store.add('organizations', {})
       expect(todo.validate()).toBeFalsy()
-      console.log(todo.errors)
       expect(todo.errors.notes[0].key).toEqual('empty')
       expect(todo.errors.notes[0].message).toEqual('must have at least one record')
     })
