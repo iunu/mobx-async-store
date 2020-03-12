@@ -1,6 +1,7 @@
 import {
   computed,
   extendObservable,
+  intercept,
   set,
   toJS,
   transaction,
@@ -213,7 +214,6 @@ class Model {
    * @default false
    */
   isPersisted = false
-
 
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -481,11 +481,18 @@ class Model {
    * @method _makeObservable
    */
   _makeObservable (initialAttributes) {
-     const { defaultAttributes } = this
+     const { defaultAttributes, attributeDefinitions } = this
 
      extendObservable(this, {
        ...defaultAttributes,
        ...initialAttributes
+     })
+
+     Object.keys(attributeDefinitions).map((attr) => {
+      intercept(this, attr, (change) => {
+        this.isPersisted = false
+        return change
+      })
      })
    }
 
