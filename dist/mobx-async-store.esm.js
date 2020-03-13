@@ -18,6 +18,7 @@ import flattenDeep from 'lodash/flattenDeep';
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
+import findLast from 'lodash/findLast';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
@@ -231,7 +232,9 @@ function ObjectPromiseProxy(promise, target) {
 
               target.isInFlight = false;
 
-              target._takeSnapshot(true);
+              target._takeSnapshot({
+                persisted: true
+              });
 
               transaction(function () {
                 // NOTE: This resolves an issue where a record is persisted but the
@@ -471,11 +474,13 @@ function () {
 
     _initializerDefineProperty(this, "errors", _descriptor3, this);
 
-    this.snapshots = [];
+    this._snapshots = [];
 
     this._makeObservable(initialAttributes);
 
-    this._takeSnapshot(!this.isNew);
+    this._takeSnapshot({
+      persisted: !this.isNew
+    });
   }
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -497,7 +502,7 @@ function () {
     key: "rollback",
 
     /**
-     * restores data to its last persisted state
+     * restores data to its last snapshot state
      * ```
      * kpi = store.find('kpis', 5)
      * kpi.name
@@ -510,20 +515,22 @@ function () {
      * @method rollback
      */
     value: function rollback() {
-      var _this2 = this;
+      this._applySnapshot(this.previousSnapshot);
+    }
+    /**
+     * restores data to its last persisted state or the oldest snapshot
+     * state if the model was never persisted
+     * @method rollbackToPersisted
+     */
 
-      transaction(function () {
-        var previousSnapshot = _this2.previousSnapshot;
+  }, {
+    key: "rollbackToPersisted",
+    value: function rollbackToPersisted() {
+      this._applySnapshot(this.persistedSnapshot);
 
-        _this2.attributeNames.forEach(function (key) {
-          _this2[key] = previousSnapshot.attributes[key];
-        });
-
-        _this2.relationships = previousSnapshot.relationships;
-        _this2.errors = {};
+      this._takeSnapshot({
+        persisted: true
       });
-
-      this._takeSnapshot();
     }
     /**
      * creates or updates a record.
@@ -535,7 +542,7 @@ function () {
   }, {
     key: "save",
     value: function save() {
-      var _this3 = this;
+      var _this2 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -566,13 +573,13 @@ function () {
 
       if (relationships) {
         relationships.forEach(function (rel) {
-          if (Array.isArray(_this3[rel])) {
-            _this3[rel].forEach(function (item, i) {
+          if (Array.isArray(_this2[rel])) {
+            _this2[rel].forEach(function (item, i) {
               if (item.isNew) {
                 throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "[").concat(i, "]\""));
               }
             });
-          } else if (_this3[rel].isNew) {
+          } else if (_this2[rel].isNew) {
             throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "\""));
           }
         });
@@ -749,30 +756,30 @@ function () {
   }, {
     key: "_listenForChanges",
     value: function _listenForChanges() {
-      var _this4 = this;
+      var _this3 = this;
 
       this._disposers = Object.keys(this.attributes).map(function (attr) {
         return reaction(function () {
-          return _this4.attributes[attr];
+          return _this3.attributes[attr];
         }, function (value) {
-          var previousValue = _this4.previousSnapshot.attributes[attr];
+          var previousValue = _this3.previousSnapshot.attributes[attr];
 
           if (isEqual(previousValue, value)) {
-            _this4._dirtyAttributes.delete(attr);
+            _this3._dirtyAttributes.delete(attr);
           } else if (isObject(value)) {
             // handles Objects and Arrays
             // clear out any dirty attrs that start with this attr prefix
             // then we can reset them if they are still (or newly) dirty
-            Array.from(_this4._dirtyAttributes).forEach(function (path) {
+            Array.from(_this3._dirtyAttributes).forEach(function (path) {
               if (path.indexOf("".concat(attr, ".")) === 0) {
-                _this4._dirtyAttributes.delete(path);
+                _this3._dirtyAttributes.delete(path);
               }
             });
             diff(previousValue, value).forEach(function (property) {
-              _this4._dirtyAttributes.add("".concat(attr, ".").concat(property));
+              _this3._dirtyAttributes.add("".concat(attr, ".").concat(property));
             });
           } else {
-            _this4._dirtyAttributes.add(attr);
+            _this3._dirtyAttributes.add(attr);
           }
         });
       });
@@ -817,10 +824,25 @@ function () {
     value: function setPreviousSnapshot() {
       this._takeSnapshot();
     }
+    /**
+     * the latest snapshot
+     *
+     * @method previousSnapshot
+     */
+
   }, {
     key: "_takeSnapshot",
+
+    /**
+     * take a snapshot of the current model state.
+     * if persisted, clear the stack and push this snapshot to the top
+     * if not persisted, push this snapshot to the top of the stack
+     * @method _takeSnapshot
+     * @param {Object} options
+     */
     value: function _takeSnapshot() {
-      var persisted = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var persisted = options.persisted || false;
 
       this._dirtyRelationships.clear();
 
@@ -829,20 +851,39 @@ function () {
       var _this$snapshot = this.snapshot,
           attributes = _this$snapshot.attributes,
           relationships = _this$snapshot.relationships;
+      var snapshot = {
+        persisted: persisted,
+        attributes: attributes,
+        relationships: relationships
+      };
 
       if (persisted) {
-        this.snapshots = [{
-          persisted: true,
-          attributes: attributes,
-          relationships: relationships
-        }];
-      } else {
-        this.snapshots.push({
-          persisted: false,
-          attributes: attributes,
-          relationships: relationships
-        });
+        this._snapshots = [];
       }
+
+      this._snapshots.push(snapshot);
+    }
+    /**
+     * set the current attributes and relationships to the attributes
+     * and relationships of the snapshot to be applied. also reset errors
+     * @method _applySnapshot
+     * @param {Object} snapshot
+     */
+
+  }, {
+    key: "_applySnapshot",
+    value: function _applySnapshot(snapshot) {
+      var _this4 = this;
+
+      if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
+      transaction(function () {
+        _this4.attributeNames.forEach(function (key) {
+          _this4[key] = snapshot.attributes[key];
+        });
+
+        _this4.relationships = snapshot.relationships;
+        _this4.errors = {};
+      });
     }
     /**
      * a list of any property paths which have been changed since the previous
@@ -1069,9 +1110,22 @@ function () {
   }, {
     key: "previousSnapshot",
     get: function get() {
-      var length = this.snapshots.length;
+      var length = this._snapshots.length;
       if (length === 0) throw new Error('Invariant violated: model has no snapshots');
-      return this.snapshots[length - 1];
+      return this._snapshots[length - 1];
+    }
+    /**
+     * the latest persisted snapshot or the first snapshot if the model was never persisted
+     *
+     * @method previousSnapshot
+     */
+
+  }, {
+    key: "persistedSnapshot",
+    get: function get() {
+      return findLast(this._snapshots, function (ss) {
+        return ss.persisted;
+      }) || this._snapshots[0];
     }
   }, {
     key: "dirtyAttributes",
