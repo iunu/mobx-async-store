@@ -144,15 +144,31 @@ export function stringifyIds (object) {
   })
 }
 
-export function walk (value, iteratee, prop, path) {
-  if (value != null && typeof value === 'object') {
-    return Object.keys(value).map((prop) => {
-      return walk(value[prop], iteratee, prop, [path, prop].filter(x => x).join('.'))
+/**
+ * recursively walk an object and call the `iteratee` function for
+ * each property
+ * @param {*} obj
+ * @param {Function} iteratee
+ * @param {*} prefix
+ */
+export function walk (obj, iteratee, prefix) {
+  if (obj != null && typeof obj === 'object') {
+    return Object.keys(obj).map((prop) => {
+      return walk(obj[prop], iteratee, [prefix, prop].filter(x => x).join('.'))
     })
   }
-  return iteratee(value, path)
+  return iteratee(obj, prefix)
 }
 
+/**
+ * deeply compare objects a and b and return object paths for attributes
+ * which differ. it is important to note that this comparison is biased
+ * toward object a. object a is walked and compared against values in
+ * object b. if a property exists in object b, but not in object a, it
+ * will not be counted as a difference.
+ * @param {Object} a
+ * @param {Object} b
+ */
 export function diff (a = {}, b = {}) {
   return flattenDeep(walk(a, (prevValue, path) => {
     const currValue = dig(b, path)
