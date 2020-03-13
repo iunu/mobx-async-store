@@ -705,7 +705,7 @@ describe('Model', () => {
   })
 
   describe('.rollback', () => {
-    it('rollback restores data to last persisted state ', async () => {
+    it('rollback restores data to last snapshot state ', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
@@ -716,7 +716,6 @@ describe('Model', () => {
     })
 
     it('rollbacks to state after save', async () => {
-      // expect.assertions(9)
       // Add record to store
       const note = store.add('notes', {
         id: 10,
@@ -734,6 +733,41 @@ describe('Model', () => {
       expect(todo.title).toEqual('Unsaved title')
       todo.rollback()
       expect(todo.title).toEqual(savedTitle)
+    })
+  })
+
+  describe('.rollbackToPersisted', () => {
+    it('rollback restores data to last persisted state ', () => {
+      const todo = new Organization({ title: 'Buy Milk', id: 10 })
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
+      todo.title = 'Do Laundry'
+      expect(todo.title).toEqual('Do Laundry')
+      todo._takeSnapshot()
+      todo.title = 'Do something else'
+      expect(todo.title).toEqual('Do something else')
+      todo.rollbackToPersisted()
+      expect(todo.title).toEqual('Buy Milk')
+    })
+
+    it('will restore the original (unpersisted) state if model was never persisted', () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
+      todo.title = 'Do Laundry'
+      todo._takeSnapshot()
+      todo.title = 'Do something else'
+      todo.rollbackToPersisted()
+      expect(todo.title).toEqual('Buy Milk')
+    })
+
+    it('it removes unpersisted snapshots from the stack', () => {
+      const todo = new Organization({ title: 'Buy Milk', id: 10 })
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
+      expect(todo._snapshots.length).toEqual(1)
+      todo.title = 'Do Laundry'
+      todo._takeSnapshot()
+      expect(todo._snapshots.length).toEqual(2)
+      todo.rollbackToPersisted()
+      expect(todo._snapshots.length).toEqual(1)
     })
   })
 

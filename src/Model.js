@@ -17,6 +17,7 @@ import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
+import findLast from 'lodash/findLast'
 
 function isPresent (value) {
   return value !== null && value !== undefined && value !== ''
@@ -318,7 +319,7 @@ class Model {
    * @type {Array<Snapshot>}
    * @default []
    */
-  snapshots = []
+  _snapshots = []
 
   /**
    * restores data to its last persisted state
@@ -334,15 +335,12 @@ class Model {
    * @method rollback
    */
   rollback () {
-    transaction(() => {
-      const { previousSnapshot } = this
-      this.attributeNames.forEach((key) => {
-        this[key] = previousSnapshot.attributes[key]
-      })
-      this.relationships = previousSnapshot.relationships
-      this.errors = {}
-    })
-    this._takeSnapshot()
+    this._applySnapshot(this.previousSnapshot)
+  }
+
+  rollbackToPersisted () {
+    this._applySnapshot(this.persistedSnapshot)
+    this._takeSnapshot({ persisted: true })
   }
 
   /**
@@ -580,9 +578,13 @@ class Model {
   }
 
   get previousSnapshot () {
-    const length = this.snapshots.length
+    const length = this._snapshots.length
     if (length === 0) throw new Error('Invariant violated: model has no snapshots')
-    return this.snapshots[length - 1]
+    return this._snapshots[length - 1]
+  }
+
+  get persistedSnapshot () {
+    return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
   _takeSnapshot (options = {}) {
@@ -591,18 +593,29 @@ class Model {
     this._dirtyAttributes.clear()
     const { attributes, relationships } = this.snapshot
     if (persisted) {
-      this.snapshots = [{
+      this._snapshots = [{
         persisted: true,
         attributes,
         relationships
       }]
     } else {
-      this.snapshots.push({
+      this._snapshots.push({
         persisted: false,
         attributes,
         relationships
       })
     }
+  }
+
+  _applySnapshot (snapshot) {
+    if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
+    transaction(() => {
+      this.attributeNames.forEach((key) => {
+        this[key] = snapshot.attributes[key]
+      })
+      this.relationships = snapshot.relationships
+      this.errors = {}
+    })
   }
 
   /**
