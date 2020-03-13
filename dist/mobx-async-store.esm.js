@@ -1197,7 +1197,7 @@ function () {
       return this.attributeNames.reduce(function (attributes, key) {
         var value = toJS(_this7[key]);
 
-        if (!value) {
+        if (value == null) {
           delete attributes[key];
         } else {
           attributes[key] = value;

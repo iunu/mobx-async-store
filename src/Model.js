@@ -703,7 +703,7 @@ class Model {
   get attributes () {
     return this.attributeNames.reduce((attributes, key) => {
       const value = toJS(this[key])
-      if (!value) {
+      if (value == null) {
         delete attributes[key]
       } else {
         attributes[key] = value
