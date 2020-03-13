@@ -146,10 +146,12 @@ export function stringifyIds (object) {
 
 /**
  * recursively walk an object and call the `iteratee` function for
- * each property
+ * each property. returns an array of results of calls to the iteratee.
+ * @method walk
  * @param {*} obj
  * @param {Function} iteratee
  * @param {String} prefix
+ * @return Array
  */
 export function walk (obj, iteratee, prefix) {
   if (obj != null && typeof obj === 'object') {
@@ -166,8 +168,10 @@ export function walk (obj, iteratee, prefix) {
  * toward object a. object a is walked and compared against values in
  * object b. if a property exists in object b, but not in object a, it
  * will not be counted as a difference.
+ * @method diff
  * @param {Object} a
  * @param {Object} b
+ * @return Array<String>
  */
 export function diff (a = {}, b = {}) {
   return flattenDeep(walk(a, (prevValue, path) => {
