@@ -222,8 +222,27 @@ class Model {
    * @static
    */
 
-   @observable _dirtyRelationships = new Set()
-   @observable _dirtyAttributes = new Set()
+  /**
+    * has this object been destroyed?
+    * @property _disposed
+    * @type {Boolean}
+    * @default false
+    */
+  @observable _disposed = false
+
+  /**
+    * set of relationships which have changed since last snapshot
+    * @property _dirtyRelationships
+    * @type {Set}
+    */
+  @observable _dirtyRelationships = new Set()
+
+  /**
+    * set of attributes which have changed since last snapshot
+    * @property _dirtyAttributes
+    * @type {Set}
+    */
+  @observable _dirtyAttributes = new Set()
 
   /**
    * True if the instance has been modified from its persisted state
@@ -475,6 +494,8 @@ class Model {
             _this.store.createModelsFromData(json.included)
           }
 
+          _this.dispose()
+
           return _this
         } else {
           _this.errors = { status: response.status }
@@ -548,6 +569,7 @@ class Model {
    * @method dispose
    */
   dispose () {
+    this._disposed = true
     this._disposers.forEach((dispose) => dispose())
   }
 

@@ -943,7 +943,7 @@ describe('Model', () => {
     })
   })
 
-  describe('.delete', () => {
+  describe('.destroy', () => {
     it('makes request and removes model from the store store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
@@ -955,6 +955,32 @@ describe('Model', () => {
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
       expect(store.findAll('organizations', { fromServer: false }))
         .toHaveLength(0)
+    })
+
+    it('calls dispose', async () => {
+      fetch.mockResponses([JSON.stringify({}), { status: 204 }])
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      todo.dispose = jest.fn()
+      await todo.destroy()
+      expect(todo.dispose.mock.calls).toHaveLength(1)
+    })
+  })
+
+  describe('.dispose', () => {
+    it('sets _disposed = true', () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      expect(todo._disposed).toBe(false)
+      todo.dispose()
+      expect(todo._disposed).toBe(true)
+    })
+
+    it('no longer tracks dirty changes', () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      expect(todo.isDirty).toBe(false)
+      todo.dispose()
+      todo.title = 'I Changed'
+      // dirty status is unchanged because the object has been disposed
+      expect(todo.isDirty).toBe(false)
     })
   })
 })
