@@ -8,14 +8,17 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _typeof from '@babel/runtime/helpers/typeof';
-import { transaction, set, observable, computed, extendObservable, toJS, action } from 'mobx';
+import { transaction, set, observable, computed, extendObservable, reaction, toJS, action } from 'mobx';
 import moment from 'moment';
 import uuidv1 from 'uuid/v1';
 import jqueryParam from 'jquery-param';
 import pluralize from 'pluralize';
-import cloneDeep from 'lodash/cloneDeep';
 import dig from 'lodash/get';
 import flattenDeep from 'lodash/flattenDeep';
+import cloneDeep from 'lodash/cloneDeep';
+import isEqual from 'lodash/isEqual';
+import isObject from 'lodash/isObject';
+import findLast from 'lodash/findLast';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
@@ -152,16 +155,48 @@ function uniqueByReducer(key) {
 function uniqueBy(array, key) {
   return array.reduce(uniqueByReducer(key), []);
 }
-function walk(value, iteratee, prop, path) {
-  if (value != null && _typeof(value) === 'object') {
-    return Object.keys(value).map(function (prop) {
-      return walk(value[prop], iteratee, prop, [path, prop].filter(function (x) {
+/**
+ * recursively walk an object and call the `iteratee` function for
+ * each property. returns an array of results of calls to the iteratee.
+ * @method walk
+ * @param {*} obj
+ * @param {Function} iteratee
+ * @param {String} prefix
+ * @return Array
+ */
+
+function walk(obj, iteratee, prefix) {
+  if (obj != null && _typeof(obj) === 'object') {
+    return Object.keys(obj).map(function (prop) {
+      return walk(obj[prop], iteratee, [prefix, prop].filter(function (x) {
         return x;
       }).join('.'));
     });
   }
 
-  return iteratee(value, path);
+  return iteratee(obj, prefix);
+}
+/**
+ * deeply compare objects a and b and return object paths for attributes
+ * which differ. it is important to note that this comparison is biased
+ * toward object a. object a is walked and compared against values in
+ * object b. if a property exists in object b, but not in object a, it
+ * will not be counted as a difference.
+ * @method diff
+ * @param {Object} a
+ * @param {Object} b
+ * @return Array<String>
+ */
+
+function diff() {
+  var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  return flattenDeep(walk(a, function (prevValue, path) {
+    var currValue = dig(b, path);
+    return prevValue === currValue ? undefined : path;
+  })).filter(function (x) {
+    return x;
+  });
 }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -218,7 +253,11 @@ function ObjectPromiseProxy(promise, target) {
               }); // Update target isInFlight
 
               target.isInFlight = false;
-              target.setPreviousSnapshot();
+
+              target._takeSnapshot({
+                persisted: true
+              });
+
               transaction(function () {
                 // NOTE: This resolves an issue where a record is persisted but the
                 // index key is still a temp uuid. We can't simply remove the temp
@@ -366,7 +405,7 @@ function () {
 
 var schema = new Schema();
 
-var _class, _descriptor, _descriptor2, _temp;
+var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _temp;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -449,17 +488,23 @@ function () {
 
     _classCallCheck(this, Model);
 
-    _initializerDefineProperty(this, "_dirtyRelationships", _descriptor, this);
+    _initializerDefineProperty(this, "_disposed", _descriptor, this);
+
+    _initializerDefineProperty(this, "_dirtyRelationships", _descriptor2, this);
+
+    _initializerDefineProperty(this, "_dirtyAttributes", _descriptor3, this);
 
     this.isInFlight = false;
 
-    _initializerDefineProperty(this, "errors", _descriptor2, this);
+    _initializerDefineProperty(this, "errors", _descriptor4, this);
 
-    this.previousSnapshot = {};
+    this._snapshots = [];
 
     this._makeObservable(initialAttributes);
 
-    this.setPreviousSnapshot();
+    this._takeSnapshot({
+      persisted: !this.isNew
+    });
   }
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -476,12 +521,19 @@ function () {
    * @static
    */
 
+  /**
+    * has this object been destroyed?
+    * @property _disposed
+    * @type {Boolean}
+    * @default false
+    */
+
 
   _createClass(Model, [{
     key: "rollback",
 
     /**
-     * restores data to its last persisted state
+     * restores data to its last snapshot state
      * ```
      * kpi = store.find('kpis', 5)
      * kpi.name
@@ -494,19 +546,22 @@ function () {
      * @method rollback
      */
     value: function rollback() {
-      var _this2 = this;
+      this._applySnapshot(this.previousSnapshot);
+    }
+    /**
+     * restores data to its last persisted state or the oldest snapshot
+     * state if the model was never persisted
+     * @method rollbackToPersisted
+     */
 
-      transaction(function () {
-        var previousSnapshot = _this2.previousSnapshot;
+  }, {
+    key: "rollbackToPersisted",
+    value: function rollbackToPersisted() {
+      this._applySnapshot(this.persistedSnapshot);
 
-        _this2.attributeNames.forEach(function (key) {
-          _this2[key] = previousSnapshot.attributes[key];
-        });
-
-        _this2.relationships = previousSnapshot.relationships;
-        _this2.errors = {};
+      this._takeSnapshot({
+        persisted: true
       });
-      this.setPreviousSnapshot();
     }
     /**
      * creates or updates a record.
@@ -518,6 +573,8 @@ function () {
   }, {
     key: "save",
     value: function save() {
+      var _this2 = this;
+
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
       if (!options.skip_validations && !this.validate()) {
@@ -544,6 +601,21 @@ function () {
         relationships: relationships,
         attributes: attributes
       }));
+
+      if (relationships) {
+        relationships.forEach(function (rel) {
+          if (Array.isArray(_this2[rel])) {
+            _this2[rel].forEach(function (item, i) {
+              if (item.isNew) {
+                throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "[").concat(i, "]\""));
+              }
+            });
+          } else if (_this2[rel].isNew) {
+            throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "\""));
+          }
+        });
+      }
+
       var response = this.store.fetch(url, {
         method: method,
         body: body
@@ -623,7 +695,7 @@ function () {
                   _this.isInFlight = false;
 
                   if (!(response.status === 202 || response.status === 204)) {
-                    _context.next = 17;
+                    _context.next = 18;
                     break;
                   }
 
@@ -659,15 +731,17 @@ function () {
                     _this.store.createModelsFromData(json.included);
                   }
 
+                  _this.dispose();
+
                   return _context.abrupt("return", _this);
 
-                case 17:
+                case 18:
                   _this.errors = {
                     status: response.status
                   };
                   return _context.abrupt("return", _this);
 
-                case 19:
+                case 20:
                 case "end":
                   return _context.stop();
               }
@@ -699,6 +773,64 @@ function () {
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
       extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+
+      this._listenForChanges();
+    }
+    /**
+     * sets up a reaction for each top-level attribute so we can compare
+     * values after each mutation and keep track of dirty attr states
+     * if an attr is different than the last snapshot, add it to the
+     * _dirtyAttributes set
+     * if it's the same as the last snapshot, make sure it's _not_ in the
+     * _dirtyAttributes set
+     * @method _listenForChanges
+     */
+
+  }, {
+    key: "_listenForChanges",
+    value: function _listenForChanges() {
+      var _this3 = this;
+
+      this._disposers = Object.keys(this.attributes).map(function (attr) {
+        return reaction(function () {
+          return _this3.attributes[attr];
+        }, function (value) {
+          var previousValue = _this3.previousSnapshot.attributes[attr];
+
+          if (isEqual(previousValue, value)) {
+            _this3._dirtyAttributes.delete(attr);
+          } else if (isObject(value)) {
+            // handles Objects and Arrays
+            // clear out any dirty attrs that start with this attr prefix
+            // then we can reset them if they are still (or newly) dirty
+            Array.from(_this3._dirtyAttributes).forEach(function (path) {
+              if (path.indexOf("".concat(attr, ".")) === 0) {
+                _this3._dirtyAttributes.delete(path);
+              }
+            });
+            diff(previousValue, value).forEach(function (property) {
+              _this3._dirtyAttributes.add("".concat(attr, ".").concat(property));
+            });
+          } else {
+            _this3._dirtyAttributes.add(attr);
+          }
+        });
+      });
+    }
+    /**
+     * call this when destroying an object to make sure that we clean up
+     * any event listeners and don't leak memory
+     * @method dispose
+     */
+
+  }, {
+    key: "dispose",
+    value: function dispose() {
+      this._disposed = true;
+
+      this._disposers.forEach(function (dispose) {
+        return dispose();
+      });
     }
     /**
      * The current state of defined attributes and relationships of the instance
@@ -725,8 +857,68 @@ function () {
      * @method setPreviousSnapshot
      */
     value: function setPreviousSnapshot() {
-      this._dirtyRelationships = new Set();
-      this.previousSnapshot = this.snapshot;
+      this._takeSnapshot();
+    }
+    /**
+     * the latest snapshot
+     *
+     * @method previousSnapshot
+     */
+
+  }, {
+    key: "_takeSnapshot",
+
+    /**
+     * take a snapshot of the current model state.
+     * if persisted, clear the stack and push this snapshot to the top
+     * if not persisted, push this snapshot to the top of the stack
+     * @method _takeSnapshot
+     * @param {Object} options
+     */
+    value: function _takeSnapshot() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var persisted = options.persisted || false;
+
+      this._dirtyRelationships.clear();
+
+      this._dirtyAttributes.clear();
+
+      var _this$snapshot = this.snapshot,
+          attributes = _this$snapshot.attributes,
+          relationships = _this$snapshot.relationships;
+      var snapshot = {
+        persisted: persisted,
+        attributes: attributes,
+        relationships: relationships
+      };
+
+      if (persisted) {
+        this._snapshots = [];
+      }
+
+      this._snapshots.push(snapshot);
+    }
+    /**
+     * set the current attributes and relationships to the attributes
+     * and relationships of the snapshot to be applied. also reset errors
+     * @method _applySnapshot
+     * @param {Object} snapshot
+     */
+
+  }, {
+    key: "_applySnapshot",
+    value: function _applySnapshot(snapshot) {
+      var _this4 = this;
+
+      if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
+      transaction(function () {
+        _this4.attributeNames.forEach(function (key) {
+          _this4[key] = snapshot.attributes[key];
+        });
+
+        _this4.relationships = snapshot.relationships;
+        _this4.errors = {};
+      });
     }
     /**
      * a list of any property paths which have been changed since the previous
@@ -773,7 +965,7 @@ function () {
      * @return {Object} data in JSON::API format
      */
     value: function jsonapi() {
-      var _this3 = this;
+      var _this5 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
@@ -791,7 +983,7 @@ function () {
       }
 
       var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this3[key];
+        var value = _this5[key];
 
         if (value) {
           var DataType = attributeDefinitions[key].dataType;
@@ -823,7 +1015,7 @@ function () {
           return options.relationships.includes(name);
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = toJS(_this3.relationships[key]);
+          rels[key] = toJS(_this5.relationships[key]);
           stringifyIds(rels[key]);
           return rels;
         }, {});
@@ -845,11 +1037,11 @@ function () {
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
-      var _this4 = this;
+      var _this6 = this;
 
       transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          _this4[key] = attributes[key];
+          _this6[key] = attributes[key];
         });
       });
     }
@@ -896,10 +1088,20 @@ function () {
      * ```
      * @property isDirty
      * @type {Boolean}
-     * @default false
      */
     get: function get() {
-      return this.dirtyAttributes.length > 0;
+      return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0;
+    }
+    /**
+     * have any changes been made since this record was last persisted?
+     * @property hasUnpersistedChanges
+     * @type {Boolean}
+     */
+
+  }, {
+    key: "hasUnpersistedChanges",
+    get: function get() {
+      return this.isDirty || !this.previousSnapshot.persisted;
     }
     /**
      * True if the model has not been sent to the store
@@ -940,19 +1142,32 @@ function () {
       };
     }
   }, {
+    key: "previousSnapshot",
+    get: function get() {
+      var length = this._snapshots.length;
+      if (length === 0) throw new Error('Invariant violated: model has no snapshots');
+      return this._snapshots[length - 1];
+    }
+    /**
+     * the latest persisted snapshot or the first snapshot if the model was never persisted
+     *
+     * @method previousSnapshot
+     */
+
+  }, {
+    key: "persistedSnapshot",
+    get: function get() {
+      return findLast(this._snapshots, function (ss) {
+        return ss.persisted;
+      }) || this._snapshots[0];
+    }
+  }, {
     key: "dirtyAttributes",
     get: function get() {
-      var _this5 = this;
-
       var relationships = Array.from(this._dirtyRelationships).map(function (property) {
         return "relationships.".concat(property);
       });
-      var attributes = flattenDeep(walk(this.previousSnapshot.attributes, function (prevValue, path) {
-        var currValue = dig(_this5.snapshot.attributes, path);
-        return prevValue === currValue ? undefined : path;
-      })).filter(function (x) {
-        return x;
-      });
+      var attributes = Array.from(this._dirtyAttributes);
       return [].concat(_toConsumableArray(relationships), _toConsumableArray(attributes));
     }
     /**
@@ -977,10 +1192,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this6 = this;
+      var _this7 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = toJS(_this6[key]);
+        var value = toJS(_this7[key]);
 
         if (!value) {
           delete attributes[key];
@@ -1068,14 +1283,28 @@ function () {
   }]);
 
   return Model;
-}(), _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "_dirtyRelationships", [observable], {
+}(), _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "_disposed", [observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return false;
+  }
+}), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "_dirtyRelationships", [observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return new Set();
   }
-}), _applyDecoratedDescriptor(_class.prototype, "isNew", [computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "errors", [observable], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class.prototype, "_dirtyAttributes", [observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return new Set();
+  }
+}), _applyDecoratedDescriptor(_class.prototype, "isNew", [computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor4 = _applyDecoratedDescriptor(_class.prototype, "errors", [observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -1084,7 +1313,7 @@ function () {
   }
 })), _class);
 
-var _class$1, _descriptor$1, _descriptor2$1, _descriptor3, _temp$1;
+var _class$1, _descriptor$1, _descriptor2$1, _descriptor3$1, _temp$1;
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -1140,7 +1369,7 @@ function () {
       });
     };
 
-    _initializerDefineProperty(this, "remove", _descriptor3, this);
+    _initializerDefineProperty(this, "remove", _descriptor3$1, this);
 
     this.findOne = function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
@@ -1842,7 +2071,7 @@ function () {
       return model;
     };
   }
-}), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [action], {
+}), _descriptor3$1 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [action], {
   configurable: true,
   enumerable: true,
   writable: true,

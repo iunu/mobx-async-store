@@ -1,6 +1,8 @@
 import uuidv1 from 'uuid/v1'
 import jqueryParam from 'jquery-param'
 import pluralize from 'pluralize'
+import dig from 'lodash/get'
+import flattenDeep from 'lodash/flattenDeep'
 
 const pending = {}
 const counter = {}
@@ -142,11 +144,38 @@ export function stringifyIds (object) {
   })
 }
 
-export function walk (value, iteratee, prop, path) {
-  if (value != null && typeof value === 'object') {
-    return Object.keys(value).map((prop) => {
-      return walk(value[prop], iteratee, prop, [path, prop].filter(x => x).join('.'))
+/**
+ * recursively walk an object and call the `iteratee` function for
+ * each property. returns an array of results of calls to the iteratee.
+ * @method walk
+ * @param {*} obj
+ * @param {Function} iteratee
+ * @param {String} prefix
+ * @return Array
+ */
+export function walk (obj, iteratee, prefix) {
+  if (obj != null && typeof obj === 'object') {
+    return Object.keys(obj).map((prop) => {
+      return walk(obj[prop], iteratee, [prefix, prop].filter(x => x).join('.'))
     })
   }
-  return iteratee(value, path)
+  return iteratee(obj, prefix)
+}
+
+/**
+ * deeply compare objects a and b and return object paths for attributes
+ * which differ. it is important to note that this comparison is biased
+ * toward object a. object a is walked and compared against values in
+ * object b. if a property exists in object b, but not in object a, it
+ * will not be counted as a difference.
+ * @method diff
+ * @param {Object} a
+ * @param {Object} b
+ * @return Array<String>
+ */
+export function diff (a = {}, b = {}) {
+  return flattenDeep(walk(a, (prevValue, path) => {
+    const currValue = dig(b, path)
+    return prevValue === currValue ? undefined : path
+  })).filter((x) => x)
 }

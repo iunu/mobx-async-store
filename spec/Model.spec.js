@@ -451,7 +451,7 @@ describe('Model', () => {
     expect(todo.notes.map((x) => x.id)).toEqual([10])
   })
 
-  describe('.snapshot', () => {
+  describe('.previousSnapshot', () => {
     it('sets snapshot on initialization', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes).toEqual({
@@ -460,6 +460,39 @@ describe('Model', () => {
         title: 'Buy Milk',
         options: {}
       })
+    })
+  })
+
+  describe('.hasUnpersistedChanges', () => {
+    it('is true on initialization', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.hasUnpersistedChanges).toBe(true)
+    })
+
+    it('is false on initialization if an id is present', async () => {
+      const todo = new Organization({ id: 10, title: 'Buy Milk' })
+      expect(todo.hasUnpersistedChanges).toBe(false)
+    })
+
+    it('is true on initialization if the id is a tmp id', async () => {
+      const todo = new Organization({ id: 'tmp-123', title: 'Buy Milk' })
+      expect(todo.hasUnpersistedChanges).toBe(true)
+    })
+
+    it('is true after attribute mutation', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      todo._takeSnapshot({ persisted: true })
+      expect(todo.hasUnpersistedChanges).toBe(false)
+      todo.title = 'Buy something else'
+      expect(todo.hasUnpersistedChanges).toBe(true)
+    })
+
+    it('is false after nested attribute mutation', async () => {
+      const todo = new Organization({ title: 'Buy Milk', options: { color: 'red' } })
+      todo._takeSnapshot({ persisted: true })
+      expect(todo.hasUnpersistedChanges).toBe(false)
+      todo.options.color = 'blue'
+      expect(todo.hasUnpersistedChanges).toBe(true)
     })
   })
 
@@ -478,6 +511,21 @@ describe('Model', () => {
       todo.options.variety = 'Skim'
       expect(todo.dirtyAttributes).toHaveLength(1)
       expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+    })
+
+    it('tracks sibling changes on nested attributes', async () => {
+      const todo = new Organization({ title: 'Buy Milk', options: { size: 'Quart', variety: '2%' } })
+      expect(todo.dirtyAttributes).toHaveLength(0)
+      todo.options.variety = 'Skim'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+      todo.options.size = 'Gallon'
+      expect(todo.dirtyAttributes).toHaveLength(2)
+      expect(todo.dirtyAttributes.includes('options.variety')).toBe(true)
+      expect(todo.dirtyAttributes.includes('options.size')).toBe(true)
+      todo.options.variety = '2%'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.size')
     })
 
     it('tracks removed to relationships', async () => {
@@ -644,7 +692,6 @@ describe('Model', () => {
     it('validates for a non-empty many relationship', () => {
       const todo = store.add('organizations', {})
       expect(todo.validate()).toBeFalsy()
-      console.log(todo.errors)
       expect(todo.errors.notes[0].key).toEqual('empty')
       expect(todo.errors.notes[0].message).toEqual('must have at least one record')
     })
@@ -668,7 +715,7 @@ describe('Model', () => {
   })
 
   describe('.rollback', () => {
-    it('rollback restores data to last persisted state ', async () => {
+    it('rollback restores data to last snapshot state ', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
@@ -679,7 +726,6 @@ describe('Model', () => {
     })
 
     it('rollbacks to state after save', async () => {
-      // expect.assertions(9)
       // Add record to store
       const note = store.add('notes', {
         id: 10,
@@ -697,6 +743,41 @@ describe('Model', () => {
       expect(todo.title).toEqual('Unsaved title')
       todo.rollback()
       expect(todo.title).toEqual(savedTitle)
+    })
+  })
+
+  describe('.rollbackToPersisted', () => {
+    it('rollback restores data to last persisted state ', () => {
+      const todo = new Organization({ title: 'Buy Milk', id: 10 })
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
+      todo.title = 'Do Laundry'
+      expect(todo.title).toEqual('Do Laundry')
+      todo._takeSnapshot()
+      todo.title = 'Do something else'
+      expect(todo.title).toEqual('Do something else')
+      todo.rollbackToPersisted()
+      expect(todo.title).toEqual('Buy Milk')
+    })
+
+    it('will restore the original (unpersisted) state if model was never persisted', () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
+      todo.title = 'Do Laundry'
+      todo._takeSnapshot()
+      todo.title = 'Do something else'
+      todo.rollbackToPersisted()
+      expect(todo.title).toEqual('Buy Milk')
+    })
+
+    it('it removes unpersisted snapshots from the stack', () => {
+      const todo = new Organization({ title: 'Buy Milk', id: 10 })
+      expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
+      expect(todo._snapshots.length).toEqual(1)
+      todo.title = 'Do Laundry'
+      todo._takeSnapshot()
+      expect(todo._snapshots.length).toEqual(2)
+      todo.rollbackToPersisted()
+      expect(todo._snapshots.length).toEqual(1)
     })
   })
 
@@ -813,6 +894,19 @@ describe('Model', () => {
         .toEqual(timestamp.format('YYYY-MM-DD'))
     })
 
+    it('sets hasUnpersistedChanges = false when save succeeds', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: 'Example description'
+      })
+      const todo = store.add('organizations', { title: 'Buy Milk' })
+      todo.notes.add(note)
+      fetch.mockResponse(mockTodoResponse)
+      expect(todo.hasUnpersistedChanges).toBe(true)
+      await todo.save()
+      expect(todo.hasUnpersistedChanges).toBe(false)
+    })
+
     it('includes all model errors from the server', async () => {
       const note = store.add('notes', {
         id: 10,
@@ -840,9 +934,26 @@ describe('Model', () => {
         })
       }
     })
+
+    it('does not set hasUnpersistedChanges after save fails', async () => {
+      const note = store.add('notes', {
+        description: ''
+      })
+
+      expect(note.hasUnpersistedChanges).toBe(true)
+      // Mock the API response
+      fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
+
+      // Trigger the save function and subsequent request
+      try {
+        await note.save()
+      } catch (errors) {
+        expect(note.hasUnpersistedChanges).toBe(true)
+      }
+    })
   })
 
-  describe('.delete', () => {
+  describe('.destroy', () => {
     it('makes request and removes model from the store store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
@@ -854,6 +965,32 @@ describe('Model', () => {
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
       expect(store.findAll('organizations', { fromServer: false }))
         .toHaveLength(0)
+    })
+
+    it('calls dispose', async () => {
+      fetch.mockResponses([JSON.stringify({}), { status: 204 }])
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      todo.dispose = jest.fn()
+      await todo.destroy()
+      expect(todo.dispose.mock.calls).toHaveLength(1)
+    })
+  })
+
+  describe('.dispose', () => {
+    it('sets _disposed = true', () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      expect(todo._disposed).toBe(false)
+      todo.dispose()
+      expect(todo._disposed).toBe(true)
+    })
+
+    it('no longer tracks dirty changes', () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      expect(todo.isDirty).toBe(false)
+      todo.dispose()
+      todo.title = 'I Changed'
+      // dirty status is unchanged because the object has been disposed
+      expect(todo.isDirty).toBe(false)
     })
   })
 })

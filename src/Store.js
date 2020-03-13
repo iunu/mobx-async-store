@@ -623,7 +623,6 @@ class Store {
         const { id, attributes = {}, relationships = {} } = dataObject
         const ModelKlass = this.modelTypeIndex[type]
         const record = new ModelKlass({ store, relationships, ...attributes })
-
         this.data[type].cache[url].push(id)
         this.data[type].records[id] = record
 
