@@ -203,7 +203,7 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     this._makeObservable(initialAttributes)
-    this._takeSnapshot(!this.isNew)
+    this._takeSnapshot({ persisted: !this.isNew })
   }
 
   /**
@@ -585,7 +585,8 @@ class Model {
     return this.snapshots[length - 1]
   }
 
-  _takeSnapshot (persisted = false) {
+  _takeSnapshot (options = {}) {
+    const persisted = options.persisted || false
     this._dirtyRelationships.clear()
     this._dirtyAttributes.clear()
     const { attributes, relationships } = this.snapshot

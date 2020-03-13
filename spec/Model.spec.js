@@ -471,7 +471,7 @@ describe('Model', () => {
 
     it('is false after attribute mutation', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
-      todo._takeSnapshot(true)
+      todo._takeSnapshot({ persisted: true })
       expect(todo.isPersisted).toBe(true)
       todo.title = 'Buy something else'
       expect(todo.isPersisted).toBe(false)
@@ -479,7 +479,7 @@ describe('Model', () => {
 
     it('is false after nested attribute mutation', async () => {
       const todo = new Organization({ title: 'Buy Milk', options: { color: 'red' } })
-      todo._takeSnapshot(true)
+      todo._takeSnapshot({ persisted: true })
       expect(todo.isPersisted).toBe(true)
       todo.options.color = 'blue'
       expect(todo.isPersisted).toBe(false)

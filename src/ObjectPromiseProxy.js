@@ -30,7 +30,7 @@ function ObjectPromiseProxy (promise, target) {
         })
         // Update target isInFlight
         target.isInFlight = false
-        target._takeSnapshot(true)
+        target._takeSnapshot({ persisted: true })
 
         transaction(() => {
           // NOTE: This resolves an issue where a record is persisted but the
