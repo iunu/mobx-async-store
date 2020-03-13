@@ -149,7 +149,7 @@ export function stringifyIds (object) {
  * each property
  * @param {*} obj
  * @param {Function} iteratee
- * @param {*} prefix
+ * @param {String} prefix
  */
 export function walk (obj, iteratee, prefix) {
   if (obj != null && typeof obj === 'object') {
