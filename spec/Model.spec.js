@@ -463,26 +463,36 @@ describe('Model', () => {
     })
   })
 
-  describe('.isPersisted', () => {
-    it('is false on initialization', async () => {
+  describe('.hasUnpersistedChanges', () => {
+    it('is true on initialization', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
-      expect(todo.isPersisted).toBe(false)
+      expect(todo.hasUnpersistedChanges).toBe(true)
     })
 
-    it('is false after attribute mutation', async () => {
+    it('is false on initialization if an id is present', async () => {
+      const todo = new Organization({ id: 10, title: 'Buy Milk' })
+      expect(todo.hasUnpersistedChanges).toBe(false)
+    })
+
+    it('is true on initialization if the id is a tmp id', async () => {
+      const todo = new Organization({ id: 'tmp-123', title: 'Buy Milk' })
+      expect(todo.hasUnpersistedChanges).toBe(true)
+    })
+
+    it('is true after attribute mutation', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       todo._takeSnapshot({ persisted: true })
-      expect(todo.isPersisted).toBe(true)
+      expect(todo.hasUnpersistedChanges).toBe(false)
       todo.title = 'Buy something else'
-      expect(todo.isPersisted).toBe(false)
+      expect(todo.hasUnpersistedChanges).toBe(true)
     })
 
     it('is false after nested attribute mutation', async () => {
       const todo = new Organization({ title: 'Buy Milk', options: { color: 'red' } })
       todo._takeSnapshot({ persisted: true })
-      expect(todo.isPersisted).toBe(true)
+      expect(todo.hasUnpersistedChanges).toBe(false)
       todo.options.color = 'blue'
-      expect(todo.isPersisted).toBe(false)
+      expect(todo.hasUnpersistedChanges).toBe(true)
     })
   })
 
@@ -884,7 +894,7 @@ describe('Model', () => {
         .toEqual(timestamp.format('YYYY-MM-DD'))
     })
 
-    it('sets isPersisted = true when save succeeds', async () => {
+    it('sets hasUnpersistedChanges = false when save succeeds', async () => {
       const note = store.add('notes', {
         id: 10,
         description: 'Example description'
@@ -892,9 +902,9 @@ describe('Model', () => {
       const todo = store.add('organizations', { title: 'Buy Milk' })
       todo.notes.add(note)
       fetch.mockResponse(mockTodoResponse)
-      expect(todo.isPersisted).toBe(false)
+      expect(todo.hasUnpersistedChanges).toBe(true)
       await todo.save()
-      expect(todo.isPersisted).toBe(true)
+      expect(todo.hasUnpersistedChanges).toBe(false)
     })
 
     it('includes all model errors from the server', async () => {
@@ -925,12 +935,12 @@ describe('Model', () => {
       }
     })
 
-    it('does not set isPersisted after save fails', async () => {
+    it('does not set hasUnpersistedChanges after save fails', async () => {
       const note = store.add('notes', {
         description: ''
       })
 
-      expect(note.isPersisted).toBe(false)
+      expect(note.hasUnpersistedChanges).toBe(true)
       // Mock the API response
       fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
 
@@ -938,7 +948,7 @@ describe('Model', () => {
       try {
         await note.save()
       } catch (errors) {
-        expect(note.isPersisted).toBe(false)
+        expect(note.hasUnpersistedChanges).toBe(true)
       }
     })
   })

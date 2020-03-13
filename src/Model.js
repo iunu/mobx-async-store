@@ -281,12 +281,11 @@ class Model {
 
   /**
    * have any changes been made since this record was last persisted?
-   * @property isPersisted
+   * @property hasUnpersistedChanges
    * @type {Boolean}
    */
-  get isPersisted () {
-    if (this.isDirty) return false
-    return this.previousSnapshot.persisted
+  get hasUnpersistedChanges () {
+    return this.isDirty || !this.previousSnapshot.persisted
   }
 
   /**

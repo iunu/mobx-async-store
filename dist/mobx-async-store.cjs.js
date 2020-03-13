@@ -1100,15 +1100,14 @@ function () {
     }
     /**
      * have any changes been made since this record was last persisted?
-     * @property isPersisted
+     * @property hasUnpersistedChanges
      * @type {Boolean}
      */
 
   }, {
-    key: "isPersisted",
+    key: "hasUnpersistedChanges",
     get: function get() {
-      if (this.isDirty) return false;
-      return this.previousSnapshot.persisted;
+      return this.isDirty || !this.previousSnapshot.persisted;
     }
     /**
      * True if the model has not been sent to the store
