@@ -451,9 +451,32 @@ describe('Model', () => {
     expect(todo.notes.map((x) => x.id)).toEqual([10])
   })
 
-  describe('.previousSnapshot', () => {
-    it('sets snapshot on initialization', async () => {
+  describe('.snapshot', () => {
+    it('a snapshot of the current attributes and relationship', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.snapshot.attributes).toEqual({
+        due_at: moment(timestamp).toDate(),
+        tags: [],
+        title: 'Buy Milk',
+        options: {}
+      })
+    })
+
+    it('doesn\'t exclude falsey values', async () => {
+      const todo = new Organization({ title: '' })
+      expect(todo.snapshot.attributes).toEqual({
+        due_at: moment(timestamp).toDate(),
+        tags: [],
+        title: '',
+        options: {}
+      })
+    })
+  })
+
+  describe('.previousSnapshot', () => {
+    it('the previous snapshot', async () => {
+      const todo = new Organization({ title: 'Buy Milk' })
+      todo.title = 'something different'
       expect(todo.previousSnapshot.attributes).toEqual({
         due_at: moment(timestamp).toDate(),
         tags: [],
