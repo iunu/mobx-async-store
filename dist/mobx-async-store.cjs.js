@@ -168,7 +168,7 @@ function uniqueBy(array, key) {
  * @param {*} obj
  * @param {Function} iteratee
  * @param {String} prefix
- * @returns Array
+ * @return Array
  */
 
 function walk(obj, iteratee, prefix) {
@@ -191,7 +191,7 @@ function walk(obj, iteratee, prefix) {
  * @method diff
  * @param {Object} a
  * @param {Object} b
- * @returns Array<String>
+ * @return Array<String>
  */
 
 function diff() {
@@ -411,7 +411,7 @@ function () {
 
 var schema = new Schema();
 
-var _class, _descriptor, _descriptor2, _descriptor3, _temp;
+var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _temp;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -494,13 +494,15 @@ function () {
 
     _classCallCheck(this, Model);
 
-    _initializerDefineProperty(this, "_dirtyRelationships", _descriptor, this);
+    _initializerDefineProperty(this, "_disposed", _descriptor, this);
 
-    _initializerDefineProperty(this, "_dirtyAttributes", _descriptor2, this);
+    _initializerDefineProperty(this, "_dirtyRelationships", _descriptor2, this);
+
+    _initializerDefineProperty(this, "_dirtyAttributes", _descriptor3, this);
 
     this.isInFlight = false;
 
-    _initializerDefineProperty(this, "errors", _descriptor3, this);
+    _initializerDefineProperty(this, "errors", _descriptor4, this);
 
     this._snapshots = [];
 
@@ -524,6 +526,13 @@ function () {
    * @property endpoint
    * @static
    */
+
+  /**
+    * has this object been destroyed?
+    * @property _disposed
+    * @type {Boolean}
+    * @default false
+    */
 
 
   _createClass(Model, [{
@@ -692,7 +701,7 @@ function () {
                   _this.isInFlight = false;
 
                   if (!(response.status === 202 || response.status === 204)) {
-                    _context.next = 17;
+                    _context.next = 18;
                     break;
                   }
 
@@ -728,15 +737,17 @@ function () {
                     _this.store.createModelsFromData(json.included);
                   }
 
+                  _this.dispose();
+
                   return _context.abrupt("return", _this);
 
-                case 17:
+                case 18:
                   _this.errors = {
                     status: response.status
                   };
                   return _context.abrupt("return", _this);
 
-                case 19:
+                case 20:
                 case "end":
                   return _context.stop();
               }
@@ -821,6 +832,8 @@ function () {
   }, {
     key: "dispose",
     value: function dispose() {
+      this._disposed = true;
+
       this._disposers.forEach(function (dispose) {
         return dispose();
       });
@@ -1277,21 +1290,28 @@ function () {
   }]);
 
   return Model;
-}(), _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "_dirtyRelationships", [mobx.observable], {
+}(), _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "_disposed", [mobx.observable], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    return false;
+  }
+}), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "_dirtyRelationships", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return new Set();
   }
-}), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "_dirtyAttributes", [mobx.observable], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class.prototype, "_dirtyAttributes", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return new Set();
   }
-}), _applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor3 = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
+}), _applyDecoratedDescriptor(_class.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor4 = _applyDecoratedDescriptor(_class.prototype, "errors", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
