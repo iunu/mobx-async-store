@@ -474,7 +474,7 @@ describe('Model', () => {
   })
 
   describe('.previousSnapshot', () => {
-    it('the previous snapshot', async () => {
+    it('return the previous snapshot', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       todo.title = 'something different'
       expect(todo.previousSnapshot.attributes).toEqual({
