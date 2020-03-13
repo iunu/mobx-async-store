@@ -155,17 +155,35 @@ function uniqueByReducer(key) {
 function uniqueBy(array, key) {
   return array.reduce(uniqueByReducer(key), []);
 }
-function walk(value, iteratee, prop, path) {
-  if (value != null && _typeof(value) === 'object') {
-    return Object.keys(value).map(function (prop) {
-      return walk(value[prop], iteratee, prop, [path, prop].filter(function (x) {
+/**
+ * recursively walk an object and call the `iteratee` function for
+ * each property
+ * @param {*} obj
+ * @param {Function} iteratee
+ * @param {*} prefix
+ */
+
+function walk(obj, iteratee, prefix) {
+  if (obj != null && _typeof(obj) === 'object') {
+    return Object.keys(obj).map(function (prop) {
+      return walk(obj[prop], iteratee, [prefix, prop].filter(function (x) {
         return x;
       }).join('.'));
     });
   }
 
-  return iteratee(value, path);
+  return iteratee(obj, prefix);
 }
+/**
+ * deeply compare objects a and b and return object paths for attributes
+ * which differ. it is important to note that this comparison is biased
+ * toward object a. object a is walked and compared against values in
+ * object b. if a property exists in object b, but not in object a, it
+ * will not be counted as a difference.
+ * @param {Object} a
+ * @param {Object} b
+ */
+
 function diff() {
   var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
