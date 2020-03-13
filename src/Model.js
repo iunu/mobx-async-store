@@ -322,7 +322,7 @@ class Model {
   _snapshots = []
 
   /**
-   * restores data to its last persisted state
+   * restores data to its last snapshot state
    * ```
    * kpi = store.find('kpis', 5)
    * kpi.name
@@ -338,6 +338,11 @@ class Model {
     this._applySnapshot(this.previousSnapshot)
   }
 
+  /**
+   * restores data to its last persisted state or the oldest snapshot
+   * state if the model was never persisted
+   * @method rollbackToPersisted
+   */
   rollbackToPersisted () {
     this._applySnapshot(this.persistedSnapshot)
     this._takeSnapshot({ persisted: true })
@@ -577,36 +582,55 @@ class Model {
     this._takeSnapshot()
   }
 
+  /**
+   * the latest snapshot
+   *
+   * @method previousSnapshot
+   */
   get previousSnapshot () {
     const length = this._snapshots.length
     if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
   }
 
+  /**
+   * the latest persisted snapshot or the first snapshot if the model was never persisted
+   *
+   * @method previousSnapshot
+   */
   get persistedSnapshot () {
     return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
+  /**
+   * take a snapshot of the current model state.
+   * if persisted, clear the stack and push this snapshot to the top
+   * if not persisted, push this snapshot to the top of the stack
+   * @method _takeSnapshot
+   * @param {Object} options
+   */
   _takeSnapshot (options = {}) {
     const persisted = options.persisted || false
     this._dirtyRelationships.clear()
     this._dirtyAttributes.clear()
     const { attributes, relationships } = this.snapshot
-    if (persisted) {
-      this._snapshots = [{
-        persisted: true,
-        attributes,
-        relationships
-      }]
-    } else {
-      this._snapshots.push({
-        persisted: false,
-        attributes,
-        relationships
-      })
+    const snapshot = {
+      persisted,
+      attributes,
+      relationships
     }
+    if (persisted) {
+      this._snapshots = []
+    }
+    this._snapshots.push(snapshot)
   }
 
+  /**
+   * set the current attributes and relationships to the attributes
+   * and relationships of the snapshot to be applied. also reset errors
+   * @method _applySnapshot
+   * @param {Object} snapshot
+   */
   _applySnapshot (snapshot) {
     if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
     transaction(() => {
