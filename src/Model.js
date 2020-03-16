@@ -404,11 +404,11 @@ class Model {
       relationships.forEach((rel) => {
         if (Array.isArray(this[rel])) {
           this[rel].forEach((item, i) => {
-            if (item.isNew) {
+            if (item && item.isNew) {
               throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}[${i}]"`)
             }
           })
-        } else if (this[rel].isNew) {
+        } else if (this[rel] && this[rel].isNew) {
           throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}"`)
         }
       })

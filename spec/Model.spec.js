@@ -72,6 +72,13 @@ function validatesOptions (property, target) {
   }
 }
 
+class User extends Model {
+  static type = 'users'
+  static endpoint = 'users'
+
+  @attribute(String) name
+}
+
 class Organization extends Model {
   static type = 'organizations'
   static endpoint = 'organizations'
@@ -91,12 +98,15 @@ class Organization extends Model {
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
+
+  @relatedToOne user
 }
 
 class AppStore extends Store {
   static types = [
     Organization,
-    Note
+    Note,
+    User
   ]
 }
 
@@ -973,6 +983,19 @@ describe('Model', () => {
       } catch (errors) {
         expect(note.hasUnpersistedChanges).toBe(true)
       }
+    })
+
+    it('allows undefined relationships', async () => {
+      const note = store.add('notes', {
+        id: 10,
+        description: ''
+      })
+      const todo = store.add('organizations', { title: 'Good title' })
+      todo.notes.add(note)
+      fetch.mockResponse(mockTodoResponse)
+      expect(todo.hasUnpersistedChanges).toBe(true)
+      await todo.save({ relationships: ['user'] })
+      expect(todo.hasUnpersistedChanges).toBe(false)
     })
   })
 
