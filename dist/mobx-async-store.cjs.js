@@ -612,11 +612,11 @@ function () {
         relationships.forEach(function (rel) {
           if (Array.isArray(_this2[rel])) {
             _this2[rel].forEach(function (item, i) {
-              if (item.isNew) {
+              if (item && item.isNew) {
                 throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "[").concat(i, "]\""));
               }
             });
-          } else if (_this2[rel].isNew) {
+          } else if (_this2[rel] && _this2[rel].isNew) {
             throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "\""));
           }
         });
