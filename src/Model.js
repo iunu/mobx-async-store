@@ -510,6 +510,24 @@ class Model {
     )
   }
 
+  /**
+   * Reloads record from the server
+   * @method reload
+   * @return {Promise} record fetched from server
+   */
+  reload (options = {}) {
+    if (this.isNew) {
+      throw new Error('New records cannot be refetched')
+    } else if (this.hasUnpersistedChanges) {
+      throw new Error('Dirty records cannot be refetched')
+    }
+
+    return this.store.findOne(this.type, this.id, {
+      fromServer: true,
+      ...options
+    })
+  }
+
    /* Private Methods */
 
   /**

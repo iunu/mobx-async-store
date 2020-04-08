@@ -759,6 +759,27 @@ function () {
         throw error;
       });
     }
+    /**
+     * Reloads record from the server
+     * @method reload
+     * @return {Promise} record fetched from server
+     */
+
+  }, {
+    key: "reload",
+    value: function reload() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      if (this.isNew) {
+        throw new Error('New records cannot be refetched');
+      } else if (this.hasUnpersistedChanges) {
+        throw new Error('Dirty records cannot be refetched');
+      }
+
+      return this.store.findOne(this.type, this.id, _objectSpread$1({
+        fromServer: true
+      }, options));
+    }
     /* Private Methods */
 
     /**
