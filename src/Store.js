@@ -540,6 +540,8 @@ class Store {
           }
         })
       }
+
+      record.setPreviousSnapshot()
     } else {
       record = this.createModel(type, id, { attributes, relationships })
       this.data[type].records[record.id] = record

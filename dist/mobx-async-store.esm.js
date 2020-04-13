@@ -1809,6 +1809,8 @@ function () {
             }
           });
         }
+
+        record.setPreviousSnapshot();
       } else {
         record = this.createModel(type, id, {
           attributes: attributes,
