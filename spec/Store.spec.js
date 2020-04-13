@@ -478,6 +478,22 @@ describe('Store', () => {
     })
   })
 
+  describe('createOrUpdateModel', () => {
+    it('sets previous snapshot', () => {
+      store.add('notes', { id: 3, text: 'hi' })
+
+      const record = store.createOrUpdateModel({
+        id: 3,
+        type: 'notes',
+        attributes: {
+          text: 'yo'
+        }
+      })
+
+      expect(record.previousSnapshot.attributes.text).toEqual('yo')
+    })
+  })
+
   describe('createModelsFromData', () => {
     it('creates a list of model objs from a list of data objs', () => {
       const dataObjs = [
