@@ -875,7 +875,7 @@ class Model {
   clone () {
     const attributes = cloneDeep(this.snapshot.attributes)
     const relationships = this.relationships
-    return this.store.createModel(this.type, this.id, { attributes, relationships })
+    return this.store._createModel(this.type, this.id, { attributes, relationships })
   }
 }
 

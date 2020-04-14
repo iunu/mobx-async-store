@@ -212,7 +212,7 @@ function ObjectPromiseProxy(promise, target) {
     var _ref = _asyncToGenerator(
     /*#__PURE__*/
     _regeneratorRuntime.mark(function _callee(response) {
-      var status, json, _json$data, id, attributes, relationships, message, _json, errorString;
+      var status, json, message, _json, errorString;
 
       return _regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -221,7 +221,7 @@ function ObjectPromiseProxy(promise, target) {
               status = response.status;
 
               if (!(status === 200 || status === 201)) {
-                _context.next = 13;
+                _context.next = 11;
                 break;
               }
 
@@ -230,27 +230,25 @@ function ObjectPromiseProxy(promise, target) {
 
             case 4:
               json = _context.sent;
-              // Update target model
-              _json$data = json.data, id = _json$data.id, attributes = _json$data.attributes, relationships = _json$data.relationships;
               transaction(function () {
-                set(target, 'id', id);
-                Object.keys(attributes).forEach(function (key) {
-                  set(target, key, attributes[key]);
-                });
+                // Update target record's current id
+                set(target, 'id', json.data.id); // NOTE: This resolves an issue where a record is persisted but the
+                // index key is still a temp uuid. We can't simply remove the temp
+                // key because there may be associated records that have the temp
+                // uuid id as its only reference to the newly persisted record.
+                // TODO: Figure out a way to update associated records to use the
+                // newly persisted id.
 
-                if (relationships) {
-                  Object.keys(relationships).forEach(function (key) {
-                    if (!relationships[key].hasOwnProperty('meta')) {
-                      // todo: throw error if relationship is not defined in model
-                      set(target.relationships, key, relationships[key]);
-                    }
-                  });
-                }
+                target.store.data[target.type].records[tmpId] = target;
+                target.store.data[target.type].records[target.id] = target; // Update the existing record in the store.
+
+                target.store._createOrUpdateOneRecordFromResponseData(json.data); // Create or update the related (included) records.
+
 
                 if (json.included) {
-                  target.store.createModelsFromData(json.included);
+                  target.store._createOrUpdateAllRecordsFromResponseData(json.included);
                 }
-              }); // Update target isInFlight
+              }); // End the "loading" state by setting target isInFlight to false
 
               target.isInFlight = false;
 
@@ -258,37 +256,26 @@ function ObjectPromiseProxy(promise, target) {
                 persisted: true
               });
 
-              transaction(function () {
-                // NOTE: This resolves an issue where a record is persisted but the
-                // index key is still a temp uuid. We can't simply remove the temp
-                // key because there may be associated records that have the temp
-                // uuid id as its only reference to the newly persisted record.
-                // TODO: Figure out a way to update associated records to use the
-                // newly persisted id.
-                target.store.data[target.type].records[tmpId] = target;
-                target.store.data[target.type].records[target.id] = target;
-              });
               return _context.abrupt("return", target);
 
-            case 13:
-              target.isInFlight = false;
+            case 11:
               message = target.store.genericErrorMessage;
               _json = {};
-              _context.prev = 16;
-              _context.next = 19;
+              _context.prev = 13;
+              _context.next = 16;
               return response.json();
 
-            case 19:
+            case 16:
               _json = _context.sent;
               message = parseApiErrors(_json.errors, message);
-              _context.next = 25;
+              _context.next = 22;
               break;
 
-            case 23:
-              _context.prev = 23;
-              _context.t0 = _context["catch"](16);
+            case 20:
+              _context.prev = 20;
+              _context.t0 = _context["catch"](13);
 
-            case 25:
+            case 22:
               // TODO: add all errors from the API response to the target
               target.errors = _objectSpread({}, target.errors, {
                 status: status,
@@ -298,14 +285,15 @@ function ObjectPromiseProxy(promise, target) {
                 server: _json.errors
               });
               errorString = JSON.stringify(target.errors);
+              target.isInFlight = false;
               return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
-            case 28:
+            case 26:
             case "end":
               return _context.stop();
           }
         }
-      }, _callee, null, [[16, 23]]);
+      }, _callee, null, [[13, 20]]);
     }));
 
     return function (_x) {
@@ -315,10 +303,15 @@ function ObjectPromiseProxy(promise, target) {
     // TODO: Handle error states correctly
     target.isInFlight = false;
     target.errors = error;
-    throw error; // return target
-  }); // Define proxied attributes
+    throw error;
+  });
+  return buildDecoratedPromise(target, result);
+}
 
+function buildDecoratedPromise(target, result) {
+  // Define proxied attributes
   var attributeNames = Object.keys(target.attributeNames);
+  attributeNames.push('isInFlight');
   var tempProperties = attributeNames.reduce(function (attrs, key) {
     attrs[key] = {
       value: target[key],
@@ -330,8 +323,7 @@ function ObjectPromiseProxy(promise, target) {
     isInFlight: {
       value: target.isInFlight
     }
-  }, tempProperties)); // Return promise
-
+  }, tempProperties));
   return result;
 }
 
@@ -1050,7 +1042,7 @@ function () {
     value: function clone() {
       var attributes = cloneDeep(this.snapshot.attributes);
       var relationships = this.relationships;
-      return this.store.createModel(this.type, this.id, {
+      return this.store._createModel(this.type, this.id, {
         attributes: attributes,
         relationships: relationships
       });
@@ -1389,7 +1381,7 @@ function () {
 
     this.findOrFetchOne = function (type, id, queryParams) {
       // Get the matching record
-      var record = _this.getMatchingRecord(type, id, queryParams); // If the cached record is present
+      var record = _this._getMatchingRecord(type, id, queryParams); // If the cached record is present
 
 
       if (record && record.id) {
@@ -1411,15 +1403,15 @@ function () {
         return _this.fetchAll(type, queryParams);
       } else if (fromServer === false) {
         // If fromServer is false never fetch the data and return
-        return _this.getMatchingRecords(type, queryParams);
+        return _this._getMatchingRecords(type, queryParams);
       } else {
-        return _this.findOrFetchAll(type, queryParams);
+        return _this._findOrFetchAll(type, queryParams);
       }
     };
 
-    this.findOrFetchAll = function (type, queryParams) {
+    this._findOrFetchAll = function (type, queryParams) {
       // Get any matching records
-      var records = _this.getMatchingRecords(type, queryParams); // If any records are present
+      var records = _this._getMatchingRecords(type, queryParams); // If any records are present
 
 
       if (records.length > 0) {
@@ -1431,7 +1423,7 @@ function () {
       }
     };
 
-    this.init(_options);
+    this._init(_options);
   }
   /**
    * Adds an instance or an array of instances to the store.
@@ -1449,433 +1441,8 @@ function () {
 
 
   _createClass(Store, [{
-    key: "reset",
+    key: "fetchUrl",
 
-    /**
-     * Clears the store of a given type, or clears all if no type given
-     *
-     *   store.reset('todos')
-     *   // removes all todos from store
-     *   store.reset()
-     *   // clears store
-     *
-     * @method reset
-     */
-    value: function reset(type) {
-      if (type) {
-        this.data[type] = {
-          records: {},
-          cache: {}
-        };
-      } else {
-        this.initializeObservableDataProperty();
-      }
-    }
-    /* Private Methods */
-
-    /**
-     * Entry point for configuring the store
-     *
-     * @method init
-     * @param {Object} options passed to constructor
-     */
-
-  }, {
-    key: "init",
-    value: function init(options) {
-      this.initializeNetworkConfiguration(options);
-      this.initializeModelTypeIndex();
-      this.initializeObservableDataProperty();
-    }
-    /**
-     * Entry point for configuring the store
-     *
-     * @method initializeNetworkConfiguration
-     * @param {Object} options for nextwork config
-     */
-
-  }, {
-    key: "initializeNetworkConfiguration",
-    value: function initializeNetworkConfiguration() {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      this.baseUrl = options.baseUrl || '';
-      this.defaultFetchOptions = options.defaultFetchOptions || {};
-    }
-    /**
-     * Entry point for configuring the store
-     *
-     * @method initializeNetworkConfiguration
-     * @param {Object} options for nextwork config
-     */
-
-  }, {
-    key: "initializeModelTypeIndex",
-    value: function initializeModelTypeIndex() {
-      var types = this.constructor.types;
-      this.modelTypeIndex = types.reduce(function (modelTypeIndex, modelKlass) {
-        modelTypeIndex[modelKlass.type] = modelKlass;
-        return modelTypeIndex;
-      }, {});
-    }
-    /**
-     * Creates an obserable index with model types
-     * as the primary key
-     *
-     * Observable({ todos: {} })
-     *
-     * @method initializeObservableDataProperty
-     */
-
-  }, {
-    key: "initializeObservableDataProperty",
-    value: function initializeObservableDataProperty() {
-      var _this2 = this;
-
-      var types = this.constructor.types; // NOTE: Is there a performance cost to setting
-      // each property individually?
-
-      types.forEach(function (modelKlass) {
-        _this2.data[modelKlass.type] = {
-          records: {},
-          cache: {}
-        };
-      });
-    }
-    /**
-     * Wrapper around fetch applies user defined fetch options
-     *
-     * @method fetch
-     * @param {String} url
-     * @param {Object} options
-     */
-
-  }, {
-    key: "fetch",
-    value: function (_fetch) {
-      function fetch(_x) {
-        return _fetch.apply(this, arguments);
-      }
-
-      fetch.toString = function () {
-        return _fetch.toString();
-      };
-
-      return fetch;
-    }(function (url) {
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var defaultFetchOptions = this.defaultFetchOptions;
-
-      var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
-
-      var key = JSON.stringify({
-        url: url,
-        fetchOptions: fetchOptions
-      });
-      return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
-      });
-    })
-    /**
-     * Gets type of collection from data observable
-     *
-     * @method getType
-     * @param {String} type
-     * @return {Object} observable type object structure
-     */
-
-  }, {
-    key: "getType",
-    value: function getType(type) {
-      return this.data[type];
-    }
-    /**
-     * Get single all record
-     * based on query params
-     *
-     * @method getMatchingRecord
-     * @param {String} type
-     * @param id
-     * @param {Object} queryParams
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getMatchingRecord",
-    value: function getMatchingRecord(type, id, queryParams) {
-      if (queryParams) {
-        return this.getCachedRecord(type, id, queryParams);
-      } else {
-        return this.getRecord(type, id);
-      }
-    }
-    /**
-     * Gets individual record from store
-     *
-     * @method getRecord
-     * @param {String} type
-     * @param {Number} id
-     * @return {Object} record
-     */
-
-  }, {
-    key: "getRecord",
-    value: function getRecord(type, id) {
-      if (!this.getType(type)) {
-        throw new Error("Could not find a collection for type '".concat(type, "'"));
-      }
-
-      var record = this.getType(type).records[id];
-      if (!record || record === 'undefined') return;
-      return record;
-    }
-    /**
-     * Gets records for type of collection from observable
-     *
-     * @method getRecords
-     * @param {String} type
-     * @return {Array} array of objects
-     */
-
-  }, {
-    key: "getRecords",
-    value: function getRecords(type) {
-      var records = Object.values(this.getType(type).records).filter(function (value) {
-        return value && value !== 'undefined';
-      }); // NOTE: Handles a scenario where the store keeps around a reference
-      // to a newly persisted record by its temp uuid. This is required
-      // because we can't simply remove the temp uuid reference because other
-      // related models may be still using the temp uuid in their relationships
-      // data object. However, when we are listing out records we want them
-      // to be unique by the persisted id (which is updated after a Model.save)
-
-      return uniqueBy(records, 'id');
-    }
-    /**
-     * Gets single from store based on cached query
-     *
-     * @method getCachedRecord
-     * @param {String} type
-     * @param id
-     * @param {Object} queryParams
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getCachedRecord",
-    value: function getCachedRecord(type, id, queryParams) {
-      var cachedRecords = this.getCachedRecords(type, queryParams, id);
-      return cachedRecords && cachedRecords[0];
-    }
-    /**
-     * Gets records from store based on cached query
-     *
-     * @method getCachedRecords
-     * @param {String} type
-     * @param {Object} queryParams
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getCachedRecords",
-    value: function getCachedRecords(type, queryParams, id) {
-      // Get the url the request would use
-      var url = this.fetchUrl(type, queryParams, id); // Get the matching ids from the response
-
-      var ids = this.getCachedIds(type, url); // Get the records matching the ids
-
-      return this.getRecordsById(type, ids);
-    }
-    /**
-     * Gets records from store based on cached query
-     *
-     * @method getCachedIds
-     * @param {String} type
-     * @param {String} url
-     * @return {Array} array of ids
-     */
-
-  }, {
-    key: "getCachedIds",
-    value: function getCachedIds(type, url) {
-      var ids = this.getType(type).cache[url];
-      if (!ids) return [];
-      var idsSet = new Set(toJS(ids));
-      return Array.from(idsSet);
-    }
-    /**
-     * Gets records from store based on cached query
-     *
-     * @method getCachedIds
-     * @param {String} type
-     * @param {String} url
-     * @return {Array} array of ids
-     */
-
-  }, {
-    key: "getCachedId",
-    value: function getCachedId(type, id) {
-      return this.getType(type).cache[id];
-    }
-    /**
-     * Get multiple records by id
-     *
-     * @method getRecordsById
-     * @param {String} type
-     * @param {Array} ids
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getRecordsById",
-    value: function getRecordsById(type) {
-      var _this3 = this;
-
-      var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-      // NOTE: Is there a better way to do this?
-      return ids.map(function (id) {
-        return _this3.getRecord(type, id);
-      }).filter(function (record) {
-        return record;
-      }).filter(function (record) {
-        return typeof record !== 'undefined';
-      });
-    }
-    /**
-     * Gets records all records or records
-     * based on query params
-     *
-     * @method getMatchingRecords
-     * @param {String} type
-     * @param {Object} queryParams
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getMatchingRecords",
-    value: function getMatchingRecords(type, queryParams) {
-      if (queryParams) {
-        return this.getCachedRecords(type, queryParams);
-      } else {
-        return this.getRecords(type);
-      }
-    }
-    /**
-     * Helper to look up model class for type.
-     *
-     * @method getKlass
-     * @param {String} type
-     * @return {Class} model class
-     */
-
-  }, {
-    key: "getKlass",
-    value: function getKlass(type) {
-      return this.modelTypeIndex[type];
-    }
-    /**
-     * Creates or updates a model
-     *
-     * @method createOrUpdateModel
-     * @param {Object} dataObject
-     */
-
-  }, {
-    key: "createOrUpdateModel",
-    value: function createOrUpdateModel(dataObject) {
-      var _this4 = this;
-
-      var _dataObject$attribute = dataObject.attributes,
-          attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
-          id = dataObject.id,
-          _dataObject$relations = dataObject.relationships,
-          relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations,
-          type = dataObject.type;
-      var record = this.getRecord(type, id);
-
-      if (record) {
-        // Update existing object attributes
-        Object.keys(attributes).forEach(function (key) {
-          set(record, key, attributes[key]);
-          set(_this4.data[type].records, id, record);
-        }); // If relationships are present, update relationships
-
-        if (relationships) {
-          Object.keys(relationships).forEach(function (key) {
-            // Don't try to create relationship if meta included false
-            if (!relationships[key].meta) {
-              // defensive against existingRecord.relationships being undefined
-              set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
-              set(_this4.data[type].records, id, record);
-            }
-          });
-        }
-
-        record.setPreviousSnapshot();
-      } else {
-        record = this.createModel(type, id, {
-          attributes: attributes,
-          relationships: relationships
-        });
-        this.data[type].records[record.id] = record;
-      }
-
-      return record;
-    }
-    /**
-     * Create multiple models from an array of data
-     *
-     * @method createModelsFromData
-     * @param {Array} data
-     */
-
-  }, {
-    key: "createModelsFromData",
-    value: function createModelsFromData(data) {
-      var _this5 = this;
-
-      return transaction(function () {
-        return data.map(function (dataObject) {
-          // Only build objects for which we have a type defined.
-          // And ignore silently anything else included in the JSON response.
-          // TODO: Put some console message in development mode
-          if (_this5.getType(dataObject.type)) {
-            return _this5.createOrUpdateModel(dataObject);
-          }
-        });
-      });
-    }
-    /**
-     * Helper to create a new model
-     *
-     * @method createModel
-     * @param {String} type
-     * @param {Number} type
-     * @param {Object} attributes
-     * @return {Object} model instance
-     */
-
-  }, {
-    key: "createModel",
-    value: function createModel(type, id, data) {
-      var _toJS = toJS(data),
-          _toJS$attributes = _toJS.attributes,
-          attributes = _toJS$attributes === void 0 ? {} : _toJS$attributes,
-          _toJS$relationships = _toJS.relationships,
-          relationships = _toJS$relationships === void 0 ? {} : _toJS$relationships;
-
-      var store = this;
-      var ModelKlass = this.getKlass(type);
-
-      if (!ModelKlass) {
-        throw new Error("Could not find a model for '".concat(type, "'"));
-      }
-
-      return new ModelKlass(_objectSpread$2({
-        id: id,
-        store: store,
-        relationships: relationships
-      }, attributes));
-    }
     /**
      * Builds fetch url based
      *
@@ -1883,9 +1450,6 @@ function () {
      * @param {String} type the type to find
      * @param {Object} options
      */
-
-  }, {
-    key: "fetchUrl",
     value: function fetchUrl(type, queryParams, id, options) {
       var baseUrl = this.baseUrl,
           modelTypeIndex = this.modelTypeIndex;
@@ -1906,7 +1470,7 @@ function () {
       var _fetchAll = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee(type, queryParams) {
-        var _this6 = this;
+        var _this2 = this;
 
         var store, url, response, json;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
@@ -1936,25 +1500,25 @@ function () {
                 json = _context.sent;
 
                 if (json.included) {
-                  this.createModelsFromData(json.included);
+                  this._createOrUpdateAllRecordsFromResponseData(json.included);
                 }
 
                 return _context.abrupt("return", transaction(function () {
                   return json.data.map(function (dataObject) {
                     var id = dataObject.id,
-                        _dataObject$attribute2 = dataObject.attributes,
-                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                        _dataObject$relations2 = dataObject.relationships,
-                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                    var ModelKlass = _this6.modelTypeIndex[type];
+                        _dataObject$attribute = dataObject.attributes,
+                        attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
+                        _dataObject$relations = dataObject.relationships,
+                        relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
+                    var ModelKlass = _this2.modelTypeIndex[type];
                     var record = new ModelKlass(_objectSpread$2({
                       store: store,
                       relationships: relationships
                     }, attributes));
 
-                    _this6.data[type].cache[url].push(id);
+                    _this2.data[type].cache[url].push(id);
 
-                    _this6.data[type].records[id] = record;
+                    _this2.data[type].records[id] = record;
                     return record;
                   });
                 }));
@@ -2017,12 +1581,12 @@ function () {
               case 7:
                 json = _context2.sent;
                 data = json.data, included = json.included;
+                record = this._createOrUpdateOneRecordFromResponseData(data);
 
                 if (included) {
-                  this.createModelsFromData(included);
+                  this._createOrUpdateAllRecordsFromResponseData(included);
                 }
 
-                record = this.createOrUpdateModel(data);
                 this.data[type].cache[url] = [];
                 this.data[type].cache[url].push(record.id);
                 return _context2.abrupt("return", record);
@@ -2044,6 +1608,455 @@ function () {
 
       return fetchOne;
     }()
+    /**
+     * Wrapper around fetch applies user defined fetch options
+     *
+     * @method fetch
+     * @param {String} url
+     * @param {Object} options
+     */
+
+  }, {
+    key: "fetch",
+    value: function (_fetch) {
+      function fetch(_x) {
+        return _fetch.apply(this, arguments);
+      }
+
+      fetch.toString = function () {
+        return _fetch.toString();
+      };
+
+      return fetch;
+    }(function (url) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var defaultFetchOptions = this.defaultFetchOptions;
+
+      var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
+
+      var key = JSON.stringify({
+        url: url,
+        fetchOptions: fetchOptions
+      });
+      return combineRacedRequests(key, function () {
+        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
+      });
+    })
+    /**
+     * Gets individual record from store.
+     * NOTE: This originally were meant to be internal methods, but having to call
+     * findAll/findOne with { fromServer: false } to just get a record from the store ended up
+     * being pretty verbose, so in several places we use getRecord to shorten things.
+     *
+     * @method getRecord
+     * @param {String} type
+     * @param {Number} id
+     * @return {Object} record
+     */
+
+  }, {
+    key: "getRecord",
+    value: function getRecord(type, id) {
+      if (!this._getType(type)) {
+        throw new Error("Could not find a collection for type '".concat(type, "'"));
+      }
+
+      var record = this._getType(type).records[id];
+
+      if (!record || record === 'undefined') return;
+      return record;
+    }
+    /**
+     * Gets records for type of collection from observable.
+     * NOTE: See note about `getRecord`.
+     *
+     * @method getRecords
+     * @param {String} type
+     * @return {Array} array of objects
+     */
+
+  }, {
+    key: "getRecords",
+    value: function getRecords(type) {
+      var records = Object.values(this._getType(type).records).filter(function (value) {
+        return value && value !== 'undefined';
+      }); // NOTE: Handles a scenario where the store keeps around a reference
+      // to a newly persisted record by its temp uuid. This is required
+      // because we can't simply remove the temp uuid reference because other
+      // related models may be still using the temp uuid in their relationships
+      // data object. However, when we are listing out records we want them
+      // to be unique by the persisted id (which is updated after a Model.save)
+
+      return uniqueBy(records, 'id');
+    }
+    /**
+     * Clears the store of a given type, or clears all if no type given
+     *
+     *   store.reset('todos')
+     *   // removes all todos from store
+     *   store.reset()
+     *   // clears store
+     *
+     * @method reset
+     */
+
+  }, {
+    key: "reset",
+    value: function reset(type) {
+      if (type) {
+        this.data[type] = {
+          records: {},
+          cache: {}
+        };
+      } else {
+        this._initializeObservableDataProperty();
+      }
+    }
+    /* Private Methods */
+
+    /**
+     * Entry point for configuring the store
+     *
+     * @method init
+     * @param {Object} options passed to constructor
+     */
+
+  }, {
+    key: "_init",
+    value: function _init(options) {
+      this._initializeNetworkConfiguration(options);
+
+      this._initializeModelTypeIndex();
+
+      this._initializeObservableDataProperty();
+    }
+    /**
+     * Entry point for configuring the store
+     *
+     * @method _initializeNetworkConfiguration
+     * @param {Object} options for nextwork config
+     */
+
+  }, {
+    key: "_initializeNetworkConfiguration",
+    value: function _initializeNetworkConfiguration() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      this.baseUrl = options.baseUrl || '';
+      this.defaultFetchOptions = options.defaultFetchOptions || {};
+    }
+    /**
+     * Entry point for configuring the store
+     *
+     * @method initializeModelTypeIndex
+     * @param {Object} options for nextwork config
+     */
+
+  }, {
+    key: "_initializeModelTypeIndex",
+    value: function _initializeModelTypeIndex() {
+      var types = this.constructor.types;
+      this.modelTypeIndex = types.reduce(function (modelTypeIndex, modelKlass) {
+        modelTypeIndex[modelKlass.type] = modelKlass;
+        return modelTypeIndex;
+      }, {});
+    }
+    /**
+     * Creates an obserable index with model types
+     * as the primary key
+     *
+     * Observable({ todos: {} })
+     *
+     * @method _initializeObservableDataProperty
+     */
+
+  }, {
+    key: "_initializeObservableDataProperty",
+    value: function _initializeObservableDataProperty() {
+      var _this3 = this;
+
+      var types = this.constructor.types; // NOTE: Is there a performance cost to setting
+      // each property individually?
+
+      types.forEach(function (modelKlass) {
+        _this3.data[modelKlass.type] = {
+          records: {},
+          cache: {}
+        };
+      });
+    }
+    /**
+     * Gets type of collection from data observable
+     *
+     * @method _getType
+     * @param {String} type
+     * @return {Object} observable type object structure
+     */
+
+  }, {
+    key: "_getType",
+    value: function _getType(type) {
+      return this.data[type];
+    }
+    /**
+     * Get single all record
+     * based on query params
+     *
+     * @method _getMatchingRecord
+     * @param {String} type
+     * @param id
+     * @param {Object} queryParams
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "_getMatchingRecord",
+    value: function _getMatchingRecord(type, id, queryParams) {
+      if (queryParams) {
+        return this._getCachedRecord(type, id, queryParams);
+      } else {
+        return this.getRecord(type, id);
+      }
+    }
+    /**
+     * Gets single from store based on cached query
+     *
+     * @method _getCachedRecord
+     * @param {String} type
+     * @param id
+     * @param {Object} queryParams
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "_getCachedRecord",
+    value: function _getCachedRecord(type, id, queryParams) {
+      var cachedRecords = this._getCachedRecords(type, queryParams, id);
+
+      return cachedRecords && cachedRecords[0];
+    }
+    /**
+     * Gets records from store based on cached query
+     *
+     * @method _getCachedRecords
+     * @param {String} type
+     * @param {Object} queryParams
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "_getCachedRecords",
+    value: function _getCachedRecords(type, queryParams, id) {
+      // Get the url the request would use
+      var url = this.fetchUrl(type, queryParams, id); // Get the matching ids from the response
+
+      var ids = this._getCachedIds(type, url); // Get the records matching the ids
+
+
+      return this._getRecordsById(type, ids);
+    }
+    /**
+     * Gets records from store based on cached query
+     *
+     * @method _getCachedIds
+     * @param {String} type
+     * @param {String} url
+     * @return {Array} array of ids
+     */
+
+  }, {
+    key: "_getCachedIds",
+    value: function _getCachedIds(type, url) {
+      var ids = this._getType(type).cache[url];
+
+      if (!ids) return [];
+      var idsSet = new Set(toJS(ids));
+      return Array.from(idsSet);
+    }
+    /**
+     * Gets records from store based on cached query
+     *
+     * @method _getCachedIds
+     * @param {String} type
+     * @param {String} url
+     * @return {Array} array of ids
+     */
+
+  }, {
+    key: "_getCachedId",
+    value: function _getCachedId(type, id) {
+      return this._getType(type).cache[id];
+    }
+    /**
+     * Get multiple records by id
+     *
+     * @method _getRecordsById
+     * @param {String} type
+     * @param {Array} ids
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "_getRecordsById",
+    value: function _getRecordsById(type) {
+      var _this4 = this;
+
+      var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+      // NOTE: Is there a better way to do this?
+      return ids.map(function (id) {
+        return _this4.getRecord(type, id);
+      }).filter(function (record) {
+        return record;
+      }).filter(function (record) {
+        return typeof record !== 'undefined';
+      });
+    }
+    /**
+     * Gets records all records or records
+     * based on query params
+     *
+     * @method _getMatchingRecords
+     * @param {String} type
+     * @param {Object} queryParams
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "_getMatchingRecords",
+    value: function _getMatchingRecords(type, queryParams) {
+      if (queryParams) {
+        return this._getCachedRecords(type, queryParams);
+      } else {
+        return this.getRecords(type);
+      }
+    }
+    /**
+     * Helper to look up model class for type.
+     *
+     * @method _getKlass
+     * @param {String} type
+     * @return {Class} model class
+     */
+
+  }, {
+    key: "_getKlass",
+    value: function _getKlass(type) {
+      return this.modelTypeIndex[type];
+    }
+    /**
+     * returns cache if exists, returns promise if not
+     *
+     * @method _findOrFetchAll
+     * @param {String} type record type
+     * @param {Object} queryParams will inform whether to return cached or fetch
+     */
+
+  }, {
+    key: "_createOrUpdateOneRecordFromResponseData",
+
+    /**
+     * Creates or updates a record
+     *
+     * @method _createOrUpdateOneRecordFromResponseData
+     * @param {Object} dataObject
+     */
+    value: function _createOrUpdateOneRecordFromResponseData(dataObject) {
+      var _this5 = this;
+
+      var _dataObject$attribute2 = dataObject.attributes,
+          attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
+          id = dataObject.id,
+          _dataObject$relations2 = dataObject.relationships,
+          relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2,
+          type = dataObject.type;
+      var record = this.getRecord(type, id);
+
+      if (record) {
+        // Update existing object attributes
+        Object.keys(attributes).forEach(function (key) {
+          set(record, key, attributes[key]);
+          set(_this5.data[type].records, id, record);
+        }); // If relationships are present, update relationships
+
+        if (relationships) {
+          Object.keys(relationships).forEach(function (key) {
+            // Don't try to create relationship if meta included false
+            if (!relationships[key].meta) {
+              // defensive against existingRecord.relationships being undefined
+              set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
+              set(_this5.data[type].records, id, record);
+            }
+          });
+        }
+
+        record._takeSnapshot({
+          persisted: true
+        });
+      } else {
+        record = this._createModel(type, id, {
+          attributes: attributes,
+          relationships: relationships
+        });
+        this.data[type].records[record.id] = record;
+      }
+
+      return record;
+    }
+    /**
+     * Create multiple models from an array of data
+     *
+     * @method _createOrUpdateAllRecordsFromResponseData
+     * @param {Array} data
+     */
+
+  }, {
+    key: "_createOrUpdateAllRecordsFromResponseData",
+    value: function _createOrUpdateAllRecordsFromResponseData(data) {
+      var _this6 = this;
+
+      return transaction(function () {
+        return data.map(function (dataObject) {
+          // Only build objects for which we have a type defined.
+          // And ignore silently anything else included in the JSON response.
+          // TODO: Put some console message in development mode
+          if (_this6._getType(dataObject.type)) {
+            return _this6._createOrUpdateOneRecordFromResponseData(dataObject);
+          }
+        });
+      });
+    }
+    /**
+     * Helper to create a new model
+     *
+     * @method _createModel
+     * @param {String} type
+     * @param {Number} type
+     * @param {Object} attributes
+     * @return {Object} model instance
+     */
+
+  }, {
+    key: "_createModel",
+    value: function _createModel(type, id, data) {
+      var _toJS = toJS(data),
+          _toJS$attributes = _toJS.attributes,
+          attributes = _toJS$attributes === void 0 ? {} : _toJS$attributes,
+          _toJS$relationships = _toJS.relationships,
+          relationships = _toJS$relationships === void 0 ? {} : _toJS$relationships;
+
+      var store = this;
+
+      var ModelKlass = this._getKlass(type);
+
+      if (!ModelKlass) {
+        throw new Error("Could not find a model for '".concat(type, "'"));
+      }
+
+      return new ModelKlass(_objectSpread$2({
+        id: id,
+        store: store,
+        relationships: relationships
+      }, attributes));
+    }
   }]);
 
   return Store;
@@ -2064,7 +2077,7 @@ function () {
     return function (type, attributes) {
       var id = dbOrNewId(attributes);
 
-      var model = _this7.createModel(type, id, {
+      var model = _this7._createModel(type, id, {
         attributes: attributes
       }); // Add the model to the type records index
 
@@ -2323,7 +2336,7 @@ function getRelatedRecords(record, property) {
   if (references && references.data) {
     // Ignore any records of unknown types
     relatedRecords = references.data.filter(function (ref) {
-      return record.store.getType(ref.type);
+      return record.store._getType(ref.type);
     }).map(function (ref) {
       var recordType = ref.type;
       return record.store.getRecord(recordType, ref.id);

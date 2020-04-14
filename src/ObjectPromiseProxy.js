@@ -6,33 +6,14 @@ function ObjectPromiseProxy (promise, target) {
   const result = promise.then(
     async function (response) {
       const { status } = response
+
       if (status === 200 || status === 201) {
         const json = await response.json()
-        // Update target model
-        const { id, attributes, relationships } = json.data
-        transaction(() => {
-          set(target, 'id', id)
-
-          Object.keys(attributes).forEach(key => {
-            set(target, key, attributes[key])
-          })
-          if (relationships) {
-            Object.keys(relationships).forEach(key => {
-              if (!relationships[key].hasOwnProperty('meta')) {
-                // todo: throw error if relationship is not defined in model
-                set(target.relationships, key, relationships[key])
-              }
-            })
-          }
-          if (json.included) {
-            target.store.createModelsFromData(json.included)
-          }
-        })
-        // Update target isInFlight
-        target.isInFlight = false
-        target._takeSnapshot({ persisted: true })
 
         transaction(() => {
+          // Update target record's current id
+          set(target, 'id', json.data.id)
+
           // NOTE: This resolves an issue where a record is persisted but the
           // index key is still a temp uuid. We can't simply remove the temp
           // key because there may be associated records that have the temp
@@ -41,14 +22,25 @@ function ObjectPromiseProxy (promise, target) {
           // newly persisted id.
           target.store.data[target.type].records[tmpId] = target
           target.store.data[target.type].records[target.id] = target
+
+          // Update the existing record in the store.
+          target.store._createOrUpdateOneRecordFromResponseData(json.data)
+
+          // Create or update the related (included) records.
+          if (json.included) {
+            target.store._createOrUpdateAllRecordsFromResponseData(json.included)
+          }
         })
+
+        // End the "loading" state by setting target isInFlight to false
+        target.isInFlight = false
+        target._takeSnapshot({ persisted: true })
 
         return target
       } else {
-        target.isInFlight = false
-
         let message = target.store.genericErrorMessage
         let json = {}
+
         try {
           json = await response.json()
           message = parseApiErrors(json.errors, message)
@@ -64,6 +56,9 @@ function ObjectPromiseProxy (promise, target) {
         }
 
         const errorString = JSON.stringify(target.errors)
+
+        target.isInFlight = false
+
         return Promise.reject(new Error(errorString))
       }
     },
@@ -72,11 +67,18 @@ function ObjectPromiseProxy (promise, target) {
       target.isInFlight = false
       target.errors = error
       throw error
-      // return target
     }
   )
+
+  return buildDecoratedPromise(target, result)
+}
+
+function buildDecoratedPromise (target, result) {
   // Define proxied attributes
   const attributeNames = Object.keys(target.attributeNames)
+
+  attributeNames.push('isInFlight')
+
   const tempProperties = attributeNames.reduce((attrs, key) => {
     attrs[key] = {
       value: target[key],
@@ -90,7 +92,6 @@ function ObjectPromiseProxy (promise, target) {
     ...tempProperties
   })
 
-  // Return promise
   return result
 }
 

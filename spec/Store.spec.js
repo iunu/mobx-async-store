@@ -324,6 +324,18 @@ describe('Store', () => {
         const cache = toJS(store.data.todos.cache)
         expect(cache['/example_api/todos']).toEqual(['1'])
       })
+
+      it('records have "persisted" snapshots', async () => {
+        expect.assertions(1)
+        fetch.mockResponse(mockTodosResponse)
+        const todos = await store.findAll('todos', {
+          fromServer: true,
+          queryParams: {
+            foo: 'bar'
+          }
+        })
+        expect(todos[0].previousSnapshot.persisted).toBeTruthy()
+      })
     })
 
     describe('when "fromServer" is not explicitly set', () => {
@@ -414,12 +426,12 @@ describe('Store', () => {
     })
   })
 
-  describe('createModel', () => {
+  describe('_createModel', () => {
     it('creates a model obj with attributes', () => {
       const todoData = {
         attributes: { title: 'hello!' }
       }
-      const todo = store.createModel('todos', 1, todoData)
+      const todo = store._createModel('todos', 1, todoData)
       expect(todo.id).toEqual(1)
       expect(todo.title).toEqual(todoData.attributes.title)
     })
@@ -432,7 +444,7 @@ describe('Store', () => {
           category: { data: { id: '5', type: 'categories' } }
         }
       }
-      const todo = store.createModel('todos', 1, todoData)
+      const todo = store._createModel('todos', 1, todoData)
       expect(todo.category.id).toEqual(category.id)
       expect(todo.category.name).toEqual(category.name)
     })
@@ -445,7 +457,7 @@ describe('Store', () => {
           tags: { data: [{ id: '3', type: 'tags' }] }
         }
       }
-      const todo = store.createModel('todos', 1, todoData)
+      const todo = store._createModel('todos', 1, todoData)
       expect(todo.id).toEqual(1)
       expect(todo.tags[0].id).toEqual(tag.id)
       expect(todo.tags[0].label).toEqual(tag.label)
@@ -459,7 +471,7 @@ describe('Store', () => {
           note: { data: { id: '17', type: 'notes' } }
         }
       }
-      const todo = store.createModel('todos', 1, todoData)
+      const todo = store._createModel('todos', 1, todoData)
       expect(todo.instructions.id).toEqual(note.id)
       expect(todo.instructions.text).toEqual(note.text)
     })
@@ -472,35 +484,43 @@ describe('Store', () => {
           notes: { data: [{ id: '3', type: 'notes' }] }
         }
       }
-      const todo = store.createModel('todos', 1, todoData)
+      const todo = store._createModel('todos', 1, todoData)
       expect(todo.user_notes[0].id).toEqual(note.id)
       expect(todo.user_notes[0].text).toEqual(note.text)
     })
   })
 
-  describe('createOrUpdateModel', () => {
-    it('sets previous snapshot', () => {
+  describe('_createOrUpdateOneRecordFromResponseData', () => {
+    let record
+
+    beforeAll(() => {
       store.add('notes', { id: 3, text: 'hi' })
 
-      const record = store.createOrUpdateModel({
+      record = store._createOrUpdateOneRecordFromResponseData({
         id: 3,
         type: 'notes',
         attributes: {
           text: 'yo'
         }
       })
+    })
 
+    it('sets previous snapshot', () => {
       expect(record.previousSnapshot.attributes.text).toEqual('yo')
+    })
+
+    it('sets previous snapshot persisted to true', () => {
+      expect(record.previousSnapshot.persisted).toBeTruthy()
     })
   })
 
-  describe('createModelsFromData', () => {
+  describe('_createOrUpdateAllRecordsFromResponseData', () => {
     it('creates a list of model objs from a list of data objs', () => {
       const dataObjs = [
         { id: 1, type: 'todos', attributes: { title: 'hello!' }, relationships: {} },
         { id: 2, type: 'todos', attributes: { title: 'see ya!' }, relationships: {} }
       ]
-      const todos = store.createModelsFromData(dataObjs)
+      const todos = store._createOrUpdateAllRecordsFromResponseData(dataObjs)
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(todos[1].type).toEqual('todos')
@@ -515,7 +535,7 @@ describe('Store', () => {
         { id: 1, type: 'todos', attributes: { title: 'hello!' }, relationships: {} },
         { id: 2, type: 'unknown', attributes: { title: 'see ya!' }, relationships: {} }
       ]
-      const todos = store.createModelsFromData(dataObjs)
+      const todos = store._createOrUpdateAllRecordsFromResponseData(dataObjs)
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(typeof todos[1]).toBe('undefined')
