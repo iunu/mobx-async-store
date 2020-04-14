@@ -13,6 +13,8 @@ import moment from 'moment'
 import { diff } from './utils'
 
 import ObjectPromiseProxy from './ObjectPromiseProxy'
+import DeleteObjectPromiseProxy from './DeleteObjectPromiseProxy'
+
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
@@ -449,65 +451,20 @@ class Model {
    * @return {Promise} an empty promise with any success/error status
    */
   destroy (options = {}) {
-    const {
-      constructor: { type }, id, snapshot, isNew
-    } = this
+    this.isInFlight = true
 
+    const { type, id, snapshot, isNew } = this
+
+    // If the record is new we can just remove the record and short circuit
     if (isNew) {
       this.store.remove(type, id)
       return snapshot
     }
 
-    const { params = {}, skipRemove = false } = options
+    const url = this.store.fetchUrl(type, options.params, id)
+    const response = this.store.fetch(url, { method: 'DELETE' })
 
-    const url = this.store.fetchUrl(type, params, id)
-    this.isInFlight = true
-    const promise = this.store.fetch(url, { method: 'DELETE' })
-    const _this = this
-    _this.errors = {}
-
-    return promise.then(
-      async function (response) {
-        _this.isInFlight = false
-        if (response.status === 202 || response.status === 204) {
-          if (!skipRemove) {
-            _this.store.remove(type, id)
-          }
-
-          let json
-          try {
-            json = await response.json()
-            if (json.data && json.data.attributes) {
-              Object.keys(json.data.attributes).forEach(key => {
-                set(_this, key, json.data.attributes[key])
-              })
-            }
-          } catch (err) {
-            console.log(err)
-            // It is text, do you text handling here
-          }
-
-          // NOTE: If deleting a record changes other related model
-          // You can return then in the delete response
-          if (json && json.included) {
-            _this.store.createModelsFromData(json.included)
-          }
-
-          _this.dispose()
-
-          return _this
-        } else {
-          _this.errors = { status: response.status }
-          return _this
-        }
-      },
-      function (error) {
-        // TODO: Handle error states correctly
-        _this.isInFlight = false
-        _this.errors = error
-        throw error
-      }
-    )
+    return new DeleteObjectPromiseProxy(response, this, options)
   }
 
    /* Private Methods */
@@ -799,13 +756,7 @@ class Model {
    * @return {Object} data in JSON::API format
    */
   jsonapi (options = {}) {
-    const {
-      attributeDefinitions,
-      attributeNames,
-      meta,
-      id,
-      constructor: { type }
-    } = this
+    const { attributeDefinitions, attributeNames, meta, id, type } = this
 
     let filteredAttributeNames = attributeNames
     let filteredRelationshipNames = []
@@ -864,14 +815,22 @@ class Model {
     return { data }
   }
 
+  /**
+   * @method updateAttributes
+   * @param {Object} attributes
+   */
   updateAttributes (attributes) {
     transaction(() => {
       Object.keys(attributes).forEach(key => {
-        this[key] = attributes[key]
+        set(this, key, attributes[key])
       })
     })
   }
 
+  /**
+   * @method clone
+   * @return {Model} initialize clone record
+   */
   clone () {
     const attributes = cloneDeep(this.snapshot.attributes)
     const relationships = this.relationships

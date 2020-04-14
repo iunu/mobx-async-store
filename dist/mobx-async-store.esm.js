@@ -1,7 +1,5 @@
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import _defineProperty from '@babel/runtime/helpers/defineProperty';
-import _regeneratorRuntime from '@babel/runtime/regenerator';
-import _asyncToGenerator from '@babel/runtime/helpers/asyncToGenerator';
 import _initializerDefineProperty from '@babel/runtime/helpers/initializerDefineProperty';
 import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
 import _createClass from '@babel/runtime/helpers/createClass';
@@ -15,6 +13,8 @@ import jqueryParam from 'jquery-param';
 import pluralize from 'pluralize';
 import dig from 'lodash/get';
 import flattenDeep from 'lodash/flattenDeep';
+import _regeneratorRuntime from '@babel/runtime/regenerator';
+import _asyncToGenerator from '@babel/runtime/helpers/asyncToGenerator';
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
@@ -25,6 +25,9 @@ import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized
 import _inherits from '@babel/runtime/helpers/inherits';
 import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 var pending = {};
 var counter = {};
 
@@ -198,13 +201,37 @@ function diff() {
     return x;
   });
 }
+function buildDecoratedPromise(target, result) {
+  // Define proxied attributes
+  var attributeNames = Object.keys(target.attributeNames);
+  attributeNames.push('isInFlight');
+  var tempProperties = attributeNames.reduce(function (attrs, key) {
+    attrs[key] = {
+      value: target[key],
+      writable: false
+    };
+    return attrs;
+  }, {});
+  Object.defineProperties(result, _objectSpread({
+    isInFlight: {
+      value: target.isInFlight
+    }
+  }, tempProperties));
+  return result;
+}
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function parseApiErrors(errors, defaultMessage) {
+  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+}
 
 function ObjectPromiseProxy(promise, target) {
-  target.isInFlight = true;
+  // Immediately set isInFlight to true
+  target.isInFlight = true; // Keep the current id around in case it is a new object.
+
   var tmpId = target.id;
   var result = promise.then(
   /*#__PURE__*/
@@ -277,7 +304,7 @@ function ObjectPromiseProxy(promise, target) {
 
             case 22:
               // TODO: add all errors from the API response to the target
-              target.errors = _objectSpread({}, target.errors, {
+              target.errors = _objectSpread$1({}, target.errors, {
                 status: status,
                 base: [{
                   message: message
@@ -308,27 +335,90 @@ function ObjectPromiseProxy(promise, target) {
   return buildDecoratedPromise(target, result);
 }
 
-function buildDecoratedPromise(target, result) {
-  // Define proxied attributes
-  var attributeNames = Object.keys(target.attributeNames);
-  attributeNames.push('isInFlight');
-  var tempProperties = attributeNames.reduce(function (attrs, key) {
-    attrs[key] = {
-      value: target[key],
-      writable: false
-    };
-    return attrs;
-  }, {});
-  Object.defineProperties(result, _objectSpread({
-    isInFlight: {
-      value: target.isInFlight
-    }
-  }, tempProperties));
-  return result;
-}
+function DeleteObjectPromiseProxy(promise, target) {
+  var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  target.errors = {};
+  var result = promise.then(
+  /*#__PURE__*/
+  function () {
+    var _ref = _asyncToGenerator(
+    /*#__PURE__*/
+    _regeneratorRuntime.mark(function _callee(response) {
+      var json, data, included;
+      return _regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (!(response.status === 202 || response.status === 204)) {
+                _context.next = 22;
+                break;
+              }
 
-function parseApiErrors(errors, defaultMessage) {
-  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+              if (!options.softDestroy) {
+                _context.next = 16;
+                break;
+              }
+
+              _context.prev = 2;
+              _context.next = 5;
+              return response.json();
+
+            case 5:
+              json = _context.sent;
+              data = json.data, included = json.included;
+
+              if (data) {
+                target.store._createOrUpdateOneRecordFromResponseData(data);
+              }
+
+              if (included) {
+                target.store._createOrUpdateAllRecordsFromResponseData(included);
+              }
+
+              _context.next = 14;
+              break;
+
+            case 11:
+              _context.prev = 11;
+              _context.t0 = _context["catch"](2);
+              console.log(_context.t0); // It is text, do you text handling here
+
+            case 14:
+              _context.next = 18;
+              break;
+
+            case 16:
+              target.dispose();
+              target.store.remove(target.type, target.id);
+
+            case 18:
+              target.isInFlight = false;
+              return _context.abrupt("return", target);
+
+            case 22:
+              target.isInFlight = false;
+              target.errors = {
+                status: response.status
+              };
+              return _context.abrupt("return", target);
+
+            case 25:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, null, [[2, 11]]);
+    }));
+
+    return function (_x) {
+      return _ref.apply(this, arguments);
+    };
+  }(), function (error) {
+    target.isInFlight = false;
+    target.errors = error;
+    throw error;
+  });
+  return buildDecoratedPromise(target, result);
 }
 
 /**
@@ -399,9 +489,9 @@ var schema = new Schema();
 
 var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _temp;
 
-function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Maps the passed-in property names through and runs validations against those properties
  * @method validateProperties
@@ -565,7 +655,7 @@ function () {
   }, {
     key: "save",
     value: function save() {
-      var _this2 = this;
+      var _this = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -596,13 +686,13 @@ function () {
 
       if (relationships) {
         relationships.forEach(function (rel) {
-          if (Array.isArray(_this2[rel])) {
-            _this2[rel].forEach(function (item, i) {
+          if (Array.isArray(_this[rel])) {
+            _this[rel].forEach(function (item, i) {
               if (item && item.isNew) {
                 throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "[").concat(i, "]\""));
               }
             });
-          } else if (_this2[rel] && _this2[rel].isNew) {
+          } else if (_this[rel] && _this[rel].isNew) {
             throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "\""));
           }
         });
@@ -650,106 +740,22 @@ function () {
     key: "destroy",
     value: function destroy() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var type = this.constructor.type,
+      this.isInFlight = true;
+      var type = this.type,
           id = this.id,
           snapshot = this.snapshot,
-          isNew = this.isNew;
+          isNew = this.isNew; // If the record is new we can just remove the record and short circuit
 
       if (isNew) {
         this.store.remove(type, id);
         return snapshot;
       }
 
-      var _options$params = options.params,
-          params = _options$params === void 0 ? {} : _options$params,
-          _options$skipRemove = options.skipRemove,
-          skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
-      var url = this.store.fetchUrl(type, params, id);
-      this.isInFlight = true;
-      var promise = this.store.fetch(url, {
+      var url = this.store.fetchUrl(type, options.params, id);
+      var response = this.store.fetch(url, {
         method: 'DELETE'
       });
-
-      var _this = this;
-
-      _this.errors = {};
-      return promise.then(
-      /*#__PURE__*/
-      function () {
-        var _ref = _asyncToGenerator(
-        /*#__PURE__*/
-        _regeneratorRuntime.mark(function _callee(response) {
-          var json;
-          return _regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  _this.isInFlight = false;
-
-                  if (!(response.status === 202 || response.status === 204)) {
-                    _context.next = 18;
-                    break;
-                  }
-
-                  if (!skipRemove) {
-                    _this.store.remove(type, id);
-                  }
-
-                  _context.prev = 3;
-                  _context.next = 6;
-                  return response.json();
-
-                case 6:
-                  json = _context.sent;
-
-                  if (json.data && json.data.attributes) {
-                    Object.keys(json.data.attributes).forEach(function (key) {
-                      set(_this, key, json.data.attributes[key]);
-                    });
-                  }
-
-                  _context.next = 13;
-                  break;
-
-                case 10:
-                  _context.prev = 10;
-                  _context.t0 = _context["catch"](3);
-                  console.log(_context.t0); // It is text, do you text handling here
-
-                case 13:
-                  // NOTE: If deleting a record changes other related model
-                  // You can return then in the delete response
-                  if (json && json.included) {
-                    _this.store.createModelsFromData(json.included);
-                  }
-
-                  _this.dispose();
-
-                  return _context.abrupt("return", _this);
-
-                case 18:
-                  _this.errors = {
-                    status: response.status
-                  };
-                  return _context.abrupt("return", _this);
-
-                case 20:
-                case "end":
-                  return _context.stop();
-              }
-            }
-          }, _callee, null, [[3, 10]]);
-        }));
-
-        return function (_x) {
-          return _ref.apply(this, arguments);
-        };
-      }(), function (error) {
-        // TODO: Handle error states correctly
-        _this.isInFlight = false;
-        _this.errors = error;
-        throw error;
-      });
+      return new DeleteObjectPromiseProxy(response, this, options);
     }
     /* Private Methods */
 
@@ -764,7 +770,7 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+      extendObservable(this, _objectSpread$2({}, defaultAttributes, {}, initialAttributes));
 
       this._listenForChanges();
     }
@@ -781,30 +787,30 @@ function () {
   }, {
     key: "_listenForChanges",
     value: function _listenForChanges() {
-      var _this3 = this;
+      var _this2 = this;
 
       this._disposers = Object.keys(this.attributes).map(function (attr) {
         return reaction(function () {
-          return _this3.attributes[attr];
+          return _this2.attributes[attr];
         }, function (value) {
-          var previousValue = _this3.previousSnapshot.attributes[attr];
+          var previousValue = _this2.previousSnapshot.attributes[attr];
 
           if (isEqual(previousValue, value)) {
-            _this3._dirtyAttributes.delete(attr);
+            _this2._dirtyAttributes.delete(attr);
           } else if (isObject(value)) {
             // handles Objects and Arrays
             // clear out any dirty attrs that start with this attr prefix
             // then we can reset them if they are still (or newly) dirty
-            Array.from(_this3._dirtyAttributes).forEach(function (path) {
+            Array.from(_this2._dirtyAttributes).forEach(function (path) {
               if (path.indexOf("".concat(attr, ".")) === 0) {
-                _this3._dirtyAttributes.delete(path);
+                _this2._dirtyAttributes.delete(path);
               }
             });
             diff(previousValue, value).forEach(function (property) {
-              _this3._dirtyAttributes.add("".concat(attr, ".").concat(property));
+              _this2._dirtyAttributes.add("".concat(attr, ".").concat(property));
             });
           } else {
-            _this3._dirtyAttributes.add(attr);
+            _this2._dirtyAttributes.add(attr);
           }
         });
       });
@@ -900,16 +906,16 @@ function () {
   }, {
     key: "_applySnapshot",
     value: function _applySnapshot(snapshot) {
-      var _this4 = this;
+      var _this3 = this;
 
       if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
       transaction(function () {
-        _this4.attributeNames.forEach(function (key) {
-          _this4[key] = snapshot.attributes[key];
+        _this3.attributeNames.forEach(function (key) {
+          _this3[key] = snapshot.attributes[key];
         });
 
-        _this4.relationships = snapshot.relationships;
-        _this4.errors = {};
+        _this3.relationships = snapshot.relationships;
+        _this3.errors = {};
       });
     }
     /**
@@ -957,14 +963,14 @@ function () {
      * @return {Object} data in JSON::API format
      */
     value: function jsonapi() {
-      var _this5 = this;
+      var _this4 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
           attributeNames = this.attributeNames,
           meta = this.meta,
           id = this.id,
-          type = this.constructor.type;
+          type = this.type;
       var filteredAttributeNames = attributeNames;
       var filteredRelationshipNames = [];
 
@@ -975,7 +981,7 @@ function () {
       }
 
       var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this5[key];
+        var value = _this4[key];
 
         if (value) {
           var DataType = attributeDefinitions[key].dataType;
@@ -1007,7 +1013,7 @@ function () {
           return options.relationships.includes(name);
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = toJS(_this5.relationships[key]);
+          rels[key] = toJS(_this4.relationships[key]);
           stringifyIds(rels[key]);
           return rels;
         }, {});
@@ -1026,17 +1032,27 @@ function () {
         data: data
       };
     }
+    /**
+     * @method updateAttributes
+     * @param {Object} attributes
+     */
+
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
-      var _this6 = this;
+      var _this5 = this;
 
       transaction(function () {
         Object.keys(attributes).forEach(function (key) {
-          _this6[key] = attributes[key];
+          set(_this5, key, attributes[key]);
         });
       });
     }
+    /**
+     * @method clone
+     * @return {Model} initialize clone record
+     */
+
   }, {
     key: "clone",
     value: function clone() {
@@ -1184,10 +1200,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this7 = this;
+      var _this6 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = toJS(_this7[key]);
+        var value = toJS(_this6[key]);
 
         if (value == null) {
           delete attributes[key];
@@ -1307,9 +1323,9 @@ function () {
 
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3$1, _temp$1;
 
-function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Defines the Artemis Data Store class.
  *
@@ -1511,7 +1527,7 @@ function () {
                         _dataObject$relations = dataObject.relationships,
                         relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
                     var ModelKlass = _this2.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread$2({
+                    var record = new ModelKlass(_objectSpread$3({
                       store: store,
                       relationships: relationships
                     }, attributes));
@@ -1632,14 +1648,14 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions;
 
-      var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
+      var fetchOptions = _objectSpread$3({}, defaultFetchOptions, {}, options);
 
       var key = JSON.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
       return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
+        return fetch(url, _objectSpread$3({}, defaultFetchOptions, {}, options));
       });
     })
     /**
@@ -1982,7 +1998,7 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
+              set(record, 'relationships', _objectSpread$3({}, record.relationships, _defineProperty({}, key, relationships[key])));
               set(_this5.data[type].records, id, record);
             }
           });
@@ -2051,7 +2067,7 @@ function () {
         throw new Error("Could not find a model for '".concat(type, "'"));
       }
 
-      return new ModelKlass(_objectSpread$2({
+      return new ModelKlass(_objectSpread$3({
         id: id,
         store: store,
         relationships: relationships

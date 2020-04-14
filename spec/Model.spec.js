@@ -858,25 +858,17 @@ describe('Model', () => {
   describe('.save', () => {
     it('handles inflight behavior', async () => {
       expect.assertions(3)
-
       const note = store.add('notes', {
         id: 10,
         description: 'Example description'
       })
-
       const todo = store.add('todos', { title: 'Buy Milk' })
       todo.notes.add(note)
-
       fetch.mockResponse(mockTodoResponse)
-
       expect(todo.isInFlight).toBeFalsy()
-
       const promise = todo.save()
-
       expect(todo.isInFlight).toBeTruthy()
-
       await promise
-
       expect(todo.isInFlight).toBeFalsy()
     })
 
@@ -1000,14 +992,12 @@ describe('Model', () => {
     it('makes request and removes model from the store store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
-      expect(store.findAll('todos', { fromServer: false }))
-        .toHaveLength(1)
+      expect(store.findAll('todos', { fromServer: false })).toHaveLength(1)
       await todo.destroy()
       expect(fetch.mock.calls).toHaveLength(1)
       expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos/1')
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
-      expect(store.findAll('todos', { fromServer: false }))
-        .toHaveLength(0)
+      expect(store.findAll('todos', { fromServer: false })).toHaveLength(0)
     })
 
     it('calls dispose', async () => {
@@ -1016,6 +1006,27 @@ describe('Model', () => {
       todo.dispose = jest.fn()
       await todo.destroy()
       expect(todo.dispose.mock.calls).toHaveLength(1)
+    })
+
+    it('supports "softDestroy" option', async () => {
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      const mockResponse = todo.jsonapi()
+      mockResponse.data.attributes.status = 'removed'
+      fetch.mockResponses([JSON.stringify(mockResponse), { status: 204 }])
+      await todo.destroy({ softDestroy: true })
+      expect(todo.status).toEqual('removed')
+      expect(store.findAll('todos', { fromServer: false })).toHaveLength(1)
+    })
+
+    it('handles inflight behavior', async () => {
+      expect.assertions(3)
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      fetch.mockResponses([JSON.stringify({}), { status: 204 }])
+      expect(todo.isInFlight).toBeFalsy()
+      const promise = todo.destroy()
+      expect(todo.isInFlight).toBeTruthy()
+      await promise
+      expect(todo.isInFlight).toBeFalsy()
     })
   })
 

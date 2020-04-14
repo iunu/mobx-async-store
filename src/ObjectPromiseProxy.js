@@ -1,8 +1,16 @@
 import { transaction, set } from 'mobx'
+import { buildDecoratedPromise } from './utils'
+
+function parseApiErrors (errors, defaultMessage) {
+  return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
+}
 
 function ObjectPromiseProxy (promise, target) {
+  // Immediately set isInFlight to true
   target.isInFlight = true
+  // Keep the current id around in case it is a new object.
   const tmpId = target.id
+
   const result = promise.then(
     async function (response) {
       const { status } = response
@@ -71,32 +79,6 @@ function ObjectPromiseProxy (promise, target) {
   )
 
   return buildDecoratedPromise(target, result)
-}
-
-function buildDecoratedPromise (target, result) {
-  // Define proxied attributes
-  const attributeNames = Object.keys(target.attributeNames)
-
-  attributeNames.push('isInFlight')
-
-  const tempProperties = attributeNames.reduce((attrs, key) => {
-    attrs[key] = {
-      value: target[key],
-      writable: false
-    }
-    return attrs
-  }, {})
-
-  Object.defineProperties(result, {
-    isInFlight: { value: target.isInFlight },
-    ...tempProperties
-  })
-
-  return result
-}
-
-function parseApiErrors (errors, defaultMessage) {
-  return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
 }
 
 export default ObjectPromiseProxy

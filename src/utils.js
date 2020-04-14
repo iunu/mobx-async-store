@@ -179,3 +179,25 @@ export function diff (a = {}, b = {}) {
     return prevValue === currValue ? undefined : path
   })).filter((x) => x)
 }
+
+export function buildDecoratedPromise (target, result) {
+  // Define proxied attributes
+  const attributeNames = Object.keys(target.attributeNames)
+
+  attributeNames.push('isInFlight')
+
+  const tempProperties = attributeNames.reduce((attrs, key) => {
+    attrs[key] = {
+      value: target[key],
+      writable: false
+    }
+    return attrs
+  }, {})
+
+  Object.defineProperties(result, {
+    isInFlight: { value: target.isInFlight },
+    ...tempProperties
+  })
+
+  return result
+}
