@@ -73,19 +73,7 @@ const mockTodoData = {
 }
 
 const mockTodoResponse = JSON.stringify(mockTodoData)
-
-const mockTodosResponse = JSON.stringify({
-  data: [
-    {
-      id: '1',
-      type: 'todos',
-      attributes: {
-        id: 1,
-        title: 'Do taxes'
-      }
-    }
-  ]
-})
+const mockTodosResponse = JSON.stringify({ data: [mockTodoData.data] })
 
 describe('Store', () => {
   beforeEach(() => {
@@ -324,6 +312,21 @@ describe('Store', () => {
         const cache = toJS(store.data.todos.cache)
         expect(cache['/example_api/todos']).toEqual(['1'])
       })
+
+      it('fetched data snapshots are marked as persisted', async () => {
+        expect.assertions(1)
+        fetch.mockResponse(mockTodosResponse)
+
+        // Create an existing todo
+        store.add('todos', {
+          id: mockTodoData.data.id,
+          attributes: mockTodoData.data.attributes
+        })
+
+        const todos = await store.findAll('todos', { fromServer: true })
+
+        expect(todos[0].previousSnapshot.persisted).toBeTruthy()
+      })
     })
 
     describe('when "fromServer" is not explicitly set', () => {
@@ -479,18 +482,26 @@ describe('Store', () => {
   })
 
   describe('createOrUpdateModel', () => {
-    it('sets previous snapshot', () => {
+    let record
+
+    beforeEach(() => {
       store.add('notes', { id: 3, text: 'hi' })
 
-      const record = store.createOrUpdateModel({
+      record = store.createOrUpdateModel({
         id: 3,
         type: 'notes',
         attributes: {
           text: 'yo'
         }
       })
+    })
 
+    it('sets previous snapshot', () => {
       expect(record.previousSnapshot.attributes.text).toEqual('yo')
+    })
+
+    it('sets previous snapshot as persisted', () => {
+      expect(record.previousSnapshot.persisted).toBeTruthy()
     })
   })
 

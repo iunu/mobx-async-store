@@ -1810,7 +1810,9 @@ function () {
           });
         }
 
-        record.setPreviousSnapshot();
+        record._takeSnapshot({
+          persisted: true
+        });
       } else {
         record = this.createModel(type, id, {
           attributes: attributes,

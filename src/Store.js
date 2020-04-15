@@ -541,7 +541,7 @@ class Store {
         })
       }
 
-      record.setPreviousSnapshot()
+      record._takeSnapshot({ persisted: true })
     } else {
       record = this.createModel(type, id, { attributes, relationships })
       this.data[type].records[record.id] = record
