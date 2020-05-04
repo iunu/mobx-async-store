@@ -5,7 +5,7 @@ import {
   set,
   toJS,
   transaction,
-  observable
+  observable,
 } from 'mobx'
 
 import moment from 'moment'
@@ -19,7 +19,7 @@ import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 
-function isPresent (value) {
+function isPresent(value) {
   return value !== null && value !== undefined && value !== ''
 }
 
@@ -29,13 +29,15 @@ function isPresent (value) {
  * @param value
  */
 
-function validatePresence (value) {
+function validatePresence(value) {
   return {
     isValid: isPresent(value),
-    errors: [{
-      key: 'blank',
-      message: 'can\'t be blank'
-    }]
+    errors: [
+      {
+        key: 'blank',
+        message: "can't be blank",
+      },
+    ],
   }
 }
 
@@ -48,7 +50,7 @@ function validatePresence (value) {
  * @return {Array} an array of booleans representing results of validations
  */
 
-function validateProperties (model, propertyNames, propertyDefinitions) {
+function validateProperties(model, propertyNames, propertyDefinitions) {
   return propertyNames.map((property) => {
     const { validator } = propertyDefinitions[property]
 
@@ -64,8 +66,8 @@ function validateProperties (model, propertyNames, propertyDefinitions) {
   })
 }
 
-function stringifyIds (object) {
-  Object.keys(object).forEach(key => {
+function stringifyIds(object) {
+  Object.keys(object).forEach((key) => {
     const property = object[key]
     if (typeof property === 'object') {
       if (property.id) {
@@ -80,7 +82,7 @@ function stringifyIds (object) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor (descriptor, DataType) {
+function defaultValueForDescriptor(descriptor, DataType) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
@@ -107,7 +109,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * ```
  * @method attribute
  */
-export function attribute (dataType = (obj) => obj) {
+export function attribute(dataType = (obj) => obj) {
   return function (target, property, descriptor) {
     const { type } = target.constructor
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
@@ -116,16 +118,16 @@ export function attribute (dataType = (obj) => obj) {
       dataType,
       defaultValue,
       property,
-      type
+      type,
     })
     // Return custom descriptor
     return {
-      get () {
+      get() {
         return defaultValue
       },
-      set (value) {
+      set(value) {
         set(target, property, value)
-      }
+      },
     }
   }
 }
@@ -144,30 +146,30 @@ export function attribute (dataType = (obj) => obj) {
  * @method validates
  */
 
- export function validates (target, property) {
-   let validator = validatePresence
+export function validates(target, property) {
+  let validator = validatePresence
 
-   if (typeof target === 'function') {
-     validator = target
+  if (typeof target === 'function') {
+    validator = target
 
-     return function (target, property) {
-       const { type } = target.constructor
+    return function (target, property) {
+      const { type } = target.constructor
 
-       schema.addValidation({
-         property,
-         type,
-         validator
-       })
-     }
-   } else {
-     const { type } = target.constructor
-     schema.addValidation({
-       property,
-       type,
-       validator
-     })
-   }
- }
+      schema.addValidation({
+        property,
+        type,
+        validator,
+      })
+    }
+  } else {
+    const { type } = target.constructor
+    schema.addValidation({
+      property,
+      type,
+      validator,
+    })
+  }
+}
 
 /*
  * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
@@ -202,7 +204,7 @@ class Model {
    *
    * @method constructor
    */
-  constructor (initialAttributes = {}) {
+  constructor(initialAttributes = {}) {
     this._makeObservable(initialAttributes)
     this._takeSnapshot({ persisted: !this.isNew })
   }
@@ -223,25 +225,25 @@ class Model {
    */
 
   /**
-    * has this object been destroyed?
-    * @property _disposed
-    * @type {Boolean}
-    * @default false
-    */
+   * has this object been destroyed?
+   * @property _disposed
+   * @type {Boolean}
+   * @default false
+   */
   @observable _disposed = false
 
   /**
-    * set of relationships which have changed since last snapshot
-    * @property _dirtyRelationships
-    * @type {Set}
-    */
+   * set of relationships which have changed since last snapshot
+   * @property _dirtyRelationships
+   * @type {Set}
+   */
   @observable _dirtyRelationships = new Set()
 
   /**
-    * set of attributes which have changed since last snapshot
-    * @property _dirtyAttributes
-    * @type {Set}
-    */
+   * set of attributes which have changed since last snapshot
+   * @property _dirtyAttributes
+   * @type {Set}
+   */
   @observable _dirtyAttributes = new Set()
 
   /**
@@ -275,7 +277,7 @@ class Model {
    * @property isDirty
    * @type {Boolean}
    */
-  get isDirty () {
+  get isDirty() {
     return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0
   }
 
@@ -284,7 +286,7 @@ class Model {
    * @property hasUnpersistedChanges
    * @type {Boolean}
    */
-  get hasUnpersistedChanges () {
+  get hasUnpersistedChanges() {
     return this.isDirty || !this.previousSnapshot.persisted
   }
 
@@ -293,7 +295,7 @@ class Model {
    * @property isNew
    * @type {Boolean}
    */
-  @computed get isNew () {
+  @computed get isNew() {
     const { id } = this
     if (!id) return true
     if (String(id).indexOf('tmp') === -1) return false
@@ -352,7 +354,7 @@ class Model {
    * ```
    * @method rollback
    */
-  rollback () {
+  rollback() {
     this._applySnapshot(this.previousSnapshot)
   }
 
@@ -361,7 +363,7 @@ class Model {
    * state if the model was never persisted
    * @method rollbackToPersisted
    */
-  rollbackToPersisted () {
+  rollbackToPersisted() {
     this._applySnapshot(this.persistedSnapshot)
     this._takeSnapshot({ persisted: true })
   }
@@ -372,17 +374,13 @@ class Model {
    * @return {Promise}
    * @param {Object} options
    */
-  save (options = {}) {
+  save(options = {}) {
     if (!options.skip_validations && !this.validate()) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
     }
 
-    const {
-      queryParams,
-      relationships,
-      attributes
-    } = options
+    const { queryParams, relationships, attributes } = options
 
     const { constructor, id, isNew } = this
 
@@ -396,20 +394,22 @@ class Model {
 
     const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
 
-    const body = JSON.stringify(this.jsonapi(
-      { relationships, attributes }
-    ))
+    const body = JSON.stringify(this.jsonapi({ relationships, attributes }))
 
     if (relationships) {
       relationships.forEach((rel) => {
         if (Array.isArray(this[rel])) {
           this[rel].forEach((item, i) => {
             if (item && item.isNew) {
-              throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}[${i}]"`)
+              throw new Error(
+                `Invariant violated: tried to save a relationship to an unpersisted record: "${rel}[${i}]"`
+              )
             }
           })
         } else if (this[rel] && this[rel].isNew) {
-          throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}"`)
+          throw new Error(
+            `Invariant violated: tried to save a relationship to an unpersisted record: "${rel}"`
+          )
         }
       })
     }
@@ -430,17 +430,25 @@ class Model {
    * @return {Boolean}
    */
 
-  validate (options = {}) {
+  validate(options = {}) {
     this.errors = {}
     const { attributeDefinitions, relationshipDefinitions } = this
 
     const attributeNames = options.attributes || this.attributeNames
     const relationshipNames = options.relationships || this.relationshipNames
 
-    const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
-    const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
+    const validAttributes = validateProperties(
+      this,
+      attributeNames,
+      attributeDefinitions
+    )
+    const validRelationships = validateProperties(
+      this,
+      relationshipNames,
+      relationshipDefinitions
+    )
 
-    return validAttributes.concat(validRelationships).every(value => value)
+    return validAttributes.concat(validRelationships).every((value) => value)
   }
 
   /**
@@ -448,9 +456,12 @@ class Model {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy (options = {}) {
+  destroy(options = {}) {
     const {
-      constructor: { type }, id, snapshot, isNew
+      constructor: { type },
+      id,
+      snapshot,
+      isNew,
     } = this
 
     if (isNew) {
@@ -478,7 +489,7 @@ class Model {
           try {
             json = await response.json()
             if (json.data && json.data.attributes) {
-              Object.keys(json.data.attributes).forEach(key => {
+              Object.keys(json.data.attributes).forEach((key) => {
                 set(_this, key, json.data.attributes[key])
               })
             }
@@ -510,7 +521,7 @@ class Model {
     )
   }
 
-   /* Private Methods */
+  /* Private Methods */
 
   /**
    * Magic method that makes changes to records
@@ -518,12 +529,12 @@ class Model {
    *
    * @method _makeObservable
    */
-  _makeObservable (initialAttributes) {
+  _makeObservable(initialAttributes) {
     const { defaultAttributes } = this
 
     extendObservable(this, {
       ...defaultAttributes,
-      ...initialAttributes
+      ...initialAttributes,
     })
 
     this._listenForChanges()
@@ -538,27 +549,31 @@ class Model {
    * _dirtyAttributes set
    * @method _listenForChanges
    */
-  _listenForChanges () {
+  _listenForChanges() {
     this._disposers = Object.keys(this.attributes).map((attr) => {
-      return reaction(() => this.attributes[attr], (value) => {
-        const previousValue = this.previousSnapshot.attributes[attr]
-        if (isEqual(previousValue, value)) {
-          this._dirtyAttributes.delete(attr)
-        } else if (isObject(value)) { // handles Objects and Arrays
-          // clear out any dirty attrs that start with this attr prefix
-          // then we can reset them if they are still (or newly) dirty
-          Array.from(this._dirtyAttributes).forEach((path) => {
-            if (path.indexOf(`${attr}.`) === 0) {
-              this._dirtyAttributes.delete(path)
-            }
-          })
-          diff(previousValue, value).forEach((property) => {
-            this._dirtyAttributes.add(`${attr}.${property}`)
-          })
-        } else {
-          this._dirtyAttributes.add(attr)
+      return reaction(
+        () => this.attributes[attr],
+        (value) => {
+          const previousValue = this.previousSnapshot.attributes[attr]
+          if (isEqual(previousValue, value)) {
+            this._dirtyAttributes.delete(attr)
+          } else if (isObject(value)) {
+            // handles Objects and Arrays
+            // clear out any dirty attrs that start with this attr prefix
+            // then we can reset them if they are still (or newly) dirty
+            Array.from(this._dirtyAttributes).forEach((path) => {
+              if (path.indexOf(`${attr}.`) === 0) {
+                this._dirtyAttributes.delete(path)
+              }
+            })
+            diff(previousValue, value).forEach((property) => {
+              this._dirtyAttributes.add(`${attr}.${property}`)
+            })
+          } else {
+            this._dirtyAttributes.add(attr)
+          }
         }
-      })
+      )
     })
   }
 
@@ -567,7 +582,7 @@ class Model {
    * any event listeners and don't leak memory
    * @method dispose
    */
-  dispose () {
+  dispose() {
     this._disposed = true
     this._disposers.forEach((dispose) => dispose())
   }
@@ -587,10 +602,10 @@ class Model {
    * @method snapshot
    * @return {Object} current attributes
    */
-  get snapshot () {
+  get snapshot() {
     return {
       attributes: this.attributes,
-      relationships: toJS(this.relationships)
+      relationships: toJS(this.relationships),
     }
   }
 
@@ -599,7 +614,7 @@ class Model {
    *
    * @method setPreviousSnapshot
    */
-  setPreviousSnapshot () {
+  setPreviousSnapshot() {
     this._takeSnapshot()
   }
 
@@ -608,9 +623,10 @@ class Model {
    *
    * @method previousSnapshot
    */
-  get previousSnapshot () {
+  get previousSnapshot() {
     const length = this._snapshots.length
-    if (length === 0) throw new Error('Invariant violated: model has no snapshots')
+    if (length === 0)
+      throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
   }
 
@@ -619,7 +635,7 @@ class Model {
    *
    * @method previousSnapshot
    */
-  get persistedSnapshot () {
+  get persistedSnapshot() {
     return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
@@ -630,7 +646,7 @@ class Model {
    * @method _takeSnapshot
    * @param {Object} options
    */
-  _takeSnapshot (options = {}) {
+  _takeSnapshot(options = {}) {
     const persisted = options.persisted || false
     this._dirtyRelationships.clear()
     this._dirtyAttributes.clear()
@@ -638,7 +654,7 @@ class Model {
     const snapshot = {
       persisted,
       attributes,
-      relationships
+      relationships,
     }
     if (persisted) {
       this._snapshots = []
@@ -652,8 +668,9 @@ class Model {
    * @method _applySnapshot
    * @param {Object} snapshot
    */
-  _applySnapshot (snapshot) {
-    if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
+  _applySnapshot(snapshot) {
+    if (!snapshot)
+      throw new Error('Invariant violated: tried to apply undefined snapshot')
     transaction(() => {
       this.attributeNames.forEach((key) => {
         this[key] = snapshot.attributes[key]
@@ -678,19 +695,21 @@ class Model {
    * @return {Array} dirty attribute paths
    */
 
-   get dirtyAttributes () {
-    const relationships = Array.from(this._dirtyRelationships).map((property) => `relationships.${property}`)
+  get dirtyAttributes() {
+    const relationships = Array.from(this._dirtyRelationships).map(
+      (property) => `relationships.${property}`
+    )
     const attributes = Array.from(this._dirtyAttributes)
     return [...relationships, ...attributes]
-   }
+  }
 
   /**
    * shortcut to get the static
    *
    * @method type
    * @return {String} current attributes
-  */
-  get type () {
+   */
+  get type() {
     return this.constructor.type
   }
 
@@ -700,7 +719,7 @@ class Model {
    * @method attributes
    * @return {Object} current attributes
    */
-  get attributes () {
+  get attributes() {
     return this.attributeNames.reduce((attributes, key) => {
       const value = toJS(this[key])
       if (value == null) {
@@ -718,7 +737,7 @@ class Model {
    * @method attributeDefinitions
    * @return {Object}
    */
-  get attributeDefinitions () {
+  get attributeDefinitions() {
     const { type } = this.constructor
     return schema.structure[type]
   }
@@ -729,7 +748,7 @@ class Model {
    * @method relationshipDefinitions
    * @return {Object}
    */
-  get relationshipDefinitions () {
+  get relationshipDefinitions() {
     const { type } = this.constructor
     return schema.relations[type]
   }
@@ -740,7 +759,7 @@ class Model {
    * @method hasErrors
    * @return {Boolean}
    */
-  get hasErrors () {
+  get hasErrors() {
     return Object.keys(this.errors).length > 0
   }
 
@@ -750,7 +769,7 @@ class Model {
    * @method hasErrors
    * @return {Boolean}
    */
-  errorForKey (key) {
+  errorForKey(key) {
     return this.errors[key]
   }
 
@@ -760,7 +779,7 @@ class Model {
    * @method attributeNames
    * @return {Array}
    */
-  get attributeNames () {
+  get attributeNames() {
     return Object.keys(this.attributeDefinitions)
   }
 
@@ -770,7 +789,7 @@ class Model {
    * @method relationshipNames
    * @return {Array}
    */
-  get relationshipNames () {
+  get relationshipNames() {
     return Object.keys(this.relationshipDefinitions)
   }
 
@@ -780,15 +799,18 @@ class Model {
    * @method defaultAttributes
    * @return {Object}
    */
-  get defaultAttributes () {
+  get defaultAttributes() {
     const { attributeDefinitions } = this
-    return this.attributeNames.reduce((defaults, key) => {
-      const { defaultValue } = attributeDefinitions[key]
-      defaults[key] = defaultValue
-      return defaults
-    }, {
-      relationships: {}
-    })
+    return this.attributeNames.reduce(
+      (defaults, key) => {
+        const { defaultValue } = attributeDefinitions[key]
+        defaults[key] = defaultValue
+        return defaults
+      },
+      {
+        relationships: {},
+      }
+    )
   }
 
   /**
@@ -798,21 +820,22 @@ class Model {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  jsonapi (options = {}) {
+  jsonapi(options = {}) {
     const {
       attributeDefinitions,
       attributeNames,
       meta,
       id,
-      constructor: { type }
+      constructor: { type },
     } = this
 
     let filteredAttributeNames = attributeNames
     let filteredRelationshipNames = []
 
     if (options.attributes) {
-      filteredAttributeNames = attributeNames
-        .filter(name => options.attributes.includes(name))
+      filteredAttributeNames = attributeNames.filter((name) =>
+        options.attributes.includes(name)
+      )
     }
 
     const attributes = filteredAttributeNames.reduce((attrs, key) => {
@@ -837,12 +860,13 @@ class Model {
     const data = {
       type,
       attributes,
-      id: String(id)
+      id: String(id),
     }
 
     if (options.relationships) {
-      filteredRelationshipNames = Object.keys(this.relationships)
-        .filter(name => options.relationships.includes(name))
+      filteredRelationshipNames = Object.keys(
+        this.relationships
+      ).filter((name) => options.relationships.includes(name))
 
       const relationships = filteredRelationshipNames.reduce((rels, key) => {
         rels[key] = toJS(this.relationships[key])
@@ -864,18 +888,21 @@ class Model {
     return { data }
   }
 
-  updateAttributes (attributes) {
+  updateAttributes(attributes) {
     transaction(() => {
-      Object.keys(attributes).forEach(key => {
+      Object.keys(attributes).forEach((key) => {
         this[key] = attributes[key]
       })
     })
   }
 
-  clone () {
+  clone() {
     const attributes = cloneDeep(this.snapshot.attributes)
     const relationships = this.relationships
-    return this.store.createModel(this.type, this.id, { attributes, relationships })
+    return this.store.createModel(this.type, this.id, {
+      attributes,
+      relationships,
+    })
   }
 }
 

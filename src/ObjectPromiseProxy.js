@@ -1,6 +1,6 @@
 import { transaction, set } from 'mobx'
 
-function ObjectPromiseProxy (promise, target) {
+function ObjectPromiseProxy(promise, target) {
   target.isInFlight = true
   const tmpId = target.id
   const result = promise.then(
@@ -13,11 +13,11 @@ function ObjectPromiseProxy (promise, target) {
         transaction(() => {
           set(target, 'id', id)
 
-          Object.keys(attributes).forEach(key => {
+          Object.keys(attributes).forEach((key) => {
             set(target, key, attributes[key])
           })
           if (relationships) {
-            Object.keys(relationships).forEach(key => {
+            Object.keys(relationships).forEach((key) => {
               if (!relationships[key].hasOwnProperty('meta')) {
                 // todo: throw error if relationship is not defined in model
                 set(target.relationships, key, relationships[key])
@@ -60,7 +60,7 @@ function ObjectPromiseProxy (promise, target) {
           ...target.errors,
           status: status,
           base: [{ message: message }],
-          server: json.errors
+          server: json.errors,
         }
 
         const errorString = JSON.stringify(target.errors)
@@ -80,22 +80,22 @@ function ObjectPromiseProxy (promise, target) {
   const tempProperties = attributeNames.reduce((attrs, key) => {
     attrs[key] = {
       value: target[key],
-      writable: false
+      writable: false,
     }
     return attrs
   }, {})
 
   Object.defineProperties(result, {
     isInFlight: { value: target.isInFlight },
-    ...tempProperties
+    ...tempProperties,
   })
 
   // Return promise
   return result
 }
 
-function parseApiErrors (errors, defaultMessage) {
-  return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
+function parseApiErrors(errors, defaultMessage) {
+  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0]
 }
 
 export default ObjectPromiseProxy

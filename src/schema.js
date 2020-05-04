@@ -8,17 +8,18 @@ class Schema {
   structure = {}
   relations = {}
 
-  addAttribute ({ type, property, dataType, defaultValue }) {
+  addAttribute({ type, property, dataType, defaultValue }) {
     this.structure[type] = this.structure[type] || {}
     this.structure[type][property] = {
-      defaultValue, dataType
+      defaultValue,
+      dataType,
     }
   }
 
-  addRelationship ({ type, property, dataType }) {
+  addRelationship({ type, property, dataType }) {
     this.relations[type] = this.relations[type] || {}
     this.relations[type][property] = {
-      dataType
+      dataType,
     }
   }
 
@@ -27,7 +28,7 @@ class Schema {
    * @method addValidation
    * @param {Object} options includes `type`, `property`, and `validator`
    */
-  addValidation ({ type, property, validator }) {
+  addValidation({ type, property, validator }) {
     if (this.structure[type][property]) {
       this.structure[type][property].validator = validator
     } else {

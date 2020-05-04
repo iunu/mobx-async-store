@@ -26,7 +26,7 @@ class Store {
    *
    * @method constructor
    */
-  constructor (options) {
+  constructor(options) {
     this.init(options)
   }
 
@@ -260,7 +260,7 @@ class Store {
    *
    * @method reset
    */
-  reset (type) {
+  reset(type) {
     if (type) {
       this.data[type] = { records: {}, cache: {} }
     } else {
@@ -276,7 +276,7 @@ class Store {
    * @method init
    * @param {Object} options passed to constructor
    */
-  init (options) {
+  init(options) {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
@@ -288,7 +288,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
-  initializeNetworkConfiguration (options = {}) {
+  initializeNetworkConfiguration(options = {}) {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
   }
@@ -299,7 +299,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
-  initializeModelTypeIndex () {
+  initializeModelTypeIndex() {
     const { types } = this.constructor
     this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
       modelTypeIndex[modelKlass.type] = modelKlass
@@ -315,12 +315,12 @@ class Store {
    *
    * @method initializeObservableDataProperty
    */
-  initializeObservableDataProperty () {
+  initializeObservableDataProperty() {
     const { types } = this.constructor
 
     // NOTE: Is there a performance cost to setting
     // each property individually?
-    types.forEach(modelKlass => {
+    types.forEach((modelKlass) => {
       this.data[modelKlass.type] = { records: {}, cache: {} }
     })
   }
@@ -332,12 +332,14 @@ class Store {
    * @param {String} url
    * @param {Object} options
    */
-  fetch (url, options = {}) {
+  fetch(url, options = {}) {
     const { defaultFetchOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const key = JSON.stringify({ url, fetchOptions })
 
-    return combineRacedRequests(key, () => fetch(url, { ...defaultFetchOptions, ...options }))
+    return combineRacedRequests(key, () =>
+      fetch(url, { ...defaultFetchOptions, ...options })
+    )
   }
 
   /**
@@ -347,7 +349,7 @@ class Store {
    * @param {String} type
    * @return {Object} observable type object structure
    */
-  getType (type) {
+  getType(type) {
     return this.data[type]
   }
 
@@ -361,7 +363,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getMatchingRecord (type, id, queryParams) {
+  getMatchingRecord(type, id, queryParams) {
     if (queryParams) {
       return this.getCachedRecord(type, id, queryParams)
     } else {
@@ -377,7 +379,7 @@ class Store {
    * @param {Number} id
    * @return {Object} record
    */
-  getRecord (type, id) {
+  getRecord(type, id) {
     if (!this.getType(type)) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
@@ -396,9 +398,10 @@ class Store {
    * @param {String} type
    * @return {Array} array of objects
    */
-  getRecords (type) {
-    const records = Object.values(this.getType(type).records)
-                          .filter(value => value && value !== 'undefined')
+  getRecords(type) {
+    const records = Object.values(this.getType(type).records).filter(
+      (value) => value && value !== 'undefined'
+    )
 
     // NOTE: Handles a scenario where the store keeps around a reference
     // to a newly persisted record by its temp uuid. This is required
@@ -418,7 +421,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getCachedRecord (type, id, queryParams) {
+  getCachedRecord(type, id, queryParams) {
     const cachedRecords = this.getCachedRecords(type, queryParams, id)
 
     return cachedRecords && cachedRecords[0]
@@ -432,7 +435,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getCachedRecords (type, queryParams, id) {
+  getCachedRecords(type, queryParams, id) {
     // Get the url the request would use
     const url = this.fetchUrl(type, queryParams, id)
     // Get the matching ids from the response
@@ -449,7 +452,7 @@ class Store {
    * @param {String} url
    * @return {Array} array of ids
    */
-  getCachedIds (type, url) {
+  getCachedIds(type, url) {
     const ids = this.getType(type).cache[url]
     if (!ids) return []
     const idsSet = new Set(toJS(ids))
@@ -464,7 +467,7 @@ class Store {
    * @param {String} url
    * @return {Array} array of ids
    */
-  getCachedId (type, id) {
+  getCachedId(type, id) {
     return this.getType(type).cache[id]
   }
 
@@ -476,11 +479,12 @@ class Store {
    * @param {Array} ids
    * @return {Array} array or records
    */
-  getRecordsById (type, ids = []) {
+  getRecordsById(type, ids = []) {
     // NOTE: Is there a better way to do this?
-    return ids.map(id => this.getRecord(type, id))
-              .filter(record => record)
-              .filter(record => typeof record !== 'undefined')
+    return ids
+      .map((id) => this.getRecord(type, id))
+      .filter((record) => record)
+      .filter((record) => typeof record !== 'undefined')
   }
 
   /**
@@ -492,7 +496,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Array} array or records
    */
-  getMatchingRecords (type, queryParams) {
+  getMatchingRecords(type, queryParams) {
     if (queryParams) {
       return this.getCachedRecords(type, queryParams)
     } else {
@@ -507,7 +511,7 @@ class Store {
    * @param {String} type
    * @return {Class} model class
    */
-  getKlass (type) {
+  getKlass(type) {
     return this.modelTypeIndex[type]
   }
 
@@ -517,25 +521,28 @@ class Store {
    * @method createOrUpdateModel
    * @param {Object} dataObject
    */
-  createOrUpdateModel (dataObject) {
+  createOrUpdateModel(dataObject) {
     const { attributes = {}, id, relationships = {}, type } = dataObject
 
     let record = this.getRecord(type, id)
 
     if (record) {
       // Update existing object attributes
-      Object.keys(attributes).forEach(key => {
+      Object.keys(attributes).forEach((key) => {
         set(record, key, attributes[key])
         set(this.data[type].records, id, record)
       })
 
       // If relationships are present, update relationships
       if (relationships) {
-        Object.keys(relationships).forEach(key => {
+        Object.keys(relationships).forEach((key) => {
           // Don't try to create relationship if meta included false
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
-            set(record, 'relationships', { ...record.relationships, [key]: relationships[key] })
+            set(record, 'relationships', {
+              ...record.relationships,
+              [key]: relationships[key],
+            })
             set(this.data[type].records, id, record)
           }
         })
@@ -556,15 +563,17 @@ class Store {
    * @method createModelsFromData
    * @param {Array} data
    */
-  createModelsFromData (data) {
-    return transaction(() => data.map(dataObject => {
-      // Only build objects for which we have a type defined.
-      // And ignore silently anything else included in the JSON response.
-      // TODO: Put some console message in development mode
-      if (this.getType(dataObject.type)) {
-        return this.createOrUpdateModel(dataObject)
-      }
-    }))
+  createModelsFromData(data) {
+    return transaction(() =>
+      data.map((dataObject) => {
+        // Only build objects for which we have a type defined.
+        // And ignore silently anything else included in the JSON response.
+        // TODO: Put some console message in development mode
+        if (this.getType(dataObject.type)) {
+          return this.createOrUpdateModel(dataObject)
+        }
+      })
+    )
   }
 
   /**
@@ -576,7 +585,7 @@ class Store {
    * @param {Object} attributes
    * @return {Object} model instance
    */
-  createModel (type, id, data) {
+  createModel(type, id, data) {
     const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
     const ModelKlass = this.getKlass(type)
@@ -595,7 +604,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  fetchUrl (type, queryParams, id, options) {
+  fetchUrl(type, queryParams, id, options) {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
@@ -609,7 +618,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  async fetchAll (type, queryParams) {
+  async fetchAll(type, queryParams) {
     const store = this
     const url = this.fetchUrl(type, queryParams)
     const response = await this.fetch(url, { method: 'GET' })
@@ -621,15 +630,21 @@ class Store {
         this.createModelsFromData(json.included)
       }
 
-      return transaction(() => json.data.map((dataObject) => {
-        const { id, attributes = {}, relationships = {} } = dataObject
-        const ModelKlass = this.modelTypeIndex[type]
-        const record = new ModelKlass({ store, relationships, ...attributes })
-        this.data[type].cache[url].push(id)
-        this.data[type].records[id] = record
+      return transaction(() =>
+        json.data.map((dataObject) => {
+          const { id, attributes = {}, relationships = {} } = dataObject
+          const ModelKlass = this.modelTypeIndex[type]
+          const record = new ModelKlass({
+            store,
+            relationships,
+            ...attributes,
+          })
+          this.data[type].cache[url].push(id)
+          this.data[type].records[id] = record
 
-        return record
-      }))
+          return record
+        })
+      )
     } else {
       return Promise.reject(response.status)
     }
@@ -643,7 +658,7 @@ class Store {
    * @param {String} type the type to find
    * @param {String} id
    */
-  async fetchOne (type, id, queryParams) {
+  async fetchOne(type, id, queryParams) {
     const url = this.fetchUrl(type, queryParams, id)
     // Trigger request
     const response = await this.fetch(url, { method: 'GET' })

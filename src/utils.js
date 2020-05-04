@@ -25,7 +25,7 @@ const decrementor = (key) => () => {
  * @param {String} recordType type of record
  * @return {String}
  */
-export function singularizeType (recordType) {
+export function singularizeType(recordType) {
   let typeParts = recordType.split('_')
   let endPart = typeParts[typeParts.length - 1]
 
@@ -41,7 +41,7 @@ export function singularizeType (recordType) {
  * @method requestUrl
  * @return {String} formatted url string
  */
-export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
+export function requestUrl(baseUrl, endpoint, queryParams = {}, id) {
   let queryParamString = ''
   if (Object.keys(queryParams).length > 0) {
     queryParamString = `?${jqueryParam(queryParams)}`
@@ -54,11 +54,11 @@ export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
   return `${baseUrl}/${endpoint}${idForPath}${queryParamString}`
 }
 
-export function newId () {
+export function newId() {
   return `tmp-${uuidv1()}`
 }
 
-export function dbOrNewId (properties) {
+export function dbOrNewId(properties) {
   return properties.id || newId()
 }
 
@@ -72,14 +72,14 @@ export function dbOrNewId (properties) {
  * @param {Function} fn the function the generates the promise
  * @return {Promise}
  */
-export function combineRacedRequests (key, fn) {
+export function combineRacedRequests(key, fn) {
   const incrementBlocked = incrementor(key)
   const decrementBlocked = decrementor(key)
 
   // keep track of the number of callers waiting for this promise to resolve
   incrementBlocked()
 
-  function handleResponse (response) {
+  function handleResponse(response) {
     const count = decrementBlocked()
     // if there are other callers waiting for this request to resolve, we should
     // clone the response before returning so that we can re-use it for the
@@ -110,9 +110,9 @@ export function combineRacedRequests (key, fn) {
  * @param {Array} key
  * @return {Function}
  */
-export function uniqueByReducer (key) {
+export function uniqueByReducer(key) {
   return function (accumulator, current) {
-    return accumulator.some(item => item[key] === current[key])
+    return accumulator.some((item) => item[key] === current[key])
       ? accumulator
       : [...accumulator, current]
   }
@@ -126,12 +126,12 @@ export function uniqueByReducer (key) {
  * @param {String} key
  * @return {Array}
  */
-export function uniqueBy (array, key) {
+export function uniqueBy(array, key) {
   return array.reduce(uniqueByReducer(key), [])
 }
 
-export function stringifyIds (object) {
-  Object.keys(object).forEach(key => {
+export function stringifyIds(object) {
+  Object.keys(object).forEach((key) => {
     const property = object[key]
 
     if (typeof property === 'object') {
@@ -153,10 +153,14 @@ export function stringifyIds (object) {
  * @param {String} prefix
  * @return Array
  */
-export function walk (obj, iteratee, prefix) {
+export function walk(obj, iteratee, prefix) {
   if (obj != null && typeof obj === 'object') {
     return Object.keys(obj).map((prop) => {
-      return walk(obj[prop], iteratee, [prefix, prop].filter(x => x).join('.'))
+      return walk(
+        obj[prop],
+        iteratee,
+        [prefix, prop].filter((x) => x).join('.')
+      )
     })
   }
   return iteratee(obj, prefix)
@@ -173,9 +177,11 @@ export function walk (obj, iteratee, prefix) {
  * @param {Object} b
  * @return Array<String>
  */
-export function diff (a = {}, b = {}) {
-  return flattenDeep(walk(a, (prevValue, path) => {
-    const currValue = dig(b, path)
-    return prevValue === currValue ? undefined : path
-  })).filter((x) => x)
+export function diff(a = {}, b = {}) {
+  return flattenDeep(
+    walk(a, (prevValue, path) => {
+      const currValue = dig(b, path)
+      return prevValue === currValue ? undefined : path
+    })
+  ).filter((x) => x)
 }

@@ -9,7 +9,7 @@ import schema from '../schema'
  * @param value
  * @return {Boolean}
  */
-export function isPresent (value) {
+export function isPresent(value) {
   return value !== null && value !== undefined && value !== ''
 }
 
@@ -18,13 +18,15 @@ export function isPresent (value) {
  * @method validatePresence
  * @param value
  */
-function validatePresence (value) {
+function validatePresence(value) {
   return {
     isValid: isPresent(value),
-    errors: [{
-      key: 'blank',
-      message: 'can\'t be blank'
-    }]
+    errors: [
+      {
+        key: 'blank',
+        message: "can't be blank",
+      },
+    ],
   }
 }
 
@@ -32,7 +34,7 @@ function validatePresence (value) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor (descriptor, DataType) {
+function defaultValueForDescriptor(descriptor, DataType) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
@@ -59,7 +61,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * ```
  * @method attribute
  */
-export function attribute (dataType = (obj) => obj) {
+export function attribute(dataType = (obj) => obj) {
   return function (target, property, descriptor) {
     const { type } = target.constructor
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
@@ -68,16 +70,16 @@ export function attribute (dataType = (obj) => obj) {
       dataType,
       defaultValue,
       property,
-      type
+      type,
     })
     // Return custom descriptor
     return {
-      get () {
+      get() {
         return defaultValue
       },
-      set (value) {
+      set(value) {
         set(target, property, value)
-      }
+      },
     }
   }
 }
@@ -95,27 +97,27 @@ export function attribute (dataType = (obj) => obj) {
  * ```
  * @method validates
  */
-export function validates (target, property) {
-   let validator = validatePresence
+export function validates(target, property) {
+  let validator = validatePresence
 
-   if (typeof target === 'function') {
-     validator = target
+  if (typeof target === 'function') {
+    validator = target
 
-     return function (target, property) {
-       const { type } = target.constructor
+    return function (target, property) {
+      const { type } = target.constructor
 
-       schema.addValidation({
-         property,
-         type,
-         validator
-       })
-     }
-   } else {
-     const { type } = target.constructor
-     schema.addValidation({
-       property,
-       type,
-       validator
-     })
-   }
- }
+      schema.addValidation({
+        property,
+        type,
+        validator,
+      })
+    }
+  } else {
+    const { type } = target.constructor
+    schema.addValidation({
+      property,
+      type,
+      validator,
+    })
+  }
+}
