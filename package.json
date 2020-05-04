@@ -24,8 +24,6 @@
     "@babel/runtime": "^7.4.3",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "8",
-    "browserslist": "^4.7.0",
-    "caniuse-lite": "^1.0.30000998",
     "enzyme": "^3.9.0",
     "enzyme-adapter-react-16": "^1.12.1",
     "eslint": "4.18.2",
