@@ -720,7 +720,7 @@ class Model {
    */
   get attributeDefinitions () {
     const { type } = this.constructor
-    return schema.structure[type]
+    return schema.structure[type] || {}
   }
 
   /**
@@ -731,7 +731,7 @@ class Model {
    */
   get relationshipDefinitions () {
     const { type } = this.constructor
-    return schema.relations[type]
+    return schema.relations[type] || {}
   }
 
   /**

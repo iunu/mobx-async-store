@@ -1223,7 +1223,7 @@ function () {
     key: "attributeDefinitions",
     get: function get() {
       var type = this.constructor.type;
-      return schema.structure[type];
+      return schema.structure[type] || {};
     }
     /**
      * Getter find the relationship definitions for the model type.
@@ -1236,7 +1236,7 @@ function () {
     key: "relationshipDefinitions",
     get: function get() {
       var type = this.constructor.type;
-      return schema.relations[type];
+      return schema.relations[type] || {};
     }
     /**
      * Getter to check if the record has errors.
