@@ -31,6 +31,12 @@ class Note extends Model {
   @relatedToOne organization
 }
 
+class Relationshipless extends Model {
+  static type = 'relationshipless'
+  static endpoint = 'relationshipless'
+  @attribute(String) name
+}
+
 function validatesArray (property) {
   return {
     isValid: Array.isArray(property),
@@ -106,7 +112,8 @@ class AppStore extends Store {
   static types = [
     Organization,
     Note,
-    User
+    User,
+    Relationshipless
   ]
 }
 
@@ -744,6 +751,11 @@ describe('Model', () => {
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.options[0].key).toEqual('blank')
       expect(todo.errors.options[0].data.optionKey).toEqual('baz')
+    })
+
+    it('allows for undefined relationshipDefinitions', () => {
+      const todo = store.add('relationshipless', { name: 'lonely model' })
+      expect(todo.validate()).toBeTruthy()
     })
   })
 
