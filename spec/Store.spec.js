@@ -532,4 +532,84 @@ describe('Store', () => {
       expect(typeof todos[1]).toBe('undefined')
     })
   })
+
+  describe('lazy loading', () => {
+    let requestOptions
+    let lazyLoadOptions
+    let mockAfterRefetch = jest.fn()
+    let mockBeforeRefetch = jest.fn()
+
+    beforeEach(() => {
+      jest.resetAllMocks()
+
+      requestOptions = {
+        queryParams: {
+          filter: {
+            title: 'Do taxes'
+          }
+        }
+      }
+
+      lazyLoadOptions = {
+        ...requestOptions,
+        lazyLoad: true,
+        afterRefetch: mockAfterRefetch,
+        beforeRefetch: mockBeforeRefetch
+      }
+    })
+
+    it('triggers a fetch if no cached data is found', async () => {
+      fetch.mockResponse(mockTodosResponse)
+
+      const result = await store.findAll('todos', lazyLoadOptions)
+
+      expect(result).toHaveLength(1)
+    })
+
+    it('returns cached data before refetching', async () => {
+      fetch.mockResponse(mockTodosResponse)
+
+      await store.findAll('todos', requestOptions)
+      const result = store.findAll('todos', lazyLoadOptions)
+
+      expect(result).toHaveLength(1)
+      expect(fetch.mock.calls).toHaveLength(2)
+    })
+
+    it('calls beforeRefetch callback with prefetch result', async () => {
+      fetch.mockResponse(mockTodosResponse)
+      await store.findAll('todos', requestOptions)
+
+      const result = store.findAll('todos', lazyLoadOptions)
+
+      expect(result).toHaveLength(1)
+      expect(mockBeforeRefetch).toHaveBeenCalledWith(result)
+    })
+
+    it('calls afterRefetch callback with refetch result', async (done) => {
+      const mockTodosResponse2 = JSON.stringify({
+        data: [
+          mockTodoData.data,
+          { ...mockTodoData.data, id: 2, title: 'Test' }
+        ]
+      })
+
+      fetch.mockResponses(
+        [mockTodosResponse, { status: 200 }],
+        [mockTodosResponse2, { status: 200 }]
+      )
+
+      // Trigger another request
+      await store.findAll('todos', requestOptions)
+
+      const result = await store.findAll('todos', lazyLoadOptions)
+
+      expect(result).toHaveLength(1)
+
+      setImmediate(() => {
+        expect(mockAfterRefetch.mock.calls[0][0]).toHaveLength(2)
+        done()
+      })
+    })
+  })
 })

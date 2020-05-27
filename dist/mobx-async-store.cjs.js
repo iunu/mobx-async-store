@@ -1410,7 +1410,16 @@ function () {
     this.findAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var fromServer = options.fromServer,
-          queryParams = options.queryParams;
+          queryParams = options.queryParams,
+          lazyLoad = options.lazyLoad;
+
+      if (lazyLoad) {
+        var lazyLoadOption = _objectSpread$2({}, options, {
+          lazyLoad: false
+        });
+
+        return _this.lazyLoad(type, lazyLoadOption);
+      }
 
       if (fromServer === true) {
         // If fromServer is true always fetch the data and return
@@ -1420,6 +1429,34 @@ function () {
         return _this.getMatchingRecords(type, queryParams);
       } else {
         return _this.findOrFetchAll(type, queryParams);
+      }
+    };
+
+    this.lazyLoad = function (type) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      var records = _this.findAll(type, _objectSpread$2({}, options, {
+        fromServer: false
+      }));
+
+      var beforeRefetch = options.beforeRefetch,
+          afterRefetch = options.afterRefetch;
+
+      if (records.length > 0) {
+        beforeRefetch && beforeRefetch(records);
+
+        _this.findAll(type, _objectSpread$2({}, options, {
+          fromServer: true
+        })).then(function (result) {
+          // console.log('yea', result)
+          afterRefetch && afterRefetch(result);
+        });
+
+        return records;
+      } else {
+        return _this.findAll(type, _objectSpread$2({}, options, {
+          fromServer: true
+        }));
       }
     };
 

@@ -216,7 +216,12 @@ class Store {
    * @param {Object} options
    */
   findAll = (type, options = {}) => {
-    const { fromServer, queryParams } = options
+    const { fromServer, queryParams, lazyLoad } = options
+
+    if (lazyLoad) {
+      const lazyLoadOption = { ...options, lazyLoad: false }
+      return this.lazyLoad(type, lazyLoadOption)
+    }
 
     if (fromServer === true) {
       // If fromServer is true always fetch the data and return
@@ -226,6 +231,23 @@ class Store {
       return this.getMatchingRecords(type, queryParams)
     } else {
       return this.findOrFetchAll(type, queryParams)
+    }
+  }
+
+  lazyLoad = (type, options = {}) => {
+    let records = this.findAll(type, { ...options, fromServer: false })
+
+    const { beforeRefetch, afterRefetch } = options
+
+    if (records.length > 0) {
+      beforeRefetch && beforeRefetch(records)
+      this.findAll(type, { ...options, fromServer: true }).then((result) => {
+        // console.log('yea', result)
+        afterRefetch && afterRefetch(result)
+      })
+      return records
+    } else {
+      return this.findAll(type, { ...options, fromServer: true })
     }
   }
 
