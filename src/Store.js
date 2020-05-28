@@ -220,7 +220,7 @@ class Store {
 
     if (lazyLoad) {
       const lazyLoadOption = { ...options, lazyLoad: false }
-      return this.lazyLoad(type, lazyLoadOption)
+      return this._lazyLoad(type, lazyLoadOption)
     }
 
     if (fromServer === true) {
@@ -234,7 +234,12 @@ class Store {
     }
   }
 
-  lazyLoad = (type, options = {}) => {
+  /**
+   * @method _lazyLoad
+   * @param {String} type the type to find
+   * @param {Object} options
+   */
+  _lazyLoad = (type, options = {}) => {
     let records = this.findAll(type, { ...options, fromServer: false })
 
     const { beforeRefetch, afterRefetch } = options
@@ -242,7 +247,6 @@ class Store {
     if (records.length > 0) {
       beforeRefetch && beforeRefetch(records)
       this.findAll(type, { ...options, fromServer: true }).then((result) => {
-        // console.log('yea', result)
         afterRefetch && afterRefetch(result)
       })
       return records

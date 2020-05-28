@@ -602,7 +602,7 @@ describe('Store', () => {
       // Trigger another request
       await store.findAll('todos', requestOptions)
 
-      const result = await store.findAll('todos', lazyLoadOptions)
+      const result = store.findAll('todos', lazyLoadOptions)
 
       expect(result).toHaveLength(1)
 
