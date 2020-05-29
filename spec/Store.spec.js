@@ -533,7 +533,7 @@ describe('Store', () => {
     })
   })
 
-  describe('lazy loading', () => {
+  describe('findAndFetchAll', () => {
     let requestOptions
     let lazyLoadOptions
     let mockAfterRefetch = jest.fn()
@@ -552,7 +552,6 @@ describe('Store', () => {
 
       lazyLoadOptions = {
         ...requestOptions,
-        lazyLoad: true,
         afterRefetch: mockAfterRefetch,
         beforeRefetch: mockBeforeRefetch
       }
@@ -570,7 +569,7 @@ describe('Store', () => {
       fetch.mockResponse(mockTodosResponse)
 
       await store.findAll('todos', requestOptions)
-      const result = store.findAll('todos', lazyLoadOptions)
+      const result = store.findAndFetchAll('todos', lazyLoadOptions)
 
       expect(result).toHaveLength(1)
       expect(fetch.mock.calls).toHaveLength(2)
@@ -580,7 +579,7 @@ describe('Store', () => {
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos', requestOptions)
 
-      const result = store.findAll('todos', lazyLoadOptions)
+      const result = store.findAndFetchAll('todos', lazyLoadOptions)
 
       expect(result).toHaveLength(1)
       expect(mockBeforeRefetch).toHaveBeenCalledWith(result)
@@ -602,7 +601,7 @@ describe('Store', () => {
       // Trigger another request
       await store.findAll('todos', requestOptions)
 
-      const result = store.findAll('todos', lazyLoadOptions)
+      const result = store.findAndFetchAll('todos', lazyLoadOptions)
 
       expect(result).toHaveLength(1)
 

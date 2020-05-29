@@ -216,12 +216,7 @@ class Store {
    * @param {Object} options
    */
   findAll = (type, options = {}) => {
-    const { fromServer, queryParams, lazyLoad } = options
-
-    if (lazyLoad) {
-      const lazyLoadOption = { ...options, lazyLoad: false }
-      return this._lazyLoad(type, lazyLoadOption)
-    }
+    const { fromServer, queryParams } = options
 
     if (fromServer === true) {
       // If fromServer is true always fetch the data and return
@@ -235,11 +230,12 @@ class Store {
   }
 
   /**
-   * @method _lazyLoad
+   * @method findAndFetchAll
    * @param {String} type the type to find
    * @param {Object} options
+   * @return {Array}
    */
-  _lazyLoad = (type, options = {}) => {
+  findAndFetchAll = (type, options = {}) => {
     let records = this.findAll(type, { ...options, fromServer: false })
 
     const { beforeRefetch, afterRefetch } = options

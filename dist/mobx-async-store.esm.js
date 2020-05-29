@@ -1404,16 +1404,7 @@ function () {
     this.findAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var fromServer = options.fromServer,
-          queryParams = options.queryParams,
-          lazyLoad = options.lazyLoad;
-
-      if (lazyLoad) {
-        var lazyLoadOption = _objectSpread$2({}, options, {
-          lazyLoad: false
-        });
-
-        return _this.lazyLoad(type, lazyLoadOption);
-      }
+          queryParams = options.queryParams;
 
       if (fromServer === true) {
         // If fromServer is true always fetch the data and return
@@ -1426,7 +1417,7 @@ function () {
       }
     };
 
-    this.lazyLoad = function (type) {
+    this.findAndFetchAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       var records = _this.findAll(type, _objectSpread$2({}, options, {
@@ -1442,7 +1433,6 @@ function () {
         _this.findAll(type, _objectSpread$2({}, options, {
           fromServer: true
         })).then(function (result) {
-          // console.log('yea', result)
           afterRefetch && afterRefetch(result);
         });
 
