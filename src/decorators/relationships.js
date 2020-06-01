@@ -118,9 +118,10 @@ export function getRelatedRecords (record, property, modelType = null) {
     })
   } else {
     const foreignId = `${singularizeType(record.type)}_id`
-    relatedRecords = record.store
-                           .getRecords(relationType)
-                           .filter(rel => String(rel[foreignId]) === String(record.id))
+    if (record.store.getRecords(relationType)) {
+      relatedRecords = record.store.getRecords(relationType)
+                                   .filter(rel => String(rel[foreignId]) === String(record.id))
+    }
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType)

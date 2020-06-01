@@ -1417,15 +1417,51 @@ function () {
         return _this.fetchAll(type, queryParams);
       } else if (fromServer === false) {
         // If fromServer is false never fetch the data and return
-        return _this.getMatchingRecords(type, queryParams);
+        return _this.getMatchingRecords(type, queryParams) || [];
       } else {
-        return _this.findOrFetchAll(type, queryParams);
+        return _this.findOrFetchAll(type, queryParams) || [];
       }
+    };
+
+    this.findAndFetchAll = function (type) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var beforeFetch = options.beforeFetch,
+          afterFetch = options.afterFetch,
+          beforeRefetch = options.beforeRefetch,
+          afterRefetch = options.afterRefetch,
+          afterError = options.afterError,
+          queryParams = options.queryParams;
+
+      var records = _this.getMatchingRecords(type, queryParams); // NOTE: See note findOrFetchAll about this conditional logic.
+
+
+      if (records.length > 0) {
+        beforeRefetch && beforeRefetch(records);
+
+        _this.fetchAll(type, queryParams).then(function (result) {
+          return afterRefetch && afterRefetch(result);
+        }).catch(function (error) {
+          return afterError && afterError(error);
+        });
+      } else {
+        beforeFetch && beforeFetch(records);
+
+        _this.fetchAll(type, queryParams).then(function (result) {
+          return afterFetch && afterFetch(result);
+        }).catch(function (error) {
+          return afterError && afterError(error);
+        });
+      }
+
+      return records || [];
     };
 
     this.findOrFetchAll = function (type, queryParams) {
       // Get any matching records
-      var records = _this.getMatchingRecords(type, queryParams); // If any records are present
+      var records = _this.getMatchingRecords(type, queryParams); // NOTE: A broader RFC is in development to improve how we keep data in sync
+      // with the server. We likely will want to getMatchingRecords and getRecords
+      // to return null if nothing is found. However, this causes several regressions
+      // in portal we will need to address in a larger PR for mobx-async-store updates.
 
 
       if (records.length > 0) {
@@ -2338,9 +2374,12 @@ function getRelatedRecords(record, property) {
     });
   } else {
     var foreignId = "".concat(singularizeType(record.type), "_id");
-    relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
-      return String(rel[foreignId]) === String(record.id);
-    });
+
+    if (record.store.getRecords(relationType)) {
+      relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
+        return String(rel[foreignId]) === String(record.id);
+      });
+    }
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType);

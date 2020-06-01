@@ -211,9 +211,7 @@ describe('Store', () => {
       describe('if records of the specified type do not exist', () => {
         it('returns an empty array', () => {
           expect.assertions(1)
-          const todos = store.findAll('todos', {
-            fromServer: false
-          })
+          const todos = store.findAll('todos', { fromServer: false })
           expect(todos).toHaveLength(0)
         })
       })
@@ -234,9 +232,7 @@ describe('Store', () => {
       it('fetches data from server', async () => {
         expect.assertions(4)
         fetch.mockResponse(mockTodosResponse)
-        const todos = await store.findAll('todos', {
-          fromServer: true
-        })
+        const todos = await store.findAll('todos', { fromServer: true })
         expect(todos).toHaveLength(1)
         expect(todos[0].title).toEqual('Do taxes')
         expect(fetch.mock.calls).toHaveLength(1)
@@ -338,8 +334,7 @@ describe('Store', () => {
           expect(todos).toHaveLength(1)
           expect(todos[0].title).toEqual('Do taxes')
           expect(fetch.mock.calls).toHaveLength(1)
-          expect(fetch.mock.calls[0][0])
-            .toEqual('/example_api/todos')
+          expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos')
         })
       })
 
@@ -530,6 +525,128 @@ describe('Store', () => {
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(typeof todos[1]).toBe('undefined')
+    })
+  })
+
+  describe('findAndFetchAll', () => {
+    let requestOptions
+    let lazyLoadOptions
+    let mockAfterFetch = jest.fn()
+    let mockBeforeFetch = jest.fn()
+    let mockTodosResponse2
+    let mockAfterError = jest.fn()
+
+    beforeEach(() => {
+      jest.resetAllMocks()
+
+      requestOptions = {
+        queryParams: {
+          filter: {
+            title: 'Do taxes'
+          }
+        }
+      }
+
+      lazyLoadOptions = {
+        ...requestOptions,
+        afterRefetch: mockAfterFetch,
+        beforeRefetch: mockBeforeFetch,
+        afterError: mockAfterError
+      }
+
+      mockTodosResponse2 = JSON.stringify({
+        data: [
+          mockTodoData.data,
+          { ...mockTodoData.data, id: 2, title: 'Test' }
+        ]
+      })
+    })
+
+    it('triggers a fetch if no cached data is found', async (done) => {
+      fetch.mockResponse(mockTodosResponse)
+
+      lazyLoadOptions.afterRefetch = jest.fn((result) => {
+        expect(result).toHaveLength(1)
+        done()
+      })
+
+      await store.findAll('todos', requestOptions)
+      const result = store.findAndFetchAll('todos', lazyLoadOptions)
+
+      expect(result).toHaveLength(0)
+      expect(fetch).toHaveBeenCalled()
+    })
+
+    it('calls beforeRefetch callback with prefetch result', async () => {
+      fetch.mockResponse(mockTodosResponse)
+      await store.findAll('todos', requestOptions)
+
+      const result = store.findAndFetchAll('todos', lazyLoadOptions)
+
+      expect(result).toHaveLength(1)
+      expect(mockBeforeFetch).toHaveBeenCalledWith(result)
+    })
+
+    it('calls afterRefetch callback with refetch result', async (done) => {
+      const mockTodosResponse2 = JSON.stringify({
+        data: [
+          mockTodoData.data,
+          { ...mockTodoData.data, id: 2, title: 'Test' }
+        ]
+      })
+
+      fetch.mockResponses(
+        [mockTodosResponse, { status: 200 }],
+        [mockTodosResponse2, { status: 200 }]
+      )
+
+      // Trigger another request
+      await store.findAll('todos', requestOptions)
+
+      lazyLoadOptions.afterRefetch = jest.fn((result) => {
+        // The refetch result is different then the cached result, because
+        // mockTodosResponse2 has 2 records
+        expect(result).toHaveLength(2)
+        done()
+      })
+
+      store.findAndFetchAll('todos', lazyLoadOptions)
+    })
+
+    it('returns cached data before refetching', async (done) => {
+      fetch.mockResponses(
+        [mockTodosResponse, { status: 200 }],
+        [mockTodosResponse2, { status: 200 }]
+      )
+
+      await store.findAll('todos', requestOptions)
+
+      lazyLoadOptions.afterRefetch = jest.fn((result) => {
+        // The refetch result is different then the cached result, because
+        // mockTodosResponse2 has 2 records
+        expect(result).toHaveLength(2)
+        done()
+      })
+
+      const result = store.findAndFetchAll('todos', lazyLoadOptions)
+
+      // mockTodosResponse has only one record
+      expect(result).toHaveLength(1)
+      // fetch was called twice: once from the findAll and once from findAndFetchAll
+      // refetching
+      expect(fetch.mock.calls).toHaveLength(2)
+    })
+
+    it('calls afterError if bad request', (done) => {
+      fetch.mockResponses([mockTodosResponse, { status: 400 }])
+
+      lazyLoadOptions.afterError = jest.fn((error) => {
+        // NOTE: We should have better errors than this.
+        expect(error).toEqual(400)
+        done()
+      })
+
+      store.findAndFetchAll('todos', lazyLoadOptions)
     })
   })
 })

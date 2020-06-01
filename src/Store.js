@@ -223,10 +223,44 @@ class Store {
       return this.fetchAll(type, queryParams)
     } else if (fromServer === false) {
       // If fromServer is false never fetch the data and return
-      return this.getMatchingRecords(type, queryParams)
+      return this.getMatchingRecords(type, queryParams) || []
     } else {
-      return this.findOrFetchAll(type, queryParams)
+      return this.findOrFetchAll(type, queryParams) || []
     }
+  }
+
+  /**
+   * @method findAndFetchAll
+   * @param {String} type the type to find
+   * @param {Object} options
+   * @return {Array}
+   */
+  findAndFetchAll = (type, options = {}) => {
+    const {
+      beforeFetch,
+      afterFetch,
+      beforeRefetch,
+      afterRefetch,
+      afterError,
+      queryParams
+    } = options
+
+    const records = this.getMatchingRecords(type, queryParams)
+
+    // NOTE: See note findOrFetchAll about this conditional logic.
+    if (records.length > 0) {
+      beforeRefetch && beforeRefetch(records)
+      this.fetchAll(type, queryParams)
+          .then((result) => afterRefetch && afterRefetch(result))
+          .catch((error) => afterError && afterError(error))
+    } else {
+      beforeFetch && beforeFetch(records)
+      this.fetchAll(type, queryParams)
+          .then((result) => afterFetch && afterFetch(result))
+          .catch((error) => afterError && afterError(error))
+    }
+
+    return records || []
   }
 
   /**
@@ -240,7 +274,11 @@ class Store {
     // Get any matching records
     const records = this.getMatchingRecords(type, queryParams)
 
-    // If any records are present
+    // NOTE: A broader RFC is in development to improve how we keep data in sync
+    // with the server. We likely will want to getMatchingRecords and getRecords
+    // to return null if nothing is found. However, this causes several regressions
+    // in portal we will need to address in a larger PR for mobx-async-store updates.
+
     if (records.length > 0) {
       // Return data
       return records
