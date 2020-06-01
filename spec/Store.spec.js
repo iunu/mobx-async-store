@@ -560,7 +560,7 @@ describe('Store', () => {
     it('triggers a fetch if no cached data is found', async () => {
       fetch.mockResponse(mockTodosResponse)
 
-      const result = await store.findAll('todos', lazyLoadOptions)
+      const result = await store.findAndFetchAll('todos', lazyLoadOptions)
 
       expect(result).toHaveLength(1)
     })
