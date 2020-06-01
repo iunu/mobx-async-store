@@ -1421,18 +1421,31 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var beforeFetch = options.beforeFetch,
           afterFetch = options.afterFetch,
+          beforeRefetch = options.beforeRefetch,
+          afterRefetch = options.afterRefetch,
           afterError = options.afterError,
           queryParams = options.queryParams;
 
-      var records = _this.getMatchingRecords(type, queryParams);
+      var records = _this.getMatchingRecords(type, queryParams); // NOTE: See note findOrFetchAll about this conditional logic.
 
-      beforeFetch && beforeFetch(records);
 
-      _this.fetchAll(type, queryParams).then(function (result) {
-        afterFetch && afterFetch(result);
-      }).catch(function (error) {
-        afterError(error);
-      });
+      if (records.length > 0) {
+        beforeRefetch && beforeRefetch(records);
+
+        _this.fetchAll(type, queryParams).then(function (result) {
+          return afterRefetch && afterRefetch(result);
+        }).catch(function (error) {
+          return afterError && afterError(error);
+        });
+      } else {
+        beforeFetch && beforeFetch(records);
+
+        _this.fetchAll(type, queryParams).then(function (result) {
+          return afterFetch && afterFetch(result);
+        }).catch(function (error) {
+          return afterError && afterError(error);
+        });
+      }
 
       return records || [];
     };
