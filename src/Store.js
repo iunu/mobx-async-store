@@ -236,16 +236,29 @@ class Store {
    * @return {Array}
    */
   findAndFetchAll = (type, options = {}) => {
-    const { beforeFetch, afterFetch, afterError, queryParams } = options
+    const {
+      beforeFetch,
+      afterFetch,
+      beforeRefetch,
+      afterRefetch,
+      afterError,
+      queryParams
+    } = options
+
     const records = this.getMatchingRecords(type, queryParams)
 
-    beforeFetch && beforeFetch(records)
-
-    this.fetchAll(type, queryParams).then((result) => {
-      afterFetch && afterFetch(result)
-    }).catch((error) => {
-      afterError(error)
-    })
+    // NOTE: See note findOrFetchAll about this conditional logic.
+    if (records.length > 0) {
+      beforeRefetch && beforeRefetch(records)
+      this.fetchAll(type, queryParams)
+          .then((result) => afterRefetch && afterRefetch(result))
+          .catch((error) => afterError && afterError(error))
+    } else {
+      beforeFetch && beforeFetch(records)
+      this.fetchAll(type, queryParams)
+          .then((result) => afterFetch && afterFetch(result))
+          .catch((error) => afterError && afterError(error))
+    }
 
     return records || []
   }

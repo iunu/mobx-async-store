@@ -549,8 +549,8 @@ describe('Store', () => {
 
       lazyLoadOptions = {
         ...requestOptions,
-        afterFetch: mockAfterFetch,
-        beforeFetch: mockBeforeFetch,
+        afterRefetch: mockAfterFetch,
+        beforeRefetch: mockBeforeFetch,
         afterError: mockAfterError
       }
 
@@ -565,18 +565,19 @@ describe('Store', () => {
     it('triggers a fetch if no cached data is found', async (done) => {
       fetch.mockResponse(mockTodosResponse)
 
-      lazyLoadOptions.afterFetch = jest.fn((result) => {
+      lazyLoadOptions.afterRefetch = jest.fn((result) => {
         expect(result).toHaveLength(1)
         done()
       })
 
+      await store.findAll('todos', requestOptions)
       const result = store.findAndFetchAll('todos', lazyLoadOptions)
 
       expect(result).toHaveLength(0)
       expect(fetch).toHaveBeenCalled()
     })
 
-    it('calls beforeFetch callback with prefetch result', async () => {
+    it('calls beforeRefetch callback with prefetch result', async () => {
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos', requestOptions)
 
@@ -586,7 +587,7 @@ describe('Store', () => {
       expect(mockBeforeFetch).toHaveBeenCalledWith(result)
     })
 
-    it('calls afterFetch callback with refetch result', async (done) => {
+    it('calls afterRefetch callback with refetch result', async (done) => {
       const mockTodosResponse2 = JSON.stringify({
         data: [
           mockTodoData.data,
@@ -602,7 +603,7 @@ describe('Store', () => {
       // Trigger another request
       await store.findAll('todos', requestOptions)
 
-      lazyLoadOptions.afterFetch = jest.fn((result) => {
+      lazyLoadOptions.afterRefetch = jest.fn((result) => {
         // The refetch result is different then the cached result, because
         // mockTodosResponse2 has 2 records
         expect(result).toHaveLength(2)
@@ -620,7 +621,7 @@ describe('Store', () => {
 
       await store.findAll('todos', requestOptions)
 
-      lazyLoadOptions.afterFetch = jest.fn((result) => {
+      lazyLoadOptions.afterRefetch = jest.fn((result) => {
         // The refetch result is different then the cached result, because
         // mockTodosResponse2 has 2 records
         expect(result).toHaveLength(2)
