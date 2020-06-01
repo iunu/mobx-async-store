@@ -261,6 +261,11 @@ class Store {
     // Get any matching records
     const records = this.getMatchingRecords(type, queryParams)
 
+    // NOTE: A broader RFC is in development to improve how we keep data in sync
+    // with the server. We likely will want to getMatchingRecords and getRecords
+    // to return null if nothing is found. However, this causes several regressions
+    // in portal we will need to address in a larger PR for mobx-async-store updates.
+
     if (records.length > 0) {
       // Return data
       return records
