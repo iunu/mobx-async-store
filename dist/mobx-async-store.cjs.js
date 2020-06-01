@@ -1417,43 +1417,35 @@ function () {
         return _this.fetchAll(type, queryParams);
       } else if (fromServer === false) {
         // If fromServer is false never fetch the data and return
-        return _this.getMatchingRecords(type, queryParams);
+        return _this.getMatchingRecords(type, queryParams) || [];
       } else {
-        return _this.findOrFetchAll(type, queryParams);
+        return _this.findOrFetchAll(type, queryParams) || [];
       }
     };
 
     this.findAndFetchAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var beforeFetch = options.beforeFetch,
+          afterFetch = options.afterFetch,
+          afterError = options.afterError,
+          queryParams = options.queryParams;
 
-      var records = _this.findAll(type, _objectSpread$2({}, options, {
-        fromServer: false
-      }));
+      var records = _this.getMatchingRecords(type, queryParams);
 
-      var beforeRefetch = options.beforeRefetch,
-          afterRefetch = options.afterRefetch;
+      beforeFetch && beforeFetch(records);
 
-      if (records.length > 0) {
-        beforeRefetch && beforeRefetch(records);
+      _this.fetchAll(type, queryParams).then(function (result) {
+        afterFetch && afterFetch(result);
+      }).catch(function (error) {
+        afterError(error);
+      });
 
-        _this.findAll(type, _objectSpread$2({}, options, {
-          fromServer: true
-        })).then(function (result) {
-          afterRefetch && afterRefetch(result);
-        });
-
-        return records;
-      } else {
-        return _this.findAll(type, _objectSpread$2({}, options, {
-          fromServer: true
-        }));
-      }
+      return records || [];
     };
 
     this.findOrFetchAll = function (type, queryParams) {
       // Get any matching records
-      var records = _this.getMatchingRecords(type, queryParams); // If any records are present
-
+      var records = _this.getMatchingRecords(type, queryParams);
 
       if (records.length > 0) {
         // Return data
@@ -2365,9 +2357,12 @@ function getRelatedRecords(record, property) {
     });
   } else {
     var foreignId = "".concat(singularizeType(record.type), "_id");
-    relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
-      return String(rel[foreignId]) === String(record.id);
-    });
+
+    if (record.store.getRecords(relationType)) {
+      relatedRecords = record.store.getRecords(relationType).filter(function (rel) {
+        return String(rel[foreignId]) === String(record.id);
+      });
+    }
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType);

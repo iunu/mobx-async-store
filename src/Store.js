@@ -223,9 +223,9 @@ class Store {
       return this.fetchAll(type, queryParams)
     } else if (fromServer === false) {
       // If fromServer is false never fetch the data and return
-      return this.getMatchingRecords(type, queryParams)
+      return this.getMatchingRecords(type, queryParams) || []
     } else {
-      return this.findOrFetchAll(type, queryParams)
+      return this.findOrFetchAll(type, queryParams) || []
     }
   }
 
@@ -236,19 +236,18 @@ class Store {
    * @return {Array}
    */
   findAndFetchAll = (type, options = {}) => {
-    let records = this.findAll(type, { ...options, fromServer: false })
+    const { beforeFetch, afterFetch, afterError, queryParams } = options
+    const records = this.getMatchingRecords(type, queryParams)
 
-    const { beforeRefetch, afterRefetch } = options
+    beforeFetch && beforeFetch(records)
 
-    if (records.length > 0) {
-      beforeRefetch && beforeRefetch(records)
-      this.findAll(type, { ...options, fromServer: true }).then((result) => {
-        afterRefetch && afterRefetch(result)
-      })
-      return records
-    } else {
-      return this.findAll(type, { ...options, fromServer: true })
-    }
+    this.fetchAll(type, queryParams).then((result) => {
+      afterFetch && afterFetch(result)
+    }).catch((error) => {
+      afterError(error)
+    })
+
+    return records || []
   }
 
   /**
@@ -262,7 +261,6 @@ class Store {
     // Get any matching records
     const records = this.getMatchingRecords(type, queryParams)
 
-    // If any records are present
     if (records.length > 0) {
       // Return data
       return records
