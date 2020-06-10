@@ -281,9 +281,9 @@ class Model {
 
     const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
 
-    const body = JSON.stringify(this.jsonapi(
-      { relationships, attributes }
-    ))
+    const body = JSON.stringify({
+      data: this.jsonapi({ relationships, attributes })
+    })
 
     if (relationships) {
       relationships.forEach((rel) => {
@@ -746,7 +746,7 @@ class Model {
       delete data.id
     }
 
-    return { data }
+    return { ...data }
   }
 
   updateAttributes (attributes) {

@@ -79,6 +79,33 @@ class Store {
   }
 
   /**
+   * Saves a collection of records via a bulk-supported JSONApi
+   * endpoint. All records need to be of the same type.
+   *
+   * @method bulkSave
+   * @param {String} type
+   * @param {Array} records
+   */
+  bulkSave = (type, records, options = {}) => {
+    const { queryParams } = options
+
+    // get url for record type
+    const url = this.fetchUrl(type, queryParams, null)
+
+    // convert records to an appropriate jsonapi attribute/relationship format
+    const recordAttributes = records.map((record) => record.jsonapi())
+
+    // build a data payload
+    const body = JSON.stringify({ data: recordAttributes })
+
+    // send request
+    const response = this.fetch(url, { method: 'POST', body })
+
+    // update records based on response
+    //return new ObjectPromiseProxyArray(response, records)
+  }
+
+  /**
    * Adds a record from the store. We can't simply remove the record
    * by deleting the records property/key via delete due to a bug
    * in mobx.

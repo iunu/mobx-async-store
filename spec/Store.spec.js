@@ -135,6 +135,35 @@ describe('Store', () => {
     })
   })
 
+  describe('bulkSave', () => {
+    it.only('constructs a payload for all record in a jsonapi bulk-extenstion compliant way', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const todo2 = store.add('todos', { title: 'Feed Dog' })
+      const todo3 = store.add('todos', { title: 'Give Dog Treat' })
+
+      fetch.mockResponse({})
+      await store.bulkSave('todos', [todo1, todo3])
+
+      console.log(fetch.mock.calls[0])
+      expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+        data: [
+          {
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog',
+            }
+          },
+          {
+            type: 'todos',
+            attributes: {
+              title: 'Give Dog Treat',
+            }
+          }
+        ]
+      })
+    })
+  })
+
   describe('reset', () => {
     it('removes all records from the store', async () => {
       expect.assertions(4)
