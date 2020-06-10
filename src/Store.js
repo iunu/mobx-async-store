@@ -99,7 +99,11 @@ class Store {
     const body = JSON.stringify({ data: recordAttributes })
 
     // send request
-    const response = this.fetch(url, { method: 'POST', body })
+    const response = this.fetch(url, {
+      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': 'application/vnd.api+json; ext="bulk"'},
+      method: 'POST',
+      body
+    })
 
     // update records based on response
     //return new ObjectPromiseProxyArray(response, records)
