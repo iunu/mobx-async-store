@@ -1,6 +1,7 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
+import ObjectPromiseProxy from './ObjectPromiseProxy'
 
 /**
  * Defines the Artemis Data Store class.
@@ -100,13 +101,13 @@ class Store {
 
     // send request
     const response = this.fetch(url, {
-      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': 'application/vnd.api+json; ext="bulk"'},
+      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': 'application/vnd.api+json; ext="bulk"' },
       method: 'POST',
       body
     })
 
     // update records based on response
-    //return new ObjectPromiseProxyArray(response, records)
+    return new ObjectPromiseProxy(response, records)
   }
 
   /**

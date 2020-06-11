@@ -165,7 +165,33 @@ describe('Store', () => {
       })
     })
 
-    it('updates the original records after they have been saved with data from the response', () => {
+    it('updates the original records after they have been saved with data from the response', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const todo3 = store.add('todos', { title: 'Give Dog Treat' })
+
+      const mockTodosData = {
+        data: [
+          {
+            id: '1',
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          },
+          {
+            id: '2',
+            type: 'todos',
+            attributes: {
+              title: 'Give Dog Treat'
+            }
+          }]
+      }
+      const mockTodosResponse = JSON.stringify(mockTodosData)
+
+      fetch.mockResponse(mockTodosResponse)
+      await store.bulkSave('todos', [todo1, todo3])
+      expect(todo1.id).toEqual('1')
+      expect(todo3.id).toEqual('2')
     })
 
     it('adds the bulk extension format to the request header', async () => {
