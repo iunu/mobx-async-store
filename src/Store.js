@@ -89,14 +89,7 @@ class Store {
    */
   @action
   remove = (type, id) => {
-    const records = this.getRecords(type)
-
-    this.data[type].records = records.reduce((hash, record) => {
-      if (String(record.id) !== String(id)) {
-        hash[record.id] = record
-      }
-      return hash
-    }, {})
+    delete this.data[type].records[id]
   }
 
   /**

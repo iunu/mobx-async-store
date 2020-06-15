@@ -2125,15 +2125,7 @@ function () {
     var _this8 = this;
 
     return function (type, id) {
-      var records = _this8.getRecords(type);
-
-      _this8.data[type].records = records.reduce(function (hash, record) {
-        if (String(record.id) !== String(id)) {
-          hash[record.id] = record;
-        }
-
-        return hash;
-      }, {});
+      delete _this8.data[type].records[id];
     };
   }
 })), _class$1);
