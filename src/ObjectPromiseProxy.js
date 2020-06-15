@@ -39,8 +39,8 @@ function ObjectPromiseProxy (promise, target) {
           // uuid id as its only reference to the newly persisted record.
           // TODO: Figure out a way to update associated records to use the
           // newly persisted id.
-          target.store.data[target.type].records[tmpId] = target
-          target.store.data[target.type].records[target.id] = target
+          target.store.data[target.type].records.set(tmpId, target)
+          target.store.data[target.type].records.set(target.id, target)
         })
 
         return target

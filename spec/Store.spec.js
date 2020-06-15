@@ -66,7 +66,7 @@ const mockTodoData = {
     id: '1',
     type: 'todos',
     attributes: {
-      id: 1,
+      id: '1',
       title: 'Do taxes'
     }
   }
@@ -427,10 +427,11 @@ describe('Store', () => {
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
-          category: { data: { id: '5', type: 'categories' } }
+          category: { data: { id: category.id, type: 'categories' } }
         }
       }
       const todo = store.createModel('todos', 1, todoData)
+      expect(todo.id).toEqual(1)
       expect(todo.category.id).toEqual(category.id)
       expect(todo.category.name).toEqual(category.name)
     })
@@ -440,7 +441,7 @@ describe('Store', () => {
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
-          tags: { data: [{ id: '3', type: 'tags' }] }
+          tags: { data: [{ id: tag.id, type: 'tags' }] }
         }
       }
       const todo = store.createModel('todos', 1, todoData)
@@ -454,7 +455,7 @@ describe('Store', () => {
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
-          note: { data: { id: '17', type: 'notes' } }
+          note: { data: { id: note.id, type: 'notes' } }
         }
       }
       const todo = store.createModel('todos', 1, todoData)
@@ -467,7 +468,7 @@ describe('Store', () => {
       const todoData = {
         attributes: { title: 'hello!' },
         relationships: {
-          notes: { data: [{ id: '3', type: 'notes' }] }
+          notes: { data: [{ id: note.id, type: 'notes' }] }
         }
       }
       const todo = store.createModel('todos', 1, todoData)
