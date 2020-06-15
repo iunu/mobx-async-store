@@ -1861,8 +1861,7 @@ function () {
         record = this.createModel(type, id, {
           attributes: attributes,
           relationships: relationships
-        }); // this.data[type].records[record.id] = record
-
+        });
         this.data[type].records.set(record.id, record);
       }
 

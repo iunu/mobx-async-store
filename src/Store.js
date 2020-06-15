@@ -581,7 +581,6 @@ class Store {
       record._takeSnapshot({ persisted: true })
     } else {
       record = this.createModel(type, id, { attributes, relationships })
-      // this.data[type].records[record.id] = record
       this.data[type].records.set(record.id, record)
     }
 
@@ -665,10 +664,8 @@ class Store {
         const ModelKlass = this.modelTypeIndex[type]
         const record = new ModelKlass({ store, relationships, ...attributes })
         const cachedIds = this.data[type].cache.get(url)
-
         this.data[type].cache.set(url, [...cachedIds, id])
         this.data[type].records.set(id, record)
-
         return record
       }))
     } else {
