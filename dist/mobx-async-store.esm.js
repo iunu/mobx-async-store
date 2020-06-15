@@ -1841,7 +1841,7 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              record.relationships = _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key]));
+              set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
 
               _this4.data[type].records.set(id, record);
             }

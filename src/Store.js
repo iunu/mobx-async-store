@@ -572,7 +572,7 @@ class Store {
           // Don't try to create relationship if meta included false
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
-            record.relationships = { ...record.relationships, [key]: relationships[key] }
+            set(record, 'relationships', { ...record.relationships, [key]: relationships[key] })
             this.data[type].records.set(id, record)
           }
         })
