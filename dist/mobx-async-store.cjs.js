@@ -1837,7 +1837,7 @@ function () {
       if (record) {
         // Update existing object attributes
         Object.keys(attributes).forEach(function (key) {
-          mobx.set(record, key, attributes[key]); // set(this.data[type].records, id, record)
+          mobx.set(record, key, attributes[key]);
 
           _this4.data[type].records.set(id, record);
         }); // If relationships are present, update relationships
@@ -1847,11 +1847,9 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              record.relationships = _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])); // set(record, 'relationships', )
+              record.relationships = _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key]));
 
               _this4.data[type].records.set(id, record);
-
-              mobx.set(_this4.data[type].records, id, record);
             }
           });
         }

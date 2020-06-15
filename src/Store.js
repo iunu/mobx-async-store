@@ -563,7 +563,6 @@ class Store {
       // Update existing object attributes
       Object.keys(attributes).forEach(key => {
         set(record, key, attributes[key])
-        // set(this.data[type].records, id, record)
         this.data[type].records.set(id, record)
       })
 
@@ -574,9 +573,7 @@ class Store {
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
             record.relationships = { ...record.relationships, [key]: relationships[key] }
-            // set(record, 'relationships', )
             this.data[type].records.set(id, record)
-            set(this.data[type].records, id, record)
           }
         })
       }
