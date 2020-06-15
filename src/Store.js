@@ -563,7 +563,6 @@ class Store {
       // Update existing object attributes
       Object.keys(attributes).forEach(key => {
         set(record, key, attributes[key])
-        this.data[type].records.set(id, record)
       })
 
       // If relationships are present, update relationships
@@ -573,17 +572,15 @@ class Store {
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
             set(record, 'relationships', { ...record.relationships, [key]: relationships[key] })
-            this.data[type].records.set(id, record)
           }
         })
       }
-
       record._takeSnapshot({ persisted: true })
     } else {
       record = this.createModel(type, id, { attributes, relationships })
-      this.data[type].records.set(record.id, record)
     }
 
+    this.data[type].records.set(String(record.id), record)
     return record
   }
 
@@ -665,7 +662,7 @@ class Store {
         const record = new ModelKlass({ store, relationships, ...attributes })
         const cachedIds = this.data[type].cache.get(url)
         this.data[type].cache.set(url, [...cachedIds, id])
-        this.data[type].records.set(id, record)
+        this.data[type].records.set(String(id), record)
         return record
       }))
     } else {

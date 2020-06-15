@@ -271,8 +271,8 @@ function ObjectPromiseProxy(promise, target) {
                 // uuid id as its only reference to the newly persisted record.
                 // TODO: Figure out a way to update associated records to use the
                 // newly persisted id.
-                target.store.data[target.type].records.set(tmpId, target);
-                target.store.data[target.type].records.set(target.id, target);
+                target.store.data[target.type].records.set(String(tmpId), target);
+                target.store.data[target.type].records.set(String(target.id), target);
               });
               return _context.abrupt("return", target);
 
@@ -1824,8 +1824,6 @@ function () {
   }, {
     key: "createOrUpdateModel",
     value: function createOrUpdateModel(dataObject) {
-      var _this4 = this;
-
       var _dataObject$attribute = dataObject.attributes,
           attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
           id = dataObject.id,
@@ -1838,8 +1836,6 @@ function () {
         // Update existing object attributes
         Object.keys(attributes).forEach(function (key) {
           mobx.set(record, key, attributes[key]);
-
-          _this4.data[type].records.set(id, record);
         }); // If relationships are present, update relationships
 
         if (relationships) {
@@ -1848,8 +1844,6 @@ function () {
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
               mobx.set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
-
-              _this4.data[type].records.set(id, record);
             }
           });
         }
@@ -1862,9 +1856,9 @@ function () {
           attributes: attributes,
           relationships: relationships
         });
-        this.data[type].records.set(record.id, record);
       }
 
+      this.data[type].records.set(String(record.id), record);
       return record;
     }
     /**
@@ -1877,15 +1871,15 @@ function () {
   }, {
     key: "createModelsFromData",
     value: function createModelsFromData(data) {
-      var _this5 = this;
+      var _this4 = this;
 
       return mobx.transaction(function () {
         return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
-          if (_this5.getType(dataObject.type)) {
-            return _this5.createOrUpdateModel(dataObject);
+          if (_this4.getType(dataObject.type)) {
+            return _this4.createOrUpdateModel(dataObject);
           }
         });
       });
@@ -1952,7 +1946,7 @@ function () {
       var _fetchAll = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee(type, queryParams) {
-        var _this6 = this;
+        var _this5 = this;
 
         var store, url, response, json;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
@@ -1992,17 +1986,17 @@ function () {
                         attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
                         _dataObject$relations2 = dataObject.relationships,
                         relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                    var ModelKlass = _this6.modelTypeIndex[type];
+                    var ModelKlass = _this5.modelTypeIndex[type];
                     var record = new ModelKlass(_objectSpread$2({
                       store: store,
                       relationships: relationships
                     }, attributes));
 
-                    var cachedIds = _this6.data[type].cache.get(url);
+                    var cachedIds = _this5.data[type].cache.get(url);
 
-                    _this6.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
+                    _this5.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
 
-                    _this6.data[type].records.set(id, record);
+                    _this5.data[type].records.set(String(id), record);
 
                     return record;
                   });
@@ -2107,17 +2101,17 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this7 = this;
+    var _this6 = this;
 
     return function (type, attributes) {
       var id = dbOrNewId(attributes);
 
-      var model = _this7.createModel(type, id, {
+      var model = _this6.createModel(type, id, {
         attributes: attributes
       }); // Add the model to the type records index
 
 
-      _this7.data[type].records.set(String(id), model);
+      _this6.data[type].records.set(String(id), model);
 
       return model;
     };
@@ -2127,10 +2121,10 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this8 = this;
+    var _this7 = this;
 
     return function (type, id) {
-      _this8.data[type].records.delete(String(id));
+      _this7.data[type].records.delete(String(id));
     };
   }
 })), _class$1);
