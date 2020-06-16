@@ -63,7 +63,7 @@ class Store {
     const model = this.createModel(type, id, { attributes })
 
     // Add the model to the type records index
-    this.data[type].records[id] = model
+    this.data[type].records.set(String(id), model)
 
     return model
   }
@@ -89,14 +89,7 @@ class Store {
    */
   @action
   remove = (type, id) => {
-    const records = this.getRecords(type)
-
-    this.data[type].records = records.reduce((hash, record) => {
-      if (String(record.id) !== String(id)) {
-        hash[record.id] = record
-      }
-      return hash
-    }, {})
+    this.data[type].records.delete(String(id))
   }
 
   /**
@@ -300,7 +293,10 @@ class Store {
    */
   reset (type) {
     if (type) {
-      this.data[type] = { records: {}, cache: {} }
+      this.data[type] = {
+        records: observable.map({}),
+        cache: observable.map({})
+      }
     } else {
       this.initializeObservableDataProperty()
     }
@@ -359,7 +355,10 @@ class Store {
     // NOTE: Is there a performance cost to setting
     // each property individually?
     types.forEach(modelKlass => {
-      this.data[modelKlass.type] = { records: {}, cache: {} }
+      this.data[modelKlass.type] = {
+        records: observable.map({}),
+        cache: observable.map({})
+      }
     })
   }
 
@@ -420,7 +419,7 @@ class Store {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
 
-    const record = this.getType(type).records[id]
+    const record = this.getType(type).records.get(String(id))
 
     if (!record || record === 'undefined') return
 
@@ -435,8 +434,8 @@ class Store {
    * @return {Array} array of objects
    */
   getRecords (type) {
-    const records = Object.values(this.getType(type).records)
-                          .filter(value => value && value !== 'undefined')
+    const records = Array.from(this.getType(type).records.values())
+                         .filter(value => value && value !== 'undefined')
 
     // NOTE: Handles a scenario where the store keeps around a reference
     // to a newly persisted record by its temp uuid. This is required
@@ -488,7 +487,7 @@ class Store {
    * @return {Array} array of ids
    */
   getCachedIds (type, url) {
-    const ids = this.getType(type).cache[url]
+    const ids = this.getType(type).cache.get(url)
     if (!ids) return []
     const idsSet = new Set(toJS(ids))
     return Array.from(idsSet)
@@ -497,13 +496,13 @@ class Store {
   /**
    * Gets records from store based on cached query
    *
-   * @method getCachedIds
+   * @method getCachedId
    * @param {String} type
    * @param {String} url
    * @return {Array} array of ids
    */
   getCachedId (type, id) {
-    return this.getType(type).cache[id]
+    return this.getType(type).cache.get(String(id))
   }
 
   /**
@@ -564,7 +563,6 @@ class Store {
       // Update existing object attributes
       Object.keys(attributes).forEach(key => {
         set(record, key, attributes[key])
-        set(this.data[type].records, id, record)
       })
 
       // If relationships are present, update relationships
@@ -574,17 +572,15 @@ class Store {
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
             set(record, 'relationships', { ...record.relationships, [key]: relationships[key] })
-            set(this.data[type].records, id, record)
           }
         })
       }
-
       record._takeSnapshot({ persisted: true })
     } else {
       record = this.createModel(type, id, { attributes, relationships })
-      this.data[type].records[record.id] = record
     }
 
+    this.data[type].records.set(String(record.id), record)
     return record
   }
 
@@ -653,8 +649,9 @@ class Store {
     const response = await this.fetch(url, { method: 'GET' })
 
     if (response.status === 200) {
-      this.data[type].cache[url] = []
+      this.data[type].cache.set(url, [])
       const json = await response.json()
+
       if (json.included) {
         this.createModelsFromData(json.included)
       }
@@ -663,9 +660,9 @@ class Store {
         const { id, attributes = {}, relationships = {} } = dataObject
         const ModelKlass = this.modelTypeIndex[type]
         const record = new ModelKlass({ store, relationships, ...attributes })
-        this.data[type].cache[url].push(id)
-        this.data[type].records[id] = record
-
+        const cachedIds = this.data[type].cache.get(url)
+        this.data[type].cache.set(url, [...cachedIds, id])
+        this.data[type].records.set(String(id), record)
         return record
       }))
     } else {
@@ -689,7 +686,6 @@ class Store {
     // Handle response
     if (response.status === 200) {
       const json = await response.json()
-
       const { data, included } = json
 
       if (included) {
@@ -698,8 +694,7 @@ class Store {
 
       const record = this.createOrUpdateModel(data)
 
-      this.data[type].cache[url] = []
-      this.data[type].cache[url].push(record.id)
+      this.data[type].cache.set(url, [record.id])
 
       return record
     } else {

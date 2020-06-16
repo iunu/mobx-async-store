@@ -279,10 +279,7 @@ describe('Model', () => {
     })
 
     it('builds relatedToMany relationship with existing models', async () => {
-      store.add('notes', {
-        id: 1,
-        description: 'Example description'
-      })
+      store.add('notes', { id: 1, description: 'Example description' })
 
       fetch.mockResponse(exampleRelatedToManyResponse)
       const todo = await store.findOne('organizations', 1)
