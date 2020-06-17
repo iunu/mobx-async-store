@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "1.0.25"
+        "version": "1.0.26"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -98,7 +98,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Model.js",
-            "line": 196
+            "line": 81
         },
         "Store": {
             "name": "Store",
@@ -295,21 +295,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 26,
-            "description": "returns `true` as long as the `value` is not `null`, `undefined`, or `''`",
-            "itemtype": "method",
-            "name": "validatePresence",
-            "params": [
-                {
-                    "name": "value",
-                    "description": ""
-                }
-            ],
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 42,
+            "line": 20,
             "description": "Maps the passed-in property names through and runs validations against those properties",
             "itemtype": "method",
             "name": "validateProperties",
@@ -338,31 +324,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 79,
-            "description": "Helper method for apply the correct defaults to attributes.",
-            "itemtype": "method",
-            "name": "defaultValueForDescriptor",
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 99,
-            "description": "Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.\nThis can be a Javascript primitive or another class. `id` cannot be defined as it is assumed to exist.\nAttributes can be defined with a default.\n```\nclass Todo extends Model {",
-            "itemtype": "method",
-            "name": "attribute",
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 133,
-            "description": "Defines validations for attributes that will be applied before saving. Takes one argument, a function to validate\nthe attribute. The default validator is `presence`: not `null`, `undefined`, or `''`.\n```\nfunction nonzero(value => value !== 0)\n\nclass Todo extends Model {\n  `@validates`\n  `@attribute`(nonzero) numberOfAssignees\n}\n```",
-            "itemtype": "method",
-            "name": "validates",
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 200,
+            "line": 85,
             "description": "Initializer for model",
             "itemtype": "method",
             "name": "constructor",
@@ -370,7 +332,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 210,
+            "line": 95,
             "description": "The type of the model. Defined on the class. Defaults to the underscored version of the class name\n(eg 'calendar_events').",
             "itemtype": "property",
             "name": "type",
@@ -379,7 +341,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 218,
+            "line": 103,
             "description": "The canonical path to the resource on the server. Defined on the class.\nDefaults to the underscored version of the class name",
             "itemtype": "property",
             "name": "endpoint",
@@ -388,7 +350,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 225,
+            "line": 110,
             "description": "has this object been destroyed?",
             "itemtype": "property",
             "name": "_disposed",
@@ -398,7 +360,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 233,
+            "line": 118,
             "description": "set of relationships which have changed since last snapshot",
             "itemtype": "property",
             "name": "_dirtyRelationships",
@@ -407,7 +369,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 240,
+            "line": 125,
             "description": "set of attributes which have changed since last snapshot",
             "itemtype": "property",
             "name": "_dirtyAttributes",
@@ -416,7 +378,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 247,
+            "line": 132,
             "description": "True if the instance has been modified from its persisted state\n\nNOTE that isDirty does _NOT_ track changes to the related objects\nbut it _does_ track changes to the relationships themselves.\n\nFor example, adding or removing a related object will mark this record as dirty,\nbut changing a related object's properties will not mark this record as dirty.\n\nThe caller is reponsible for asking related objects about their\nown dirty state.\n\n```\nkpi = store.add('kpis', { name: 'A good thing to measure' })\nkpi.isDirty\n=> true\nkpi.name\n=> \"A good thing to measure\"\nawait kpi.save()\nkpi.isDirty\n=> false\nkpi.name = \"Another good thing to measure\"\nkpi.isDirty\n=> true\nawait kpi.save()\nkpi.isDirty\n=> false\n```",
             "itemtype": "property",
             "name": "isDirty",
@@ -425,7 +387,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 282,
+            "line": 167,
             "description": "have any changes been made since this record was last persisted?",
             "itemtype": "property",
             "name": "hasUnpersistedChanges",
@@ -434,7 +396,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 291,
+            "line": 176,
             "description": "True if the model has not been sent to the store",
             "itemtype": "property",
             "name": "isNew",
@@ -443,7 +405,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 303,
+            "line": 188,
             "description": "True if the instance is coming from / going to the server\n```\nkpi = store.find('kpis', 5)\n// fetch started\nkpi.isInFlight\n=> true\n// fetch finished\nkpi.isInFlight\n=> false\n```",
             "itemtype": "property",
             "name": "isInFlight",
@@ -453,7 +415,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 320,
+            "line": 205,
             "description": "A hash of errors from the server\n```\nkpi = store.find('kpis', 5)\nkpi.errors\n=> { authorization: \"You do not have access to this resource\" }\n```",
             "itemtype": "property",
             "name": "errors",
@@ -463,7 +425,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 333,
+            "line": 218,
             "description": "a list of snapshots that have been taken since the record was either last persisted or since it was instantiated",
             "itemtype": "property",
             "name": "snapshots",
@@ -473,7 +435,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 342,
+            "line": 227,
             "description": "restores data to its last snapshot state\n```\nkpi = store.find('kpis', 5)\nkpi.name\n=> \"A good thing to measure\"\nkpi.name = \"Another good thing to measure\"\nkpi.rollback()\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "rollback",
@@ -481,7 +443,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 359,
+            "line": 244,
             "description": "restores data to its last persisted state or the oldest snapshot\nstate if the model was never persisted",
             "itemtype": "method",
             "name": "rollbackToPersisted",
@@ -489,7 +451,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 369,
+            "line": 254,
             "description": "creates or updates a record.",
             "itemtype": "method",
             "name": "save",
@@ -508,7 +470,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 422,
+            "line": 307,
             "description": "Checks all validations, adding errors where necessary and returning `false` if any are not valid\nDefault is to check all validations, but they can be selectively run via options:\n - attributes - an array of names of attributes to validate\n - relationships - an array of names of relationships to validate",
             "itemtype": "method",
             "name": "validate",
@@ -527,7 +489,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 446,
+            "line": 331,
             "description": "deletes a record from the store and server",
             "itemtype": "method",
             "name": "destroy",
@@ -539,7 +501,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 515,
+            "line": 400,
             "description": "Magic method that makes changes to records\nobservable",
             "itemtype": "method",
             "name": "_makeObservable",
@@ -547,7 +509,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 532,
+            "line": 417,
             "description": "sets up a reaction for each top-level attribute so we can compare\nvalues after each mutation and keep track of dirty attr states\nif an attr is different than the last snapshot, add it to the\n_dirtyAttributes set\nif it's the same as the last snapshot, make sure it's _not_ in the\n_dirtyAttributes set",
             "itemtype": "method",
             "name": "_listenForChanges",
@@ -555,7 +517,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 565,
+            "line": 450,
             "description": "call this when destroying an object to make sure that we clean up\nany event listeners and don't leak memory",
             "itemtype": "method",
             "name": "dispose",
@@ -563,7 +525,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 575,
+            "line": 460,
             "description": "The current state of defined attributes and relationships of the instance\nReally just an alias for attributes\n```\ntodo = store.find('todos', 5)\ntodo.title\n=> \"Buy the eggs\"\nsnapshot = todo.snapshot\ntodo.title = \"Buy the eggs and bacon\"\nsnapshot.title\n=> \"Buy the eggs and bacon\"\n```",
             "itemtype": "method",
             "name": "snapshot",
@@ -575,7 +537,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 597,
+            "line": 482,
             "description": "Sets previous snapshot to current snapshot",
             "itemtype": "method",
             "name": "setPreviousSnapshot",
@@ -583,7 +545,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 606,
+            "line": 491,
             "description": "the latest snapshot",
             "itemtype": "method",
             "name": "previousSnapshot",
@@ -591,7 +553,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 617,
+            "line": 502,
             "description": "the latest persisted snapshot or the first snapshot if the model was never persisted",
             "itemtype": "method",
             "name": "previousSnapshot",
@@ -599,7 +561,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 626,
+            "line": 511,
             "description": "take a snapshot of the current model state.\nif persisted, clear the stack and push this snapshot to the top\nif not persisted, push this snapshot to the top of the stack",
             "itemtype": "method",
             "name": "_takeSnapshot",
@@ -614,7 +576,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 649,
+            "line": 534,
             "description": "set the current attributes and relationships to the attributes\nand relationships of the snapshot to be applied. also reset errors",
             "itemtype": "method",
             "name": "_applySnapshot",
@@ -629,7 +591,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 666,
+            "line": 551,
             "description": "a list of any property paths which have been changed since the previous\nsnapshot\n```\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyAttributes\n=> []\ntodo.title = 'Buy Cheese'\ntodo.dirtyAttributes\n=> ['title']\n```",
             "itemtype": "method",
             "name": "dirtyAttributes",
@@ -641,7 +603,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 687,
+            "line": 572,
             "description": "shortcut to get the static",
             "itemtype": "method",
             "name": "type",
@@ -653,7 +615,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 697,
+            "line": 582,
             "description": "current attributes of record",
             "itemtype": "method",
             "name": "attributes",
@@ -665,7 +627,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 715,
+            "line": 600,
             "description": "Getter find the attribute definition for the model type.",
             "itemtype": "method",
             "name": "attributeDefinitions",
@@ -677,7 +639,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 726,
+            "line": 611,
             "description": "Getter find the relationship definitions for the model type.",
             "itemtype": "method",
             "name": "relationshipDefinitions",
@@ -689,7 +651,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 737,
+            "line": 622,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -701,7 +663,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 747,
+            "line": 632,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -713,7 +675,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 757,
+            "line": 642,
             "description": "Getter to just get the names of a records attributes.",
             "itemtype": "method",
             "name": "attributeNames",
@@ -725,7 +687,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 767,
+            "line": 652,
             "description": "Getter to just get the names of a records relationships.",
             "itemtype": "method",
             "name": "relationshipNames",
@@ -737,7 +699,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 777,
+            "line": 662,
             "description": "getter method to get the default attributes",
             "itemtype": "method",
             "name": "defaultAttributes",
@@ -749,7 +711,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 794,
+            "line": 679,
             "description": "getter method to get data in api compliance format\nTODO: Figure out how to handle unpersisted ids",
             "itemtype": "method",
             "name": "jsonapi",
@@ -918,7 +880,7 @@
         {
             "file": "src/Store.js",
             "line": 161,
-            "description": "finds all of the instances of a given type. If there are instances available in the store,\nit will return those, otherwise it will trigger a fetch\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\npassing `fromServer` as an option will always trigger a\nfetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findAll('todos', { fromServer: false })\n  // no fetch triggered\n  => []\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n\n  // async stuff happens on the server\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\n  store.findAll('todos', { fromServer: true })\n  // fetch triggered\n  => [event1, event2, event3, event4]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result (unless `fromServer` is `true`)\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: moment(),\n        end_time: moment()\n      }\n    }\n  })",
+            "description": "finds all of the instances of a given type. If there are instances available in the store,\nit will return those, otherwise it will trigger a fetch\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\npassing `fromServer` as an option will always trigger a\nfetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findAll('todos', { fromServer: false })\n  // no fetch triggered\n  => []\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n\n  // async stuff happens on the server\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\n  store.findAll('todos', { fromServer: true })\n  // fetch triggered\n  => [event1, event2, event3, event4]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result (unless `fromServer` is `true`)\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })",
             "itemtype": "method",
             "name": "findAll",
             "params": [
@@ -1552,6 +1514,25 @@
         {
             "file": "src/utils.js",
             "line": 147,
+            "description": "convert a value into a date, pass Date or Moment instances thru\nuntouched",
+            "itemtype": "method",
+            "name": "makeDate",
+            "params": [
+                {
+                    "name": "value",
+                    "description": "",
+                    "type": "*"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Date|Moment"
+            },
+            "class": ""
+        },
+        {
+            "file": "src/utils.js",
+            "line": 159,
             "description": "recursively walk an object and call the `iteratee` function for\neach property. returns an array of results of calls to the iteratee.",
             "itemtype": "method",
             "name": "walk",
@@ -1579,7 +1560,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 165,
+            "line": 177,
             "description": "deeply compare objects a and b and return object paths for attributes\nwhich differ. it is important to note that this comparison is biased\ntoward object a. object a is walked and compared against values in\nobject b. if a property exists in object b, but not in object a, it\nwill not be counted as a difference.",
             "itemtype": "method",
             "name": "diff",

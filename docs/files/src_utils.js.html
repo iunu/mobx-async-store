@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.25</em>
+            <em>API Docs for: 1.0.26</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -227,6 +227,18 @@ export function stringifyIds (object) {
       stringifyIds(property)
     }
   })
+}
+
+/**
+ * convert a value into a date, pass Date or Moment instances thru
+ * untouched
+ * @method makeDate
+ * @param {*} value
+ * @return {Date|Moment}
+ */
+export function makeDate (value) {
+  if (value instanceof Date || value._isAMomentObject) return value
+  return new Date(Date.parse(value)).toISOString()
 }
 
 /**

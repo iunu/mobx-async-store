@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.25</em>
+            <em>API Docs for: 1.0.26</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -93,9 +93,7 @@ import {
   observable
 } from &#x27;mobx&#x27;
 
-import moment from &#x27;moment&#x27;
-
-import { diff } from &#x27;./utils&#x27;
+import { diff, makeDate } from &#x27;./utils&#x27;
 
 import ObjectPromiseProxy from &#x27;./ObjectPromiseProxy&#x27;
 import schema from &#x27;./schema&#x27;
@@ -103,26 +101,6 @@ import cloneDeep from &#x27;lodash/cloneDeep&#x27;
 import isEqual from &#x27;lodash/isEqual&#x27;
 import isObject from &#x27;lodash/isObject&#x27;
 import findLast from &#x27;lodash/findLast&#x27;
-
-function isPresent (value) {
-  return value !== null &amp;&amp; value !== undefined &amp;&amp; value !== &#x27;&#x27;
-}
-
-/**
- * returns &#x60;true&#x60; as long as the &#x60;value&#x60; is not &#x60;null&#x60;, &#x60;undefined&#x60;, or &#x60;&#x27;&#x27;&#x60;
- * @method validatePresence
- * @param value
- */
-
-function validatePresence (value) {
-  return {
-    isValid: isPresent(value),
-    errors: [{
-      key: &#x27;blank&#x27;,
-      message: &#x27;can\&#x27;t be blank&#x27;
-    }]
-  }
-}
 
 /**
  * Maps the passed-in property names through and runs validations against those properties
@@ -160,99 +138,6 @@ function stringifyIds (object) {
     }
   })
 }
-
-/**
- * Helper method for apply the correct defaults to attributes.
- * @method defaultValueForDescriptor
- */
-function defaultValueForDescriptor (descriptor, DataType) {
-  if (typeof descriptor.initializer === &#x27;function&#x27;) {
-    const value = descriptor.initializer()
-    if (DataType.name === &#x27;Date&#x27;) {
-      return moment(value).toDate()
-    } else {
-      return DataType(value)
-    }
-  }
-
-  if (DataType.name === &#x27;String&#x27;) return &#x27;&#x27;
-  if (DataType.name === &#x27;Array&#x27;) return []
-
-  return null
-}
-
-/**
- * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
- * This can be a Javascript primitive or another class. &#x60;id&#x60; cannot be defined as it is assumed to exist.
- * Attributes can be defined with a default.
- * &#x60;&#x60;&#x60;
- * class Todo extends Model {
- *   @attribute(Date) start_time = moment()
- * }
- * &#x60;&#x60;&#x60;
- * @method attribute
- */
-export function attribute (dataType = (obj) =&gt; obj) {
-  return function (target, property, descriptor) {
-    const { type } = target.constructor
-    const defaultValue = defaultValueForDescriptor(descriptor, dataType)
-    // Update the schema
-    schema.addAttribute({
-      dataType,
-      defaultValue,
-      property,
-      type
-    })
-    // Return custom descriptor
-    return {
-      get () {
-        return defaultValue
-      },
-      set (value) {
-        set(target, property, value)
-      }
-    }
-  }
-}
-
-/**
- * Defines validations for attributes that will be applied before saving. Takes one argument, a function to validate
- * the attribute. The default validator is &#x60;presence&#x60;: not &#x60;null&#x60;, &#x60;undefined&#x60;, or &#x60;&#x27;&#x27;&#x60;.
- * &#x60;&#x60;&#x60;
- * function nonzero(value =&gt; value !== 0)
- *
- * class Todo extends Model {
- *   &#x60;@validates&#x60;
- *   &#x60;@attribute&#x60;(nonzero) numberOfAssignees
- * }
- * &#x60;&#x60;&#x60;
- * @method validates
- */
-
- export function validates (target, property) {
-   let validator = validatePresence
-
-   if (typeof target === &#x27;function&#x27;) {
-     validator = target
-
-     return function (target, property) {
-       const { type } = target.constructor
-
-       schema.addValidation({
-         property,
-         type,
-         validator
-       })
-     }
-   } else {
-     const { type } = target.constructor
-     schema.addValidation({
-       property,
-       type,
-       validator
-     })
-   }
- }
 
 /*
  * Defines a many-to-one relationship. Defaults to the class with camelized name of the property.
@@ -908,7 +793,7 @@ class Model {
         if (DataType.name === &#x27;Array&#x27; || DataType.name === &#x27;Object&#x27;) {
           attr = toJS(value)
         } else if (DataType.name === &#x27;Date&#x27;) {
-          attr = moment(value).toISOString()
+          attr = makeDate(value).toISOString()
         } else {
           attr = DataType(value)
         }

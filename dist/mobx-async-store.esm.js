@@ -155,6 +155,18 @@ function uniqueBy(array, key) {
   return array.reduce(uniqueByReducer(key), []);
 }
 /**
+ * convert a value into a date, pass Date or Moment instances thru
+ * untouched
+ * @method makeDate
+ * @param {*} value
+ * @return {Date|Moment}
+ */
+
+function makeDate(value) {
+  if (value instanceof Date || value._isAMomentObject) return value;
+  return new Date(Date.parse(value)).toISOString();
+}
+/**
  * recursively walk an object and call the `iteratee` function for
  * each property. returns an array of results of calls to the iteratee.
  * @method walk
@@ -991,7 +1003,7 @@ function () {
           if (DataType.name === 'Array' || DataType.name === 'Object') {
             attr = toJS(value);
           } else if (DataType.name === 'Date') {
-            attr = value instanceof Date || value._isAMomentObject ? value : new Date(Date.parse(value)).toISOString();
+            attr = makeDate(value).toISOString();
           } else {
             attr = DataType(value);
           }
@@ -2159,8 +2171,7 @@ function defaultValueForDescriptor(descriptor, DataType) {
     var value = descriptor.initializer();
 
     if (DataType.name === 'Date') {
-      if (value instanceof Date || value._isAMomentObject) return value;
-      return new Date(Date.parse(value));
+      return makeDate(value);
     } else {
       return DataType(value);
     }
