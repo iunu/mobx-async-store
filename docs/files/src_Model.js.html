@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.6</em>
+            <em>API Docs for: 1.0.25</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -84,9 +84,9 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 import {
-  reaction,
   computed,
   extendObservable,
+  reaction,
   set,
   toJS,
   transaction,
@@ -95,12 +95,14 @@ import {
 
 import moment from &#x27;moment&#x27;
 
-import { walk } from &#x27;./utils&#x27;
+import { diff } from &#x27;./utils&#x27;
 
 import ObjectPromiseProxy from &#x27;./ObjectPromiseProxy&#x27;
 import schema from &#x27;./schema&#x27;
-import dig from &#x27;lodash/get&#x27;
-import flattenDeep from &#x27;lodash/flattenDeep&#x27;
+import cloneDeep from &#x27;lodash/cloneDeep&#x27;
+import isEqual from &#x27;lodash/isEqual&#x27;
+import isObject from &#x27;lodash/isObject&#x27;
+import findLast from &#x27;lodash/findLast&#x27;
 
 function isPresent (value) {
   return value !== null &amp;&amp; value !== undefined &amp;&amp; value !== &#x27;&#x27;
@@ -120,6 +122,31 @@ function validatePresence (value) {
       message: &#x27;can\&#x27;t be blank&#x27;
     }]
   }
+}
+
+/**
+ * Maps the passed-in property names through and runs validations against those properties
+ * @method validateProperties
+ * @param {Object} model the model to check
+ * @param {Array} propertyNames the names of the model properties to check
+ * @param {Object} propertyDefinitions a hash map containing validators by property
+ * @return {Array} an array of booleans representing results of validations
+ */
+
+function validateProperties (model, propertyNames, propertyDefinitions) {
+  return propertyNames.map((property) =&gt; {
+    const { validator } = propertyDefinitions[property]
+
+    if (!validator) return true
+
+    const validationResult = validator(model[property], model)
+
+    if (!validationResult.isValid) {
+      model.errors[property] = validationResult.errors
+    }
+
+    return validationResult.isValid
+  })
 }
 
 function stringifyIds (object) {
@@ -262,8 +289,7 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     this._makeObservable(initialAttributes)
-    this.setPreviousSnapshot()
-    this._trackState()
+    this._takeSnapshot({ persisted: !this.isNew })
   }
 
   /**
@@ -282,7 +308,39 @@ class Model {
    */
 
   /**
+    * has this object been destroyed?
+    * @property _disposed
+    * @type {Boolean}
+    * @default false
+    */
+  @observable _disposed = false
+
+  /**
+    * set of relationships which have changed since last snapshot
+    * @property _dirtyRelationships
+    * @type {Set}
+    */
+  @observable _dirtyRelationships = new Set()
+
+  /**
+    * set of attributes which have changed since last snapshot
+    * @property _dirtyAttributes
+    * @type {Set}
+    */
+  @observable _dirtyAttributes = new Set()
+
+  /**
    * True if the instance has been modified from its persisted state
+   *
+   * NOTE that isDirty does _NOT_ track changes to the related objects
+   * but it _does_ track changes to the relationships themselves.
+   *
+   * For example, adding or removing a related object will mark this record as dirty,
+   * but changing a related object&#x27;s properties will not mark this record as dirty.
+   *
+   * The caller is reponsible for asking related objects about their
+   * own dirty state.
+   *
    * &#x60;&#x60;&#x60;
    * kpi = store.add(&#x27;kpis&#x27;, { name: &#x27;A good thing to measure&#x27; })
    * kpi.isDirty
@@ -301,26 +359,19 @@ class Model {
    * &#x60;&#x60;&#x60;
    * @property isDirty
    * @type {Boolean}
-   * @default false
    */
-  @computed get isDirty () {
-    const { isNew, _isDirty } = this
-    return _isDirty || isNew
-  }
-  set isDirty (value) {
-    this._isDirty = value
+  get isDirty () {
+    return this._dirtyAttributes.size &gt; 0 || this._dirtyRelationships.size &gt; 0
   }
 
   /**
-   * Private method. True if the model has been programatically changed,
-   * as opposed to just being new.
-   * @property _isDirty
+   * have any changes been made since this record was last persisted?
+   * @property hasUnpersistedChanges
    * @type {Boolean}
-   * @default false
-   * @private
    */
-
-  @observable _isDirty = false
+  get hasUnpersistedChanges () {
+    return this.isDirty || !this.previousSnapshot.persisted
+  }
 
   /**
    * True if the model has not been sent to the store
@@ -329,7 +380,9 @@ class Model {
    */
   @computed get isNew () {
     const { id } = this
-    return !!String(id).match(/tmp/)
+    if (!id) return true
+    if (String(id).indexOf(&#x27;tmp&#x27;) === -1) return false
+    return true
   }
 
   /**
@@ -363,16 +416,16 @@ class Model {
   @observable errors = {}
 
   /**
-   * The previous state of defined attributes and relationships of the instance
+   * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
    *
-   * @property previousSnapshot
-   * @type {Object}
-   * @default {}
+   * @property snapshots
+   * @type {Array&lt;Snapshot&gt;}
+   * @default []
    */
-  previousSnapshot = {}
+  _snapshots = []
 
   /**
-   * restores data to its last persisted state
+   * restores data to its last snapshot state
    * &#x60;&#x60;&#x60;
    * kpi = store.find(&#x27;kpis&#x27;, 5)
    * kpi.name
@@ -385,15 +438,17 @@ class Model {
    * @method rollback
    */
   rollback () {
-    transaction(() =&gt; {
-      const { previousSnapshot } = this
-      this.attributeNames.forEach((key) =&gt; {
-        this[key] = previousSnapshot.attributes[key]
-      })
-      this.relationships = previousSnapshot.relationships
-      this.errors = {}
-    })
-    this.setPreviousSnapshot()
+    this._applySnapshot(this.previousSnapshot)
+  }
+
+  /**
+   * restores data to its last persisted state or the oldest snapshot
+   * state if the model was never persisted
+   * @method rollbackToPersisted
+   */
+  rollbackToPersisted () {
+    this._applySnapshot(this.persistedSnapshot)
+    this._takeSnapshot({ persisted: true })
   }
 
   /**
@@ -430,6 +485,20 @@ class Model {
       { relationships, attributes }
     ))
 
+    if (relationships) {
+      relationships.forEach((rel) =&gt; {
+        if (Array.isArray(this[rel])) {
+          this[rel].forEach((item, i) =&gt; {
+            if (item &amp;&amp; item.isNew) {
+              throw new Error(&#x60;Invariant violated: tried to save a relationship to an unpersisted record: &quot;${rel}[${i}]&quot;&#x60;)
+            }
+          })
+        } else if (this[rel] &amp;&amp; this[rel].isNew) {
+          throw new Error(&#x60;Invariant violated: tried to save a relationship to an unpersisted record: &quot;${rel}&quot;&#x60;)
+        }
+      })
+    }
+
     const response = this.store.fetch(url, { method, body })
 
     return new ObjectPromiseProxy(response, this)
@@ -437,27 +506,26 @@ class Model {
 
   /**
    * Checks all validations, adding errors where necessary and returning &#x60;false&#x60; if any are not valid
+   * Default is to check all validations, but they can be selectively run via options:
+   *  - attributes - an array of names of attributes to validate
+   *  - relationships - an array of names of relationships to validate
+   *
    * @method validate
+   * @param {Object} options
    * @return {Boolean}
    */
 
-  validate () {
+  validate (options = {}) {
     this.errors = {}
-    const { attributeNames, attributeDefinitions } = this
-    const validationChecks = attributeNames.map((property) =&gt; {
-      const { validator } = attributeDefinitions[property]
+    const { attributeDefinitions, relationshipDefinitions } = this
 
-      if (!validator) return true
+    const attributeNames = options.attributes || this.attributeNames
+    const relationshipNames = options.relationships || this.relationshipNames
 
-      const validationResult = validator(this[property], this)
+    const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
+    const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
 
-      if (!validationResult.isValid) {
-        this.errors[property] = validationResult.errors
-      }
-
-      return validationResult.isValid
-    })
-    return validationChecks.every(value =&gt; value)
+    return validAttributes.concat(validRelationships).every(value =&gt; value)
   }
 
   /**
@@ -510,6 +578,8 @@ class Model {
             _this.store.createModelsFromData(json.included)
           }
 
+          _this.dispose()
+
           return _this
         } else {
           _this.errors = { status: response.status }
@@ -534,13 +604,58 @@ class Model {
    * @method _makeObservable
    */
   _makeObservable (initialAttributes) {
-     const { defaultAttributes } = this
+    const { defaultAttributes } = this
 
-     extendObservable(this, {
-       ...defaultAttributes,
-       ...initialAttributes
-     })
-   }
+    extendObservable(this, {
+      ...defaultAttributes,
+      ...initialAttributes
+    })
+
+    this._listenForChanges()
+  }
+
+  /**
+   * sets up a reaction for each top-level attribute so we can compare
+   * values after each mutation and keep track of dirty attr states
+   * if an attr is different than the last snapshot, add it to the
+   * _dirtyAttributes set
+   * if it&#x27;s the same as the last snapshot, make sure it&#x27;s _not_ in the
+   * _dirtyAttributes set
+   * @method _listenForChanges
+   */
+  _listenForChanges () {
+    this._disposers = Object.keys(this.attributes).map((attr) =&gt; {
+      return reaction(() =&gt; this.attributes[attr], (value) =&gt; {
+        const previousValue = this.previousSnapshot.attributes[attr]
+        if (isEqual(previousValue, value)) {
+          this._dirtyAttributes.delete(attr)
+        } else if (isObject(value)) { // handles Objects and Arrays
+          // clear out any dirty attrs that start with this attr prefix
+          // then we can reset them if they are still (or newly) dirty
+          Array.from(this._dirtyAttributes).forEach((path) =&gt; {
+            if (path.indexOf(&#x60;${attr}.&#x60;) === 0) {
+              this._dirtyAttributes.delete(path)
+            }
+          })
+          diff(previousValue, value).forEach((property) =&gt; {
+            this._dirtyAttributes.add(&#x60;${attr}.${property}&#x60;)
+          })
+        } else {
+          this._dirtyAttributes.add(attr)
+        }
+      })
+    })
+  }
+
+  /**
+   * call this when destroying an object to make sure that we clean up
+   * any event listeners and don&#x27;t leak memory
+   * @method dispose
+   */
+  dispose () {
+    this._disposed = true
+    this._disposers.forEach((dispose) =&gt; dispose())
+  }
 
   /**
    * The current state of defined attributes and relationships of the instance
@@ -570,7 +685,67 @@ class Model {
    * @method setPreviousSnapshot
    */
   setPreviousSnapshot () {
-    this.previousSnapshot = this.snapshot
+    this._takeSnapshot()
+  }
+
+  /**
+   * the latest snapshot
+   *
+   * @method previousSnapshot
+   */
+  get previousSnapshot () {
+    const length = this._snapshots.length
+    if (length === 0) throw new Error(&#x27;Invariant violated: model has no snapshots&#x27;)
+    return this._snapshots[length - 1]
+  }
+
+  /**
+   * the latest persisted snapshot or the first snapshot if the model was never persisted
+   *
+   * @method previousSnapshot
+   */
+  get persistedSnapshot () {
+    return findLast(this._snapshots, (ss) =&gt; ss.persisted) || this._snapshots[0]
+  }
+
+  /**
+   * take a snapshot of the current model state.
+   * if persisted, clear the stack and push this snapshot to the top
+   * if not persisted, push this snapshot to the top of the stack
+   * @method _takeSnapshot
+   * @param {Object} options
+   */
+  _takeSnapshot (options = {}) {
+    const persisted = options.persisted || false
+    this._dirtyRelationships.clear()
+    this._dirtyAttributes.clear()
+    const { attributes, relationships } = this.snapshot
+    const snapshot = {
+      persisted,
+      attributes,
+      relationships
+    }
+    if (persisted) {
+      this._snapshots = []
+    }
+    this._snapshots.push(snapshot)
+  }
+
+  /**
+   * set the current attributes and relationships to the attributes
+   * and relationships of the snapshot to be applied. also reset errors
+   * @method _applySnapshot
+   * @param {Object} snapshot
+   */
+  _applySnapshot (snapshot) {
+    if (!snapshot) throw new Error(&#x27;Invariant violated: tried to apply undefined snapshot&#x27;)
+    transaction(() =&gt; {
+      this.attributeNames.forEach((key) =&gt; {
+        this[key] = snapshot.attributes[key]
+      })
+      this.relationships = snapshot.relationships
+      this.errors = {}
+    })
   }
 
   /**
@@ -588,35 +763,11 @@ class Model {
    * @return {Array} dirty attribute paths
    */
 
-  get dirtyAttributes () {
-    return flattenDeep(walk(this.previousSnapshot.attributes, (prevValue, path) =&gt; {
-      const currValue = dig(this.snapshot.attributes, path)
-      return prevValue === currValue ? undefined : path
-    })).filter((x) =&gt; x)
-  }
-
-  /**
-   * Uses mobx.autorun to track changes to attributes
-   *
-   * @method _trackState
-   */
-  _trackState () {
-    reaction(
-      () =&gt; JSON.stringify(this.attributes),
-      objectString =&gt; {
-        // console.log(objectString)
-        this.isDirty = true
-      }
-    )
-
-    reaction(
-      () =&gt; JSON.stringify(this.relationships),
-      relString =&gt; {
-        // console.log(relString)
-        this.isDirty = true
-      }
-    )
-  }
+   get dirtyAttributes () {
+    const relationships = Array.from(this._dirtyRelationships).map((property) =&gt; &#x60;relationships.${property}&#x60;)
+    const attributes = Array.from(this._dirtyAttributes)
+    return [...relationships, ...attributes]
+   }
 
   /**
    * shortcut to get the static
@@ -637,7 +788,7 @@ class Model {
   get attributes () {
     return this.attributeNames.reduce((attributes, key) =&gt; {
       const value = toJS(this[key])
-      if (!value) {
+      if (value == null) {
         delete attributes[key]
       } else {
         attributes[key] = value
@@ -654,7 +805,7 @@ class Model {
    */
   get attributeDefinitions () {
     const { type } = this.constructor
-    return schema.structure[type]
+    return schema.structure[type] || {}
   }
 
   /**
@@ -665,7 +816,7 @@ class Model {
    */
   get relationshipDefinitions () {
     const { type } = this.constructor
-    return schema.relations[type]
+    return schema.relations[type] || {}
   }
 
   /**
@@ -696,6 +847,16 @@ class Model {
    */
   get attributeNames () {
     return Object.keys(this.attributeDefinitions)
+  }
+
+  /**
+   * Getter to just get the names of a records relationships.
+   *
+   * @method relationshipNames
+   * @return {Array}
+   */
+  get relationshipNames () {
+    return Object.keys(this.relationshipDefinitions)
   }
 
   /**
@@ -794,6 +955,12 @@ class Model {
         this[key] = attributes[key]
       })
     })
+  }
+
+  clone () {
+    const attributes = cloneDeep(this.snapshot.attributes)
+    const relationships = this.relationships
+    return this.store.createModel(this.type, this.id, { attributes, relationships })
   }
 }
 

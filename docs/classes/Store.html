@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.6</em>
+            <em>API Docs for: 1.0.25</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -195,6 +195,10 @@
 
                             </li>
                             <li class="index-item method">
+                                <a href="#method_findAndFetchAll">findAndFetchAll</a>
+
+                            </li>
+                            <li class="index-item method">
                                 <a href="#method_findOne">findOne</a>
 
                             </li>
@@ -207,7 +211,7 @@
 
                             </li>
                             <li class="index-item method">
-                                <a href="#method_getCachedIds">getCachedIds</a>
+                                <a href="#method_getCachedId">getCachedId</a>
 
                             </li>
                             <li class="index-item method">
@@ -595,7 +599,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l580"><code>src&#x2F;Store.js:580</code></a>
+        <a href="../files/src_Store.js.html#l604"><code>src&#x2F;Store.js:604</code></a>
         </p>
 
 
@@ -677,7 +681,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l557"><code>src&#x2F;Store.js:557</code></a>
+        <a href="../files/src_Store.js.html#l587"><code>src&#x2F;Store.js:587</code></a>
         </p>
 
 
@@ -730,7 +734,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l520"><code>src&#x2F;Store.js:520</code></a>
+        <a href="../files/src_Store.js.html#l551"><code>src&#x2F;Store.js:551</code></a>
         </p>
 
 
@@ -786,7 +790,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l334"><code>src&#x2F;Store.js:334</code></a>
+        <a href="../files/src_Store.js.html#l365"><code>src&#x2F;Store.js:365</code></a>
         </p>
 
 
@@ -852,7 +856,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l615"><code>src&#x2F;Store.js:615</code></a>
+        <a href="../files/src_Store.js.html#l639"><code>src&#x2F;Store.js:639</code></a>
         </p>
 
 
@@ -920,7 +924,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l655"><code>src&#x2F;Store.js:655</code></a>
+        <a href="../files/src_Store.js.html#l673"><code>src&#x2F;Store.js:673</code></a>
         </p>
 
 
@@ -987,7 +991,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l601"><code>src&#x2F;Store.js:601</code></a>
+        <a href="../files/src_Store.js.html#l625"><code>src&#x2F;Store.js:625</code></a>
         </p>
 
 
@@ -1054,7 +1058,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l174"><code>src&#x2F;Store.js:174</code></a>
+        <a href="../files/src_Store.js.html#l161"><code>src&#x2F;Store.js:161</code></a>
         </p>
 
 
@@ -1132,6 +1136,82 @@ end_time: moment()
 
 
 </div>
+<div id="method_findAndFetchAll" class="method item">
+    <h3 class="name"><code>findAndFetchAll</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>type</code>
+                </li>
+                <li class="arg">
+                        <code>options</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Store.js.html#l225"><code>src&#x2F;Store.js:225</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">type</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <p>the type to find</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+            </div>
+        </div>
+
+
+</div>
 <div id="method_findOne" class="method item">
     <h3 class="name"><code>findOne</code></h3>
 
@@ -1159,7 +1239,7 @@ end_time: moment()
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l108"><code>src&#x2F;Store.js:108</code></a>
+        <a href="../files/src_Store.js.html#l95"><code>src&#x2F;Store.js:95</code></a>
         </p>
 
 
@@ -1253,7 +1333,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l238"><code>src&#x2F;Store.js:238</code></a>
+        <a href="../files/src_Store.js.html#l259"><code>src&#x2F;Store.js:259</code></a>
         </p>
 
 
@@ -1324,7 +1404,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l152"><code>src&#x2F;Store.js:152</code></a>
+        <a href="../files/src_Store.js.html#l139"><code>src&#x2F;Store.js:139</code></a>
         </p>
 
 
@@ -1378,8 +1458,8 @@ Otherwise, it will trigger the default behavior</p>
 
 
 </div>
-<div id="method_getCachedIds" class="method item">
-    <h3 class="name"><code>getCachedIds</code></h3>
+<div id="method_getCachedId" class="method item">
+    <h3 class="name"><code>getCachedId</code></h3>
 
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
@@ -1405,7 +1485,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l450"><code>src&#x2F;Store.js:450</code></a>
+        <a href="../files/src_Store.js.html#l496"><code>src&#x2F;Store.js:496</code></a>
         </p>
 
 
@@ -1483,7 +1563,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l465"><code>src&#x2F;Store.js:465</code></a>
+        <a href="../files/src_Store.js.html#l481"><code>src&#x2F;Store.js:481</code></a>
         </p>
 
 
@@ -1564,7 +1644,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l418"><code>src&#x2F;Store.js:418</code></a>
+        <a href="../files/src_Store.js.html#l449"><code>src&#x2F;Store.js:449</code></a>
         </p>
 
 
@@ -1652,7 +1732,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l433"><code>src&#x2F;Store.js:433</code></a>
+        <a href="../files/src_Store.js.html#l464"><code>src&#x2F;Store.js:464</code></a>
         </p>
 
 
@@ -1727,7 +1807,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l509"><code>src&#x2F;Store.js:509</code></a>
+        <a href="../files/src_Store.js.html#l540"><code>src&#x2F;Store.js:540</code></a>
         </p>
 
 
@@ -1798,7 +1878,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l360"><code>src&#x2F;Store.js:360</code></a>
+        <a href="../files/src_Store.js.html#l391"><code>src&#x2F;Store.js:391</code></a>
         </p>
 
 
@@ -1887,7 +1967,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l492"><code>src&#x2F;Store.js:492</code></a>
+        <a href="../files/src_Store.js.html#l523"><code>src&#x2F;Store.js:523</code></a>
         </p>
 
 
@@ -1966,7 +2046,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l378"><code>src&#x2F;Store.js:378</code></a>
+        <a href="../files/src_Store.js.html#l409"><code>src&#x2F;Store.js:409</code></a>
         </p>
 
 
@@ -2041,7 +2121,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l398"><code>src&#x2F;Store.js:398</code></a>
+        <a href="../files/src_Store.js.html#l429"><code>src&#x2F;Store.js:429</code></a>
         </p>
 
 
@@ -2109,7 +2189,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l477"><code>src&#x2F;Store.js:477</code></a>
+        <a href="../files/src_Store.js.html#l508"><code>src&#x2F;Store.js:508</code></a>
         </p>
 
 
@@ -2184,7 +2264,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l349"><code>src&#x2F;Store.js:349</code></a>
+        <a href="../files/src_Store.js.html#l380"><code>src&#x2F;Store.js:380</code></a>
         </p>
 
 
@@ -2246,7 +2326,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l279"><code>src&#x2F;Store.js:279</code></a>
+        <a href="../files/src_Store.js.html#l307"><code>src&#x2F;Store.js:307</code></a>
         </p>
 
 
@@ -2300,7 +2380,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l302"><code>src&#x2F;Store.js:302</code></a>
+        <a href="../files/src_Store.js.html#l330"><code>src&#x2F;Store.js:330</code></a>
         </p>
 
 
@@ -2354,7 +2434,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l291"><code>src&#x2F;Store.js:291</code></a>
+        <a href="../files/src_Store.js.html#l319"><code>src&#x2F;Store.js:319</code></a>
         </p>
 
 
@@ -2402,7 +2482,7 @@ based on query params</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l316"><code>src&#x2F;Store.js:316</code></a>
+        <a href="../files/src_Store.js.html#l344"><code>src&#x2F;Store.js:344</code></a>
         </p>
 
 
@@ -2444,7 +2524,7 @@ as the primary key</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l87"><code>src&#x2F;Store.js:87</code></a>
+        <a href="../files/src_Store.js.html#l81"><code>src&#x2F;Store.js:81</code></a>
         </p>
 
 
@@ -2504,7 +2584,7 @@ in mobx.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l259"><code>src&#x2F;Store.js:259</code></a>
+        <a href="../files/src_Store.js.html#l284"><code>src&#x2F;Store.js:284</code></a>
         </p>
 
 

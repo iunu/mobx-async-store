@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.6</em>
+            <em>API Docs for: 1.0.25</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -203,9 +203,10 @@ export function getRelatedRecords (record, property, modelType = null) {
     })
   } else {
     const foreignId = &#x60;${singularizeType(record.type)}_id&#x60;
-    relatedRecords = record.store
-                           .getRecords(relationType)
-                           .filter(rel =&gt; String(rel[foreignId]) === String(record.id))
+    if (record.store.getRecords(relationType)) {
+      relatedRecords = record.store.getRecords(relationType)
+                                   .filter(rel =&gt; String(rel[foreignId]) === String(record.id))
+    }
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType)
@@ -224,13 +225,13 @@ export function getRelatedRecord (record, property, modelType = null) {
   if (!relationships) return
 
   // Use property name unless model type is provided
-  const relationType = modelType || property
+  const relationType = modelType ? singularizeType(modelType) : property
   const reference = relationships[relationType]
 
   // Short circuit if matching reference is not found
   if (!reference || !reference.data) return
 
-  const { id, type } = relationships[relationType].data
+  const { id, type } = reference.data
   const recordType = modelType || type
 
   return record.store.getRecord(recordType, id)
@@ -348,11 +349,10 @@ export class RelatedRecordsArray extends Array {
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
       this.push(relatedRecord)
+      record._dirtyRelationships.add(property)
       // setting the inverse - hack this will only work with singularized relationships.
       setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1))
     }
-
-    record.isDirty = true
 
     return relatedRecord
   }
@@ -369,11 +369,11 @@ export class RelatedRecordsArray extends Array {
     const { id, constructor: { type } } = relatedRecord
 
     if (relationships &amp;&amp; relationships[property] &amp;&amp; relatedRecord) {
-      const referenceIndexToRemove = relationships[property].data.findIndex((model) =&gt; model.id === id &amp;&amp; model.type === type)
-      relationships[property].data.splice(referenceIndexToRemove, 1)
+      const referenceIndexToRemove = relationships[property].data.findIndex((model) =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type)
+      if (referenceIndexToRemove &gt;= 0) relationships[property].data.splice(referenceIndexToRemove, 1)
 
-      const recordIndexToRemove = this.findIndex((model) =&gt; model.id === id &amp;&amp; model.type === type)
-      if (recordIndexToRemove &gt; 0) this.splice(recordIndexToRemove, 1)
+      const recordIndexToRemove = this.findIndex((model) =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type)
+      if (recordIndexToRemove &gt;= 0) this.splice(recordIndexToRemove, 1)
 
       if (!relationships[property].data.length) {
         delete relationships[property]
@@ -383,11 +383,11 @@ export class RelatedRecordsArray extends Array {
         delete record.relationships
       }
 
+      record._dirtyRelationships.add(property)
+
       // hack this will only work with singularized relationships.
       setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1))
     }
-
-    record.isDirty = true
 
     return relatedRecord
   }
@@ -399,9 +399,8 @@ export class RelatedRecordsArray extends Array {
     transaction(() =&gt; {
       relationships[property] = { data: [] }
       array.forEach(object =&gt; this.add(object))
+      record._dirtyRelationships.add(property)
     })
-
-    record.isDirty = true
   }
 }
 
