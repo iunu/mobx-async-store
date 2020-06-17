@@ -1,6 +1,6 @@
-import moment from 'moment'
 import { set } from 'mobx'
 import schema from '../schema'
+import { makeDate } from '../utils'
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
@@ -36,7 +36,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
-      return moment(value).toDate()
+      return makeDate(value)
     } else {
       return DataType(value)
     }
@@ -54,7 +54,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * Attributes can be defined with a default.
  * ```
  * class Todo extends Model {
- *   @attribute(Date) start_time = moment()
+ *   @attribute(Date) start_time = new Date()
  * }
  * ```
  * @method attribute

@@ -1,6 +1,5 @@
 /* global fetch */
 import { autorun, isObservable } from 'mobx'
-import moment from 'moment'
 
 import {
   Model,
@@ -18,8 +17,7 @@ import {
   exampleRelatedToManyIncludedWithNoiseResponse
 } from './fixtures/exampleRelationalResponses'
 
-// YYYY-MM-DD
-const timestamp = moment()
+const timestamp = new Date(Date.now())
 
 class Note extends Model {
   static type = 'notes'
@@ -137,7 +135,8 @@ const mockTodoData = {
     type: 'organizations',
     attributes: {
       title: 'Do taxes',
-      created_at: timestamp.format('YYYY-MM-DD')
+      // YYYY-MM-DD
+      created_at: timestamp.toISOString().split('T')[0]
     }
   }
 }
@@ -469,7 +468,7 @@ describe('Model', () => {
     it('a snapshot of the current attributes and relationship', async () => {
       const todo = new Organization({ title: 'Buy Milk' })
       expect(todo.snapshot.attributes).toEqual({
-        due_at: moment(timestamp).toDate(),
+        due_at: timestamp,
         tags: [],
         title: 'Buy Milk',
         options: {}
@@ -479,7 +478,7 @@ describe('Model', () => {
     it('doesn\'t exclude falsey values', async () => {
       const todo = new Organization({ title: '' })
       expect(todo.snapshot.attributes).toEqual({
-        due_at: moment(timestamp).toDate(),
+        due_at: timestamp,
         tags: [],
         title: '',
         options: {}
@@ -492,7 +491,7 @@ describe('Model', () => {
       const todo = new Organization({ title: 'Buy Milk' })
       todo.title = 'something different'
       expect(todo.previousSnapshot.attributes).toEqual({
-        due_at: moment(timestamp).toDate(),
+        due_at: timestamp,
         tags: [],
         title: 'Buy Milk',
         options: {}
@@ -627,7 +626,7 @@ describe('Model', () => {
           id: '1',
           type: 'organizations',
           attributes: {
-            due_at: moment(timestamp).toISOString(),
+            due_at: timestamp.toISOString(),
             tags: [],
             title: 'Buy Milk',
             options: {}
@@ -651,7 +650,7 @@ describe('Model', () => {
           id: '11',
           type: 'organizations',
           attributes: {
-            due_at: moment(timestamp).toISOString(),
+            due_at: timestamp.toISOString(),
             tags: [],
             title: 'Buy Milk',
             options: {}
@@ -921,7 +920,7 @@ describe('Model', () => {
         data: {
           type: 'organizations',
           attributes: {
-            due_at: moment(timestamp).toDate().toISOString(),
+            due_at: timestamp.toISOString(),
             tags: [],
             title: 'Buy Milk',
             options: {}
@@ -932,8 +931,9 @@ describe('Model', () => {
       // from the server
       expect(todo.id).toEqual('1')
       // Check that the `created_at` attribute is populated
+      // YYYY-MM-DD
       expect(todo.created_at)
-        .toEqual(timestamp.format('YYYY-MM-DD'))
+        .toEqual(timestamp.toISOString().split('T')[0])
     })
 
     it('sets hasUnpersistedChanges = false when save succeeds', async () => {

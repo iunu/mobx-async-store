@@ -8,9 +8,7 @@ import {
   observable
 } from 'mobx'
 
-import moment from 'moment'
-
-import { diff } from './utils'
+import { diff, makeDate } from './utils'
 
 import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
@@ -710,7 +708,7 @@ class Model {
         if (DataType.name === 'Array' || DataType.name === 'Object') {
           attr = toJS(value)
         } else if (DataType.name === 'Date') {
-          attr = moment(value).toISOString()
+          attr = makeDate(value).toISOString()
         } else {
           attr = DataType(value)
         }

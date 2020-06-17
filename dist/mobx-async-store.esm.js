@@ -9,7 +9,6 @@ import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDesc
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _typeof from '@babel/runtime/helpers/typeof';
 import { transaction, set, observable, computed, extendObservable, reaction, toJS, action } from 'mobx';
-import moment from 'moment';
 import uuidv1 from 'uuid/v1';
 import jqueryParam from 'jquery-param';
 import pluralize from 'pluralize';
@@ -419,7 +418,6 @@ function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { 
  * @return {Array} an array of booleans representing results of validations
  */
 
-
 function validateProperties(model, propertyNames, propertyDefinitions) {
   return propertyNames.map(function (property) {
     var validator = propertyDefinitions[property].validator;
@@ -474,6 +472,7 @@ function stringifyIds(object) {
 /**
  @class Model
  */
+
 
 var Model = (_class = (_temp =
 /*#__PURE__*/
@@ -992,7 +991,7 @@ function () {
           if (DataType.name === 'Array' || DataType.name === 'Object') {
             attr = toJS(value);
           } else if (DataType.name === 'Date') {
-            attr = moment(value).toISOString();
+            attr = value instanceof Date || value._isAMomentObject ? value : new Date(Date.parse(value)).toISOString();
           } else {
             attr = DataType(value);
           }
@@ -2160,7 +2159,8 @@ function defaultValueForDescriptor(descriptor, DataType) {
     var value = descriptor.initializer();
 
     if (DataType.name === 'Date') {
-      return moment(value).toDate();
+      if (value instanceof Date || value._isAMomentObject) return value;
+      return new Date(Date.parse(value));
     } else {
       return DataType(value);
     }
@@ -2176,7 +2176,7 @@ function defaultValueForDescriptor(descriptor, DataType) {
  * Attributes can be defined with a default.
  * ```
  * class Todo extends Model {
- *   @attribute(Date) start_time = moment()
+ *   @attribute(Date) start_time = new Date()
  * }
  * ```
  * @method attribute

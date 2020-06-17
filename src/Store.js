@@ -198,8 +198,8 @@ class Store {
    *   store.findAll('todos', {
    *     queryParams: {
    *       filter: {
-   *         start_time: moment(),
-   *         end_time: moment()
+   *         start_time: '2020-06-01T00:00:00.000Z',
+   *         end_time: '2020-06-02T00:00:00.000Z'
    *       }
    *     }
    *   })
