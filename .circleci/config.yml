@@ -64,7 +64,7 @@ jobs:
           command: yarn doc
       - run:
           name: Verify docs up-to-date
-          command: git diff --quiet --exit-code ./docs
+          command: git diff --exit-code ./docs
 
   verify_build:
     docker:
@@ -79,7 +79,7 @@ jobs:
           command: yarn build
       - run:
           name: Verify build up-to-date
-          command: git diff --quiet --exit-code ./dist
+          command: git diff --exit-code ./dist
 
 workflows:
   version: 2
