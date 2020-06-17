@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.6</em>
+            <em>API Docs for: 1.0.25</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -86,6 +86,8 @@
 import uuidv1 from &#x27;uuid/v1&#x27;
 import jqueryParam from &#x27;jquery-param&#x27;
 import pluralize from &#x27;pluralize&#x27;
+import dig from &#x27;lodash/get&#x27;
+import flattenDeep from &#x27;lodash/flattenDeep&#x27;
 
 const pending = {}
 const counter = {}
@@ -227,13 +229,40 @@ export function stringifyIds (object) {
   })
 }
 
-export function walk (value, iteratee, prop, path) {
-  if (value != null &amp;&amp; typeof value === &#x27;object&#x27;) {
-    return Object.keys(value).map((prop) =&gt; {
-      return walk(value[prop], iteratee, prop, [path, prop].filter(x =&gt; x).join(&#x27;.&#x27;))
+/**
+ * recursively walk an object and call the &#x60;iteratee&#x60; function for
+ * each property. returns an array of results of calls to the iteratee.
+ * @method walk
+ * @param {*} obj
+ * @param {Function} iteratee
+ * @param {String} prefix
+ * @return Array
+ */
+export function walk (obj, iteratee, prefix) {
+  if (obj != null &amp;&amp; typeof obj === &#x27;object&#x27;) {
+    return Object.keys(obj).map((prop) =&gt; {
+      return walk(obj[prop], iteratee, [prefix, prop].filter(x =&gt; x).join(&#x27;.&#x27;))
     })
   }
-  return iteratee(value, path)
+  return iteratee(obj, prefix)
+}
+
+/**
+ * deeply compare objects a and b and return object paths for attributes
+ * which differ. it is important to note that this comparison is biased
+ * toward object a. object a is walked and compared against values in
+ * object b. if a property exists in object b, but not in object a, it
+ * will not be counted as a difference.
+ * @method diff
+ * @param {Object} a
+ * @param {Object} b
+ * @return Array&lt;String&gt;
+ */
+export function diff (a = {}, b = {}) {
+  return flattenDeep(walk(a, (prevValue, path) =&gt; {
+    const currValue = dig(b, path)
+    return prevValue === currValue ? undefined : path
+  })).filter((x) =&gt; x)
 }
 
     </pre>

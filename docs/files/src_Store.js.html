@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.6</em>
+            <em>API Docs for: 1.0.25</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -148,7 +148,7 @@ class Store {
     const model = this.createModel(type, id, { attributes })
 
     // Add the model to the type records index
-    this.data[type].records[id] = model
+    this.data[type].records.set(String(id), model)
 
     return model
   }
@@ -160,13 +160,7 @@ class Store {
    * @return {Array} array of ArtemisData records
    */
   addModels = (type, data) =&gt; {
-    let records = []
-
-    transaction(() =&gt; {
-      records = data.map(obj =&gt; this.addModel(type, obj))
-    })
-
-    return records
+    return transaction(() =&gt; data.map((obj) =&gt; this.addModel(type, obj)))
   }
 
   /**
@@ -180,14 +174,7 @@ class Store {
    */
   @action
   remove = (type, id) =&gt; {
-    const records = this.getRecords(type)
-
-    this.data[type].records = records.reduce((hash, record) =&gt; {
-      if (String(record.id) !== String(id)) {
-        hash[record.id] = record
-      }
-      return hash
-    }, {})
+    this.data[type].records.delete(String(id))
   }
 
   /**
@@ -314,10 +301,44 @@ class Store {
       return this.fetchAll(type, queryParams)
     } else if (fromServer === false) {
       // If fromServer is false never fetch the data and return
-      return this.getMatchingRecords(type, queryParams)
+      return this.getMatchingRecords(type, queryParams) || []
     } else {
-      return this.findOrFetchAll(type, queryParams)
+      return this.findOrFetchAll(type, queryParams) || []
     }
+  }
+
+  /**
+   * @method findAndFetchAll
+   * @param {String} type the type to find
+   * @param {Object} options
+   * @return {Array}
+   */
+  findAndFetchAll = (type, options = {}) =&gt; {
+    const {
+      beforeFetch,
+      afterFetch,
+      beforeRefetch,
+      afterRefetch,
+      afterError,
+      queryParams
+    } = options
+
+    const records = this.getMatchingRecords(type, queryParams)
+
+    // NOTE: See note findOrFetchAll about this conditional logic.
+    if (records.length &gt; 0) {
+      beforeRefetch &amp;&amp; beforeRefetch(records)
+      this.fetchAll(type, queryParams)
+          .then((result) =&gt; afterRefetch &amp;&amp; afterRefetch(result))
+          .catch((error) =&gt; afterError &amp;&amp; afterError(error))
+    } else {
+      beforeFetch &amp;&amp; beforeFetch(records)
+      this.fetchAll(type, queryParams)
+          .then((result) =&gt; afterFetch &amp;&amp; afterFetch(result))
+          .catch((error) =&gt; afterError &amp;&amp; afterError(error))
+    }
+
+    return records || []
   }
 
   /**
@@ -331,7 +352,11 @@ class Store {
     // Get any matching records
     const records = this.getMatchingRecords(type, queryParams)
 
-    // If any records are present
+    // NOTE: A broader RFC is in development to improve how we keep data in sync
+    // with the server. We likely will want to getMatchingRecords and getRecords
+    // to return null if nothing is found. However, this causes several regressions
+    // in portal we will need to address in a larger PR for mobx-async-store updates.
+
     if (records.length &gt; 0) {
       // Return data
       return records
@@ -353,7 +378,10 @@ class Store {
    */
   reset (type) {
     if (type) {
-      this.data[type] = { records: {}, cache: {} }
+      this.data[type] = {
+        records: observable.map({}),
+        cache: observable.map({})
+      }
     } else {
       this.initializeObservableDataProperty()
     }
@@ -412,7 +440,10 @@ class Store {
     // NOTE: Is there a performance cost to setting
     // each property individually?
     types.forEach(modelKlass =&gt; {
-      this.data[modelKlass.type] = { records: {}, cache: {} }
+      this.data[modelKlass.type] = {
+        records: observable.map({}),
+        cache: observable.map({})
+      }
     })
   }
 
@@ -473,7 +504,7 @@ class Store {
       throw new Error(&#x60;Could not find a collection for type &#x27;${type}&#x27;&#x60;)
     }
 
-    const record = this.getType(type).records[id]
+    const record = this.getType(type).records.get(String(id))
 
     if (!record || record === &#x27;undefined&#x27;) return
 
@@ -488,8 +519,8 @@ class Store {
    * @return {Array} array of objects
    */
   getRecords (type) {
-    const records = Object.values(this.getType(type).records)
-                          .filter(value =&gt; value &amp;&amp; value !== &#x27;undefined&#x27;)
+    const records = Array.from(this.getType(type).records.values())
+                         .filter(value =&gt; value &amp;&amp; value !== &#x27;undefined&#x27;)
 
     // NOTE: Handles a scenario where the store keeps around a reference
     // to a newly persisted record by its temp uuid. This is required
@@ -541,7 +572,7 @@ class Store {
    * @return {Array} array of ids
    */
   getCachedIds (type, url) {
-    const ids = this.getType(type).cache[url]
+    const ids = this.getType(type).cache.get(url)
     if (!ids) return []
     const idsSet = new Set(toJS(ids))
     return Array.from(idsSet)
@@ -550,13 +581,13 @@ class Store {
   /**
    * Gets records from store based on cached query
    *
-   * @method getCachedIds
+   * @method getCachedId
    * @param {String} type
    * @param {String} url
    * @return {Array} array of ids
    */
   getCachedId (type, id) {
-    return this.getType(type).cache[id]
+    return this.getType(type).cache.get(String(id))
   }
 
   /**
@@ -617,7 +648,6 @@ class Store {
       // Update existing object attributes
       Object.keys(attributes).forEach(key =&gt; {
         set(record, key, attributes[key])
-        set(this.data[type].records, id, record)
       })
 
       // If relationships are present, update relationships
@@ -627,15 +657,15 @@ class Store {
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
             set(record, &#x27;relationships&#x27;, { ...record.relationships, [key]: relationships[key] })
-            set(this.data[type].records, id, record)
           }
         })
       }
+      record._takeSnapshot({ persisted: true })
     } else {
       record = this.createModel(type, id, { attributes, relationships })
-      this.data[type].records[record.id] = record
     }
 
+    this.data[type].records.set(String(record.id), record)
     return record
   }
 
@@ -646,20 +676,14 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
-    let records = []
-
-    transaction(() =&gt; {
-      records = data.forEach(dataObject =&gt; {
-        // Only build objects for which we have a type defined.
-        // And ignore silently anything else included in the JSON response.
-        // TODO: Put some console message in development mode
-        if (this.getType(dataObject.type)) {
-          this.createOrUpdateModel(dataObject)
-        }
-      })
-    })
-
-    return records
+    return transaction(() =&gt; data.map(dataObject =&gt; {
+      // Only build objects for which we have a type defined.
+      // And ignore silently anything else included in the JSON response.
+      // TODO: Put some console message in development mode
+      if (this.getType(dataObject.type)) {
+        return this.createOrUpdateModel(dataObject)
+      }
+    }))
   }
 
   /**
@@ -710,28 +734,22 @@ class Store {
     const response = await this.fetch(url, { method: &#x27;GET&#x27; })
 
     if (response.status === 200) {
-      this.data[type].cache[url] = []
+      this.data[type].cache.set(url, [])
       const json = await response.json()
+
       if (json.included) {
         this.createModelsFromData(json.included)
       }
 
-      let records = []
-
-      transaction(() =&gt; {
-        records = json.data.map(dataObject =&gt; {
-          const { id, attributes = {}, relationships = {} } = dataObject
-          const ModelKlass = this.modelTypeIndex[type]
-          const record = new ModelKlass({ store, relationships, ...attributes })
-
-          this.data[type].cache[url].push(id)
-          this.data[type].records[id] = record
-
-          return record
-        })
-      })
-
-      return records
+      return transaction(() =&gt; json.data.map((dataObject) =&gt; {
+        const { id, attributes = {}, relationships = {} } = dataObject
+        const ModelKlass = this.modelTypeIndex[type]
+        const record = new ModelKlass({ store, relationships, ...attributes })
+        const cachedIds = this.data[type].cache.get(url)
+        this.data[type].cache.set(url, [...cachedIds, id])
+        this.data[type].records.set(String(id), record)
+        return record
+      }))
     } else {
       return Promise.reject(response.status)
     }
@@ -753,7 +771,6 @@ class Store {
     // Handle response
     if (response.status === 200) {
       const json = await response.json()
-
       const { data, included } = json
 
       if (included) {
@@ -762,8 +779,7 @@ class Store {
 
       const record = this.createOrUpdateModel(data)
 
-      this.data[type].cache[url] = []
-      this.data[type].cache[url].push(record.id)
+      this.data[type].cache.set(url, [record.id])
 
       return record
     } else {

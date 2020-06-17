@@ -1,9 +1,9 @@
 {
     "project": {
         "name": "mobx-async-store",
-        "description": "Data Management for Artemis",
-        "url": "https://portal.agrilyst.com/",
-        "version": "1.0.6"
+        "description": "Asyc Data Store for mobx",
+        "url": "https://github.com/artemis-ag/mobx-async-store",
+        "version": "1.0.25"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -68,7 +68,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/decorators/relationships.js",
-            "line": 201,
+            "line": 202,
             "description": "An array that allows for updating store references and relationships",
             "is_constructor": 1,
             "params": [
@@ -98,7 +98,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Model.js",
-            "line": 169
+            "line": 196
         },
         "Store": {
             "name": "Store",
@@ -219,7 +219,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 129,
+            "line": 130,
             "description": "Handles getting polymorphic has_one/belong_to.",
             "itemtype": "method",
             "name": "getRelatedRecord",
@@ -227,7 +227,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 154,
+            "line": 155,
             "description": "Handles setting polymorphic has_one/belong_to.\n- Validates the related record to make sure it inherits from `Model` class\n- Sets the relationship\n- Attempts to find an inverse relationship, and if successful adds it as well",
             "itemtype": "method",
             "name": "setRelatedRecord",
@@ -257,7 +257,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 232,
+            "line": 233,
             "description": "Adds a record to the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "add",
@@ -295,7 +295,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 24,
+            "line": 26,
             "description": "returns `true` as long as the `value` is not `null`, `undefined`, or `''`",
             "itemtype": "method",
             "name": "validatePresence",
@@ -309,7 +309,36 @@
         },
         {
             "file": "src/Model.js",
-            "line": 52,
+            "line": 42,
+            "description": "Maps the passed-in property names through and runs validations against those properties",
+            "itemtype": "method",
+            "name": "validateProperties",
+            "params": [
+                {
+                    "name": "model",
+                    "description": "the model to check",
+                    "type": "Object"
+                },
+                {
+                    "name": "propertyNames",
+                    "description": "the names of the model properties to check",
+                    "type": "Array"
+                },
+                {
+                    "name": "propertyDefinitions",
+                    "description": "a hash map containing validators by property",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "an array of booleans representing results of validations",
+                "type": "Array"
+            },
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 79,
             "description": "Helper method for apply the correct defaults to attributes.",
             "itemtype": "method",
             "name": "defaultValueForDescriptor",
@@ -317,7 +346,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 72,
+            "line": 99,
             "description": "Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.\nThis can be a Javascript primitive or another class. `id` cannot be defined as it is assumed to exist.\nAttributes can be defined with a default.\n```\nclass Todo extends Model {",
             "itemtype": "method",
             "name": "attribute",
@@ -325,7 +354,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 106,
+            "line": 133,
             "description": "Defines validations for attributes that will be applied before saving. Takes one argument, a function to validate\nthe attribute. The default validator is `presence`: not `null`, `undefined`, or `''`.\n```\nfunction nonzero(value => value !== 0)\n\nclass Todo extends Model {\n  `@validates`\n  `@attribute`(nonzero) numberOfAssignees\n}\n```",
             "itemtype": "method",
             "name": "validates",
@@ -333,7 +362,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 173,
+            "line": 200,
             "description": "Initializer for model",
             "itemtype": "method",
             "name": "constructor",
@@ -341,7 +370,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 184,
+            "line": 210,
             "description": "The type of the model. Defined on the class. Defaults to the underscored version of the class name\n(eg 'calendar_events').",
             "itemtype": "property",
             "name": "type",
@@ -350,7 +379,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 192,
+            "line": 218,
             "description": "The canonical path to the resource on the server. Defined on the class.\nDefaults to the underscored version of the class name",
             "itemtype": "property",
             "name": "endpoint",
@@ -359,29 +388,53 @@
         },
         {
             "file": "src/Model.js",
-            "line": 199,
-            "description": "True if the instance has been modified from its persisted state\n```\nkpi = store.add('kpis', { name: 'A good thing to measure' })\nkpi.isDirty\n=> true\nkpi.name\n=> \"A good thing to measure\"\nawait kpi.save()\nkpi.isDirty\n=> false\nkpi.name = \"Another good thing to measure\"\nkpi.isDirty\n=> true\nawait kpi.save()\nkpi.isDirty\n=> false\n```",
+            "line": 225,
+            "description": "has this object been destroyed?",
             "itemtype": "property",
-            "name": "isDirty",
+            "name": "_disposed",
             "type": "{Boolean}",
             "default": "false",
             "class": "Model"
         },
         {
             "file": "src/Model.js",
-            "line": 229,
-            "description": "Private method. True if the model has been programatically changed,\nas opposed to just being new.",
+            "line": 233,
+            "description": "set of relationships which have changed since last snapshot",
             "itemtype": "property",
-            "name": "_isDirty",
-            "type": "{Boolean}",
-            "default": "false",
-            "access": "private",
-            "tagname": "",
+            "name": "_dirtyRelationships",
+            "type": "{Set}",
             "class": "Model"
         },
         {
             "file": "src/Model.js",
             "line": 240,
+            "description": "set of attributes which have changed since last snapshot",
+            "itemtype": "property",
+            "name": "_dirtyAttributes",
+            "type": "{Set}",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 247,
+            "description": "True if the instance has been modified from its persisted state\n\nNOTE that isDirty does _NOT_ track changes to the related objects\nbut it _does_ track changes to the relationships themselves.\n\nFor example, adding or removing a related object will mark this record as dirty,\nbut changing a related object's properties will not mark this record as dirty.\n\nThe caller is reponsible for asking related objects about their\nown dirty state.\n\n```\nkpi = store.add('kpis', { name: 'A good thing to measure' })\nkpi.isDirty\n=> true\nkpi.name\n=> \"A good thing to measure\"\nawait kpi.save()\nkpi.isDirty\n=> false\nkpi.name = \"Another good thing to measure\"\nkpi.isDirty\n=> true\nawait kpi.save()\nkpi.isDirty\n=> false\n```",
+            "itemtype": "property",
+            "name": "isDirty",
+            "type": "{Boolean}",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 282,
+            "description": "have any changes been made since this record was last persisted?",
+            "itemtype": "property",
+            "name": "hasUnpersistedChanges",
+            "type": "{Boolean}",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 291,
             "description": "True if the model has not been sent to the store",
             "itemtype": "property",
             "name": "isNew",
@@ -390,7 +443,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 250,
+            "line": 303,
             "description": "True if the instance is coming from / going to the server\n```\nkpi = store.find('kpis', 5)\n// fetch started\nkpi.isInFlight\n=> true\n// fetch finished\nkpi.isInFlight\n=> false\n```",
             "itemtype": "property",
             "name": "isInFlight",
@@ -400,7 +453,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 267,
+            "line": 320,
             "description": "A hash of errors from the server\n```\nkpi = store.find('kpis', 5)\nkpi.errors\n=> { authorization: \"You do not have access to this resource\" }\n```",
             "itemtype": "property",
             "name": "errors",
@@ -410,25 +463,33 @@
         },
         {
             "file": "src/Model.js",
-            "line": 280,
-            "description": "The previous state of defined attributes and relationships of the instance",
+            "line": 333,
+            "description": "a list of snapshots that have been taken since the record was either last persisted or since it was instantiated",
             "itemtype": "property",
-            "name": "previousSnapshot",
-            "type": "{Object}",
-            "default": "{}",
+            "name": "snapshots",
+            "type": "{Array<Snapshot>}",
+            "default": "[]",
             "class": "Model"
         },
         {
             "file": "src/Model.js",
-            "line": 289,
-            "description": "restores data to its last persisted state\n```\nkpi = store.find('kpis', 5)\nkpi.name\n=> \"A good thing to measure\"\nkpi.name = \"Another good thing to measure\"\nkpi.rollback()\nkpi.name\n=> \"A good thing to measure\"\n```",
+            "line": 342,
+            "description": "restores data to its last snapshot state\n```\nkpi = store.find('kpis', 5)\nkpi.name\n=> \"A good thing to measure\"\nkpi.name = \"Another good thing to measure\"\nkpi.rollback()\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "rollback",
             "class": "Model"
         },
         {
             "file": "src/Model.js",
-            "line": 314,
+            "line": 359,
+            "description": "restores data to its last persisted state or the oldest snapshot\nstate if the model was never persisted",
+            "itemtype": "method",
+            "name": "rollbackToPersisted",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 369,
             "description": "creates or updates a record.",
             "itemtype": "method",
             "name": "save",
@@ -447,10 +508,17 @@
         },
         {
             "file": "src/Model.js",
-            "line": 353,
-            "description": "Checks all validations, adding errors where necessary and returning `false` if any are not valid",
+            "line": 422,
+            "description": "Checks all validations, adding errors where necessary and returning `false` if any are not valid\nDefault is to check all validations, but they can be selectively run via options:\n - attributes - an array of names of attributes to validate\n - relationships - an array of names of relationships to validate",
             "itemtype": "method",
             "name": "validate",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
             "return": {
                 "description": "",
                 "type": "Boolean"
@@ -459,7 +527,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 378,
+            "line": 446,
             "description": "deletes a record from the store and server",
             "itemtype": "method",
             "name": "destroy",
@@ -471,7 +539,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 445,
+            "line": 515,
             "description": "Magic method that makes changes to records\nobservable",
             "itemtype": "method",
             "name": "_makeObservable",
@@ -479,7 +547,23 @@
         },
         {
             "file": "src/Model.js",
-            "line": 460,
+            "line": 532,
+            "description": "sets up a reaction for each top-level attribute so we can compare\nvalues after each mutation and keep track of dirty attr states\nif an attr is different than the last snapshot, add it to the\n_dirtyAttributes set\nif it's the same as the last snapshot, make sure it's _not_ in the\n_dirtyAttributes set",
+            "itemtype": "method",
+            "name": "_listenForChanges",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 565,
+            "description": "call this when destroying an object to make sure that we clean up\nany event listeners and don't leak memory",
+            "itemtype": "method",
+            "name": "dispose",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 575,
             "description": "The current state of defined attributes and relationships of the instance\nReally just an alias for attributes\n```\ntodo = store.find('todos', 5)\ntodo.title\n=> \"Buy the eggs\"\nsnapshot = todo.snapshot\ntodo.title = \"Buy the eggs and bacon\"\nsnapshot.title\n=> \"Buy the eggs and bacon\"\n```",
             "itemtype": "method",
             "name": "snapshot",
@@ -491,7 +575,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 482,
+            "line": 597,
             "description": "Sets previous snapshot to current snapshot",
             "itemtype": "method",
             "name": "setPreviousSnapshot",
@@ -499,7 +583,53 @@
         },
         {
             "file": "src/Model.js",
-            "line": 491,
+            "line": 606,
+            "description": "the latest snapshot",
+            "itemtype": "method",
+            "name": "previousSnapshot",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 617,
+            "description": "the latest persisted snapshot or the first snapshot if the model was never persisted",
+            "itemtype": "method",
+            "name": "previousSnapshot",
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 626,
+            "description": "take a snapshot of the current model state.\nif persisted, clear the stack and push this snapshot to the top\nif not persisted, push this snapshot to the top of the stack",
+            "itemtype": "method",
+            "name": "_takeSnapshot",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 649,
+            "description": "set the current attributes and relationships to the attributes\nand relationships of the snapshot to be applied. also reset errors",
+            "itemtype": "method",
+            "name": "_applySnapshot",
+            "params": [
+                {
+                    "name": "snapshot",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 666,
             "description": "a list of any property paths which have been changed since the previous\nsnapshot\n```\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyAttributes\n=> []\ntodo.title = 'Buy Cheese'\ntodo.dirtyAttributes\n=> ['title']\n```",
             "itemtype": "method",
             "name": "dirtyAttributes",
@@ -511,15 +641,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 513,
-            "description": "Uses mobx.autorun to track changes to attributes",
-            "itemtype": "method",
-            "name": "_trackState",
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 536,
+            "line": 687,
             "description": "shortcut to get the static",
             "itemtype": "method",
             "name": "type",
@@ -531,7 +653,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 546,
+            "line": 697,
             "description": "current attributes of record",
             "itemtype": "method",
             "name": "attributes",
@@ -543,7 +665,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 564,
+            "line": 715,
             "description": "Getter find the attribute definition for the model type.",
             "itemtype": "method",
             "name": "attributeDefinitions",
@@ -555,7 +677,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 575,
+            "line": 726,
             "description": "Getter find the relationship definitions for the model type.",
             "itemtype": "method",
             "name": "relationshipDefinitions",
@@ -567,7 +689,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 586,
+            "line": 737,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -579,7 +701,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 596,
+            "line": 747,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -591,7 +713,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 606,
+            "line": 757,
             "description": "Getter to just get the names of a records attributes.",
             "itemtype": "method",
             "name": "attributeNames",
@@ -603,7 +725,19 @@
         },
         {
             "file": "src/Model.js",
-            "line": 616,
+            "line": 767,
+            "description": "Getter to just get the names of a records relationships.",
+            "itemtype": "method",
+            "name": "relationshipNames",
+            "return": {
+                "description": "",
+                "type": "Array"
+            },
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 777,
             "description": "getter method to get the default attributes",
             "itemtype": "method",
             "name": "defaultAttributes",
@@ -615,7 +749,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 633,
+            "line": 794,
             "description": "getter method to get data in api compliance format\nTODO: Figure out how to handle unpersisted ids",
             "itemtype": "method",
             "name": "jsonapi",
@@ -715,7 +849,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 87,
+            "line": 81,
             "description": "Adds a record from the store. We can't simply remove the record\nby deleting the records property/key via delete due to a bug\nin mobx.",
             "itemtype": "method",
             "name": "remove",
@@ -735,7 +869,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 108,
+            "line": 95,
             "description": "finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n  store.findOne('todos', 5)\n  // no fetch triggered\n  => event1\n\nPassing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findOne('todos', 5, { fromServer: false })\n  // no fetch triggered\n  => undefined\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n\n  store.findOne('todos', 5, { fromServer: true })\n  // fetch triggered\n  => event1",
             "itemtype": "method",
             "name": "findOne",
@@ -759,7 +893,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 152,
+            "line": 139,
             "description": "returns cache if exists, returns promise if not",
             "itemtype": "method",
             "name": "findOrFetchOne",
@@ -783,7 +917,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 174,
+            "line": 161,
             "description": "finds all of the instances of a given type. If there are instances available in the store,\nit will return those, otherwise it will trigger a fetch\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\npassing `fromServer` as an option will always trigger a\nfetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findAll('todos', { fromServer: false })\n  // no fetch triggered\n  => []\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n\n  // async stuff happens on the server\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\n  store.findAll('todos', { fromServer: true })\n  // fetch triggered\n  => [event1, event2, event3, event4]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result (unless `fromServer` is `true`)\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: moment(),\n        end_time: moment()\n      }\n    }\n  })",
             "itemtype": "method",
             "name": "findAll",
@@ -803,7 +937,30 @@
         },
         {
             "file": "src/Store.js",
-            "line": 238,
+            "line": 225,
+            "itemtype": "method",
+            "name": "findAndFetchAll",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "the type to find",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Array"
+            },
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 259,
             "description": "returns cache if exists, returns promise if not",
             "itemtype": "method",
             "name": "findOrFetchAll",
@@ -823,7 +980,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 259,
+            "line": 284,
             "description": "Clears the store of a given type, or clears all if no type given\n\n  store.reset('todos')\n  // removes all todos from store\n  store.reset()\n  // clears store",
             "itemtype": "method",
             "name": "reset",
@@ -831,7 +988,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 279,
+            "line": 307,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "init",
@@ -846,7 +1003,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 291,
+            "line": 319,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -861,7 +1018,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 302,
+            "line": 330,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -876,7 +1033,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 316,
+            "line": 344,
             "description": "Creates an obserable index with model types\nas the primary key\n\nObservable({ todos: {} })",
             "itemtype": "method",
             "name": "initializeObservableDataProperty",
@@ -884,7 +1041,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 334,
+            "line": 365,
             "description": "Wrapper around fetch applies user defined fetch options",
             "itemtype": "method",
             "name": "fetch",
@@ -904,7 +1061,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 349,
+            "line": 380,
             "description": "Gets type of collection from data observable",
             "itemtype": "method",
             "name": "getType",
@@ -923,7 +1080,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 360,
+            "line": 391,
             "description": "Get single all record\nbased on query params",
             "itemtype": "method",
             "name": "getMatchingRecord",
@@ -951,7 +1108,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 378,
+            "line": 409,
             "description": "Gets individual record from store",
             "itemtype": "method",
             "name": "getRecord",
@@ -975,7 +1132,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 398,
+            "line": 429,
             "description": "Gets records for type of collection from observable",
             "itemtype": "method",
             "name": "getRecords",
@@ -994,7 +1151,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 418,
+            "line": 449,
             "description": "Gets single from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecord",
@@ -1022,7 +1179,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 433,
+            "line": 464,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecords",
@@ -1046,7 +1203,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 450,
+            "line": 481,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedIds",
@@ -1070,10 +1227,10 @@
         },
         {
             "file": "src/Store.js",
-            "line": 465,
+            "line": 496,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
-            "name": "getCachedIds",
+            "name": "getCachedId",
             "params": [
                 {
                     "name": "type",
@@ -1094,7 +1251,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 477,
+            "line": 508,
             "description": "Get multiple records by id",
             "itemtype": "method",
             "name": "getRecordsById",
@@ -1118,7 +1275,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 492,
+            "line": 523,
             "description": "Gets records all records or records\nbased on query params",
             "itemtype": "method",
             "name": "getMatchingRecords",
@@ -1142,7 +1299,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 509,
+            "line": 540,
             "description": "Helper to look up model class for type.",
             "itemtype": "method",
             "name": "getKlass",
@@ -1161,7 +1318,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 520,
+            "line": 551,
             "description": "Creates or updates a model",
             "itemtype": "method",
             "name": "createOrUpdateModel",
@@ -1176,7 +1333,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 557,
+            "line": 587,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1191,7 +1348,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 580,
+            "line": 604,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1220,7 +1377,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 601,
+            "line": 625,
             "description": "Builds fetch url based",
             "itemtype": "method",
             "name": "fetchUrl",
@@ -1240,7 +1397,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 615,
+            "line": 639,
             "description": "finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.",
             "itemtype": "method",
             "name": "fetchAll",
@@ -1260,7 +1417,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 655,
+            "line": 673,
             "description": "fetches record by `id`.",
             "async": 1,
             "itemtype": "method",
@@ -1280,8 +1437,23 @@
             "class": "Store"
         },
         {
+            "file": "src/schema.js",
+            "line": 25,
+            "description": "Adds a validation to either the schema `structure` (for attributes) or `relations` (for relationships)",
+            "itemtype": "method",
+            "name": "addValidation",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "includes `type`, `property`, and `validator`",
+                    "type": "Object"
+                }
+            ],
+            "class": "Schema"
+        },
+        {
             "file": "src/utils.js",
-            "line": 20,
+            "line": 22,
             "description": "Singularizes record type",
             "itemtype": "method",
             "name": "singularizeType",
@@ -1300,7 +1472,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 36,
+            "line": 38,
             "description": "Build request url from base url, endpoint, query params, and ids.",
             "itemtype": "method",
             "name": "requestUrl",
@@ -1312,7 +1484,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 63,
+            "line": 65,
             "description": "Avoids making racing requests by blocking a request if an identical one is\nalready in-flight. Blocked requests will be resolved when the initial request\nresolves by cloning the response.",
             "itemtype": "method",
             "name": "combineRacedRequests",
@@ -1336,7 +1508,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 102,
+            "line": 104,
             "description": "Reducer function for filtering out duplicate records\nby a key provided. Returns a function that has a accumulator and\ncurrent record per Array.reduce.",
             "itemtype": "method",
             "name": "uniqueByReducer",
@@ -1355,7 +1527,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 119,
+            "line": 121,
             "description": "Returns objects unique by key provided",
             "itemtype": "method",
             "name": "uniqueBy",
@@ -1374,6 +1546,57 @@
             "return": {
                 "description": "",
                 "type": "Array"
+            },
+            "class": ""
+        },
+        {
+            "file": "src/utils.js",
+            "line": 147,
+            "description": "recursively walk an object and call the `iteratee` function for\neach property. returns an array of results of calls to the iteratee.",
+            "itemtype": "method",
+            "name": "walk",
+            "params": [
+                {
+                    "name": "obj",
+                    "description": "",
+                    "type": "*"
+                },
+                {
+                    "name": "iteratee",
+                    "description": "",
+                    "type": "Function"
+                },
+                {
+                    "name": "prefix",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "Array"
+            },
+            "class": ""
+        },
+        {
+            "file": "src/utils.js",
+            "line": 165,
+            "description": "deeply compare objects a and b and return object paths for attributes\nwhich differ. it is important to note that this comparison is biased\ntoward object a. object a is walked and compared against values in\nobject b. if a property exists in object b, but not in object a, it\nwill not be counted as a difference.",
+            "itemtype": "method",
+            "name": "diff",
+            "params": [
+                {
+                    "name": "a",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "b",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "Array<String>"
             },
             "class": ""
         }
