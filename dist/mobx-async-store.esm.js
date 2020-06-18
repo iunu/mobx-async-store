@@ -228,15 +228,18 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function ObjectPromiseProxy(promise, target) {
-  target.isInFlight = true;
-  var tmpId = target.id;
+  var targets = Array.isArray(target) ? target : [target];
+  var store = targets[0].store;
+  targets.forEach(function (t) {
+    t.isInFlight = true;
+  });
   var result = promise.then(
   /*#__PURE__*/
   function () {
     var _ref = _asyncToGenerator(
     /*#__PURE__*/
     _regeneratorRuntime.mark(function _callee(response) {
-      var status, json, _json$data, id, attributes, relationships, message, _json, errorString;
+      var status, json, data, message, _json, errorString;
 
       return _regeneratorRuntime.wrap(function _callee$(_context) {
         while (1) {
@@ -254,49 +257,32 @@ function ObjectPromiseProxy(promise, target) {
 
             case 4:
               json = _context.sent;
-              // Update target model
-              _json$data = json.data, id = _json$data.id, attributes = _json$data.attributes, relationships = _json$data.relationships;
-              transaction(function () {
-                set(target, 'id', id);
-                Object.keys(attributes).forEach(function (key) {
-                  set(target, key, attributes[key]);
-                });
+              data = Array.isArray(json.data) ? json.data : [json.data]; // Update target model(s)
+              // TODO: zip json.data + targets, then iterate
 
-                if (relationships) {
-                  Object.keys(relationships).forEach(function (key) {
-                    if (!relationships[key].hasOwnProperty('meta')) {
-                      // todo: throw error if relationship is not defined in model
-                      set(target.relationships, key, relationships[key]);
-                    }
-                  });
-                }
+              if (!(data.length !== targets.length)) {
+                _context.next = 8;
+                break;
+              }
 
-                if (json.included) {
-                  target.store.createModelsFromData(json.included);
-                }
-              }); // Update target isInFlight
+              throw new Error('Invariant violated: ObjectPromiseProxy response data and targets are not the same length');
 
-              target.isInFlight = false;
-
-              target._takeSnapshot({
-                persisted: true
+            case 8:
+              data.forEach(function (targetData, index) {
+                applyResponseAttributesToTarget(targetData, targets[index]);
               });
 
-              transaction(function () {
-                // NOTE: This resolves an issue where a record is persisted but the
-                // index key is still a temp uuid. We can't simply remove the temp
-                // key because there may be associated records that have the temp
-                // uuid id as its only reference to the newly persisted record.
-                // TODO: Figure out a way to update associated records to use the
-                // newly persisted id.
-                target.store.data[target.type].records.set(String(tmpId), target);
-                target.store.data[target.type].records.set(String(target.id), target);
-              });
+              if (json.included) {
+                store.createModelsFromData(json.included);
+              }
+
               return _context.abrupt("return", target);
 
             case 13:
-              target.isInFlight = false;
-              message = target.store.genericErrorMessage;
+              targets.forEach(function (t) {
+                t.isInFlight = false;
+              });
+              message = store.genericErrorMessage;
               _json = {};
               _context.prev = 16;
               _context.next = 19;
@@ -314,14 +300,16 @@ function ObjectPromiseProxy(promise, target) {
 
             case 25:
               // TODO: add all errors from the API response to the target
-              target.errors = _objectSpread({}, target.errors, {
+              // also TODO: split server errors by target once the info is available from the API
+              // maybe handle not just the first target lol
+              targets[0].errors = _objectSpread({}, targets[0].errors, {
                 status: status,
                 base: [{
                   message: message
                 }],
                 server: _json.errors
               });
-              errorString = JSON.stringify(target.errors);
+              errorString = JSON.stringify(targets[0].errors);
               return _context.abrupt("return", Promise.reject(new Error(errorString)));
 
             case 28:
@@ -336,27 +324,70 @@ function ObjectPromiseProxy(promise, target) {
       return _ref.apply(this, arguments);
     };
   }(), function (error) {
-    // TODO: Handle error states correctly
-    target.isInFlight = false;
+    // TODO: Handle error states correctly, including handling errors for multiple targets
+    targets.forEach(function (t) {
+      t.isInFlight = false;
+    });
     target.errors = error;
     throw error; // return target
   }); // Define proxied attributes
 
-  var attributeNames = Object.keys(target.attributeNames);
+  var attributeNames = Object.keys(targets[0].attributeNames);
   var tempProperties = attributeNames.reduce(function (attrs, key) {
     attrs[key] = {
-      value: target[key],
+      value: targets[0][key],
       writable: false
     };
     return attrs;
-  }, {});
+  }, {}); // TODO: how is isInFlight used? how should it be set for multiple targets?
+
   Object.defineProperties(result, _objectSpread({
     isInFlight: {
-      value: target.isInFlight
+      value: targets[0].isInFlight
     }
   }, tempProperties)); // Return promise
 
   return result;
+} // TODO: can this be merged with createOrUpdateModel?
+
+
+function applyResponseAttributesToTarget(data, target) {
+  var tmpId = target.id;
+  var id = data.id,
+      attributes = data.attributes,
+      relationships = data.relationships;
+  transaction(function () {
+    set(target, 'id', id);
+    Object.keys(attributes).forEach(function (key) {
+      set(target, key, attributes[key]);
+    });
+
+    if (relationships) {
+      Object.keys(relationships).forEach(function (key) {
+        if (!relationships[key].hasOwnProperty('meta')) {
+          // todo: throw error if relationship is not defined in model
+          set(target.relationships, key, relationships[key]);
+        }
+      });
+    }
+  }); // Update target isInFlight
+
+  target.isInFlight = false;
+
+  target._takeSnapshot({
+    persisted: true
+  });
+
+  transaction(function () {
+    // NOTE: This resolves an issue where a record is persisted but the
+    // index key is still a temp uuid. We can't simply remove the temp
+    // key because there may be associated records that have the temp
+    // uuid id as its only reference to the newly persisted record.
+    // TODO: Figure out a way to update associated records to use the
+    // newly persisted id.
+    target.store.data[target.type].records.set(String(tmpId), target);
+    target.store.data[target.type].records.set(String(target.id), target);
+  });
 }
 
 function parseApiErrors(errors, defaultMessage) {
@@ -621,10 +652,12 @@ function () {
       }
 
       var url = this.store.fetchUrl(constructor.type, queryParams, requestId);
-      var body = JSON.stringify(this.jsonapi({
-        relationships: relationships,
-        attributes: attributes
-      }));
+      var body = JSON.stringify({
+        data: this.jsonapi({
+          relationships: relationships,
+          attributes: attributes
+        })
+      });
 
       if (relationships) {
         relationships.forEach(function (rel) {
@@ -1054,9 +1087,7 @@ function () {
         delete data.id;
       }
 
-      return {
-        data: data
-      };
+      return _objectSpread$1({}, data);
     }
   }, {
     key: "updateAttributes",
@@ -1432,6 +1463,33 @@ function () {
           return _this.addModel(type, obj);
         });
       });
+    };
+
+    this.bulkSave = function (type, records) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var queryParams = options.queryParams; // get url for record type
+
+      var url = _this.fetchUrl(type, queryParams, null); // convert records to an appropriate jsonapi attribute/relationship format
+
+
+      var recordAttributes = records.map(function (record) {
+        return record.jsonapi();
+      }); // build a data payload
+
+      var body = JSON.stringify({
+        data: recordAttributes
+      }); // send request
+
+      var response = _this.fetch(url, {
+        headers: _objectSpread$2({}, _this.defaultFetchOptions.headers, {
+          'Content-Type': 'application/vnd.api+json; ext="bulk"'
+        }),
+        method: 'POST',
+        body: body
+      }); // update records based on response
+
+
+      return new ObjectPromiseProxy(response, records);
     };
 
     _initializerDefineProperty(this, "remove", _descriptor3$1, this);
