@@ -170,7 +170,7 @@ function uniqueBy(array, key) {
 
 function makeDate(value) {
   if (value instanceof Date || value._isAMomentObject) return value;
-  return new Date(Date.parse(value)).toISOString();
+  return new Date(Date.parse(value));
 }
 /**
  * recursively walk an object and call the `iteratee` function for
