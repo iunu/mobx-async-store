@@ -145,6 +145,18 @@ export function stringifyIds (object) {
 }
 
 /**
+ * convert a value into a date, pass Date or Moment instances thru
+ * untouched
+ * @method makeDate
+ * @param {*} value
+ * @return {Date|Moment}
+ */
+export function makeDate (value) {
+  if (value instanceof Date || value._isAMomentObject) return value
+  return new Date(Date.parse(value))
+}
+
+/**
  * recursively walk an object and call the `iteratee` function for
  * each property. returns an array of results of calls to the iteratee.
  * @method walk

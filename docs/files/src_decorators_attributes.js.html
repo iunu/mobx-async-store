@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.0.25</em>
+            <em>API Docs for: 1.0.26</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -83,9 +83,9 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-import moment from &#x27;moment&#x27;
 import { set } from &#x27;mobx&#x27;
 import schema from &#x27;../schema&#x27;
+import { makeDate } from &#x27;../utils&#x27;
 
 /**
  * returns &#x60;true&#x60; as long as the &#x60;value&#x60; is not &#x60;null&#x60;, &#x60;undefined&#x60;, or &#x60;&#x27;&#x27;&#x60;
@@ -121,7 +121,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
   if (typeof descriptor.initializer === &#x27;function&#x27;) {
     const value = descriptor.initializer()
     if (DataType.name === &#x27;Date&#x27;) {
-      return moment(value).toDate()
+      return makeDate(value)
     } else {
       return DataType(value)
     }
@@ -139,7 +139,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * Attributes can be defined with a default.
  * &#x60;&#x60;&#x60;
  * class Todo extends Model {
- *   @attribute(Date) start_time = moment()
+ *   @attribute(Date) start_time = new Date()
  * }
  * &#x60;&#x60;&#x60;
  * @method attribute

@@ -1,6 +1,6 @@
 {
   "name": "@artemisag/mobx-async-store",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "module": "dist/mobx-async-store.esm.js",
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
@@ -9,7 +9,6 @@
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.15",
     "mobx": "5.5.0",
-    "moment": "^2.24.0",
     "pluralize": "^8.0.0",
     "react-native-uuid": "^1.4.9",
     "uuid": "^3.3.2"
@@ -38,7 +37,6 @@
     "jest-fetch-mock": "^2.1.2",
     "mobx": "5.5.0",
     "mobx-react": "^5.4.3",
-    "moment": "^2.24.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "rollup": "^1.0.0",
