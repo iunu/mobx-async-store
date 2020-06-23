@@ -746,7 +746,7 @@ class Model {
       delete data.id
     }
 
-    return { ...data }
+    return data
   }
 
   updateAttributes (attributes) {
