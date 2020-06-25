@@ -861,6 +861,97 @@ describe('Model', () => {
       original.notes[0].description = 'Update!'
       expect(original.notes[0].description).toEqual(clone.notes[0].description)
     })
+
+    it('relationships themselves are cloned, not referenced', () => {
+      original.notes.replace([])
+      expect(original.notes.length).toEqual(0)
+      expect(clone.notes.length).toEqual(1)
+    })
+  })
+
+  describe('.isEqual', () => {
+    let original
+    beforeEach(() => {
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+      original = store.add('organizations', {
+        id: 11,
+        title: 'Buy Milk',
+        options: { color: 'green' }
+      })
+      original.notes.add(note)
+    })
+
+    it('is true for a clone and the original', () => {
+      const clone = original.clone()
+      expect(original.isEqual(clone)).toBe(true)
+    })
+
+    it('is false after attr differences', () => {
+      const clone = original.clone()
+      original.title = 'Buy Cheese'
+      expect(original.isEqual(clone)).toBe(false)
+    })
+
+    it('is false after deep attr changes', () => {
+      const clone = original.clone()
+      original.options.color = 'blue'
+      expect(original.isEqual(clone)).toBe(false)
+    })
+
+    it('is false after a change in relationships', () => {
+      const clone = original.clone()
+      clone.notes.replace([])
+      expect(original.isEqual(clone)).toBe(false)
+    })
+  })
+
+  describe('.isSame', () => {
+    let original
+    beforeEach(() => {
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+      original = store.add('organizations', {
+        id: 11,
+        title: 'Buy Milk',
+        options: { color: 'green' }
+      })
+      original.notes.add(note)
+    })
+
+    it('is false when the other obj is null', () => {
+      expect(original.isSame(null)).toBe(false)
+    })
+
+    it('is false for two different objects', () => {
+      expect(original.isSame(original.notes[0])).toBe(false)
+    })
+
+    it('is false for objects with the same type but different ids', () => {
+      const clone = original.clone()
+      clone.id = 777
+      expect(original.isSame(clone)).toBe(false)
+    })
+
+    it('is true for a clone', () => {
+      const clone = original.clone()
+      expect(original.isSame(clone)).toBe(true)
+    })
+
+    it('ignores differences in attrs', () => {
+      const clone = original.clone()
+      expect(original.isSame(clone)).toBe(true)
+    })
+
+    it('ignores differences in relationships', () => {
+      const clone = original.clone()
+      clone.notes.replace([])
+      expect(original.isSame(clone)).toBe(true)
+    })
   })
 
   describe('.save', () => {

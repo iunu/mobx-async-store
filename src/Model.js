@@ -757,10 +757,46 @@ class Model {
     })
   }
 
+  /**
+   * clone this object, deeply copy attrs and relationships (related
+   * objects are not cloned, but the relationships themselves are)
+   *
+   * @method clone
+   * @return {Object}
+   */
   clone () {
     const attributes = cloneDeep(this.snapshot.attributes)
-    const relationships = this.relationships
+    const relationships = cloneDeep(this.snapshot.relationships)
     return this.store.createModel(this.type, this.id, { attributes, relationships })
+  }
+
+  /**
+   * Comparison by value
+   * returns `true` if this object has the same attrs and relationships
+   * as the "other" object, ignores differences in internal state like
+   * attribute "dirtyness" or errors
+   *
+   * @method isEqual
+   * @param {Object} other
+   * @return {Object}
+   */
+  isEqual (other) {
+    if (!other) return false
+    return isEqual(this.attributes, other.attributes) && isEqual(this.relationships, other.relationships)
+  }
+
+  /**
+   * Comparison by identity
+   * returns `true` if this object has the same type and id as the
+   * "other" object, ignores differences in attrs and relationships
+   *
+   * @method isSame
+   * @param {Object} other
+   * @return {Object}
+   */
+  isSame (other) {
+    if (!other) return false
+    return this.type === other.type && this.id === other.id
   }
 }
 

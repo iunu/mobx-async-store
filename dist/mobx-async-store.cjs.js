@@ -21,7 +21,7 @@ var pluralize = _interopDefault(require('pluralize'));
 var dig = _interopDefault(require('lodash/get'));
 var flattenDeep = _interopDefault(require('lodash/flattenDeep'));
 var cloneDeep = _interopDefault(require('lodash/cloneDeep'));
-var isEqual = _interopDefault(require('lodash/isEqual'));
+var _isEqual = _interopDefault(require('lodash/isEqual'));
 var isObject = _interopDefault(require('lodash/isObject'));
 var findLast = _interopDefault(require('lodash/findLast'));
 var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
@@ -814,7 +814,7 @@ function () {
         }, function (value) {
           var previousValue = _this3.previousSnapshot.attributes[attr];
 
-          if (isEqual(previousValue, value)) {
+          if (_isEqual(previousValue, value)) {
             _this3._dirtyAttributes.delete(attr);
           } else if (isObject(value)) {
             // handles Objects and Arrays
@@ -1062,15 +1062,56 @@ function () {
         });
       });
     }
+    /**
+     * clone this object, deeply copy attrs and relationships (related
+     * objects are not cloned, but the relationships themselves are)
+     *
+     * @method clone
+     * @return {Object}
+     */
+
   }, {
     key: "clone",
     value: function clone() {
       var attributes = cloneDeep(this.snapshot.attributes);
-      var relationships = this.relationships;
+      var relationships = cloneDeep(this.snapshot.relationships);
       return this.store.createModel(this.type, this.id, {
         attributes: attributes,
         relationships: relationships
       });
+    }
+    /**
+     * Comparison by value
+     * returns `true` if this object has the same attrs and relationships
+     * as the "other" object, ignores differences in internal state like
+     * attribute "dirtyness" or errors
+     *
+     * @method isEqual
+     * @param {Object} other
+     * @return {Object}
+     */
+
+  }, {
+    key: "isEqual",
+    value: function isEqual(other) {
+      if (!other) return false;
+      return _isEqual(this.attributes, other.attributes) && _isEqual(this.relationships, other.relationships);
+    }
+    /**
+     * Comparison by identity
+     * returns `true` if this object has the same type and id as the
+     * "other" object, ignores differences in attrs and relationships
+     *
+     * @method isSame
+     * @param {Object} other
+     * @return {Object}
+     */
+
+  }, {
+    key: "isSame",
+    value: function isSame(other) {
+      if (!other) return false;
+      return this.type === other.type && this.id === other.id;
     }
   }, {
     key: "isDirty",
