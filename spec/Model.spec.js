@@ -861,6 +861,12 @@ describe('Model', () => {
       original.notes[0].description = 'Update!'
       expect(original.notes[0].description).toEqual(clone.notes[0].description)
     })
+
+    it('relationships themselves are cloned, not referenced', () => {
+      original.notes.replace([])
+      expect(original.notes.length).toEqual(0)
+      expect(clone.notes.length).toEqual(1)
+    })
   })
 
   describe('.save', () => {
