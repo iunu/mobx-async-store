@@ -1,30 +1,56 @@
 import { transaction, set } from 'mobx'
 
 function ObjectPromiseProxy (promise, target) {
-  const targets = Array.isArray(target) ? target : [target]
-  const store = targets[0].store
-  targets.forEach((t) => { t.isInFlight = true })
-  const result = promise.then(
-    async function (response) {
+  const result = updateRecords(promise, target.store, target)
+
+  // Define proxied attributes
+  debugger
+  const attributeNames = Object.keys(target.attributeNames)
+  const tempProperties = attributeNames.reduce((attrs, key) => {
+    attrs[key] = {
+      value: target[key],
+      writable: false
+    }
+    return attrs
+  }, {})
+
+  Object.defineProperties(result, {
+    isInFlight: { value: target.isInFlight },
+    ...tempProperties
+  })
+
+  // Return promise
+  return result
+}
+
+export function updateRecords (promise, store, records) {
+  // records may be a single record, if so wrap it in an array to make
+  // iteration simpler
+  const recordsArray = Array.isArray(records) ? records : [records]
+  recordsArray.forEach((record) => { record.isInFlight = true })
+
+  return promise.then(
+    async function(response) {
       const { status } = response
       if (status === 200 || status === 201) {
         const json = await response.json()
         const data = Array.isArray(json.data) ? json.data : [json.data]
-        // Update target model(s)
-        // TODO: zip json.data + targets, then iterate
-        if (data.length !== targets.length) throw new Error('Invariant violated: ObjectPromiseProxy response data and targets are not the same length')
+
+        if (data.length !== recordsArray.length) throw new Error('Invariant violated: API response data and records to update do not match')
 
         data.forEach((targetData, index) => {
-          applyResponseAttributesToTarget(targetData, targets[index])
+          applyResponseAttributesToTarget(targetData, recordsArray[index])
         })
 
         if (json.included) {
           store.createModelsFromData(json.included)
         }
 
-        return target
+        // on success, return the original record(s).
+        // again - this may be a single record so preserve the structure
+        return records
       } else {
-        targets.forEach(t => { t.isInFlight = false })
+        recordsArray.forEach(record => { record.isInFlight = false })
 
         let message = store.genericErrorMessage
         let json = {}
@@ -34,46 +60,26 @@ function ObjectPromiseProxy (promise, target) {
         } catch (error) {
           // 500 doesn't return a parsable response
         }
-        // TODO: add all errors from the API response to the target
-        // also TODO: split server errors by target once the info is available from the API
-        // maybe handle not just the first target lol
-        targets[0].errors = {
-          ...targets[0].errors,
+        // TODO: add all errors from the API response to the record
+        // also TODO: split server errors by record once the info is available from the API
+        recordsArray[0].errors = {
+          ...recordsArray[0].errors,
           status: status,
           base: [{ message: message }],
           server: json.errors
         }
 
-        const errorString = JSON.stringify(targets[0].errors)
+        const errorString = JSON.stringify(recordsArray[0].errors)
         return Promise.reject(new Error(errorString))
       }
     },
     function (error) {
       // TODO: Handle error states correctly, including handling errors for multiple targets
-      targets.forEach(t => { t.isInFlight = false })
-      target.errors = error
+      recordsArray.forEach(record => { record.isInFlight = false })
+      recordsArray[0].errors = error
       throw error
-      // return target
     }
   )
-  // Define proxied attributes
-  const attributeNames = Object.keys(targets[0].attributeNames)
-  const tempProperties = attributeNames.reduce((attrs, key) => {
-    attrs[key] = {
-      value: targets[0][key],
-      writable: false
-    }
-    return attrs
-  }, {})
-
-  // TODO: how is isInFlight used? how should it be set for multiple targets?
-  Object.defineProperties(result, {
-    isInFlight: { value: targets[0].isInFlight },
-    ...tempProperties
-  })
-
-  // Return promise
-  return result
 }
 
 // TODO: can this be merged with createOrUpdateModel?

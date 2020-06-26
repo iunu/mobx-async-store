@@ -146,7 +146,7 @@ describe('Store', () => {
       try {
         await store.bulkSave('todos', [todo1, todo2])
       } catch (err) {
-        expect(err.message).toMatch('Invariant violated: ObjectPromiseProxy response data and targets are not the same length')
+        expect(err.message).toMatch('Invariant violated')
       }
     })
 

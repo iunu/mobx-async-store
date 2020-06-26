@@ -1,7 +1,7 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
-import ObjectPromiseProxy from './ObjectPromiseProxy'
+import { updateRecords } from './ObjectPromiseProxy'
 
 /**
  * Defines the Artemis Data Store class.
@@ -87,7 +87,7 @@ class Store {
    * @param {String} type
    * @param {Array} records
    */
-  bulkSave = (type, records, options = {}) => {
+  bulkSave = async (type, records, options = {}) => {
     const { queryParams } = options
 
     // get url for record type
@@ -107,7 +107,7 @@ class Store {
     })
 
     // update records based on response
-    return new ObjectPromiseProxy(response, records)
+    return await updateRecords(response, this, records)
   }
 
   /**
