@@ -2204,7 +2204,7 @@ function () {
 
                 case 19:
                   _json = _context4.sent;
-                  message = parseApiErrors(_json.errors, message);
+                  message = _this6.parseApiErrors(_json.errors, message);
                   _context4.next = 25;
                   break;
 
