@@ -51,7 +51,7 @@ export default [
 			'@babel/runtime/helpers/possibleConstructorReturn',
 			'@babel/runtime/helpers/typeof',
 			'@babel/runtime/regenerator',
-			'jquery-param',
+			'query-string',
 			'jsonapi-serializer',
 			'mobx',
 			'moment',

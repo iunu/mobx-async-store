@@ -5,11 +5,11 @@
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
-    "jquery-param": "^1.0.1",
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.15",
     "mobx": "5.5.0",
     "pluralize": "^8.0.0",
+    "query-string": "^6.13.1",
     "react-native-uuid": "^1.4.9",
     "uuid": "^3.3.2"
   },
