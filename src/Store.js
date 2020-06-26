@@ -775,7 +775,7 @@ class Store {
           let json = {}
           try {
             json = await response.json()
-            message = parseApiErrors(json.errors, message)
+            message = this.parseApiErrors(json.errors, message)
           } catch (error) {
             // 500 doesn't return a parsable response
           }

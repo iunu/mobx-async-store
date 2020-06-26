@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.2.1</em>
+            <em>API Docs for: 1.3.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -31,11 +31,11 @@
                             <li><a href="#api-classes">Classes</a></li>
                             <li><a href="#api-modules">Modules</a></li>
                         </ul>
-                
+
                         <div id="api-tabview-filter">
                             <input type="search" id="api-filter" placeholder="Type to filter APIs">
                         </div>
-                
+
                         <div id="api-tabview-panel">
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/Model.html">Model</a></li>
@@ -43,8 +43,8 @@
                                 <li><a href="../classes/Schema.html">Schema</a></li>
                                 <li><a href="../classes/Store.html">Store</a></li>
                             </ul>
-                
-                
+
+
                             <ul id="api-modules" class="apis modules">
                             </ul>
                         </div>
@@ -59,12 +59,12 @@
                         <input type="checkbox" id="api-show-inherited" checked>
                         Inherited
                     </label>
-            
+
                     <label for="api-show-protected">
                         <input type="checkbox" id="api-show-protected">
                         Protected
                     </label>
-            
+
                     <label for="api-show-private">
                         <input type="checkbox" id="api-show-private">
                         Private
@@ -73,9 +73,9 @@
                         <input type="checkbox" id="api-show-deprecated">
                         Deprecated
                     </label>
-            
+
                 </div>
-            
+
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
@@ -161,6 +161,37 @@ class Store {
    */
   addModels = (type, data) =&gt; {
     return transaction(() =&gt; data.map((obj) =&gt; this.addModel(type, obj)))
+  }
+
+  /**
+   * Saves a collection of records via a bulk-supported JSONApi
+   * endpoint. All records need to be of the same type.
+   *
+   * @method bulkSave
+   * @param {String} type
+   * @param {Array} records
+   */
+  bulkSave = async (type, records, options = {}) =&gt; {
+    const { queryParams } = options
+
+    // get url for record type
+    const url = this.fetchUrl(type, queryParams, null)
+
+    // convert records to an appropriate jsonapi attribute/relationship format
+    const recordAttributes = records.map((record) =&gt; record.jsonapi())
+
+    // build a data payload
+    const body = JSON.stringify({ data: recordAttributes })
+
+    // send request
+    const response = this.fetch(url, {
+      headers: { ...this.defaultFetchOptions.headers, &#x27;Content-Type&#x27;: &#x27;application/vnd.api+json; ext=&quot;bulk&quot;&#x27; },
+      method: &#x27;POST&#x27;,
+      body
+    })
+
+    // update records based on response
+    await this.updateRecords(response, records)
   }
 
   /**
@@ -786,6 +817,89 @@ class Store {
       // Return null if record is not found
       return null
     }
+  }
+
+  /**
+   * Defines a resolution for an API call that will update a record or
+   * set of records with the data returned from the API
+   *
+   * @method updateRecords
+   * @param {Promise} a request to the API
+   * @param {Model|Array} records to be updated
+   */
+  updateRecords (promise, records) {
+    // records may be a single record, if so wrap it in an array to make
+    // iteration simpler
+    const recordsArray = Array.isArray(records) ? records : [records]
+    recordsArray.forEach((record) =&gt; { record.isInFlight = true })
+
+    return promise.then(
+      async (response) =&gt; {
+        const { status } = response
+        if (status === 200 || status === 201) {
+          const json = await response.json()
+          const data = Array.isArray(json.data) ? json.data : [json.data]
+
+          if (data.length !== recordsArray.length) throw new Error(&#x27;Invariant violated: API response data and records to update do not match&#x27;)
+
+          data.forEach((targetData, index) =&gt; {
+            recordsArray[index].updateAttributesFromResponse(targetData)
+          })
+
+          if (json.included) {
+            this.createModelsFromData(json.included)
+          }
+
+          // on success, return the original record(s).
+          // again - this may be a single record so preserve the structure
+          return records
+        } else {
+          recordsArray.forEach(record =&gt; { record.isInFlight = false })
+
+          let message = this.genericErrorMessage
+          let json = {}
+          try {
+            json = await response.json()
+            message = this.parseApiErrors(json.errors, message)
+          } catch (error) {
+            // 500 doesn&#x27;t return a parsable response
+          }
+          // TODO: add all errors from the API response to the record
+          // also TODO: split server errors by record once the info is available from the API
+          recordsArray[0].errors = {
+            ...recordsArray[0].errors,
+            status: status,
+            base: [{ message }],
+            server: json.errors
+          }
+
+          const errorString = JSON.stringify(recordsArray[0].errors)
+          return Promise.reject(new Error(errorString))
+        }
+      },
+      function (error) {
+        // TODO: Handle error states correctly, including handling errors for multiple targets
+        recordsArray.forEach(record =&gt; { record.isInFlight = false })
+        recordsArray[0].errors = error
+        throw error
+      }
+    )
+  }
+
+  /**
+   * A naive way of extracting errors from the server.
+   * This needs some real work. Please don&#x27;t track down the original author
+   * of the code (it&#x27;s DEFINITELY not the person writing this documentation).
+   * Currently it only extracts the message from the first error, but not only
+   * can multiple errors be returned, they will correspond to different records
+   * in the case of a bulk JSONAPI response.
+   *
+   * @method parseApiErrors
+   * @param {Array} a request to the API
+   * @param {String} default error message
+   */
+  parseApiErrors (errors, defaultMessage) {
+    return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
   }
 }
 
