@@ -16,7 +16,7 @@ require('@babel/runtime/helpers/initializerWarningHelper');
 var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
 var mobx = require('mobx');
 var uuidv1 = _interopDefault(require('uuid/v1'));
-var jqueryParam = _interopDefault(require('jquery-param'));
+var qs = _interopDefault(require('qs'));
 var pluralize = _interopDefault(require('pluralize'));
 var dig = _interopDefault(require('lodash/get'));
 var flattenDeep = _interopDefault(require('lodash/flattenDeep'));
@@ -29,6 +29,19 @@ var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototy
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
 var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
 var _wrapNativeSuper = _interopDefault(require('@babel/runtime/helpers/wrapNativeSuper'));
+
+var QueryString = {
+  parse: function parse(str) {
+    return qs.parse(str, {
+      ignoreQueryPrefix: true
+    });
+  },
+  stringify: function stringify(str) {
+    return qs.stringify(str, {
+      arrayFormat: 'brackets'
+    });
+  }
+};
 
 var pending = {};
 var counter = {};
@@ -76,7 +89,7 @@ function requestUrl(baseUrl, endpoint) {
   var queryParamString = '';
 
   if (Object.keys(queryParams).length > 0) {
-    queryParamString = "?".concat(jqueryParam(queryParams));
+    queryParamString = "?".concat(QueryString.stringify(queryParams));
   }
 
   var idForPath = '';
@@ -2672,6 +2685,7 @@ function (_Array) {
 
 exports.Model = Model;
 exports.ObjectPromiseProxy = ObjectPromiseProxy;
+exports.QueryString = QueryString;
 exports.Store = Store;
 exports.attribute = attribute;
 exports.relatedToMany = relatedToMany;

@@ -3726,11 +3726,6 @@ jest@^24.7.1:
     import-local "^2.0.0"
     jest-cli "^24.9.0"
 
-jquery-param@^1.0.1:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/jquery-param/-/jquery-param-1.0.2.tgz#42ca2a9b244f133f55fa718fd2b62cf55bca0891"
-  integrity sha512-4DvI/PRdNbTLef+slsmsPW16tPaCUpInbwh6FfKw9S/Q/0xOrGIB4AsUHOeccICuiWtXwNiDCLszy7bavQlXrA==
-
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
@@ -4773,6 +4768,11 @@ qs@6.7.0:
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.7.0.tgz#41dc1a015e3d581f1621776be31afb2876a9b1bc"
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
+
+qs@^6.9.4:
+  version "6.9.4"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.9.4.tgz#9090b290d1f91728d3c22e54843ca44aea5ab687"
+  integrity sha512-A1kFqHekCTM7cz0udomYUoYNWjBebHm/5wzU/XqrBRBNWectVH0QIiN+NEcZ0Dte5hvzHwbr8+XQmguPhJ6WdQ==
 
 qs@~1.0.0:
   version "1.0.2"

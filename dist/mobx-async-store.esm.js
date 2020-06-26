@@ -10,7 +10,7 @@ import '@babel/runtime/helpers/initializerWarningHelper';
 import _typeof from '@babel/runtime/helpers/typeof';
 import { transaction, set, observable, computed, extendObservable, reaction, toJS, action } from 'mobx';
 import uuidv1 from 'uuid/v1';
-import jqueryParam from 'jquery-param';
+import qs from 'qs';
 import pluralize from 'pluralize';
 import dig from 'lodash/get';
 import flattenDeep from 'lodash/flattenDeep';
@@ -23,6 +23,19 @@ import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
+
+var QueryString = {
+  parse: function parse(str) {
+    return qs.parse(str, {
+      ignoreQueryPrefix: true
+    });
+  },
+  stringify: function stringify(str) {
+    return qs.stringify(str, {
+      arrayFormat: 'brackets'
+    });
+  }
+};
 
 var pending = {};
 var counter = {};
@@ -70,7 +83,7 @@ function requestUrl(baseUrl, endpoint) {
   var queryParamString = '';
 
   if (Object.keys(queryParams).length > 0) {
-    queryParamString = "?".concat(jqueryParam(queryParams));
+    queryParamString = "?".concat(QueryString.stringify(queryParams));
   }
 
   var idForPath = '';
@@ -2664,4 +2677,4 @@ function (_Array) {
   return RelatedRecordsArray;
 }(_wrapNativeSuper(Array));
 
-export { Model, ObjectPromiseProxy, Store, attribute, relatedToMany, relatedToOne, validates };
+export { Model, ObjectPromiseProxy, QueryString, Store, attribute, relatedToMany, relatedToOne, validates };

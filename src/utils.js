@@ -1,5 +1,5 @@
 import uuidv1 from 'uuid/v1'
-import jqueryParam from 'jquery-param'
+import QueryString from './QueryString'
 import pluralize from 'pluralize'
 import dig from 'lodash/get'
 import flattenDeep from 'lodash/flattenDeep'
@@ -44,7 +44,7 @@ export function singularizeType (recordType) {
 export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
   let queryParamString = ''
   if (Object.keys(queryParams).length > 0) {
-    queryParamString = `?${jqueryParam(queryParams)}`
+    queryParamString = `?${QueryString.stringify(queryParams)}`
   }
   let idForPath = ''
   if (id) {
