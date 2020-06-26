@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.1.0</em>
+            <em>API Docs for: 1.2.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -84,7 +84,7 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 import uuidv1 from &#x27;uuid/v1&#x27;
-import jqueryParam from &#x27;jquery-param&#x27;
+import QueryString from &#x27;./QueryString&#x27;
 import pluralize from &#x27;pluralize&#x27;
 import dig from &#x27;lodash/get&#x27;
 import flattenDeep from &#x27;lodash/flattenDeep&#x27;
@@ -129,7 +129,7 @@ export function singularizeType (recordType) {
 export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
   let queryParamString = &#x27;&#x27;
   if (Object.keys(queryParams).length &gt; 0) {
-    queryParamString = &#x60;?${jqueryParam(queryParams)}&#x60;
+    queryParamString = &#x60;?${QueryString.stringify(queryParams)}&#x60;
   }
   let idForPath = &#x27;&#x27;
   if (id) {
