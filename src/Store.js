@@ -1,7 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
-import { updateRecords } from './ObjectPromiseProxy'
 
 /**
  * Defines the Artemis Data Store class.
@@ -107,7 +106,7 @@ class Store {
     })
 
     // update records based on response
-    return await updateRecords(response, this, records)
+    return await this.updateRecords(response, this, records)
   }
 
   /**
@@ -733,6 +732,89 @@ class Store {
       // Return null if record is not found
       return null
     }
+  }
+
+  /**
+   * Defines a resolution for an API call that will update a record or
+   * set of records with the data returned from the API
+   *
+   * @method updateRecords
+   * @param {Promise} a request to the API
+   * @param {Model|Array} records to be updated
+   */
+  updateRecords (promise, records) {
+    // records may be a single record, if so wrap it in an array to make
+    // iteration simpler
+    const recordsArray = Array.isArray(records) ? records : [records]
+    recordsArray.forEach((record) => { record.isInFlight = true })
+
+    return promise.then(
+      async (response) => {
+        const { status } = response
+        if (status === 200 || status === 201) {
+          const json = await response.json()
+          const data = Array.isArray(json.data) ? json.data : [json.data]
+
+          if (data.length !== recordsArray.length) throw new Error('Invariant violated: API response data and records to update do not match')
+
+          data.forEach((targetData, index) => {
+            recordsArray[index].updateAttributesFromResponse(targetData)
+          })
+
+          if (json.included) {
+            this.createModelsFromData(json.included)
+          }
+
+          // on success, return the original record(s).
+          // again - this may be a single record so preserve the structure
+          return records
+        } else {
+          recordsArray.forEach(record => { record.isInFlight = false })
+
+          let message = this.genericErrorMessage
+          let json = {}
+          try {
+            json = await response.json()
+            message = parseApiErrors(json.errors, message)
+          } catch (error) {
+            // 500 doesn't return a parsable response
+          }
+          // TODO: add all errors from the API response to the record
+          // also TODO: split server errors by record once the info is available from the API
+          recordsArray[0].errors = {
+            ...recordsArray[0].errors,
+            status: status,
+            base: [{ message }],
+            server: json.errors
+          }
+
+          const errorString = JSON.stringify(recordsArray[0].errors)
+          return Promise.reject(new Error(errorString))
+        }
+      },
+      function (error) {
+        // TODO: Handle error states correctly, including handling errors for multiple targets
+        recordsArray.forEach(record => { record.isInFlight = false })
+        recordsArray[0].errors = error
+        throw error
+      }
+    )
+  }
+
+  /**
+   * A naive way of extracting errors from the server.
+   * This needs some real work. Please don't track down the original author
+   * of the code (it's DEFINITELY not the person writing this documentation).
+   * Currently it only extracts the message from the first error, but not only
+   * can multiple errors be returned, they will correspond to different records
+   * in the case of a bulk JSONAPI response.
+   *
+   * @method parseApiErrors
+   * @param {Array} a request to the API
+   * @param {String} default error message
+   */
+  parseApiErrors (errors, defaultMessage) {
+    return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
   }
 }
 
