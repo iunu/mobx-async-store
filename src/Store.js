@@ -106,7 +106,7 @@ class Store {
     })
 
     // update records based on response
-    return await this.updateRecords(response, this, records)
+    await this.updateRecords(response, records)
   }
 
   /**
