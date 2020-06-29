@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.2.0</em>
+            <em>API Docs for: 1.3.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -94,6 +94,8 @@ import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from &#x27;./ut
  * @constructor
  */
 class Store {
+  static types = []
+
   /**
    * Observable property used to store data and
    * handle changes to state
@@ -125,15 +127,26 @@ class Store {
    * &#x60;&#x60;&#x60;
    * @method add
    * @param {String} type
-   * @param {Object} properties the properties to use
+   * @param {Object} attributes the properties to use
    * @return {Object} the new record
    */
-  add = (type, data) =&gt; {
-    if (data.constructor.name === &#x27;Array&#x27;) {
-      return this.addModels(type, data)
+  add = (type, attributes) =&gt; {
+    if (attributes.constructor.name === &#x27;Array&#x27;) {
+      return this.addModels(type, attributes)
     } else {
-      return this.addModel(type, toJS(data))
+      return this.addModel(type, toJS(attributes))
     }
+  }
+
+  /**
+   * @method build
+   * @param {String} type
+   * @param {Object} attributes json api attributes
+   * @return {Object} Artemis Data record
+   */
+  build = (type, attributes) =&gt; {
+    const id = dbOrNewId(attributes)
+    return this.createModel(type, id, { attributes })
   }
 
   /**
@@ -144,11 +157,10 @@ class Store {
    */
   @action
   addModel = (type, attributes) =&gt; {
-    const id = dbOrNewId(attributes)
-    const model = this.createModel(type, id, { attributes })
+    const model = this.build(type, attributes)
 
     // Add the model to the type records index
-    this.data[type].records.set(String(id), model)
+    this.data[type].records.set(String(model.id), model)
 
     return model
   }
@@ -421,6 +433,7 @@ class Store {
   initializeModelTypeIndex () {
     const { types } = this.constructor
     this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) =&gt; {
+      modelKlass.store = this
       modelTypeIndex[modelKlass.type] = modelKlass
       return modelTypeIndex
     }, {})

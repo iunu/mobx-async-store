@@ -9,6 +9,8 @@ import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
  * @constructor
  */
 class Store {
+  static types = []
+
   /**
    * Observable property used to store data and
    * handle changes to state
@@ -40,15 +42,26 @@ class Store {
    * ```
    * @method add
    * @param {String} type
-   * @param {Object} properties the properties to use
+   * @param {Object} attributes the properties to use
    * @return {Object} the new record
    */
-  add = (type, data) => {
-    if (data.constructor.name === 'Array') {
-      return this.addModels(type, data)
+  add = (type, attributes) => {
+    if (attributes.constructor.name === 'Array') {
+      return this.addModels(type, attributes)
     } else {
-      return this.addModel(type, toJS(data))
+      return this.addModel(type, toJS(attributes))
     }
+  }
+
+  /**
+   * @method build
+   * @param {String} type
+   * @param {Object} attributes json api attributes
+   * @return {Object} Artemis Data record
+   */
+  build = (type, attributes) => {
+    const id = dbOrNewId(attributes)
+    return this.createModel(type, id, { attributes })
   }
 
   /**
@@ -59,11 +72,10 @@ class Store {
    */
   @action
   addModel = (type, attributes) => {
-    const id = dbOrNewId(attributes)
-    const model = this.createModel(type, id, { attributes })
+    const model = this.build(type, attributes)
 
     // Add the model to the type records index
-    this.data[type].records.set(String(id), model)
+    this.data[type].records.set(String(model.id), model)
 
     return model
   }
@@ -336,6 +348,7 @@ class Store {
   initializeModelTypeIndex () {
     const { types } = this.constructor
     this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
+      modelKlass.store = this
       modelTypeIndex[modelKlass.type] = modelKlass
       return modelTypeIndex
     }, {})

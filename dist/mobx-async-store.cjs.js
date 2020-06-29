@@ -508,11 +508,37 @@ function stringifyIds(object) {
 var Model = (_class = (_temp =
 /*#__PURE__*/
 function () {
-  /**
-   * Initializer for model
-   *
-   * @method constructor
-   */
+  _createClass(Model, null, [{
+    key: "fetchOne",
+
+    /**
+     * @method fetchOne
+     * @param {String} id
+     * @param {Object} params
+     */
+    value: function fetchOne(id) {
+      var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      return this.store.fetchOne(this.type, id, params);
+    }
+    /**
+     * @method fetchAll
+     * @param {Object} params
+     */
+
+  }, {
+    key: "fetchAll",
+    value: function fetchAll() {
+      var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return this.store.fetchAll(this.type, params);
+    }
+    /**
+     * Initializer for model
+     *
+     * @method constructor
+     */
+
+  }]);
+
   function Model() {
     var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -1384,7 +1410,7 @@ function () {
   }
 })), _class);
 
-var _class$1, _descriptor$1, _descriptor2$1, _descriptor3$1, _temp$1;
+var _class$1, _descriptor$1, _descriptor2$1, _descriptor3$1, _class2, _temp$1;
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -1396,7 +1422,7 @@ function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { 
  * @constructor
  */
 
-var Store = (_class$1 = (_temp$1 =
+var Store = (_class$1 = (_temp$1 = _class2 =
 /*#__PURE__*/
 function () {
   /**
@@ -1422,12 +1448,19 @@ function () {
 
     this.genericErrorMessage = 'Something went wrong.';
 
-    this.add = function (type, data) {
-      if (data.constructor.name === 'Array') {
-        return _this.addModels(type, data);
+    this.add = function (type, attributes) {
+      if (attributes.constructor.name === 'Array') {
+        return _this.addModels(type, attributes);
       } else {
-        return _this.addModel(type, mobx.toJS(data));
+        return _this.addModel(type, mobx.toJS(attributes));
       }
+    };
+
+    this.build = function (type, attributes) {
+      var id = dbOrNewId(attributes);
+      return _this.createModel(type, id, {
+        attributes: attributes
+      });
     };
 
     _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
@@ -1550,7 +1583,7 @@ function () {
    * ```
    * @method add
    * @param {String} type
-   * @param {Object} properties the properties to use
+   * @param {Object} attributes the properties to use
    * @return {Object} the new record
    */
 
@@ -1618,8 +1651,11 @@ function () {
   }, {
     key: "initializeModelTypeIndex",
     value: function initializeModelTypeIndex() {
+      var _this2 = this;
+
       var types = this.constructor.types;
       this.modelTypeIndex = types.reduce(function (modelTypeIndex, modelKlass) {
+        modelKlass.store = _this2;
         modelTypeIndex[modelKlass.type] = modelKlass;
         return modelTypeIndex;
       }, {});
@@ -1636,13 +1672,13 @@ function () {
   }, {
     key: "initializeObservableDataProperty",
     value: function initializeObservableDataProperty() {
-      var _this2 = this;
+      var _this3 = this;
 
       var types = this.constructor.types; // NOTE: Is there a performance cost to setting
       // each property individually?
 
       types.forEach(function (modelKlass) {
-        _this2.data[modelKlass.type] = {
+        _this3.data[modelKlass.type] = {
           records: mobx.observable.map({}),
           cache: mobx.observable.map({})
         };
@@ -1835,12 +1871,12 @@ function () {
   }, {
     key: "getRecordsById",
     value: function getRecordsById(type) {
-      var _this3 = this;
+      var _this4 = this;
 
       var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
       // NOTE: Is there a better way to do this?
       return ids.map(function (id) {
-        return _this3.getRecord(type, id);
+        return _this4.getRecord(type, id);
       }).filter(function (record) {
         return record;
       }).filter(function (record) {
@@ -1936,15 +1972,15 @@ function () {
   }, {
     key: "createModelsFromData",
     value: function createModelsFromData(data) {
-      var _this4 = this;
+      var _this5 = this;
 
       return mobx.transaction(function () {
         return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
-          if (_this4.getType(dataObject.type)) {
-            return _this4.createOrUpdateModel(dataObject);
+          if (_this5.getType(dataObject.type)) {
+            return _this5.createOrUpdateModel(dataObject);
           }
         });
       });
@@ -2011,7 +2047,7 @@ function () {
       var _fetchAll = _asyncToGenerator(
       /*#__PURE__*/
       _regeneratorRuntime.mark(function _callee(type, queryParams) {
-        var _this5 = this;
+        var _this6 = this;
 
         var store, url, response, json;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
@@ -2051,17 +2087,17 @@ function () {
                         attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
                         _dataObject$relations2 = dataObject.relationships,
                         relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                    var ModelKlass = _this5.modelTypeIndex[type];
+                    var ModelKlass = _this6.modelTypeIndex[type];
                     var record = new ModelKlass(_objectSpread$2({
                       store: store,
                       relationships: relationships
                     }, attributes));
 
-                    var cachedIds = _this5.data[type].cache.get(url);
+                    var cachedIds = _this6.data[type].cache.get(url);
 
-                    _this5.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
+                    _this6.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
 
-                    _this5.data[type].records.set(String(id), record);
+                    _this6.data[type].records.set(String(id), record);
 
                     return record;
                   });
@@ -2154,7 +2190,7 @@ function () {
   }]);
 
   return Store;
-}(), _temp$1), (_descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "data", [mobx.observable], {
+}(), _class2.types = [], _temp$1), (_descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "data", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2166,17 +2202,13 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this6 = this;
+    var _this7 = this;
 
     return function (type, attributes) {
-      var id = dbOrNewId(attributes);
-
-      var model = _this6.createModel(type, id, {
-        attributes: attributes
-      }); // Add the model to the type records index
+      var model = _this7.build(type, attributes); // Add the model to the type records index
 
 
-      _this6.data[type].records.set(String(id), model);
+      _this7.data[type].records.set(String(model.id), model);
 
       return model;
     };
@@ -2186,10 +2218,10 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this7 = this;
+    var _this8 = this;
 
     return function (type, id) {
-      _this7.data[type].records.delete(String(id));
+      _this8.data[type].records.delete(String(id));
     };
   }
 })), _class$1);

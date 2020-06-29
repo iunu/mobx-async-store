@@ -1139,4 +1139,33 @@ describe('Model', () => {
       expect(todo.isDirty).toBe(false)
     })
   })
+
+  describe('Model.fetchAll', () => {
+    it('finds all via the store', async () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      store.fetchAll = jest.fn(() => Promise.resolve([todo]))
+      const found = await Organization.fetchAll({ title: 'foo' })
+      expect(found.length).toBe(1)
+      expect(found[0].id).toBe(todo.id)
+      const { calls } = store.fetchAll.mock
+      expect(calls.length).toBe(1)
+      const [type, options] = calls[0]
+      expect(type).toEqual('organizations')
+      expect(options.title).toEqual('foo')
+    })
+  })
+
+  describe('Model.fetchOne', () => {
+    it('finds one via the store', async () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      store.fetchOne = jest.fn(() => Promise.resolve(todo))
+      const found = await Organization.fetchOne(1)
+      expect(found.id).toBe(todo.id)
+      const { calls } = store.fetchOne.mock
+      expect(calls.length).toBe(1)
+      const [type, id] = calls[0]
+      expect(type).toEqual('organizations')
+      expect(id).toEqual(1)
+    })
+  })
 })

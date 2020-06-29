@@ -83,6 +83,23 @@ function stringifyIds (object) {
  */
 class Model {
   /**
+   * @method fetchOne
+   * @param {String} id
+   * @param {Object} params
+   */
+  static fetchOne (id, params = {}) {
+    return this.store.fetchOne(this.type, id, params)
+  }
+
+  /**
+   * @method fetchAll
+   * @param {Object} params
+   */
+  static fetchAll (params = {}) {
+    return this.store.fetchAll(this.type, params)
+  }
+
+  /**
    * Initializer for model
    *
    * @method constructor

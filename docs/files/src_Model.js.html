@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.2.0</em>
+            <em>API Docs for: 1.3.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -167,6 +167,23 @@ function stringifyIds (object) {
  @class Model
  */
 class Model {
+  /**
+   * @method fetchOne
+   * @param {String} id
+   * @param {Object} params
+   */
+  static fetchOne (id, params = {}) {
+    return this.store.fetchOne(this.type, id, params)
+  }
+
+  /**
+   * @method fetchAll
+   * @param {Object} params
+   */
+  static fetchAll (params = {}) {
+    return this.store.fetchAll(this.type, params)
+  }
+
   /**
    * Initializer for model
    *
