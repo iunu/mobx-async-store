@@ -354,7 +354,7 @@ class Model {
     return promise.then(
       async function (response) {
         _this.isInFlight = false
-        if (response.status === 202 || response.status === 204) {
+        if ([200, 202, 204].includes(response.status)) {
           if (!skipRemove) {
             _this.store.remove(type, id)
           }

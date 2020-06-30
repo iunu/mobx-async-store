@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.2.0</em>
+            <em>API Docs for: 1.2.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -439,7 +439,7 @@ class Model {
     return promise.then(
       async function (response) {
         _this.isInFlight = false
-        if (response.status === 202 || response.status === 204) {
+        if ([200, 202, 204].includes(response.status)) {
           if (!skipRemove) {
             _this.store.remove(type, id)
           }
