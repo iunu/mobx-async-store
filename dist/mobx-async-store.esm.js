@@ -957,7 +957,7 @@ function () {
 
   }, {
     key: "updateAttributesFromResponse",
-    value: function updateAttributesFromResponse(data) {
+    value: function updateAttributesFromResponse(data, included) {
       var _this7 = this;
 
       var tmpId = this.id;
@@ -977,6 +977,10 @@ function () {
               set(_this7.relationships, key, relationships[key]);
             }
           });
+        }
+
+        if (included) {
+          _this7.store.createModelsFromData(included);
         }
       }); // Update target isInFlight
 
@@ -2146,7 +2150,7 @@ function () {
         var _ref2 = _asyncToGenerator(
         /*#__PURE__*/
         _regeneratorRuntime.mark(function _callee4(response) {
-          var status, json, data, message, _json, errorString;
+          var status, json, data, included, message, _json, errorString;
 
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
@@ -2155,7 +2159,7 @@ function () {
                   status = response.status;
 
                   if (!(status === 200 || status === 201)) {
-                    _context4.next = 13;
+                    _context4.next = 14;
                     break;
                   }
 
@@ -2165,17 +2169,18 @@ function () {
                 case 4:
                   json = _context4.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
+                  included = json.included;
 
                   if (!(data.length !== recordsArray.length)) {
-                    _context4.next = 8;
+                    _context4.next = 9;
                     break;
                   }
 
                   throw new Error('Invariant violated: API response data and records to update do not match');
 
-                case 8:
+                case 9:
                   data.forEach(function (targetData, index) {
-                    recordsArray[index].updateAttributesFromResponse(targetData);
+                    recordsArray[index].updateAttributesFromResponse(targetData, included);
                   });
 
                   if (json.included) {
@@ -2186,27 +2191,27 @@ function () {
 
                   return _context4.abrupt("return", records);
 
-                case 13:
+                case 14:
                   recordsArray.forEach(function (record) {
                     record.isInFlight = false;
                   });
                   message = _this6.genericErrorMessage;
                   _json = {};
-                  _context4.prev = 16;
-                  _context4.next = 19;
+                  _context4.prev = 17;
+                  _context4.next = 20;
                   return response.json();
 
-                case 19:
+                case 20:
                   _json = _context4.sent;
                   message = _this6.parseApiErrors(_json.errors, message);
-                  _context4.next = 25;
+                  _context4.next = 26;
                   break;
 
-                case 23:
-                  _context4.prev = 23;
-                  _context4.t0 = _context4["catch"](16);
+                case 24:
+                  _context4.prev = 24;
+                  _context4.t0 = _context4["catch"](17);
 
-                case 25:
+                case 26:
                   // TODO: add all errors from the API response to the record
                   // also TODO: split server errors by record once the info is available from the API
                   recordsArray[0].errors = _objectSpread$2({}, recordsArray[0].errors, {
@@ -2219,12 +2224,12 @@ function () {
                   errorString = JSON.stringify(recordsArray[0].errors);
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
-                case 28:
+                case 29:
                 case "end":
                   return _context4.stop();
               }
             }
-          }, _callee4, null, [[16, 23]]);
+          }, _callee4, null, [[17, 24]]);
         }));
 
         return function (_x9) {

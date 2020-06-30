@@ -754,11 +754,12 @@ class Store {
         if (status === 200 || status === 201) {
           const json = await response.json()
           const data = Array.isArray(json.data) ? json.data : [json.data]
+          const { included } = json
 
           if (data.length !== recordsArray.length) throw new Error('Invariant violated: API response data and records to update do not match')
 
           data.forEach((targetData, index) => {
-            recordsArray[index].updateAttributesFromResponse(targetData)
+            recordsArray[index].updateAttributesFromResponse(targetData, included)
           })
 
           if (json.included) {

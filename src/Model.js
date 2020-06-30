@@ -759,7 +759,7 @@ class Model {
 
   // TODO: this shares a lot of functionality with Store.createOrUpdateModel
   // Perhaps that shared code
-  updateAttributesFromResponse (data) {
+  updateAttributesFromResponse (data, included) {
     const tmpId = this.id
     const { id, attributes, relationships } = data
 
@@ -776,6 +776,9 @@ class Model {
             set(this.relationships, key, relationships[key])
           }
         })
+      }
+      if (included) {
+        this.store.createModelsFromData(included)
       }
     })
 
