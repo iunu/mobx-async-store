@@ -724,7 +724,7 @@ function () {
                 case 0:
                   _this.isInFlight = false;
 
-                  if (!(response.status === 202 || response.status === 204)) {
+                  if (![200, 202, 204].includes(response.status)) {
                     _context.next = 18;
                     break;
                   }
