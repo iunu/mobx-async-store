@@ -723,7 +723,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 804,
+            "line": 807,
             "description": "Comparison by value\nreturns `true` if this object has the same attrs and relationships\nas the \"other\" object, ignores differences in internal state like\nattribute \"dirtyness\" or errors",
             "itemtype": "method",
             "name": "isEqual",
@@ -742,7 +742,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 819,
+            "line": 822,
             "description": "Comparison by identity\nreturns `true` if this object has the same type and id as the\n\"other\" object, ignores differences in attrs and relationships",
             "itemtype": "method",
             "name": "isSame",
@@ -1478,7 +1478,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 804,
+            "line": 805,
             "description": "A naive way of extracting errors from the server.\nThis needs some real work. Please don't track down the original author\nof the code (it's DEFINITELY not the person writing this documentation).\nCurrently it only extracts the message from the first error, but not only\ncan multiple errors be returned, they will correspond to different records\nin the case of a bulk JSONAPI response.",
             "itemtype": "method",
             "name": "parseApiErrors",
