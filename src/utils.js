@@ -191,3 +191,19 @@ export function diff (a = {}, b = {}) {
     return prevValue === currValue ? undefined : path
   })).filter((x) => x)
 }
+
+/**
+ * A naive way of extracting errors from the server.
+ * This needs some real work. Please don't track down the original author
+ * of the code (it's DEFINITELY not the person writing this documentation).
+ * Currently it only extracts the message from the first error, but not only
+ * can multiple errors be returned, they will correspond to different records
+ * in the case of a bulk JSONAPI response.
+ *
+ * @method parseApiErrors
+ * @param {Array} a request to the API
+ * @param {String} default error message
+ */
+export function parseApiErrors (errors, defaultMessage) {
+  return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
+}

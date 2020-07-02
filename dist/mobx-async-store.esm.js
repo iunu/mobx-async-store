@@ -222,6 +222,22 @@ function diff() {
     return x;
   });
 }
+/**
+ * A naive way of extracting errors from the server.
+ * This needs some real work. Please don't track down the original author
+ * of the code (it's DEFINITELY not the person writing this documentation).
+ * Currently it only extracts the message from the first error, but not only
+ * can multiple errors be returned, they will correspond to different records
+ * in the case of a bulk JSONAPI response.
+ *
+ * @method parseApiErrors
+ * @param {Array} a request to the API
+ * @param {String} default error message
+ */
+
+function parseApiErrors(errors, defaultMessage) {
+  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+}
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -1397,10 +1413,9 @@ function () {
                   body: body
                 }); // update records based on response
 
-                _context.next = 8;
-                return _this.updateRecords(response, records);
+                return _context.abrupt("return", _this.updateRecords(response, records));
 
-              case 8:
+              case 7:
               case "end":
                 return _context.stop();
             }
@@ -2203,7 +2218,7 @@ function () {
 
                 case 20:
                   _json = _context4.sent;
-                  message = _this6.parseApiErrors(_json.errors, message);
+                  message = parseApiErrors(_json.errors, message);
                   _context4.next = 26;
                   break;
 
@@ -2243,24 +2258,6 @@ function () {
         recordsArray[0].errors = error;
         throw error;
       });
-    }
-    /**
-     * A naive way of extracting errors from the server.
-     * This needs some real work. Please don't track down the original author
-     * of the code (it's DEFINITELY not the person writing this documentation).
-     * Currently it only extracts the message from the first error, but not only
-     * can multiple errors be returned, they will correspond to different records
-     * in the case of a bulk JSONAPI response.
-     *
-     * @method parseApiErrors
-     * @param {Array} a request to the API
-     * @param {String} default error message
-     */
-
-  }, {
-    key: "parseApiErrors",
-    value: function parseApiErrors(errors, defaultMessage) {
-      return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
     }
   }]);
 

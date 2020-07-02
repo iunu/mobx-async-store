@@ -1477,26 +1477,6 @@
             "class": "Store"
         },
         {
-            "file": "src/Store.js",
-            "line": 805,
-            "description": "A naive way of extracting errors from the server.\nThis needs some real work. Please don't track down the original author\nof the code (it's DEFINITELY not the person writing this documentation).\nCurrently it only extracts the message from the first error, but not only\ncan multiple errors be returned, they will correspond to different records\nin the case of a bulk JSONAPI response.",
-            "itemtype": "method",
-            "name": "parseApiErrors",
-            "params": [
-                {
-                    "name": "a",
-                    "description": "request to the API",
-                    "type": "Array"
-                },
-                {
-                    "name": "default",
-                    "description": "error message",
-                    "type": "String"
-                }
-            ],
-            "class": "Store"
-        },
-        {
             "file": "src/schema.js",
             "line": 25,
             "description": "Adds a validation to either the schema `structure` (for attributes) or `relations` (for relationships)",
@@ -1677,6 +1657,26 @@
             "return": {
                 "description": "Array<String>"
             },
+            "class": ""
+        },
+        {
+            "file": "src/utils.js",
+            "line": 195,
+            "description": "A naive way of extracting errors from the server.\nThis needs some real work. Please don't track down the original author\nof the code (it's DEFINITELY not the person writing this documentation).\nCurrently it only extracts the message from the first error, but not only\ncan multiple errors be returned, they will correspond to different records\nin the case of a bulk JSONAPI response.",
+            "itemtype": "method",
+            "name": "parseApiErrors",
+            "params": [
+                {
+                    "name": "a",
+                    "description": "request to the API",
+                    "type": "Array"
+                },
+                {
+                    "name": "default",
+                    "description": "error message",
+                    "type": "String"
+                }
+            ],
             "class": ""
         }
     ],

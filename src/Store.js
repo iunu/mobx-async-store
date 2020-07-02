@@ -1,6 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
+import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -106,7 +106,7 @@ class Store {
     })
 
     // update records based on response
-    await this.updateRecords(response, records)
+    return this.updateRecords(response, records)
   }
 
   /**
@@ -776,7 +776,7 @@ class Store {
           let json = {}
           try {
             json = await response.json()
-            message = this.parseApiErrors(json.errors, message)
+            message = parseApiErrors(json.errors, message)
           } catch (error) {
             // 500 doesn't return a parsable response
           }
@@ -800,22 +800,6 @@ class Store {
         throw error
       }
     )
-  }
-
-  /**
-   * A naive way of extracting errors from the server.
-   * This needs some real work. Please don't track down the original author
-   * of the code (it's DEFINITELY not the person writing this documentation).
-   * Currently it only extracts the message from the first error, but not only
-   * can multiple errors be returned, they will correspond to different records
-   * in the case of a bulk JSONAPI response.
-   *
-   * @method parseApiErrors
-   * @param {Array} a request to the API
-   * @param {String} default error message
-   */
-  parseApiErrors (errors, defaultMessage) {
-    return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
   }
 }
 
