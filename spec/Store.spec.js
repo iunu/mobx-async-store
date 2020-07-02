@@ -135,6 +135,117 @@ describe('Store', () => {
     })
   })
 
+  describe('bulkSave', () => {
+    it('raises an invariant error if we submit n records and don\'t receive data for n records', async () => {
+      expect.assertions(1)
+
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const todo2 = store.add('todos', { title: 'Give Dog Treat' })
+      fetch.mockResponse(JSON.stringify({}))
+
+      try {
+        await store.bulkSave('todos', [todo1, todo2])
+      } catch (err) {
+        expect(err.message).toMatch('Invariant violated')
+      }
+    })
+
+    it('constructs a payload for all records in a jsonapi bulk-extension compliant way', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const todo3 = store.add('todos', { title: 'Give Dog Treat' })
+
+      const mockTodosData = {
+        data: [
+          {
+            id: '1',
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          },
+          {
+            id: '2',
+            type: 'todos',
+            attributes: {
+              title: 'Give Dog Treat'
+            }
+          }]
+      }
+      const mockTodosResponse = JSON.stringify(mockTodosData)
+      fetch.mockResponse(mockTodosResponse)
+
+      await store.bulkSave('todos', [todo1, todo3])
+
+      expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+        data: [
+          {
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          },
+          {
+            type: 'todos',
+            attributes: {
+              title: 'Give Dog Treat'
+            }
+          }
+        ]
+      })
+    })
+
+    it('updates the original records after they have been saved with data from the response', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const todo3 = store.add('todos', { title: 'Give Dog Treat' })
+
+      const mockTodosData = {
+        data: [
+          {
+            id: '1',
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          },
+          {
+            id: '2',
+            type: 'todos',
+            attributes: {
+              title: 'Give Dog Treat'
+            }
+          }]
+      }
+      const mockTodosResponse = JSON.stringify(mockTodosData)
+
+      fetch.mockResponse(mockTodosResponse)
+      await store.bulkSave('todos', [todo1, todo3])
+      expect(todo1.id).toEqual('1')
+      expect(todo3.id).toEqual('2')
+    })
+
+    it('adds the bulk extension format to the request header', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+
+      const mockTodosData = {
+        data: [
+          {
+            id: '1',
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          }]
+      }
+      const mockTodosResponse = JSON.stringify(mockTodosData)
+      fetch.mockResponse(mockTodosResponse)
+
+      await store.bulkSave('todos', [todo1])
+
+      expect(fetch.mock.calls[0][1].headers['Content-Type'])
+        .toEqual('application/vnd.api+json; ext="bulk"')
+    })
+  })
+
   describe('reset', () => {
     it('removes all records from the store', async () => {
       expect.assertions(4)

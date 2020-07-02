@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.2.1</em>
+            <em>API Docs for: 1.3.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -366,9 +366,9 @@ class Model {
 
     const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
 
-    const body = JSON.stringify(this.jsonapi(
-      { relationships, attributes }
-    ))
+    const body = JSON.stringify({
+      data: this.jsonapi({ relationships, attributes })
+    })
 
     if (relationships) {
       relationships.forEach((rel) =&gt; {
@@ -831,7 +831,7 @@ class Model {
       delete data.id
     }
 
-    return { data }
+    return data
   }
 
   updateAttributes (attributes) {
@@ -842,13 +842,47 @@ class Model {
     })
   }
 
-  /**
-   * clone this object, deeply copy attrs and relationships (related
-   * objects are not cloned, but the relationships themselves are)
-   *
-   * @method clone
-   * @return {Object}
-   */
+  // TODO: this shares a lot of functionality with Store.createOrUpdateModel
+  // Perhaps that shared code
+  updateAttributesFromResponse (data, included) {
+    const tmpId = this.id
+    const { id, attributes, relationships } = data
+
+    transaction(() =&gt; {
+      set(this, &#x27;id&#x27;, id)
+
+      Object.keys(attributes).forEach(key =&gt; {
+        set(this, key, attributes[key])
+      })
+      if (relationships) {
+        Object.keys(relationships).forEach(key =&gt; {
+          if (!relationships[key].hasOwnProperty(&#x27;meta&#x27;)) {
+            // todo: throw error if relationship is not defined in model
+            set(this.relationships, key, relationships[key])
+          }
+        })
+      }
+      if (included) {
+        this.store.createModelsFromData(included)
+      }
+    })
+
+    // Update target isInFlight
+    this.isInFlight = false
+    this._takeSnapshot({ persisted: true })
+
+    transaction(() =&gt; {
+      // NOTE: This resolves an issue where a record is persisted but the
+      // index key is still a temp uuid. We can&#x27;t simply remove the temp
+      // key because there may be associated records that have the temp
+      // uuid id as its only reference to the newly persisted record.
+      // TODO: Figure out a way to update associated records to use the
+      // newly persisted id.
+      this.store.data[this.type].records.set(String(tmpId), this)
+      this.store.data[this.type].records.set(String(this.id), this)
+    })
+  }
+
   clone () {
     const attributes = cloneDeep(this.snapshot.attributes)
     const relationships = cloneDeep(this.snapshot.relationships)

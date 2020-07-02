@@ -228,125 +228,29 @@ function diff() {
     return x;
   });
 }
+/**
+ * A naive way of extracting errors from the server.
+ * This needs some real work. Please don't track down the original author
+ * of the code (it's DEFINITELY not the person writing this documentation).
+ * Currently it only extracts the message from the first error, but not only
+ * can multiple errors be returned, they will correspond to different records
+ * in the case of a bulk JSONAPI response.
+ *
+ * @method parseApiErrors
+ * @param {Array} a request to the API
+ * @param {String} default error message
+ */
+
+function parseApiErrors(errors, defaultMessage) {
+  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+}
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function ObjectPromiseProxy(promise, target) {
-  target.isInFlight = true;
-  var tmpId = target.id;
-  var result = promise.then(
-  /*#__PURE__*/
-  function () {
-    var _ref = _asyncToGenerator(
-    /*#__PURE__*/
-    _regeneratorRuntime.mark(function _callee(response) {
-      var status, json, _json$data, id, attributes, relationships, message, _json, errorString;
-
-      return _regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              status = response.status;
-
-              if (!(status === 200 || status === 201)) {
-                _context.next = 13;
-                break;
-              }
-
-              _context.next = 4;
-              return response.json();
-
-            case 4:
-              json = _context.sent;
-              // Update target model
-              _json$data = json.data, id = _json$data.id, attributes = _json$data.attributes, relationships = _json$data.relationships;
-              mobx.transaction(function () {
-                mobx.set(target, 'id', id);
-                Object.keys(attributes).forEach(function (key) {
-                  mobx.set(target, key, attributes[key]);
-                });
-
-                if (relationships) {
-                  Object.keys(relationships).forEach(function (key) {
-                    if (!relationships[key].hasOwnProperty('meta')) {
-                      // todo: throw error if relationship is not defined in model
-                      mobx.set(target.relationships, key, relationships[key]);
-                    }
-                  });
-                }
-
-                if (json.included) {
-                  target.store.createModelsFromData(json.included);
-                }
-              }); // Update target isInFlight
-
-              target.isInFlight = false;
-
-              target._takeSnapshot({
-                persisted: true
-              });
-
-              mobx.transaction(function () {
-                // NOTE: This resolves an issue where a record is persisted but the
-                // index key is still a temp uuid. We can't simply remove the temp
-                // key because there may be associated records that have the temp
-                // uuid id as its only reference to the newly persisted record.
-                // TODO: Figure out a way to update associated records to use the
-                // newly persisted id.
-                target.store.data[target.type].records.set(String(tmpId), target);
-                target.store.data[target.type].records.set(String(target.id), target);
-              });
-              return _context.abrupt("return", target);
-
-            case 13:
-              target.isInFlight = false;
-              message = target.store.genericErrorMessage;
-              _json = {};
-              _context.prev = 16;
-              _context.next = 19;
-              return response.json();
-
-            case 19:
-              _json = _context.sent;
-              message = parseApiErrors(_json.errors, message);
-              _context.next = 25;
-              break;
-
-            case 23:
-              _context.prev = 23;
-              _context.t0 = _context["catch"](16);
-
-            case 25:
-              // TODO: add all errors from the API response to the target
-              target.errors = _objectSpread({}, target.errors, {
-                status: status,
-                base: [{
-                  message: message
-                }],
-                server: _json.errors
-              });
-              errorString = JSON.stringify(target.errors);
-              return _context.abrupt("return", Promise.reject(new Error(errorString)));
-
-            case 28:
-            case "end":
-              return _context.stop();
-          }
-        }
-      }, _callee, null, [[16, 23]]);
-    }));
-
-    return function (_x) {
-      return _ref.apply(this, arguments);
-    };
-  }(), function (error) {
-    // TODO: Handle error states correctly
-    target.isInFlight = false;
-    target.errors = error;
-    throw error; // return target
-  }); // Define proxied attributes
+  var result = target.store.updateRecords(promise, target); // Define proxied attributes
 
   var attributeNames = Object.keys(target.attributeNames);
   var tempProperties = attributeNames.reduce(function (attrs, key) {
@@ -363,10 +267,6 @@ function ObjectPromiseProxy(promise, target) {
   }, tempProperties)); // Return promise
 
   return result;
-}
-
-function parseApiErrors(errors, defaultMessage) {
-  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
 }
 
 /**
@@ -627,10 +527,12 @@ function () {
       }
 
       var url = this.store.fetchUrl(constructor.type, queryParams, requestId);
-      var body = JSON.stringify(this.jsonapi({
-        relationships: relationships,
-        attributes: attributes
-      }));
+      var body = JSON.stringify({
+        data: this.jsonapi({
+          relationships: relationships,
+          attributes: attributes
+        })
+      });
 
       if (relationships) {
         relationships.forEach(function (rel) {
@@ -1060,9 +962,7 @@ function () {
         delete data.id;
       }
 
-      return {
-        data: data
-      };
+      return data;
     }
   }, {
     key: "updateAttributes",
@@ -1074,15 +974,56 @@ function () {
           _this6[key] = attributes[key];
         });
       });
-    }
-    /**
-     * clone this object, deeply copy attrs and relationships (related
-     * objects are not cloned, but the relationships themselves are)
-     *
-     * @method clone
-     * @return {Object}
-     */
+    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
+    // Perhaps that shared code
 
+  }, {
+    key: "updateAttributesFromResponse",
+    value: function updateAttributesFromResponse(data, included) {
+      var _this7 = this;
+
+      var tmpId = this.id;
+      var id = data.id,
+          attributes = data.attributes,
+          relationships = data.relationships;
+      mobx.transaction(function () {
+        mobx.set(_this7, 'id', id);
+        Object.keys(attributes).forEach(function (key) {
+          mobx.set(_this7, key, attributes[key]);
+        });
+
+        if (relationships) {
+          Object.keys(relationships).forEach(function (key) {
+            if (!relationships[key].hasOwnProperty('meta')) {
+              // todo: throw error if relationship is not defined in model
+              mobx.set(_this7.relationships, key, relationships[key]);
+            }
+          });
+        }
+
+        if (included) {
+          _this7.store.createModelsFromData(included);
+        }
+      }); // Update target isInFlight
+
+      this.isInFlight = false;
+
+      this._takeSnapshot({
+        persisted: true
+      });
+
+      mobx.transaction(function () {
+        // NOTE: This resolves an issue where a record is persisted but the
+        // index key is still a temp uuid. We can't simply remove the temp
+        // key because there may be associated records that have the temp
+        // uuid id as its only reference to the newly persisted record.
+        // TODO: Figure out a way to update associated records to use the
+        // newly persisted id.
+        _this7.store.data[_this7.type].records.set(String(tmpId), _this7);
+
+        _this7.store.data[_this7.type].records.set(String(_this7.id), _this7);
+      });
+    }
   }, {
     key: "clone",
     value: function clone() {
@@ -1263,10 +1204,10 @@ function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this7 = this;
+      var _this8 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = mobx.toJS(_this7[key]);
+        var value = mobx.toJS(_this8[key]);
 
         if (value == null) {
           delete attributes[key];
@@ -1439,6 +1380,59 @@ function () {
         });
       });
     };
+
+    this.bulkSave =
+    /*#__PURE__*/
+    function () {
+      var _ref = _asyncToGenerator(
+      /*#__PURE__*/
+      _regeneratorRuntime.mark(function _callee(type, records) {
+        var options,
+            queryParams,
+            url,
+            recordAttributes,
+            body,
+            response,
+            _args = arguments;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                options = _args.length > 2 && _args[2] !== undefined ? _args[2] : {};
+                queryParams = options.queryParams; // get url for record type
+
+                url = _this.fetchUrl(type, queryParams, null); // convert records to an appropriate jsonapi attribute/relationship format
+
+                recordAttributes = records.map(function (record) {
+                  return record.jsonapi();
+                }); // build a data payload
+
+                body = JSON.stringify({
+                  data: recordAttributes
+                }); // send request
+
+                response = _this.fetch(url, {
+                  headers: _objectSpread$2({}, _this.defaultFetchOptions.headers, {
+                    'Content-Type': 'application/vnd.api+json; ext="bulk"'
+                  }),
+                  method: 'POST',
+                  body: body
+                }); // update records based on response
+
+                return _context.abrupt("return", _this.updateRecords(response, records));
+
+              case 7:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }));
+
+      return function (_x2, _x3) {
+        return _ref.apply(this, arguments);
+      };
+    }();
 
     _initializerDefineProperty(this, "remove", _descriptor3$1, this);
 
@@ -2010,41 +2004,41 @@ function () {
     value: function () {
       var _fetchAll = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee(type, queryParams) {
+      _regeneratorRuntime.mark(function _callee2(type, queryParams) {
         var _this5 = this;
 
         var store, url, response, json;
-        return _regeneratorRuntime.wrap(function _callee$(_context) {
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
-            switch (_context.prev = _context.next) {
+            switch (_context2.prev = _context2.next) {
               case 0:
                 store = this;
                 url = this.fetchUrl(type, queryParams);
-                _context.next = 4;
+                _context2.next = 4;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
               case 4:
-                response = _context.sent;
+                response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context.next = 14;
+                  _context2.next = 14;
                   break;
                 }
 
                 this.data[type].cache.set(url, []);
-                _context.next = 9;
+                _context2.next = 9;
                 return response.json();
 
               case 9:
-                json = _context.sent;
+                json = _context2.sent;
 
                 if (json.included) {
                   this.createModelsFromData(json.included);
                 }
 
-                return _context.abrupt("return", mobx.transaction(function () {
+                return _context2.abrupt("return", mobx.transaction(function () {
                   return json.data.map(function (dataObject) {
                     var id = dataObject.id,
                         _dataObject$attribute2 = dataObject.attributes,
@@ -2068,17 +2062,17 @@ function () {
                 }));
 
               case 14:
-                return _context.abrupt("return", Promise.reject(response.status));
+                return _context2.abrupt("return", Promise.reject(response.status));
 
               case 15:
               case "end":
-                return _context.stop();
+                return _context2.stop();
             }
           }
-        }, _callee, this);
+        }, _callee2, this);
       }));
 
-      function fetchAll(_x2, _x3) {
+      function fetchAll(_x4, _x5) {
         return _fetchAll.apply(this, arguments);
       }
 
@@ -2098,32 +2092,32 @@ function () {
     value: function () {
       var _fetchOne = _asyncToGenerator(
       /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee2(type, id, queryParams) {
+      _regeneratorRuntime.mark(function _callee3(type, id, queryParams) {
         var url, response, json, data, included, record;
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
                 url = this.fetchUrl(type, queryParams, id); // Trigger request
 
-                _context2.next = 3;
+                _context3.next = 3;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
               case 3:
-                response = _context2.sent;
+                response = _context3.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 15;
+                  _context3.next = 15;
                   break;
                 }
 
-                _context2.next = 7;
+                _context3.next = 7;
                 return response.json();
 
               case 7:
-                json = _context2.sent;
+                json = _context3.sent;
                 data = json.data, included = json.included;
 
                 if (included) {
@@ -2132,25 +2126,145 @@ function () {
 
                 record = this.createOrUpdateModel(data);
                 this.data[type].cache.set(url, [record.id]);
-                return _context2.abrupt("return", record);
+                return _context3.abrupt("return", record);
 
               case 15:
-                return _context2.abrupt("return", null);
+                return _context3.abrupt("return", null);
 
               case 16:
               case "end":
-                return _context2.stop();
+                return _context3.stop();
             }
           }
-        }, _callee2, this);
+        }, _callee3, this);
       }));
 
-      function fetchOne(_x4, _x5, _x6) {
+      function fetchOne(_x6, _x7, _x8) {
         return _fetchOne.apply(this, arguments);
       }
 
       return fetchOne;
     }()
+    /**
+     * Defines a resolution for an API call that will update a record or
+     * set of records with the data returned from the API
+     *
+     * @method updateRecords
+     * @param {Promise} a request to the API
+     * @param {Model|Array} records to be updated
+     */
+
+  }, {
+    key: "updateRecords",
+    value: function updateRecords(promise, records) {
+      var _this6 = this;
+
+      // records may be a single record, if so wrap it in an array to make
+      // iteration simpler
+      var recordsArray = Array.isArray(records) ? records : [records];
+      recordsArray.forEach(function (record) {
+        record.isInFlight = true;
+      });
+      return promise.then(
+      /*#__PURE__*/
+      function () {
+        var _ref2 = _asyncToGenerator(
+        /*#__PURE__*/
+        _regeneratorRuntime.mark(function _callee4(response) {
+          var status, json, data, included, message, _json, errorString;
+
+          return _regeneratorRuntime.wrap(function _callee4$(_context4) {
+            while (1) {
+              switch (_context4.prev = _context4.next) {
+                case 0:
+                  status = response.status;
+
+                  if (!(status === 200 || status === 201)) {
+                    _context4.next = 14;
+                    break;
+                  }
+
+                  _context4.next = 4;
+                  return response.json();
+
+                case 4:
+                  json = _context4.sent;
+                  data = Array.isArray(json.data) ? json.data : [json.data];
+                  included = json.included;
+
+                  if (!(data.length !== recordsArray.length)) {
+                    _context4.next = 9;
+                    break;
+                  }
+
+                  throw new Error('Invariant violated: API response data and records to update do not match');
+
+                case 9:
+                  data.forEach(function (targetData, index) {
+                    recordsArray[index].updateAttributesFromResponse(targetData, included);
+                  });
+
+                  if (json.included) {
+                    _this6.createModelsFromData(json.included);
+                  } // on success, return the original record(s).
+                  // again - this may be a single record so preserve the structure
+
+
+                  return _context4.abrupt("return", records);
+
+                case 14:
+                  recordsArray.forEach(function (record) {
+                    record.isInFlight = false;
+                  });
+                  message = _this6.genericErrorMessage;
+                  _json = {};
+                  _context4.prev = 17;
+                  _context4.next = 20;
+                  return response.json();
+
+                case 20:
+                  _json = _context4.sent;
+                  message = parseApiErrors(_json.errors, message);
+                  _context4.next = 26;
+                  break;
+
+                case 24:
+                  _context4.prev = 24;
+                  _context4.t0 = _context4["catch"](17);
+
+                case 26:
+                  // TODO: add all errors from the API response to the record
+                  // also TODO: split server errors by record once the info is available from the API
+                  recordsArray[0].errors = _objectSpread$2({}, recordsArray[0].errors, {
+                    status: status,
+                    base: [{
+                      message: message
+                    }],
+                    server: _json.errors
+                  });
+                  errorString = JSON.stringify(recordsArray[0].errors);
+                  return _context4.abrupt("return", Promise.reject(new Error(errorString)));
+
+                case 29:
+                case "end":
+                  return _context4.stop();
+              }
+            }
+          }, _callee4, null, [[17, 24]]);
+        }));
+
+        return function (_x9) {
+          return _ref2.apply(this, arguments);
+        };
+      }(), function (error) {
+        // TODO: Handle error states correctly, including handling errors for multiple targets
+        recordsArray.forEach(function (record) {
+          record.isInFlight = false;
+        });
+        recordsArray[0].errors = error;
+        throw error;
+      });
+    }
   }]);
 
   return Store;
@@ -2166,17 +2280,17 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this6 = this;
+    var _this7 = this;
 
     return function (type, attributes) {
       var id = dbOrNewId(attributes);
 
-      var model = _this6.createModel(type, id, {
+      var model = _this7.createModel(type, id, {
         attributes: attributes
       }); // Add the model to the type records index
 
 
-      _this6.data[type].records.set(String(id), model);
+      _this7.data[type].records.set(String(id), model);
 
       return model;
     };
@@ -2186,10 +2300,10 @@ function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this7 = this;
+    var _this8 = this;
 
     return function (type, id) {
-      _this7.data[type].records.delete(String(id));
+      _this8.data[type].records.delete(String(id));
     };
   }
 })), _class$1);

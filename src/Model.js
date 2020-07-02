@@ -281,9 +281,9 @@ class Model {
 
     const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
 
-    const body = JSON.stringify(this.jsonapi(
-      { relationships, attributes }
-    ))
+    const body = JSON.stringify({
+      data: this.jsonapi({ relationships, attributes })
+    })
 
     if (relationships) {
       relationships.forEach((rel) => {
@@ -746,7 +746,7 @@ class Model {
       delete data.id
     }
 
-    return { data }
+    return data
   }
 
   updateAttributes (attributes) {
@@ -757,13 +757,47 @@ class Model {
     })
   }
 
-  /**
-   * clone this object, deeply copy attrs and relationships (related
-   * objects are not cloned, but the relationships themselves are)
-   *
-   * @method clone
-   * @return {Object}
-   */
+  // TODO: this shares a lot of functionality with Store.createOrUpdateModel
+  // Perhaps that shared code
+  updateAttributesFromResponse (data, included) {
+    const tmpId = this.id
+    const { id, attributes, relationships } = data
+
+    transaction(() => {
+      set(this, 'id', id)
+
+      Object.keys(attributes).forEach(key => {
+        set(this, key, attributes[key])
+      })
+      if (relationships) {
+        Object.keys(relationships).forEach(key => {
+          if (!relationships[key].hasOwnProperty('meta')) {
+            // todo: throw error if relationship is not defined in model
+            set(this.relationships, key, relationships[key])
+          }
+        })
+      }
+      if (included) {
+        this.store.createModelsFromData(included)
+      }
+    })
+
+    // Update target isInFlight
+    this.isInFlight = false
+    this._takeSnapshot({ persisted: true })
+
+    transaction(() => {
+      // NOTE: This resolves an issue where a record is persisted but the
+      // index key is still a temp uuid. We can't simply remove the temp
+      // key because there may be associated records that have the temp
+      // uuid id as its only reference to the newly persisted record.
+      // TODO: Figure out a way to update associated records to use the
+      // newly persisted id.
+      this.store.data[this.type].records.set(String(tmpId), this)
+      this.store.data[this.type].records.set(String(this.id), this)
+    })
+  }
+
   clone () {
     const attributes = cloneDeep(this.snapshot.attributes)
     const relationships = cloneDeep(this.snapshot.relationships)

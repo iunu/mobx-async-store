@@ -622,15 +622,13 @@ describe('Model', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
       expect(todo.jsonapi()).toEqual({
-        data: {
-          id: '1',
-          type: 'organizations',
-          attributes: {
-            due_at: timestamp.toISOString(),
-            tags: [],
-            title: 'Buy Milk',
-            options: {}
-          }
+        id: '1',
+        type: 'organizations',
+        attributes: {
+          due_at: timestamp.toISOString(),
+          tags: [],
+          title: 'Buy Milk',
+          options: {}
         }
       })
     })
@@ -646,19 +644,17 @@ describe('Model', () => {
       todo.notes.add(note)
 
       expect(todo.jsonapi({ relationships: ['notes'] })).toEqual({
-        data: {
-          id: '11',
-          type: 'organizations',
-          attributes: {
-            due_at: timestamp.toISOString(),
-            tags: [],
-            title: 'Buy Milk',
-            options: {}
-          },
-          relationships: {
-            notes: {
-              data: [{ id: '11', type: 'notes' }]
-            }
+        id: '11',
+        type: 'organizations',
+        attributes: {
+          due_at: timestamp.toISOString(),
+          tags: [],
+          title: 'Buy Milk',
+          options: {}
+        },
+        relationships: {
+          notes: {
+            data: [{ id: '11', type: 'notes' }]
           }
         }
       })

@@ -1,6 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, requestUrl, uniqueBy, combineRacedRequests } from './utils'
+import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -76,6 +76,37 @@ class Store {
    */
   addModels = (type, data) => {
     return transaction(() => data.map((obj) => this.addModel(type, obj)))
+  }
+
+  /**
+   * Saves a collection of records via a bulk-supported JSONApi
+   * endpoint. All records need to be of the same type.
+   *
+   * @method bulkSave
+   * @param {String} type
+   * @param {Array} records
+   */
+  bulkSave = async (type, records, options = {}) => {
+    const { queryParams } = options
+
+    // get url for record type
+    const url = this.fetchUrl(type, queryParams, null)
+
+    // convert records to an appropriate jsonapi attribute/relationship format
+    const recordAttributes = records.map((record) => record.jsonapi())
+
+    // build a data payload
+    const body = JSON.stringify({ data: recordAttributes })
+
+    // send request
+    const response = this.fetch(url, {
+      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': 'application/vnd.api+json; ext="bulk"' },
+      method: 'POST',
+      body
+    })
+
+    // update records based on response
+    return this.updateRecords(response, records)
   }
 
   /**
@@ -701,6 +732,74 @@ class Store {
       // Return null if record is not found
       return null
     }
+  }
+
+  /**
+   * Defines a resolution for an API call that will update a record or
+   * set of records with the data returned from the API
+   *
+   * @method updateRecords
+   * @param {Promise} a request to the API
+   * @param {Model|Array} records to be updated
+   */
+  updateRecords (promise, records) {
+    // records may be a single record, if so wrap it in an array to make
+    // iteration simpler
+    const recordsArray = Array.isArray(records) ? records : [records]
+    recordsArray.forEach((record) => { record.isInFlight = true })
+
+    return promise.then(
+      async (response) => {
+        const { status } = response
+        if (status === 200 || status === 201) {
+          const json = await response.json()
+          const data = Array.isArray(json.data) ? json.data : [json.data]
+          const { included } = json
+
+          if (data.length !== recordsArray.length) throw new Error('Invariant violated: API response data and records to update do not match')
+
+          data.forEach((targetData, index) => {
+            recordsArray[index].updateAttributesFromResponse(targetData, included)
+          })
+
+          if (json.included) {
+            this.createModelsFromData(json.included)
+          }
+
+          // on success, return the original record(s).
+          // again - this may be a single record so preserve the structure
+          return records
+        } else {
+          recordsArray.forEach(record => { record.isInFlight = false })
+
+          let message = this.genericErrorMessage
+          let json = {}
+          try {
+            json = await response.json()
+            message = parseApiErrors(json.errors, message)
+          } catch (error) {
+            // 500 doesn't return a parsable response
+          }
+          // TODO: add all errors from the API response to the record
+          // also TODO: split server errors by record once the info is available from the API
+          recordsArray[0].errors = {
+            ...recordsArray[0].errors,
+            status: status,
+            base: [{ message }],
+            server: json.errors
+          }
+
+          const errorString = JSON.stringify(recordsArray[0].errors)
+          return Promise.reject(new Error(errorString))
+        }
+      },
+      function (error) {
+        // TODO: Handle error states correctly, including handling errors for multiple targets
+        recordsArray.forEach(record => { record.isInFlight = false })
+        recordsArray[0].errors = error
+        throw error
+      }
+    )
   }
 }
 
