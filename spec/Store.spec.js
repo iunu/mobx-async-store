@@ -135,6 +135,28 @@ describe('Store', () => {
     })
   })
 
+  describe('build', () => {
+    it('builds a model instance', () => {
+      const example = store.build('todos', { title: 'Buy Milk' })
+      expect(example.title).toEqual('Buy Milk')
+    })
+
+    it('does not add it to the store', () => {
+      const example = store.build('todos', { title: 'Buy Milk' })
+      expect(store.getRecord('todos', example.id)).toBeUndefined()
+    })
+
+    it('gives the record a temporary id', () => {
+      const example = store.build('todos', { title: 'Buy Milk' })
+      expect(example.id).toMatch(/^tmp-/)
+    })
+
+    it('unless an id is present in attributes', () => {
+      const example = store.build('todos', { id: 'foo', title: 'Buy Milk' })
+      expect(example.id).toBe('foo')
+    })
+  })
+
   describe('bulkSave', () => {
     it('raises an invariant error if we submit n records and don\'t receive data for n records', async () => {
       expect.assertions(1)
