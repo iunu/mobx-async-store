@@ -99,6 +99,14 @@ class Model {
     return this.store.fetchAll(this.type, params)
   }
 
+  static findOne (id, options = {}) {
+    return this.store.findOne(this.type, id, options)
+  }
+
+  static findAll (options = {}) {
+    return this.store.findAll(this.type, options)
+  }
+
   /**
    * Initializer for model
    *
