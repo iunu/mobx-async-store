@@ -804,9 +804,9 @@
         {
             "file": "src/Store.js",
             "line": 54,
-            "description": "builds an instance of a model but does not add it to the store\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.build('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
+            "description": "Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.build('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
-            "name": "add",
+            "name": "build",
             "params": [
                 {
                     "name": "type",

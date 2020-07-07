@@ -239,6 +239,28 @@ const todos = store.add('todos', [
 ])
 ```
 
+### Building without adding to the store
+
+Records can be built without being added to the store with `Store#build`
+
+```JavaScript
+const todo = store.build('todos', { title: 'Buy Milk', category: 'chores' })
+```
+
+Newly created client records with have a temporary id by default.
+
+```JavaScript
+todo.id
+// => tmp-6b46fa20-db49-11e9-8256-1be9dad543b1
+```
+
+The newly built record will be ephemeral and will not be added to the store
+```JavaScript
+store.findOne('todos', todo.id)
+// => undefined
+```
+
+
 ### Persisting records with `Model#save`
 
 Records created on client side can be persisted via an AJAX request by calling the `save` method on the record.

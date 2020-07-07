@@ -52,7 +52,7 @@ class Store {
   }
 
   /**
-   * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store. 
+   * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.
    * ```
    * kpiHash = { name: "A good thing to measure" }
    * kpi = store.build('kpis', kpiHash)
