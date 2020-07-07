@@ -59,7 +59,7 @@ class Store {
    * kpi.name
    * => "A good thing to measure"
    * ```
-   * @method add
+   * @method build
    * @param {String} type
    * @param {Object} properties the properties to use
    * @return {Object} the new record
