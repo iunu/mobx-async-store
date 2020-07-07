@@ -1371,6 +1371,16 @@ function () {
       }
     };
 
+    this.build = function (type, attributes) {
+      var id = dbOrNewId(attributes);
+
+      var model = _this.createModel(type, id, {
+        attributes: attributes
+      });
+
+      return model;
+    };
+
     _initializerDefineProperty(this, "addModel", _descriptor2$1, this);
 
     this.addModels = function (type, data) {

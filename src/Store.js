@@ -52,6 +52,26 @@ class Store {
   }
 
   /**
+   * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.
+   * ```
+   * kpiHash = { name: "A good thing to measure" }
+   * kpi = store.build('kpis', kpiHash)
+   * kpi.name
+   * => "A good thing to measure"
+   * ```
+   * @method build
+   * @param {String} type
+   * @param {Object} properties the properties to use
+   * @return {Object} the new record
+   */
+  build = (type, attributes) => {
+    const id = dbOrNewId(attributes)
+    const model = this.createModel(type, id, { attributes })
+
+    return model
+  }
+
+  /**
    * @method addModel
    * @param {String} type
    * @param {Object} attributes json api attributes
