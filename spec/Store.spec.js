@@ -1,6 +1,7 @@
 /* global fetch */
 import { isObservable, toJS } from 'mobx'
 import { Store, Model, attribute, relatedToOne, relatedToMany } from '../src/main'
+import { URL_MAX_LENGTH } from '../src/utils'
 
 class Tag extends Model {
   static type = 'tags'
@@ -74,6 +75,34 @@ const mockTodoData = {
 
 const mockTodoResponse = JSON.stringify(mockTodoData)
 const mockTodosResponse = JSON.stringify({ data: [mockTodoData.data] })
+
+const createMockIds = (numberOfIds, idPrefix = '') => {
+  return [...Array(numberOfIds)].map((_, index) => {
+    const startingNumber = Number(idPrefix)
+    return isNaN(startingNumber) ? `${idPrefix}${index}` : String(startingNumber + index)
+  })
+}
+
+const createMockTodosAttributes = (numberOfRecords, idPrefix = '', titlePrefix = 'Todo') => {
+  return createMockIds(numberOfRecords, idPrefix).map(id => {
+    return {
+      id,
+      title: `${titlePrefix} ${id}`
+    }
+  })
+}
+
+const createMockTodosResponse = (numberOfRecords, idPrefix = '', titlePrefix = 'Todo') => {
+  const data = createMockTodosAttributes(numberOfRecords, idPrefix, titlePrefix).map(attributes => {
+    return {
+      id: attributes.id,
+      type: 'todos',
+      attributes
+    }
+  })
+
+  return JSON.stringify({ data })
+}
 
 describe('Store', () => {
   beforeEach(() => {
@@ -540,6 +569,282 @@ describe('Store', () => {
           // set in the store
           const cachedTodo = cachedTodos[0]
           expect(cachedTodo.title).toEqual('New title')
+        })
+      })
+    })
+  })
+
+  describe('findMany', () => {
+    describe('"fromServer" is set to false', () => {
+      describe('records of the specified type do not exist', () => {
+        it('returns an empty array', () => {
+          const todos = store.findMany('todos', ['1001', '5000'], { fromServer: false })
+          expect(todos).toHaveLength(0)
+        })
+      })
+
+      describe('records of the specified type do exist', () => {
+        it('returns existing only models in the store', () => {
+          store.add('todos', createMockTodosAttributes(5, '1000'))
+          const todos = store.findMany('todos', ['1001', '5000'], {
+            fromServer: false
+          })
+          expect(todos).toHaveLength(1)
+        })
+      })
+    })
+
+    describe('when "fromServer" is set to true', () => {
+      it('fetches data from server', async () => {
+        expect.assertions(4)
+        fetch.mockResponse(createMockTodosResponse(5, '1000'))
+        const ids = createMockIds(5, '1000')
+        const todos = await store.findMany('todos', ids, { fromServer: true })
+        expect(todos).toHaveLength(5)
+        expect(todos[0].title).toEqual('Todo 1000')
+        expect(fetch.mock.calls).toHaveLength(1)
+        expect(fetch.mock.calls[0][0])
+          .toEqual('/example_api/todos?filter%5Bids%5D=1000%2C1001%2C1002%2C1003%2C1004')
+      })
+
+      it('uses multiple fetches for data from server', async () => {
+        expect.assertions(7)
+
+        fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
+        fetch.mockResponseOnce(createMockTodosResponse(100, '1100'))
+        fetch.mockResponseOnce(createMockTodosResponse(100, '1200'))
+
+        const ids = createMockIds(300, '1000')
+        const todos = await store.findMany('todos', ids, { fromServer: true })
+
+        expect(todos).toHaveLength(300)
+        expect(store.findAll('todos', { fromServer: false })).toHaveLength(300)
+
+        expect(fetch.mock.calls).toHaveLength(3)
+        const [firstCall] = fetch.mock.calls[0]
+        expect(decodeURIComponent(firstCall)).toMatch(/1139$/)
+
+        fetch.mock.calls.forEach(call => {
+          expect(call[0].length).toBeLessThan(URL_MAX_LENGTH)
+        })
+      })
+
+      it('fetches data with other params', async () => {
+        expect.assertions(8)
+
+        const ids = createMockIds(300, '1000')
+        fetch.mockResponse(mockTodosResponse)
+
+        await store.findMany('todos', ids, {
+          fromServer: true,
+          queryParams: {
+            filter: {
+              title: 'Do taxes',
+              overdue: true
+            }
+          }
+        })
+
+        expect(fetch.mock.calls).toHaveLength(3)
+        fetch.mock.calls.forEach(call => {
+          const [path] = call
+          expect(decodeURIComponent(path)).toMatch('/example_api/todos?filter[title]=Do taxes&filter[overdue]=true')
+          expect(call.length).toBeLessThan(URL_MAX_LENGTH)
+        })
+
+        const [firstPath] = fetch.mock.calls[0]
+        expect(decodeURIComponent(firstPath)).toMatch(/1132$/)
+      })
+
+      it('fetches data with named array filters', async () => {
+        expect.assertions(8)
+        fetch.mockResponse(mockTodosResponse)
+        const ids = createMockIds(300, '1000')
+        await store.findMany('todos', ids, {
+          fromServer: true,
+          queryParams: {
+            filter: {
+              category: 'important'
+            }
+          }
+        })
+
+        expect(fetch.mock.calls).toHaveLength(3)
+        fetch.mock.calls.forEach(call => {
+          const [path] = call
+          expect(decodeURIComponent(path)).toMatch('filter[category]=important')
+          expect(call.length).toBeLessThan(URL_MAX_LENGTH)
+        })
+
+        const [firstPath] = fetch.mock.calls[0]
+        expect(decodeURIComponent(firstPath)).toMatch(/1135$/)
+      })
+
+      it('caches list ids by request url', async () => {
+        expect.assertions(1)
+        fetch.mockResponse(mockTodosResponse)
+        await store.findMany('todos', ['1'], { fromServer: true })
+        const cache = toJS(store.data.todos.cache)
+        expect(cache['/example_api/todos?filter%5Bids%5D=1']).toEqual(['1'])
+      })
+    })
+
+    describe('when "fromServer" is not explicitly set', () => {
+      it('fetches data from server', async () => {
+        expect.assertions(4)
+        fetch.mockResponse(createMockTodosResponse(5, '1000'))
+        const ids = createMockIds(5, '1000')
+        const todos = await store.findMany('todos', ids, { fromServer: true })
+        expect(todos).toHaveLength(5)
+        expect(todos[0].title).toEqual('Todo 1000')
+        expect(fetch.mock.calls).toHaveLength(1)
+        expect(fetch.mock.calls[0][0])
+          .toEqual('/example_api/todos?filter%5Bids%5D=1000%2C1001%2C1002%2C1003%2C1004')
+      })
+
+      it('uses multiple fetches for data from server', async () => {
+        expect.assertions(7)
+
+        fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
+        fetch.mockResponseOnce(createMockTodosResponse(100, '1100'))
+        fetch.mockResponseOnce(createMockTodosResponse(100, '1200'))
+
+        const ids = createMockIds(300, '1000')
+        const todos = await store.findMany('todos', ids, { fromServer: true })
+
+        expect(todos).toHaveLength(300)
+        expect(store.findAll('todos', { fromServer: false })).toHaveLength(300)
+
+        expect(fetch.mock.calls).toHaveLength(3)
+        const [firstCall] = fetch.mock.calls[0]
+        expect(decodeURIComponent(firstCall)).toMatch(/1139$/)
+
+        fetch.mock.calls.forEach(call => {
+          expect(call[0].length).toBeLessThan(URL_MAX_LENGTH)
+        })
+      })
+
+      it('fetches data with other params', async () => {
+        expect.assertions(8)
+
+        const ids = createMockIds(300, '1000')
+        fetch.mockResponse(mockTodosResponse)
+
+        await store.findMany('todos', ids, {
+          fromServer: true,
+          queryParams: {
+            filter: {
+              title: 'Do taxes',
+              overdue: true
+            }
+          }
+        })
+
+        expect(fetch.mock.calls).toHaveLength(3)
+        fetch.mock.calls.forEach(call => {
+          const [path] = call
+          expect(decodeURIComponent(path)).toMatch('/example_api/todos?filter[title]=Do taxes&filter[overdue]=true')
+          expect(call.length).toBeLessThan(URL_MAX_LENGTH)
+        })
+
+        const [firstPath] = fetch.mock.calls[0]
+        expect(decodeURIComponent(firstPath)).toMatch(/1132$/)
+      })
+
+      it('fetches data with named array filters', async () => {
+        expect.assertions(8)
+        fetch.mockResponse(mockTodosResponse)
+        const ids = createMockIds(300, '1000')
+        await store.findMany('todos', ids, {
+          fromServer: true,
+          queryParams: {
+            filter: {
+              category: 'important'
+            }
+          }
+        })
+
+        expect(fetch.mock.calls).toHaveLength(3)
+        fetch.mock.calls.forEach(call => {
+          const [path] = call
+          expect(decodeURIComponent(path)).toMatch('filter[category]=important')
+          expect(call.length).toBeLessThan(URL_MAX_LENGTH)
+        })
+
+        const [firstPath] = fetch.mock.calls[0]
+        expect(decodeURIComponent(firstPath)).toMatch(/1135$/)
+      })
+
+      it('caches list ids by request url', async () => {
+        expect.assertions(1)
+        fetch.mockResponse(mockTodosResponse)
+        await store.findMany('todos', ['1'], { fromServer: true })
+        const cache = toJS(store.data.todos.cache)
+        expect(cache['/example_api/todos?filter%5Bids%5D=1']).toEqual(['1'])
+      })
+
+      describe('no records of the specified type exist', () => {
+        it('uses multiple fetches to request all records from server', async () => {
+          expect.assertions(7)
+
+          fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
+          fetch.mockResponseOnce(createMockTodosResponse(100, '1100'))
+          fetch.mockResponseOnce(createMockTodosResponse(100, '1200'))
+
+          const ids = createMockIds(300, '1000')
+          const todos = await store.findMany('todos', ids, { fromServer: true })
+
+          expect(todos).toHaveLength(300)
+          expect(store.findAll('todos', { fromServer: false })).toHaveLength(300)
+
+          expect(fetch.mock.calls).toHaveLength(3)
+          const [firstCall] = fetch.mock.calls[0]
+          expect(decodeURIComponent(firstCall)).toMatch(/1139$/)
+
+          fetch.mock.calls.forEach(call => {
+            expect(call[0].length).toBeLessThan(URL_MAX_LENGTH)
+          })
+        })
+      })
+
+      describe('some records of the specified type exist', () => {
+        it('uses multiple fetches to request some records from server', async () => {
+          expect.assertions(7)
+
+          fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
+          fetch.mockResponseOnce(createMockTodosResponse(75, '1100'))
+
+          store.add('todos', createMockTodosAttributes(150, '1175'))
+
+          const ids = createMockIds(300, '1000')
+          const todos = await store.findMany('todos', ids)
+
+          expect(todos).toHaveLength(300)
+          expect(store.findAll('todos', { fromServer: false })).toHaveLength(325)
+
+          expect(fetch.mock.calls).toHaveLength(2)
+          expect(fetch.mock.calls.some(call => call[0].match(/1174/))).toBeTruthy()
+          expect(fetch.mock.calls.some(call => call[0].match(/1175/))).toBeFalsy()
+
+          fetch.mock.calls.forEach(call => {
+            expect(call[0].length).toBeLessThan(URL_MAX_LENGTH)
+          })
+        })
+      })
+
+      describe('all records of the specified type exist', () => {
+        it('uses the cache instead of requesting from the server', async () => {
+          expect.assertions(3)
+
+          store.add('todos', createMockTodosAttributes(400, '1000'))
+
+          const ids = createMockIds(300, '1000')
+          const todos = await store.findMany('todos', ids)
+
+          expect(todos).toHaveLength(300)
+          expect(store.findAll('todos', { fromServer: false })).toHaveLength(400)
+
+          expect(fetch.mock.calls).toHaveLength(0)
         })
       })
     })
