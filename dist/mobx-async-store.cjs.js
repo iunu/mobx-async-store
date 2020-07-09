@@ -45,6 +45,7 @@ var QueryString = {
 
 var pending = {};
 var counter = {};
+var URL_MAX_LENGTH = 1024;
 
 var incrementor = function incrementor(key) {
   return function () {
@@ -243,6 +244,37 @@ function diff() {
 
 function parseApiErrors(errors, defaultMessage) {
   return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+}
+/**
+ * Splits an array of ids into a series of strings that can be used to form
+ * queries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.
+ * @method deriveIdQueryStrings
+ * @param {Array} ids an array of ids that will be used in the string
+ * @param {String} restOfUrl the additional text URL that will be passed to the server
+ */
+
+function deriveIdQueryStrings(ids) {
+  var restOfUrl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  var idLength = Math.max.apply(Math, _toConsumableArray(ids.map(function (id) {
+    return String(id).length;
+  })));
+  var maxLength = URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length;
+  var encodedIds = encodeURIComponent(ids.join(','));
+
+  if (encodedIds.length <= maxLength) {
+    return [ids.join(',')];
+  }
+
+  var minLength = maxLength - idLength;
+  var regexp = new RegExp(".{".concat(minLength, ",").concat(maxLength, "}%2C"), 'g'); // the matches
+
+  var matched = encodedIds.match(regexp); // everything that doesn't match, ie the last of the ids
+
+  var tail = encodedIds.replace(regexp, ''); // we manually strip the ',' at the end because javascript's non-capturing regex groups are hard to manage
+
+  return [].concat(_toConsumableArray(matched), [tail]).map(decodeURIComponent).map(function (string) {
+    return string.replace(/,$/, '');
+  });
 }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -1476,6 +1508,57 @@ function () {
       }
     };
 
+    this.findMany = function (type, ids) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var fromServer = options.fromServer;
+      var idsToQuery = ids.slice().map(String);
+
+      if (fromServer === false) {
+        // If fromServer is false never fetch the data and return
+        return _this.getRecords(type).filter(function (record) {
+          return idsToQuery.includes(record.id);
+        });
+      }
+
+      var recordsInStore = [];
+
+      if (fromServer !== true) {
+        recordsInStore = _this.getRecords(type).filter(function (record) {
+          return idsToQuery.includes(record.id);
+        });
+
+        if (recordsInStore.length === idsToQuery.length) {
+          // if fromServer is not false or true, but all the records are in store, wrap it in a promise
+          return Promise.resolve(recordsInStore);
+        }
+
+        var recordIdsInStore = recordsInStore.map(function (_ref2) {
+          var id = _ref2.id;
+          return String(id);
+        }); // If fromServer is not true, we will only query records that are not already in the store
+
+        idsToQuery = idsToQuery.filter(function (id) {
+          return !recordIdsInStore.includes(id);
+        });
+      }
+
+      var queryParams = options.queryParams || {};
+      queryParams.filter = queryParams.filter || {};
+
+      var baseUrl = _this.fetchUrl(type, queryParams);
+
+      var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
+      var query = Promise.all(idQueries.map(function (queryIds) {
+        queryParams.filter.ids = queryIds;
+        return _this.fetchAll(type, queryParams);
+      }));
+      return query.then(function (recordsFromServer) {
+        var _recordsInStore;
+
+        return (_recordsInStore = recordsInStore).concat.apply(_recordsInStore, _toConsumableArray(recordsFromServer));
+      });
+    };
+
     this.findAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var fromServer = options.fromServer,
@@ -2178,7 +2261,7 @@ function () {
       return promise.then(
       /*#__PURE__*/
       function () {
-        var _ref2 = _asyncToGenerator(
+        var _ref3 = _asyncToGenerator(
         /*#__PURE__*/
         _regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, message, _json, errorString;
@@ -2264,7 +2347,7 @@ function () {
         }));
 
         return function (_x9) {
-          return _ref2.apply(this, arguments);
+          return _ref3.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets

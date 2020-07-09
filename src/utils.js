@@ -6,6 +6,7 @@ import flattenDeep from 'lodash/flattenDeep'
 
 const pending = {}
 const counter = {}
+export const URL_MAX_LENGTH = 1024
 
 const incrementor = (key) => () => {
   const count = (counter[key] || 0) + 1
@@ -206,4 +207,33 @@ export function diff (a = {}, b = {}) {
  */
 export function parseApiErrors (errors, defaultMessage) {
   return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
+}
+
+/**
+ * Splits an array of ids into a series of strings that can be used to form
+ * queries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.
+ * @method deriveIdQueryStrings
+ * @param {Array} ids an array of ids that will be used in the string
+ * @param {String} restOfUrl the additional text URL that will be passed to the server
+ */
+
+export function deriveIdQueryStrings (ids, restOfUrl = '') {
+  const idLength = Math.max(...ids.map(id => String(id).length))
+  const maxLength = URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length
+
+  const encodedIds = encodeURIComponent(ids.join(','))
+  if (encodedIds.length <= maxLength) {
+    return [ids.join(',')]
+  }
+
+  const minLength = maxLength - idLength
+
+  const regexp = new RegExp(`.{${minLength},${maxLength}}%2C`, 'g')
+  // the matches
+  const matched = encodedIds.match(regexp)
+  // everything that doesn't match, ie the last of the ids
+  const tail = encodedIds.replace(regexp, '')
+
+  // we manually strip the ',' at the end because javascript's non-capturing regex groups are hard to manage
+  return [...matched, tail].map(decodeURIComponent).map(string => string.replace(/,$/, ''))
 }

@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "1.4.0"
+        "version": "1.5.0"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -962,6 +962,26 @@
         {
             "file": "src/Store.js",
             "line": 212,
+            "description": "Like 'findOne', but with an array ids. If there are instances available in the store,\nit will return those, otherwise it will trigger a fetch\n\n  store.findMany('todos', [1, 2, 3])\n  // fetch triggered\n  => [event1, event2, event3]\n  store.findMany('todos', [3, 2, 1])\n  // no fetch triggered\n  => [event1, event2, event3]\n\npassing `fromServer` as an option will always trigger a\nfetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findMany('todos', [1, 2])\n  // fetch triggered\n  => [event1, event2]\n\n  store.findMany('todos', [1, 2, 3], { fromServer: false })\n  // no fetch triggered, only returns the records already in the store\n  => [event1, event2]\n\n  store.findMany('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n\n  // async stuff happens on the server\n  store.findMany('todos', [1, 2, 3])\n  // no fetch triggered\n  => [event1, event2, event3]\n\n  store.findMany('todos', [1, 2, 3], { fromServer: true })\n  // fetch triggered\n  => [event1, event2, event3]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findMany`\nis called with identical params and values, the store will\nfirst look for the local result (unless `fromServer` is `true`)\n\n  store.findMany('todos', [1, 2, 3], {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })",
+            "itemtype": "method",
+            "name": "findMany",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "the type to find",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 306,
             "description": "finds all of the instances of a given type. If there are instances available in the store,\nit will return those, otherwise it will trigger a fetch\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\npassing `fromServer` as an option will always trigger a\nfetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findAll('todos', { fromServer: false })\n  // no fetch triggered\n  => []\n\n  store.findAll('todos')\n  // fetch triggered\n  => [event1, event2, event3]\n\n  // async stuff happens on the server\n  store.findAll('todos')\n  // no fetch triggered\n  => [event1, event2, event3]\n\n  store.findAll('todos', { fromServer: true })\n  // fetch triggered\n  => [event1, event2, event3, event4]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result (unless `fromServer` is `true`)\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })",
             "itemtype": "method",
             "name": "findAll",
@@ -981,7 +1001,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 276,
+            "line": 370,
             "itemtype": "method",
             "name": "findAndFetchAll",
             "params": [
@@ -1004,7 +1024,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 310,
+            "line": 404,
             "description": "returns cache if exists, returns promise if not",
             "itemtype": "method",
             "name": "findOrFetchAll",
@@ -1024,7 +1044,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 335,
+            "line": 429,
             "description": "Clears the store of a given type, or clears all if no type given\n\n  store.reset('todos')\n  // removes all todos from store\n  store.reset()\n  // clears store",
             "itemtype": "method",
             "name": "reset",
@@ -1032,7 +1052,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 358,
+            "line": 452,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "init",
@@ -1047,7 +1067,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 370,
+            "line": 464,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1062,7 +1082,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 381,
+            "line": 475,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1077,7 +1097,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 395,
+            "line": 489,
             "description": "Creates an obserable index with model types\nas the primary key\n\nObservable({ todos: {} })",
             "itemtype": "method",
             "name": "initializeObservableDataProperty",
@@ -1085,7 +1105,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 416,
+            "line": 510,
             "description": "Wrapper around fetch applies user defined fetch options",
             "itemtype": "method",
             "name": "fetch",
@@ -1105,7 +1125,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 431,
+            "line": 525,
             "description": "Gets type of collection from data observable",
             "itemtype": "method",
             "name": "getType",
@@ -1124,7 +1144,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 442,
+            "line": 536,
             "description": "Get single all record\nbased on query params",
             "itemtype": "method",
             "name": "getMatchingRecord",
@@ -1152,7 +1172,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 460,
+            "line": 554,
             "description": "Gets individual record from store",
             "itemtype": "method",
             "name": "getRecord",
@@ -1176,7 +1196,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 480,
+            "line": 574,
             "description": "Gets records for type of collection from observable",
             "itemtype": "method",
             "name": "getRecords",
@@ -1195,7 +1215,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 500,
+            "line": 594,
             "description": "Gets single from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecord",
@@ -1223,7 +1243,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 515,
+            "line": 609,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecords",
@@ -1247,7 +1267,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 532,
+            "line": 626,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedIds",
@@ -1271,7 +1291,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 547,
+            "line": 641,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedId",
@@ -1295,7 +1315,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 559,
+            "line": 653,
             "description": "Get multiple records by id",
             "itemtype": "method",
             "name": "getRecordsById",
@@ -1319,7 +1339,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 574,
+            "line": 668,
             "description": "Gets records all records or records\nbased on query params",
             "itemtype": "method",
             "name": "getMatchingRecords",
@@ -1343,7 +1363,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 591,
+            "line": 685,
             "description": "Helper to look up model class for type.",
             "itemtype": "method",
             "name": "getKlass",
@@ -1362,7 +1382,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 602,
+            "line": 696,
             "description": "Creates or updates a model",
             "itemtype": "method",
             "name": "createOrUpdateModel",
@@ -1377,7 +1397,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 638,
+            "line": 732,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1392,7 +1412,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 655,
+            "line": 749,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1421,7 +1441,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 676,
+            "line": 770,
             "description": "Builds fetch url based",
             "itemtype": "method",
             "name": "fetchUrl",
@@ -1441,7 +1461,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 690,
+            "line": 784,
             "description": "finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.",
             "itemtype": "method",
             "name": "fetchAll",
@@ -1461,7 +1481,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 724,
+            "line": 818,
             "description": "fetches record by `id`.",
             "async": 1,
             "itemtype": "method",
@@ -1482,7 +1502,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 757,
+            "line": 851,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",
@@ -1517,7 +1537,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 22,
+            "line": 23,
             "description": "Singularizes record type",
             "itemtype": "method",
             "name": "singularizeType",
@@ -1536,7 +1556,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 38,
+            "line": 39,
             "description": "Build request url from base url, endpoint, query params, and ids.",
             "itemtype": "method",
             "name": "requestUrl",
@@ -1548,7 +1568,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 65,
+            "line": 66,
             "description": "Avoids making racing requests by blocking a request if an identical one is\nalready in-flight. Blocked requests will be resolved when the initial request\nresolves by cloning the response.",
             "itemtype": "method",
             "name": "combineRacedRequests",
@@ -1572,7 +1592,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 104,
+            "line": 105,
             "description": "Reducer function for filtering out duplicate records\nby a key provided. Returns a function that has a accumulator and\ncurrent record per Array.reduce.",
             "itemtype": "method",
             "name": "uniqueByReducer",
@@ -1591,7 +1611,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 121,
+            "line": 122,
             "description": "Returns objects unique by key provided",
             "itemtype": "method",
             "name": "uniqueBy",
@@ -1615,7 +1635,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 147,
+            "line": 148,
             "description": "convert a value into a date, pass Date or Moment instances thru\nuntouched",
             "itemtype": "method",
             "name": "makeDate",
@@ -1634,7 +1654,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 159,
+            "line": 160,
             "description": "recursively walk an object and call the `iteratee` function for\neach property. returns an array of results of calls to the iteratee.",
             "itemtype": "method",
             "name": "walk",
@@ -1662,7 +1682,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 177,
+            "line": 178,
             "description": "deeply compare objects a and b and return object paths for attributes\nwhich differ. it is important to note that this comparison is biased\ntoward object a. object a is walked and compared against values in\nobject b. if a property exists in object b, but not in object a, it\nwill not be counted as a difference.",
             "itemtype": "method",
             "name": "diff",
@@ -1685,7 +1705,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 195,
+            "line": 196,
             "description": "A naive way of extracting errors from the server.\nThis needs some real work. Please don't track down the original author\nof the code (it's DEFINITELY not the person writing this documentation).\nCurrently it only extracts the message from the first error, but not only\ncan multiple errors be returned, they will correspond to different records\nin the case of a bulk JSONAPI response.",
             "itemtype": "method",
             "name": "parseApiErrors",
@@ -1698,6 +1718,26 @@
                 {
                     "name": "default",
                     "description": "error message",
+                    "type": "String"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "src/utils.js",
+            "line": 212,
+            "description": "Splits an array of ids into a series of strings that can be used to form\nqueries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.",
+            "itemtype": "method",
+            "name": "deriveIdQueryStrings",
+            "params": [
+                {
+                    "name": "ids",
+                    "description": "an array of ids that will be used in the string",
+                    "type": "Array"
+                },
+                {
+                    "name": "restOfUrl",
+                    "description": "the additional text URL that will be passed to the server",
                     "type": "String"
                 }
             ],

@@ -1,6 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests } from './utils'
+import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -207,6 +207,100 @@ class Store {
       // Otherwise fetch it from the server
       return this.fetchOne(type, id, queryParams)
     }
+  }
+
+  /**
+   * Like 'findOne', but with an array ids. If there are instances available in the store,
+   * it will return those, otherwise it will trigger a fetch
+   *
+   *   store.findMany('todos', [1, 2, 3])
+   *   // fetch triggered
+   *   => [event1, event2, event3]
+   *   store.findMany('todos', [3, 2, 1])
+   *   // no fetch triggered
+   *   => [event1, event2, event3]
+   *
+   * passing `fromServer` as an option will always trigger a
+   * fetch if `true` and never trigger a fetch if `false`.
+   * Otherwise, it will trigger the default behavior
+   *
+   *   store.findMany('todos', [1, 2])
+   *   // fetch triggered
+   *   => [event1, event2]
+   *
+   *   store.findMany('todos', [1, 2, 3], { fromServer: false })
+   *   // no fetch triggered, only returns the records already in the store
+   *   => [event1, event2]
+   *
+   *   store.findMany('todos')
+   *   // fetch triggered
+   *   => [event1, event2, event3]
+   *
+   *   // async stuff happens on the server
+   *   store.findMany('todos', [1, 2, 3])
+   *   // no fetch triggered
+   *   => [event1, event2, event3]
+   *
+   *   store.findMany('todos', [1, 2, 3], { fromServer: true })
+   *   // fetch triggered
+   *   => [event1, event2, event3]
+   *
+   * Query params can be passed as part of the options hash.
+   * The response will be cached, so the next time `findMany`
+   * is called with identical params and values, the store will
+   * first look for the local result (unless `fromServer` is `true`)
+   *
+   *   store.findMany('todos', [1, 2, 3], {
+   *     queryParams: {
+   *       filter: {
+   *         start_time: '2020-06-01T00:00:00.000Z',
+   *         end_time: '2020-06-02T00:00:00.000Z'
+   *       }
+   *     }
+   *   })
+   *
+   * @method findMany
+   * @param {String} type the type to find
+   * @param {Object} options
+   */
+  findMany = (type, ids, options = {}) => {
+    const { fromServer } = options
+
+    let idsToQuery = ids.slice().map(String)
+
+    if (fromServer === false) {
+      // If fromServer is false never fetch the data and return
+      return this.getRecords(type).filter(record => idsToQuery.includes(record.id))
+    }
+
+    let recordsInStore = []
+
+    if (fromServer !== true) {
+      recordsInStore = this.getRecords(type).filter(record => idsToQuery.includes(record.id))
+
+      if (recordsInStore.length === idsToQuery.length) {
+        // if fromServer is not false or true, but all the records are in store, wrap it in a promise
+        return Promise.resolve(recordsInStore)
+      }
+
+      const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
+      // If fromServer is not true, we will only query records that are not already in the store
+      idsToQuery = idsToQuery.filter(id => !recordIdsInStore.includes(id))
+    }
+
+    const queryParams = options.queryParams || {}
+    queryParams.filter = queryParams.filter || {}
+    const baseUrl = this.fetchUrl(type, queryParams)
+    const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
+
+    const query = Promise.all(
+      idQueries.map((queryIds) => {
+        queryParams.filter.ids = queryIds
+        return this.fetchAll(type, queryParams)
+      })
+    )
+
+    return query.then(recordsFromServer => recordsInStore.concat(...recordsFromServer))
   }
 
   /**

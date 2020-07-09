@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 1.4.0</em>
+            <em>API Docs for: 1.5.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -85,7 +85,7 @@
     <pre class="code prettyprint linenums">
 /* global fetch */
 import { action, observable, transaction, set, toJS } from &#x27;mobx&#x27;
-import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests } from &#x27;./utils&#x27;
+import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from &#x27;./utils&#x27;
 
 /**
  * Defines the Artemis Data Store class.
@@ -292,6 +292,100 @@ class Store {
       // Otherwise fetch it from the server
       return this.fetchOne(type, id, queryParams)
     }
+  }
+
+  /**
+   * Like &#x27;findOne&#x27;, but with an array ids. If there are instances available in the store,
+   * it will return those, otherwise it will trigger a fetch
+   *
+   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3])
+   *   // fetch triggered
+   *   =&gt; [event1, event2, event3]
+   *   store.findMany(&#x27;todos&#x27;, [3, 2, 1])
+   *   // no fetch triggered
+   *   =&gt; [event1, event2, event3]
+   *
+   * passing &#x60;fromServer&#x60; as an option will always trigger a
+   * fetch if &#x60;true&#x60; and never trigger a fetch if &#x60;false&#x60;.
+   * Otherwise, it will trigger the default behavior
+   *
+   *   store.findMany(&#x27;todos&#x27;, [1, 2])
+   *   // fetch triggered
+   *   =&gt; [event1, event2]
+   *
+   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3], { fromServer: false })
+   *   // no fetch triggered, only returns the records already in the store
+   *   =&gt; [event1, event2]
+   *
+   *   store.findMany(&#x27;todos&#x27;)
+   *   // fetch triggered
+   *   =&gt; [event1, event2, event3]
+   *
+   *   // async stuff happens on the server
+   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3])
+   *   // no fetch triggered
+   *   =&gt; [event1, event2, event3]
+   *
+   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3], { fromServer: true })
+   *   // fetch triggered
+   *   =&gt; [event1, event2, event3]
+   *
+   * Query params can be passed as part of the options hash.
+   * The response will be cached, so the next time &#x60;findMany&#x60;
+   * is called with identical params and values, the store will
+   * first look for the local result (unless &#x60;fromServer&#x60; is &#x60;true&#x60;)
+   *
+   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3], {
+   *     queryParams: {
+   *       filter: {
+   *         start_time: &#x27;2020-06-01T00:00:00.000Z&#x27;,
+   *         end_time: &#x27;2020-06-02T00:00:00.000Z&#x27;
+   *       }
+   *     }
+   *   })
+   *
+   * @method findMany
+   * @param {String} type the type to find
+   * @param {Object} options
+   */
+  findMany = (type, ids, options = {}) =&gt; {
+    const { fromServer } = options
+
+    let idsToQuery = ids.slice().map(String)
+
+    if (fromServer === false) {
+      // If fromServer is false never fetch the data and return
+      return this.getRecords(type).filter(record =&gt; idsToQuery.includes(record.id))
+    }
+
+    let recordsInStore = []
+
+    if (fromServer !== true) {
+      recordsInStore = this.getRecords(type).filter(record =&gt; idsToQuery.includes(record.id))
+
+      if (recordsInStore.length === idsToQuery.length) {
+        // if fromServer is not false or true, but all the records are in store, wrap it in a promise
+        return Promise.resolve(recordsInStore)
+      }
+
+      const recordIdsInStore = recordsInStore.map(({ id }) =&gt; String(id))
+      // If fromServer is not true, we will only query records that are not already in the store
+      idsToQuery = idsToQuery.filter(id =&gt; !recordIdsInStore.includes(id))
+    }
+
+    const queryParams = options.queryParams || {}
+    queryParams.filter = queryParams.filter || {}
+    const baseUrl = this.fetchUrl(type, queryParams)
+    const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
+
+    const query = Promise.all(
+      idQueries.map((queryIds) =&gt; {
+        queryParams.filter.ids = queryIds
+        return this.fetchAll(type, queryParams)
+      })
+    )
+
+    return query.then(recordsFromServer =&gt; recordsInStore.concat(...recordsFromServer))
   }
 
   /**
