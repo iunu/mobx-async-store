@@ -1618,7 +1618,7 @@ function () {
 
       if (records.length > 0) {
         // Return data
-        return records;
+        return Promise.resolve(records);
       } else {
         // Otherwise fetch it from the server
         return _this.fetchAll(type, queryParams);
