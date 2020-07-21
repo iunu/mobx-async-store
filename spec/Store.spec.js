@@ -511,7 +511,7 @@ describe('Store', () => {
       })
 
       describe('if a query is made with identical params', () => {
-        it.only('skips fetch and returns local data from the store', async () => {
+        it('skips fetch and returns local data from the store', async () => {
           expect.assertions(6)
           // Query params for both requests
           const queryParams = { filter: { overdue: true } }
