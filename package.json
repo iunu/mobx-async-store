@@ -1,6 +1,6 @@
 {
   "name": "@artemisag/mobx-async-store",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "module": "dist/mobx-async-store.esm.js",
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",

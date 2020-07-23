@@ -159,7 +159,7 @@ describe('Store', () => {
       const examples = store.add('todos', exampleData)
       expect(examples).toHaveLength(2)
 
-      const foundExamples = store.findAll('todos', exampleData, { fromServer: false })
+      const foundExamples = store.findAll('todos', { fromServer: false })
       expect(foundExamples).toHaveLength(2)
     })
   })
@@ -512,17 +512,21 @@ describe('Store', () => {
 
       describe('if a query is made with identical params', () => {
         it('skips fetch and returns local data from the store', async () => {
-          expect.assertions(4)
+          expect.assertions(6)
           // Query params for both requests
           const queryParams = { filter: { overdue: true } }
           // Only need to mock response once :)
           fetch.mockResponse(mockTodosResponse)
           // Fetch todos
-          let todos = await store.findAll('todos', { queryParams })
+          let query = store.findAll('todos', { queryParams })
+          expect(query).toBeInstanceOf(Promise)
+          let todos = await query
           expect(todos).toHaveLength(1)
           expect(fetch.mock.calls).toHaveLength(1)
           // Find todos a second time
-          todos = await store.findAll('todos', { queryParams })
+          query = store.findAll('todos', { queryParams })
+          expect(query).toBeInstanceOf(Promise)
+          todos = await query
           // Not fetch should be kicked off
           expect(todos).toHaveLength(1)
           expect(fetch.mock.calls).toHaveLength(1)
