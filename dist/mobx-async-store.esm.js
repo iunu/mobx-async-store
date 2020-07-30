@@ -1440,7 +1440,7 @@ function () {
                 url = _this.fetchUrl(type, queryParams, null); // convert records to an appropriate jsonapi attribute/relationship format
 
                 recordAttributes = records.map(function (record) {
-                  return record.jsonapi();
+                  return record.jsonapi(options);
                 }); // build a data payload
 
                 body = JSON.stringify({
