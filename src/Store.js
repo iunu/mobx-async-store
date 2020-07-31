@@ -113,7 +113,7 @@ class Store {
     const url = this.fetchUrl(type, queryParams, null)
 
     // convert records to an appropriate jsonapi attribute/relationship format
-    const recordAttributes = records.map((record) => record.jsonapi())
+    const recordAttributes = records.map((record) => record.jsonapi(options))
 
     // build a data payload
     const body = JSON.stringify({ data: recordAttributes })
