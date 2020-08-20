@@ -894,15 +894,30 @@ class Store {
           } catch (error) {
             // 500 doesn't return a parsable response
           }
-          // TODO: add all errors from the API response to the record
-          // also TODO: split server errors by record once the info is available from the API
-          recordsArray[0].errors = {
-            ...recordsArray[0].errors,
-            status: status,
-            base: [{ message }],
-            server: json.errors
-          }
 
+          // Add all errors from the API response to the record(s).
+          // This is done by comparing the pointer in the error to
+          // the request.
+          json.errors.forEach(error => {
+            const { index, key, path } = this.parsePointer(error)
+            if (path != null) {
+              // TODO: this difference in structure is a problem -
+              //       errors.name may be an array while errors.options
+              //       is an object. These should be consistent.
+              if (recordsArray[index].errors[key] == null) {
+                recordsArray[index].errors[key] = {}
+              }
+              const errors = recordsArray[index].errors[key][path] || []
+              errors.push({ message:error.detail })
+              recordsArray[index].errors[key][path] = errors
+            } else {
+              const errors = recordsArray[index].errors[key] || []
+              errors.push({ message:error.detail })
+              recordsArray[index].errors[key] = errors
+            }
+          })
+
+          // TODO: add any errors that have no index to general errors
           const errorString = JSON.stringify(recordsArray[0].errors)
           return Promise.reject(new Error(errorString))
         }
@@ -914,6 +929,47 @@ class Store {
         throw error
       }
     )
+  }
+
+  /**
+   * Parses the pointer of the error to retrieve the index of the
+   * record the error belongs to, the top level attribute, and any
+   * path to a nested attribute value (we have a precedence of using
+   * period separated paths to describe values for attributes that
+   * are objects in order to keep the errors interface consistent)
+   *
+   * If there is no parsed index, then assume the payload was for
+   * a single record and default to 0.
+   *
+   * ex.
+   *   error = {
+   *     detail: "Quantity can't be blank",
+   *     source: {
+   *       pointer: '/data/1/attributes/options/resources/0/quantity'
+   *     },
+   *     title: 'Invalid quantity'
+   *   }
+   *
+   * parsePointer(error)
+   * > {
+   *     index: 1,
+   *     key: 'options',
+   *     path: 'resources.0.quantity'
+   *   }
+   *
+   * @method parsePointer
+   * @param {Object} error
+   * @return {Object} the matching parts of the pointer
+   */
+  parsePointer (error) {
+    const regex = /\/data\/(?<index>\d+)?\/?attributes\/(?<key>[^/]*)\/?(?<path>.*)?$/
+    const { groups: { index = 0, key, path } } = error.source.pointer.match(regex)
+
+    return {
+      index: parseInt(index),
+      key,
+      path: path?.replace(/\//g, '.')
+    }
   }
 }
 

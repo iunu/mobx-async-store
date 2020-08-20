@@ -18,11 +18,11 @@ import cloneDeep from 'lodash/cloneDeep';
 import _isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
 import findLast from 'lodash/findLast';
+import _inherits from '@babel/runtime/helpers/inherits';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
-import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
-import _inherits from '@babel/runtime/helpers/inherits';
 import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
+import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 
 var QueryString = {
   parse: function parse(str) {
@@ -1353,6 +1353,8 @@ function () {
 
 var _class$1, _descriptor$1, _descriptor2$1, _descriptor3$1, _temp$1;
 
+function _wrapRegExp(re, groups) { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, undefined, groups); }; var _RegExp = _wrapNativeSuper(RegExp); var _super = RegExp.prototype; var _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = _RegExp.call(this, re, flags); _groups.set(_this, groups || _groups.get(re)); return _this; } _inherits(BabelRegExp, _RegExp); BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) result.groups = buildGroups(result, this); return result; }; BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if (typeof substitution === "string") { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } else if (typeof substitution === "function") { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = []; args.push.apply(args, arguments); if (_typeof(args[args.length - 1]) !== "object") { args.push(buildGroups(args, _this)); } return substitution.apply(this, args); }); } else { return _super[Symbol.replace].call(this, str, substitution); } }; function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { groups[name] = result[g[name]]; return groups; }, Object.create(null)); } return _wrapRegExp.apply(this, arguments); }
+
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -2320,15 +2322,40 @@ function () {
                   _context4.t0 = _context4["catch"](17);
 
                 case 26:
-                  // TODO: add all errors from the API response to the record
-                  // also TODO: split server errors by record once the info is available from the API
-                  recordsArray[0].errors = _objectSpread$2({}, recordsArray[0].errors, {
-                    status: status,
-                    base: [{
-                      message: message
-                    }],
-                    server: _json.errors
-                  });
+                  // Add all errors from the API response to the record(s).
+                  // This is done by comparing the pointer in the error to
+                  // the request.
+                  _json.errors.forEach(function (error) {
+                    var _this6$parsePointer = _this6.parsePointer(error),
+                        index = _this6$parsePointer.index,
+                        key = _this6$parsePointer.key,
+                        path = _this6$parsePointer.path;
+
+                    if (path != null) {
+                      // TODO: this difference in structure is a problem -
+                      //       errors.name may be an array while errors.options
+                      //       is an object. These should be consistent.
+                      if (recordsArray[index].errors[key] == null) {
+                        recordsArray[index].errors[key] = {};
+                      }
+
+                      var errors = recordsArray[index].errors[key][path] || [];
+                      errors.push({
+                        message: error.detail
+                      });
+                      recordsArray[index].errors[key][path] = errors;
+                    } else {
+                      var _errors = recordsArray[index].errors[key] || [];
+
+                      _errors.push({
+                        message: error.detail
+                      });
+
+                      recordsArray[index].errors[key] = _errors;
+                    }
+                  }); // TODO: add any errors that have no index to general errors
+
+
                   errorString = JSON.stringify(recordsArray[0].errors);
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
@@ -2351,6 +2378,59 @@ function () {
         recordsArray[0].errors = error;
         throw error;
       });
+    }
+    /**
+     * Parses the pointer of the error to retrieve the index of the
+     * record the error belongs to, the top level attribute, and any
+     * path to a nested attribute value (we have a precedence of using
+     * period separated paths to describe values for attributes that
+     * are objects in order to keep the errors interface consistent)
+     *
+     * If there is no parsed index, then assume the payload was for
+     * a single record and default to 0.
+     *
+     * ex.
+     *   error = {
+     *     detail: "Quantity can't be blank",
+     *     source: {
+     *       pointer: '/data/1/attributes/options/resources/0/quantity'
+     *     },
+     *     title: 'Invalid quantity'
+     *   }
+     *
+     * parsePointer(error)
+     * > {
+     *     index: 1,
+     *     key: 'options',
+     *     path: 'resources.0.quantity'
+     *   }
+     *
+     * @method parsePointer
+     * @param {Object} error
+     * @return {Object} the matching parts of the pointer
+     */
+
+  }, {
+    key: "parsePointer",
+    value: function parsePointer(error) {
+      var regex = _wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/([\0-\.0-\uFFFF]*)\/?(.*)?$/, {
+        index: 1,
+        key: 2,
+        path: 3
+      });
+
+      var _error$source$pointer = error.source.pointer.match(regex),
+          _error$source$pointer2 = _error$source$pointer.groups,
+          _error$source$pointer3 = _error$source$pointer2.index,
+          index = _error$source$pointer3 === void 0 ? 0 : _error$source$pointer3,
+          key = _error$source$pointer2.key,
+          path = _error$source$pointer2.path;
+
+      return {
+        index: parseInt(index),
+        key: key,
+        path: path === null || path === void 0 ? void 0 : path.replace(/\//g, '.')
+      };
     }
   }]);
 
