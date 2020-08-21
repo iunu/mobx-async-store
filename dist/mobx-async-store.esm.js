@@ -2328,31 +2328,11 @@ function () {
                   _json.errors.forEach(function (error) {
                     var _this6$parsePointer = _this6.parsePointer(error),
                         index = _this6$parsePointer.index,
-                        key = _this6$parsePointer.key,
-                        path = _this6$parsePointer.path;
+                        key = _this6$parsePointer.key;
 
-                    if (path != null) {
-                      // TODO: this difference in structure is a problem -
-                      //       errors.name may be an array while errors.options
-                      //       is an object. These should be consistent.
-                      if (recordsArray[index].errors[key] == null) {
-                        recordsArray[index].errors[key] = {};
-                      }
-
-                      var errors = recordsArray[index].errors[key][path] || [];
-                      errors.push({
-                        message: error.detail
-                      });
-                      recordsArray[index].errors[key][path] = errors;
-                    } else {
-                      var _errors = recordsArray[index].errors[key] || [];
-
-                      _errors.push({
-                        message: error.detail
-                      });
-
-                      recordsArray[index].errors[key] = _errors;
-                    }
+                    var errors = recordsArray[index].errors[key] || [];
+                    errors.push(error);
+                    recordsArray[index].errors[key] = errors;
                   }); // TODO: add any errors that have no index to general errors
 
 
@@ -2381,10 +2361,8 @@ function () {
     }
     /**
      * Parses the pointer of the error to retrieve the index of the
-     * record the error belongs to, the top level attribute, and any
-     * path to a nested attribute value (we have a precedence of using
-     * period separated paths to describe values for attributes that
-     * are objects in order to keep the errors interface consistent)
+     * record the error belongs to and the full path to the attribute
+     * which will serve as the key for the error.
      *
      * If there is no parsed index, then assume the payload was for
      * a single record and default to 0.
@@ -2392,17 +2370,14 @@ function () {
      * ex.
      *   error = {
      *     detail: "Quantity can't be blank",
-     *     source: {
-     *       pointer: '/data/1/attributes/options/resources/0/quantity'
-     *     },
+     *     source: { pointer: '/data/1/attributes/options/barcode' },
      *     title: 'Invalid quantity'
      *   }
      *
      * parsePointer(error)
      * > {
      *     index: 1,
-     *     key: 'options',
-     *     path: 'resources.0.quantity'
+     *     key: 'options.barcode'
      *   }
      *
      * @method parsePointer
@@ -2413,23 +2388,20 @@ function () {
   }, {
     key: "parsePointer",
     value: function parsePointer(error) {
-      var regex = _wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/([\0-\.0-\uFFFF]*)\/?(.*)?$/, {
+      var regex = _wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/(.*)$/, {
         index: 1,
-        key: 2,
-        path: 3
+        key: 2
       });
 
       var _error$source$pointer = error.source.pointer.match(regex),
           _error$source$pointer2 = _error$source$pointer.groups,
           _error$source$pointer3 = _error$source$pointer2.index,
           index = _error$source$pointer3 === void 0 ? 0 : _error$source$pointer3,
-          key = _error$source$pointer2.key,
-          path = _error$source$pointer2.path;
+          key = _error$source$pointer2.key;
 
       return {
         index: parseInt(index),
-        key: key,
-        path: path === null || path === void 0 ? void 0 : path.replace(/\//g, '.')
+        key: key === null || key === void 0 ? void 0 : key.replace(/\//g, '.')
       };
     }
   }]);
