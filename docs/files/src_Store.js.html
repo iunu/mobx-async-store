@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 2.0.1</em>
+            <em>API Docs for: 2.1.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -979,15 +979,18 @@ class Store {
           } catch (error) {
             // 500 doesn&#x27;t return a parsable response
           }
-          // TODO: add all errors from the API response to the record
-          // also TODO: split server errors by record once the info is available from the API
-          recordsArray[0].errors = {
-            ...recordsArray[0].errors,
-            status: status,
-            base: [{ message }],
-            server: json.errors
-          }
 
+          // Add all errors from the API response to the record(s).
+          // This is done by comparing the pointer in the error to
+          // the request.
+          json.errors.forEach(error =&gt; {
+            const { index, key } = this.parsePointer(error)
+            const errors = recordsArray[index].errors[key] || []
+            errors.push(error)
+            recordsArray[index].errors[key] = errors
+          })
+
+          // TODO: add any errors that have no index to general errors
           const errorString = JSON.stringify(recordsArray[0].errors)
           return Promise.reject(new Error(errorString))
         }
@@ -999,6 +1002,41 @@ class Store {
         throw error
       }
     )
+  }
+
+  /**
+   * Parses the pointer of the error to retrieve the index of the
+   * record the error belongs to and the full path to the attribute
+   * which will serve as the key for the error.
+   *
+   * If there is no parsed index, then assume the payload was for
+   * a single record and default to 0.
+   *
+   * ex.
+   *   error = {
+   *     detail: &quot;Quantity can&#x27;t be blank&quot;,
+   *     source: { pointer: &#x27;/data/1/attributes/options/barcode&#x27; },
+   *     title: &#x27;Invalid quantity&#x27;
+   *   }
+   *
+   * parsePointer(error)
+   * &gt; {
+   *     index: 1,
+   *     key: &#x27;options.barcode&#x27;
+   *   }
+   *
+   * @method parsePointer
+   * @param {Object} error
+   * @return {Object} the matching parts of the pointer
+   */
+  parsePointer (error) {
+    const regex = /\/data\/(?&lt;index&gt;\d+)?\/?attributes\/(?&lt;key&gt;.*)$/
+    const { groups: { index = 0, key } } = error.source.pointer.match(regex)
+
+    return {
+      index: parseInt(index),
+      key: key?.replace(/\//g, &#x27;.&#x27;)
+    }
   }
 }
 

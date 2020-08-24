@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 2.0.1</em>
+            <em>API Docs for: 2.1.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -280,6 +280,10 @@
                             </li>
                             <li class="index-item method">
                                 <a href="#method_initializeObservableDataProperty">initializeObservableDataProperty</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_parsePointer">parsePointer</a>
 
                             </li>
                             <li class="index-item method">
@@ -2769,6 +2773,88 @@ as the primary key</p>
     </div>
 
 
+
+
+</div>
+<div id="method_parsePointer" class="method item">
+    <h3 class="name"><code>parsePointer</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>error</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Store.js.html#l922"><code>src&#x2F;Store.js:922</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Parses the pointer of the error to retrieve the index of the
+record the error belongs to and the full path to the attribute
+which will serve as the key for the error.</p>
+<p>If there is no parsed index, then assume the payload was for
+a single record and default to 0.</p>
+<p>ex.
+error = {
+detail: &quot;Quantity can't be blank&quot;,
+source: { pointer: '/data/1/attributes/options/barcode' },
+title: 'Invalid quantity'
+}</p>
+<p>parsePointer(error)</p>
+<blockquote>
+<p>{
+index: 1,
+key: 'options.barcode'
+}</p>
+</blockquote>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">error</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Object</span>:
+                    <p>the matching parts of the pointer</p>
+
+            </div>
+        </div>
 
 
 </div>

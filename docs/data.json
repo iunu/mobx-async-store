@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "2.0.1"
+        "version": "2.1.0"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -1518,6 +1518,25 @@
                     "type": "Model|Array"
                 }
             ],
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 922,
+            "description": "Parses the pointer of the error to retrieve the index of the\nrecord the error belongs to and the full path to the attribute\nwhich will serve as the key for the error.\n\nIf there is no parsed index, then assume the payload was for\na single record and default to 0.\n\nex.\n  error = {\n    detail: \"Quantity can't be blank\",\n    source: { pointer: '/data/1/attributes/options/barcode' },\n    title: 'Invalid quantity'\n  }\n\nparsePointer(error)\n> {\n    index: 1,\n    key: 'options.barcode'\n  }",
+            "itemtype": "method",
+            "name": "parsePointer",
+            "params": [
+                {
+                    "name": "error",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the matching parts of the pointer",
+                "type": "Object"
+            },
             "class": "Store"
         },
         {
