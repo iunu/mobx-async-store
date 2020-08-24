@@ -1036,34 +1036,6 @@ describe('Model', () => {
       expect(todo.hasUnpersistedChanges).toBe(false)
     })
 
-    it('includes all model errors from the server', async () => {
-      const note = store.add('notes', {
-        id: 10,
-        description: ''
-      })
-      const todo = store.add('organizations', { title: 'Good title' })
-      todo.notes.add(note)
-
-      // Mock the API response
-      fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
-
-      // Trigger the save function and subsequent request
-      try {
-        await note.save()
-      } catch (errors) {
-        // Assert that errors are set on the record object
-        expect(note.errors).toEqual({
-          status: 422,
-          base: [
-            { message: 'Something went wrong.' }
-          ],
-          server: {
-            description: ['can\'t be blank']
-          }
-        })
-      }
-    })
-
     it('does not set hasUnpersistedChanges after save fails', async () => {
       const note = store.add('notes', {
         description: ''
