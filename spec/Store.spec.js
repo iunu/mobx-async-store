@@ -308,6 +308,39 @@ describe('Store', () => {
     }
 
     describe('error handling', () => {
+      it('ignores errors without a pointer', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            title: "Invalid title"
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch {
+          expect(todo.errors).toEqual({})
+        }
+      })
+
+      it('ignores pointers not in the jsonapi spec format', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            source: { pointer: 'attributes:title' },
+            title: "Invalid title"
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch {
+          expect(todo.errors).toEqual({})
+        }
+      })
+
       it('adds server errors to the models', async () => {
         const todo = store.add('todos', { title: '' })
         const errors = [
@@ -321,9 +354,8 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), todo)
         } catch {
+          expect(todo.errors.title).toEqual(errors)
         }
-
-        expect(todo.errors.title).toEqual(errors)
       })
 
       it('adds multiple server errors for the same attribute', async () => {
@@ -344,9 +376,8 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), todo)
         } catch {
+          expect(todo.errors.title).toEqual(errors)
         }
-
-        expect(todo.errors.title).toEqual(errors)
       })
 
       it('adds server errors for nested attributes', async () => {
@@ -364,9 +395,8 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), todo)
         } catch {
+          expect(todo.errors['options.resources.0.quantity']).toEqual(errors)
         }
-
-        expect(todo.errors['options.resources.0.quantity']).toEqual(errors)
       })
 
       it('adds server errors for multiple records', async () => {
@@ -390,10 +420,9 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch {
+          expect(todo1.errors.title).toEqual([errors[0]])
+          expect(todo2.errors.quantity).toEqual([errors[1]])
         }
-
-        expect(todo1.errors.title).toEqual([errors[0]])
-        expect(todo2.errors.quantity).toEqual([errors[1]])
       })
 
       it('adds server errors to the right record', async () => {
@@ -410,9 +439,8 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch {
+          expect(todo2.errors.title).toEqual(errors)
         }
-
-        expect(todo2.errors.title).toEqual(errors)
       })
     })
   })

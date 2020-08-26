@@ -1,6 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
+import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -886,23 +886,24 @@ class Store {
         } else {
           recordsArray.forEach(record => { record.isInFlight = false })
 
-          let message = this.genericErrorMessage
           let json = {}
           try {
             json = await response.json()
-            message = parseApiErrors(json.errors, message)
           } catch (error) {
             // 500 doesn't return a parsable response
+            return Promise.reject(new Error(this.genericErrorMessage))
           }
 
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
           json.errors.forEach(error => {
-            const { index, key } = this.parsePointer(error)
-            const errors = recordsArray[index].errors[key] || []
-            errors.push(error)
-            recordsArray[index].errors[key] = errors
+            const { index, key } = parseErrorPointer(error)
+            if (key != null) {
+              const errors = recordsArray[index].errors[key] || []
+              errors.push(error)
+              recordsArray[index].errors[key] = errors
+            }
           })
 
           // TODO: add any errors that have no index to general errors
@@ -917,41 +918,6 @@ class Store {
         throw error
       }
     )
-  }
-
-  /**
-   * Parses the pointer of the error to retrieve the index of the
-   * record the error belongs to and the full path to the attribute
-   * which will serve as the key for the error.
-   *
-   * If there is no parsed index, then assume the payload was for
-   * a single record and default to 0.
-   *
-   * ex.
-   *   error = {
-   *     detail: "Quantity can't be blank",
-   *     source: { pointer: '/data/1/attributes/options/barcode' },
-   *     title: 'Invalid quantity'
-   *   }
-   *
-   * parsePointer(error)
-   * > {
-   *     index: 1,
-   *     key: 'options.barcode'
-   *   }
-   *
-   * @method parsePointer
-   * @param {Object} error
-   * @return {Object} the matching parts of the pointer
-   */
-  parsePointer (error) {
-    const regex = /\/data\/(?<index>\d+)?\/?attributes\/(?<key>.*)$/
-    const { groups: { index = 0, key } } = error.source.pointer.match(regex)
-
-    return {
-      index: parseInt(index),
-      key: key?.replace(/\//g, '.')
-    }
   }
 }
 

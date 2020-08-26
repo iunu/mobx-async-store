@@ -194,19 +194,39 @@ export function diff (a = {}, b = {}) {
 }
 
 /**
- * A naive way of extracting errors from the server.
- * This needs some real work. Please don't track down the original author
- * of the code (it's DEFINITELY not the person writing this documentation).
- * Currently it only extracts the message from the first error, but not only
- * can multiple errors be returned, they will correspond to different records
- * in the case of a bulk JSONAPI response.
+ * Parses the pointer of the error to retrieve the index of the
+ * record the error belongs to and the full path to the attribute
+ * which will serve as the key for the error.
  *
- * @method parseApiErrors
- * @param {Array} a request to the API
- * @param {String} default error message
+ * If there is no parsed index, then assume the payload was for
+ * a single record and default to 0.
+ *
+ * ex.
+ *   error = {
+ *     detail: "Foo can't be blank",
+ *     source: { pointer: '/data/1/attributes/options/foo' },
+ *     title: 'Invalid foo'
+ *   }
+ *
+ * parsePointer(error)
+ * > {
+ *     index: 1,
+ *     key: 'options.foo'
+ *   }
+ *
+ * @method parseErrorPointer
+ * @param {Object} error
+ * @return {Object} the matching parts of the pointer
  */
-export function parseApiErrors (errors, defaultMessage) {
-  return (errors[0].detail.length === 0) ? defaultMessage : errors[0].detail[0]
+export function parseErrorPointer (error = {}) {
+  const regex = /\/data\/(?<index>\d+)?\/?attributes\/(?<key>.*)$/
+  const match = dig(error, 'source.pointer', '').match(regex)
+  const { index = 0, key } = match?.groups || {}
+
+  return {
+    index: parseInt(index),
+    key: key?.replace(/\//g, '.')
+  }
 }
 
 /**
