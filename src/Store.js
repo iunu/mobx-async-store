@@ -906,8 +906,9 @@ class Store {
             }
           })
 
-          // TODO: add any errors that have no index to general errors
-          const errorString = JSON.stringify(recordsArray[0].errors)
+          const errorString = recordsArray
+            .map(record => JSON.stringify(record.errors))
+            .join(';')
           return Promise.reject(new Error(errorString))
         }
       },
