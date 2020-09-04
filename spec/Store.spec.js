@@ -380,6 +380,7 @@ describe('Store', () => {
         }
       })
 
+      // Note: There is no support for model validations for nested attributes
       it('adds server errors for nested attributes', async () => {
         const todo = store.add('todos', { title: '' })
         const errors = [
