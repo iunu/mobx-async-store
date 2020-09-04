@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "2.0.1"
+        "version": "3.0.0"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -1706,26 +1706,25 @@
         {
             "file": "src/utils.js",
             "line": 196,
-            "description": "A naive way of extracting errors from the server.\nThis needs some real work. Please don't track down the original author\nof the code (it's DEFINITELY not the person writing this documentation).\nCurrently it only extracts the message from the first error, but not only\ncan multiple errors be returned, they will correspond to different records\nin the case of a bulk JSONAPI response.",
+            "description": "Parses the pointer of the error to retrieve the index of the\nrecord the error belongs to and the full path to the attribute\nwhich will serve as the key for the error.\n\nIf there is no parsed index, then assume the payload was for\na single record and default to 0.\n\nex.\n  error = {\n    detail: \"Foo can't be blank\",\n    source: { pointer: '/data/1/attributes/options/foo' },\n    title: 'Invalid foo'\n  }\n\nparsePointer(error)\n> {\n    index: 1,\n    key: 'options.foo'\n  }",
             "itemtype": "method",
-            "name": "parseApiErrors",
+            "name": "parseErrorPointer",
             "params": [
                 {
-                    "name": "a",
-                    "description": "request to the API",
-                    "type": "Array"
-                },
-                {
-                    "name": "default",
-                    "description": "error message",
-                    "type": "String"
+                    "name": "error",
+                    "description": "",
+                    "type": "Object"
                 }
             ],
+            "return": {
+                "description": "the matching parts of the pointer",
+                "type": "Object"
+            },
             "class": ""
         },
         {
             "file": "src/utils.js",
-            "line": 212,
+            "line": 232,
             "description": "Splits an array of ids into a series of strings that can be used to form\nqueries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.",
             "itemtype": "method",
             "name": "deriveIdQueryStrings",

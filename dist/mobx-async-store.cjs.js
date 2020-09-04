@@ -15,6 +15,10 @@ var _applyDecoratedDescriptor = _interopDefault(require('@babel/runtime/helpers/
 require('@babel/runtime/helpers/initializerWarningHelper');
 var _typeof = _interopDefault(require('@babel/runtime/helpers/typeof'));
 var mobx = require('mobx');
+var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
+var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
+var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
+var _wrapNativeSuper = _interopDefault(require('@babel/runtime/helpers/wrapNativeSuper'));
 var uuidv1 = _interopDefault(require('uuid/v1'));
 var qs = _interopDefault(require('qs'));
 var pluralize = _interopDefault(require('pluralize'));
@@ -24,11 +28,7 @@ var cloneDeep = _interopDefault(require('lodash/cloneDeep'));
 var _isEqual = _interopDefault(require('lodash/isEqual'));
 var isObject = _interopDefault(require('lodash/isObject'));
 var findLast = _interopDefault(require('lodash/findLast'));
-var _possibleConstructorReturn = _interopDefault(require('@babel/runtime/helpers/possibleConstructorReturn'));
-var _getPrototypeOf = _interopDefault(require('@babel/runtime/helpers/getPrototypeOf'));
 var _assertThisInitialized = _interopDefault(require('@babel/runtime/helpers/assertThisInitialized'));
-var _inherits = _interopDefault(require('@babel/runtime/helpers/inherits'));
-var _wrapNativeSuper = _interopDefault(require('@babel/runtime/helpers/wrapNativeSuper'));
 
 var QueryString = {
   parse: function parse(str) {
@@ -43,6 +43,7 @@ var QueryString = {
   }
 };
 
+function _wrapRegExp(re, groups) { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, undefined, groups); }; var _RegExp = _wrapNativeSuper(RegExp); var _super = RegExp.prototype; var _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = _RegExp.call(this, re, flags); _groups.set(_this, groups || _groups.get(re)); return _this; } _inherits(BabelRegExp, _RegExp); BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) result.groups = buildGroups(result, this); return result; }; BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if (typeof substitution === "string") { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } else if (typeof substitution === "function") { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = []; args.push.apply(args, arguments); if (_typeof(args[args.length - 1]) !== "object") { args.push(buildGroups(args, _this)); } return substitution.apply(this, args); }); } else { return _super[Symbol.replace].call(this, str, substitution); } }; function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { groups[name] = result[g[name]]; return groups; }, Object.create(null)); } return _wrapRegExp.apply(this, arguments); }
 var pending = {};
 var counter = {};
 var URL_MAX_LENGTH = 1024;
@@ -230,20 +231,50 @@ function diff() {
   });
 }
 /**
- * A naive way of extracting errors from the server.
- * This needs some real work. Please don't track down the original author
- * of the code (it's DEFINITELY not the person writing this documentation).
- * Currently it only extracts the message from the first error, but not only
- * can multiple errors be returned, they will correspond to different records
- * in the case of a bulk JSONAPI response.
+ * Parses the pointer of the error to retrieve the index of the
+ * record the error belongs to and the full path to the attribute
+ * which will serve as the key for the error.
  *
- * @method parseApiErrors
- * @param {Array} a request to the API
- * @param {String} default error message
+ * If there is no parsed index, then assume the payload was for
+ * a single record and default to 0.
+ *
+ * ex.
+ *   error = {
+ *     detail: "Foo can't be blank",
+ *     source: { pointer: '/data/1/attributes/options/foo' },
+ *     title: 'Invalid foo'
+ *   }
+ *
+ * parsePointer(error)
+ * > {
+ *     index: 1,
+ *     key: 'options.foo'
+ *   }
+ *
+ * @method parseErrorPointer
+ * @param {Object} error
+ * @return {Object} the matching parts of the pointer
  */
 
-function parseApiErrors(errors, defaultMessage) {
-  return errors[0].detail.length === 0 ? defaultMessage : errors[0].detail[0];
+function parseErrorPointer() {
+  var error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  var regex = _wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/(.*)$/, {
+    index: 1,
+    key: 2
+  });
+
+  var match = dig(error, 'source.pointer', '').match(regex);
+
+  var _ref = (match === null || match === void 0 ? void 0 : match.groups) || {},
+      _ref$index = _ref.index,
+      index = _ref$index === void 0 ? 0 : _ref$index,
+      key = _ref.key;
+
+  return {
+    index: parseInt(index),
+    key: key === null || key === void 0 ? void 0 : key.replace(/\//g, '.')
+  };
 }
 /**
  * Splits an array of ids into a series of strings that can be used to form
@@ -2264,7 +2295,7 @@ function () {
         var _ref3 = _asyncToGenerator(
         /*#__PURE__*/
         _regeneratorRuntime.mark(function _callee4(response) {
-          var status, json, data, included, message, _json, errorString;
+          var status, json, data, included, _json, errorString;
 
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
@@ -2309,41 +2340,48 @@ function () {
                   recordsArray.forEach(function (record) {
                     record.isInFlight = false;
                   });
-                  message = _this6.genericErrorMessage;
                   _json = {};
-                  _context4.prev = 17;
-                  _context4.next = 20;
+                  _context4.prev = 16;
+                  _context4.next = 19;
                   return response.json();
 
-                case 20:
+                case 19:
                   _json = _context4.sent;
-                  message = parseApiErrors(_json.errors, message);
-                  _context4.next = 26;
+                  _context4.next = 25;
                   break;
 
-                case 24:
-                  _context4.prev = 24;
-                  _context4.t0 = _context4["catch"](17);
+                case 22:
+                  _context4.prev = 22;
+                  _context4.t0 = _context4["catch"](16);
+                  return _context4.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
 
-                case 26:
-                  // TODO: add all errors from the API response to the record
-                  // also TODO: split server errors by record once the info is available from the API
-                  recordsArray[0].errors = _objectSpread$2({}, recordsArray[0].errors, {
-                    status: status,
-                    base: [{
-                      message: message
-                    }],
-                    server: _json.errors
+                case 25:
+                  // Add all errors from the API response to the record(s).
+                  // This is done by comparing the pointer in the error to
+                  // the request.
+                  _json.errors.forEach(function (error) {
+                    var _parseErrorPointer = parseErrorPointer(error),
+                        index = _parseErrorPointer.index,
+                        key = _parseErrorPointer.key;
+
+                    if (key != null) {
+                      var errors = recordsArray[index].errors[key] || [];
+                      errors.push(error);
+                      recordsArray[index].errors[key] = errors;
+                    }
                   });
-                  errorString = JSON.stringify(recordsArray[0].errors);
+
+                  errorString = recordsArray.map(function (record) {
+                    return JSON.stringify(record.errors);
+                  }).join(';');
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
-                case 29:
+                case 28:
                 case "end":
                   return _context4.stop();
               }
             }
-          }, _callee4, null, [[17, 24]]);
+          }, _callee4, null, [[16, 22]]);
         }));
 
         return function (_x9) {

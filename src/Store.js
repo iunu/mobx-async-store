@@ -1,6 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
+import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -886,24 +886,29 @@ class Store {
         } else {
           recordsArray.forEach(record => { record.isInFlight = false })
 
-          let message = this.genericErrorMessage
           let json = {}
           try {
             json = await response.json()
-            message = parseApiErrors(json.errors, message)
           } catch (error) {
             // 500 doesn't return a parsable response
-          }
-          // TODO: add all errors from the API response to the record
-          // also TODO: split server errors by record once the info is available from the API
-          recordsArray[0].errors = {
-            ...recordsArray[0].errors,
-            status: status,
-            base: [{ message }],
-            server: json.errors
+            return Promise.reject(new Error(this.genericErrorMessage))
           }
 
-          const errorString = JSON.stringify(recordsArray[0].errors)
+          // Add all errors from the API response to the record(s).
+          // This is done by comparing the pointer in the error to
+          // the request.
+          json.errors.forEach(error => {
+            const { index, key } = parseErrorPointer(error)
+            if (key != null) {
+              const errors = recordsArray[index].errors[key] || []
+              errors.push(error)
+              recordsArray[index].errors[key] = errors
+            }
+          })
+
+          const errorString = recordsArray
+            .map(record => JSON.stringify(record.errors))
+            .join(';')
           return Promise.reject(new Error(errorString))
         }
       },

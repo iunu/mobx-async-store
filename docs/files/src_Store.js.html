@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 2.0.1</em>
+            <em>API Docs for: 3.0.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -85,7 +85,7 @@
     <pre class="code prettyprint linenums">
 /* global fetch */
 import { action, observable, transaction, set, toJS } from &#x27;mobx&#x27;
-import { dbOrNewId, parseApiErrors, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from &#x27;./utils&#x27;
+import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from &#x27;./utils&#x27;
 
 /**
  * Defines the Artemis Data Store class.
@@ -971,24 +971,29 @@ class Store {
         } else {
           recordsArray.forEach(record =&gt; { record.isInFlight = false })
 
-          let message = this.genericErrorMessage
           let json = {}
           try {
             json = await response.json()
-            message = parseApiErrors(json.errors, message)
           } catch (error) {
             // 500 doesn&#x27;t return a parsable response
-          }
-          // TODO: add all errors from the API response to the record
-          // also TODO: split server errors by record once the info is available from the API
-          recordsArray[0].errors = {
-            ...recordsArray[0].errors,
-            status: status,
-            base: [{ message }],
-            server: json.errors
+            return Promise.reject(new Error(this.genericErrorMessage))
           }
 
-          const errorString = JSON.stringify(recordsArray[0].errors)
+          // Add all errors from the API response to the record(s).
+          // This is done by comparing the pointer in the error to
+          // the request.
+          json.errors.forEach(error =&gt; {
+            const { index, key } = parseErrorPointer(error)
+            if (key != null) {
+              const errors = recordsArray[index].errors[key] || []
+              errors.push(error)
+              recordsArray[index].errors[key] = errors
+            }
+          })
+
+          const errorString = recordsArray
+            .map(record =&gt; JSON.stringify(record.errors))
+            .join(&#x27;;&#x27;)
           return Promise.reject(new Error(errorString))
         }
       },

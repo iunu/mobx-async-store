@@ -1,4 +1,4 @@
-/* global fetch */
+/* global fetch Response */
 import { isObservable, toJS } from 'mobx'
 import { Store, Model, attribute, relatedToOne, relatedToMany } from '../src/main'
 import { URL_MAX_LENGTH } from '../src/utils'
@@ -294,6 +294,154 @@ describe('Store', () => {
 
       expect(fetch.mock.calls[0][1].headers['Content-Type'])
         .toEqual('application/vnd.api+json; ext="bulk"')
+    })
+  })
+
+  describe('updateRecords', () => {
+    function mockRequest (errors) {
+      return new Promise((resolve, reject) => {
+        const body = JSON.stringify({ errors })
+        process.nextTick(() => resolve(
+          new Response(body, { status: 422 })
+        ))
+      })
+    }
+
+    describe('error handling', () => {
+      it('ignores errors without a pointer', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            title: 'Invalid title'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          expect(todo.errors).toEqual({})
+        }
+      })
+
+      it('ignores pointers not in the jsonapi spec format', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            source: { pointer: 'attributes:title' },
+            title: 'Invalid title'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          expect(todo.errors).toEqual({})
+        }
+      })
+
+      it('adds server errors to the models', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            source: { pointer: '/data/attributes/title' },
+            title: 'Invalid title'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          expect(todo.errors.title).toEqual(errors)
+        }
+      })
+
+      it('adds multiple server errors for the same attribute', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            source: { pointer: '/data/attributes/title' },
+            title: 'Invalid title'
+          },
+          {
+            detail: 'Title is taken',
+            source: { pointer: '/data/attributes/title' },
+            title: 'Invalid title'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          expect(todo.errors.title).toEqual(errors)
+        }
+      })
+
+      // Note: There is no support for model validations for nested attributes
+      it('adds server errors for nested attributes', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: 'Quantity must be greater than 0',
+            source: {
+              pointer: '/data/attributes/options/resources/0/quantity'
+            },
+            title: 'Invalid quantity'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          expect(todo.errors['options.resources.0.quantity']).toEqual(errors)
+        }
+      })
+
+      it('adds server errors for multiple records', async () => {
+        const todo1 = store.add('todos', {})
+        const todo2 = store.add('todos', {})
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            source: { pointer: '/data/0/attributes/title' },
+            title: 'Invalid title'
+          },
+          {
+            detail: 'Quantity must be greater than 0',
+            source: {
+              pointer: '/data/1/attributes/quantity'
+            },
+            title: 'Invalid quantity'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), [todo1, todo2])
+        } catch (error) {
+          expect(todo2.errors.quantity).toEqual([errors[1]])
+        }
+      })
+
+      it('adds server errors to the right record', async () => {
+        const todo1 = store.add('todos', {})
+        const todo2 = store.add('todos', {})
+        const errors = [
+          {
+            detail: "Title can't be blank",
+            source: { pointer: '/data/1/attributes/title' },
+            title: 'Invalid title'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), [todo1, todo2])
+        } catch (error) {
+          expect(todo2.errors.title).toEqual(errors)
+        }
+      })
     })
   })
 
