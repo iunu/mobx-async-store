@@ -159,3 +159,29 @@ export const exampleRelatedToOneIncludedResponse = JSON.stringify({
     version: '1.0'
   }
 })
+
+export const exampleRelatedToOneUnmatchedTypeResponse = JSON.stringify({
+  data: {
+    id: '1',
+    type: 'organizations',
+    attributes: {
+      id: 1,
+      name: 'Do laundry'
+    },
+    relationships: {
+      meeting_notes: {
+        meta: {
+          included: false
+        }
+      },
+      awesome_notes: {
+        meta: {
+          included: false
+        }
+      }
+    }
+  },
+  jsonapi: {
+    version: '1.0'
+  }
+})

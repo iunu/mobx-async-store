@@ -14,7 +14,8 @@ import {
   exampleRelatedToManyResponse,
   exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToManyIncludedResponse,
-  exampleRelatedToManyIncludedWithNoiseResponse
+  exampleRelatedToManyIncludedWithNoiseResponse,
+  exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
 
 const timestamp = new Date(Date.now())
@@ -102,6 +103,7 @@ class Organization extends Model {
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
+  @relatedToMany awesome_notes
 
   @relatedToOne user
 }
@@ -295,6 +297,17 @@ describe('Model', () => {
       expect(todo.title).toEqual('Do laundry')
       expect(todo.notes).toHaveLength(1)
       expect(todo.notes[0].description).toEqual('Use fabric softener')
+    })
+
+    it('builds relatedToMany relationship without included data', async () => {
+      fetch.mockResponse(exampleRelatedToOneUnmatchedTypeResponse)
+      const organization = await store.findOne('organizations', 1)
+
+      expect(organization.name).toEqual('Do laundry')
+      expect(organization.awesome_notes).toHaveLength(0)
+      expect(organization.awesome_notes).toBeInstanceOf(Array)
+      expect(organization.meeting_notes).toHaveLength(0)
+      expect(organization.meeting_notes).toBeInstanceOf(Array)
     })
 
     it('builds aliased relatedToMany relationship', async () => {
