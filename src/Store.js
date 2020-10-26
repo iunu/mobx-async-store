@@ -105,9 +105,10 @@ class Store {
    * @method bulkSave
    * @param {String} type
    * @param {Array} records
+   * @param {Object} options {queryParams, customExtensions}
    */
   bulkSave = async (type, records, options = {}) => {
-    const { queryParams } = options
+    const { queryParams, customExtensions } = options
 
     // get url for record type
     const url = this.fetchUrl(type, queryParams, null)
@@ -118,9 +119,14 @@ class Store {
     // build a data payload
     const body = JSON.stringify({ data: recordAttributes })
 
+    // build the json api extension string
+    const extensionStr = customExtensions?.length
+      ? `ext="bulk,${customExtensions.join()}"`
+      : 'ext="bulk"'
+
     // send request
     const response = this.fetch(url, {
-      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': 'application/vnd.api+json; ext="bulk"' },
+      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': `application/vnd.api+json; ${extensionStr}` },
       method: 'POST',
       body
     })
