@@ -295,6 +295,50 @@ describe('Store', () => {
       expect(fetch.mock.calls[0][1].headers['Content-Type'])
         .toEqual('application/vnd.api+json; ext="bulk"')
     })
+
+    it('adds the customExtensions to the request header', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const customExtensions = ['artemis/group', 'artemis/extendDaThings']
+      const mockTodosData = {
+        data: [
+          {
+            id: '1',
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          }]
+      }
+      const mockTodosResponse = JSON.stringify(mockTodosData)
+      fetch.mockResponse(mockTodosResponse)
+
+      await store.bulkSave('todos', [todo1], {customExtensions})
+
+      expect(fetch.mock.calls[0][1].headers['Content-Type'])
+        .toEqual('application/vnd.api+json; ext="bulk,artemis/group,artemis/extendDaThings"')
+    })
+
+    it('ignores empty customExtensions in the request header', async () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const customExtensions = []
+      const mockTodosData = {
+        data: [
+          {
+            id: '1',
+            type: 'todos',
+            attributes: {
+              title: 'Pet Dog'
+            }
+          }]
+      }
+      const mockTodosResponse = JSON.stringify(mockTodosData)
+      fetch.mockResponse(mockTodosResponse)
+
+      await store.bulkSave('todos', [todo1], {customExtensions})
+
+      expect(fetch.mock.calls[0][1].headers['Content-Type'])
+        .toEqual('application/vnd.api+json; ext="bulk"')
+    })
   })
 
   describe('updateRecords', () => {

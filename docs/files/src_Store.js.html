@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.0.1</em>
+            <em>API Docs for: 3.0.2</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -190,9 +190,10 @@ class Store {
    * @method bulkSave
    * @param {String} type
    * @param {Array} records
+   * @param {Object} options {queryParams, customExtensions}
    */
   bulkSave = async (type, records, options = {}) =&gt; {
-    const { queryParams } = options
+    const { queryParams, customExtensions } = options
 
     // get url for record type
     const url = this.fetchUrl(type, queryParams, null)
@@ -203,9 +204,14 @@ class Store {
     // build a data payload
     const body = JSON.stringify({ data: recordAttributes })
 
+    // build the json api extension string
+    const extensionStr = customExtensions?.length
+      ? &#x60;ext=&quot;bulk,${customExtensions.join()}&quot;&#x60;
+      : &#x27;ext=&quot;bulk&quot;&#x27;
+
     // send request
     const response = this.fetch(url, {
-      headers: { ...this.defaultFetchOptions.headers, &#x27;Content-Type&#x27;: &#x27;application/vnd.api+json; ext=&quot;bulk&quot;&#x27; },
+      headers: { ...this.defaultFetchOptions.headers, &#x27;Content-Type&#x27;: &#x60;application/vnd.api+json; ${extensionStr}&#x60; },
       method: &#x27;POST&#x27;,
       body
     })
