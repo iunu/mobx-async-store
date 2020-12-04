@@ -655,6 +655,24 @@ describe('Model', () => {
       expect(note.dirtyAttributes).toEqual(['relationships.todo'])
     })
 
+    it('tracks updated toOne relationship', async () => {
+      const todo1 = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const todo2 = store.add('todos', { id: 12, title: 'Buy Milk' })
+
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      note.todo = todo1
+
+      note._dirtyRelationships.clear()
+      expect(note.dirtyAttributes).toEqual([])
+
+      note.todo = todo2
+      expect(note.dirtyAttributes).toEqual(['relationships.todo'])
+    })
+
     it('does NOT revert to empty after adding and then removing a relationship', async () => {
       const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
       const note = store.add('notes', {
