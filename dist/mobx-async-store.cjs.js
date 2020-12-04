@@ -259,7 +259,7 @@ function diff() {
 function parseErrorPointer() {
   var error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-  var regex = _wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/(.*)$/, {
+  var regex = /*#__PURE__*/_wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/(.*)$/, {
     index: 1,
     key: 2
   });
@@ -338,9 +338,7 @@ function ObjectPromiseProxy(promise, target) {
  *
  * @class Schema
  */
-var Schema =
-/*#__PURE__*/
-function () {
+var Schema = /*#__PURE__*/function () {
   function Schema() {
     _classCallCheck(this, Schema);
 
@@ -468,9 +466,7 @@ function stringifyIds(object) {
  */
 
 
-var Model = (_class = (_temp =
-/*#__PURE__*/
-function () {
+var Model = (_class = (_temp = /*#__PURE__*/function () {
   /**
    * Initializer for model
    *
@@ -676,12 +672,8 @@ function () {
       var _this = this;
 
       _this.errors = {};
-      return promise.then(
-      /*#__PURE__*/
-      function () {
-        var _ref = _asyncToGenerator(
-        /*#__PURE__*/
-        _regeneratorRuntime.mark(function _callee(response) {
+      return promise.then( /*#__PURE__*/function () {
+        var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(response) {
           var json;
           return _regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
@@ -767,7 +759,7 @@ function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      mobx.extendObservable(this, _objectSpread$1({}, defaultAttributes, {}, initialAttributes));
+      mobx.extendObservable(this, _objectSpread$1(_objectSpread$1({}, defaultAttributes), initialAttributes));
 
       this._listenForChanges();
     }
@@ -1400,9 +1392,7 @@ function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { 
  * @constructor
  */
 
-var Store = (_class$1 = (_temp$1 =
-/*#__PURE__*/
-function () {
+var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   /**
    * Observable property used to store data and
    * handle changes to state
@@ -1454,12 +1444,8 @@ function () {
       });
     };
 
-    this.bulkSave =
-    /*#__PURE__*/
-    function () {
-      var _ref = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee(type, records) {
+    this.bulkSave = /*#__PURE__*/function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(type, records) {
         var options,
             queryParams,
             customExtensions,
@@ -1486,10 +1472,10 @@ function () {
                   data: recordAttributes
                 }); // build the json api extension string
 
-                extensionStr = (customExtensions === null || customExtensions === void 0 ? void 0 : customExtensions.length) ? "ext=\"bulk,".concat(customExtensions.join(), "\"") : 'ext="bulk"'; // send request
+                extensionStr = customExtensions !== null && customExtensions !== void 0 && customExtensions.length ? "ext=\"bulk,".concat(customExtensions.join(), "\"") : 'ext="bulk"'; // send request
 
                 response = _this.fetch(url, {
-                  headers: _objectSpread$2({}, _this.defaultFetchOptions.headers, {
+                  headers: _objectSpread$2(_objectSpread$2({}, _this.defaultFetchOptions.headers), {}, {
                     'Content-Type': "application/vnd.api+json; ".concat(extensionStr)
                   }),
                   method: 'POST',
@@ -1794,14 +1780,14 @@ function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions;
 
-      var fetchOptions = _objectSpread$2({}, defaultFetchOptions, {}, options);
+      var fetchOptions = _objectSpread$2(_objectSpread$2({}, defaultFetchOptions), options);
 
       var key = JSON.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
       return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$2({}, defaultFetchOptions, {}, options));
+        return fetch(url, _objectSpread$2(_objectSpread$2({}, defaultFetchOptions), options));
       });
     })
     /**
@@ -2030,7 +2016,7 @@ function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              mobx.set(record, 'relationships', _objectSpread$2({}, record.relationships, _defineProperty({}, key, relationships[key])));
+              mobx.set(record, 'relationships', _objectSpread$2(_objectSpread$2({}, record.relationships), {}, _defineProperty({}, key, relationships[key])));
             }
           });
         }
@@ -2130,9 +2116,7 @@ function () {
   }, {
     key: "fetchAll",
     value: function () {
-      var _fetchAll = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee2(type, queryParams) {
+      var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, queryParams) {
         var _this5 = this;
 
         var store, url, response, json;
@@ -2218,9 +2202,7 @@ function () {
   }, {
     key: "fetchOne",
     value: function () {
-      var _fetchOne = _asyncToGenerator(
-      /*#__PURE__*/
-      _regeneratorRuntime.mark(function _callee3(type, id, queryParams) {
+      var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type, id, queryParams) {
         var url, response, json, data, included, record;
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
@@ -2293,12 +2275,8 @@ function () {
       recordsArray.forEach(function (record) {
         record.isInFlight = true;
       });
-      return promise.then(
-      /*#__PURE__*/
-      function () {
-        var _ref3 = _asyncToGenerator(
-        /*#__PURE__*/
-        _regeneratorRuntime.mark(function _callee4(response) {
+      return promise.then( /*#__PURE__*/function () {
+        var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, _json, errorString;
 
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -2566,6 +2544,10 @@ function validates(target, property) {
 }
 
 var _Symbol$species;
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -2685,7 +2667,7 @@ function getRelatedRecords(record, property) {
 
       var allRecords = record.store.getRecords(relationType);
 
-      if (allRecords === null || allRecords === void 0 ? void 0 : (_allRecords$ = allRecords[0]) === null || _allRecords$ === void 0 ? void 0 : _allRecords$[foreignId]) {
+      if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && _allRecords$[foreignId]) {
         console.warn("Support for including non-canonical jsonapi references will be removed in future versions. Record type: ".concat(record.type, ". Reference: ").concat(foreignId));
         relatedRecords = allRecords.filter(function (rel) {
           return String(rel[foreignId]) === String(record.id);
@@ -2785,19 +2767,17 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray =
-/*#__PURE__*/
-function (_Array) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   _inherits(RelatedRecordsArray, _Array);
 
-  function RelatedRecordsArray(_array, _record, _property) {
-    var _getPrototypeOf2;
+  var _super = _createSuper(RelatedRecordsArray);
 
+  function RelatedRecordsArray(_array, _record, _property) {
     var _this;
 
     _classCallCheck(this, RelatedRecordsArray);
 
-    _this = _possibleConstructorReturn(this, (_getPrototypeOf2 = _getPrototypeOf(RelatedRecordsArray)).call.apply(_getPrototypeOf2, [this].concat(_toConsumableArray(_array))));
+    _this = _super.call.apply(_super, [this].concat(_toConsumableArray(_array)));
 
     _this.add = function (relatedRecord) {
       var _assertThisInitialize = _assertThisInitialized(_this),
@@ -2937,7 +2917,7 @@ function (_Array) {
   }]);
 
   return RelatedRecordsArray;
-}(_wrapNativeSuper(Array));
+}( /*#__PURE__*/_wrapNativeSuper(Array));
 
 exports.Model = Model;
 exports.ObjectPromiseProxy = ObjectPromiseProxy;
