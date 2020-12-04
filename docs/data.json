@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.0.2"
+        "version": "3.1.1"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -68,7 +68,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/decorators/relationships.js",
-            "line": 206,
+            "line": 208,
             "description": "An array that allows for updating store references and relationships",
             "is_constructor": 1,
             "params": [
@@ -257,7 +257,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 237,
+            "line": 239,
             "description": "Adds a record to the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "add",
@@ -276,7 +276,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 279,
+            "line": 281,
             "description": "Removes a record from the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "remove",
@@ -592,7 +592,7 @@
         {
             "file": "src/Model.js",
             "line": 551,
-            "description": "a list of any property paths which have been changed since the previous\nsnapshot\n```\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyAttributes\n=> []\ntodo.title = 'Buy Cheese'\ntodo.dirtyAttributes\n=> ['title']\n```",
+            "description": "a list of any property paths which have been changed since the previous\nsnapshot\n```\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyAttributes\n=> []\ntodo.title = 'Buy Cheese'\ntodo.dirtyAttributes\n=> ['title']\ntodo.note = note1\ntodo.dirtyAttributes\n=> ['title', 'relationships.note']\n```",
             "itemtype": "method",
             "name": "dirtyAttributes",
             "return": {
@@ -603,7 +603,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 572,
+            "line": 575,
             "description": "shortcut to get the static",
             "itemtype": "method",
             "name": "type",
@@ -615,7 +615,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 582,
+            "line": 585,
             "description": "current attributes of record",
             "itemtype": "method",
             "name": "attributes",
@@ -627,7 +627,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 600,
+            "line": 603,
             "description": "Getter find the attribute definition for the model type.",
             "itemtype": "method",
             "name": "attributeDefinitions",
@@ -639,7 +639,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 611,
+            "line": 614,
             "description": "Getter find the relationship definitions for the model type.",
             "itemtype": "method",
             "name": "relationshipDefinitions",
@@ -651,7 +651,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 622,
+            "line": 625,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -663,7 +663,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 632,
+            "line": 635,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -675,7 +675,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 642,
+            "line": 645,
             "description": "Getter to just get the names of a records attributes.",
             "itemtype": "method",
             "name": "attributeNames",
@@ -687,7 +687,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 652,
+            "line": 655,
             "description": "Getter to just get the names of a records relationships.",
             "itemtype": "method",
             "name": "relationshipNames",
@@ -699,7 +699,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 662,
+            "line": 665,
             "description": "getter method to get the default attributes",
             "itemtype": "method",
             "name": "defaultAttributes",
@@ -711,7 +711,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 679,
+            "line": 682,
             "description": "getter method to get data in api compliance format\nTODO: Figure out how to handle unpersisted ids",
             "itemtype": "method",
             "name": "jsonapi",
@@ -723,7 +723,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 807,
+            "line": 810,
             "description": "Comparison by value\nreturns `true` if this object has the same attrs and relationships\nas the \"other\" object, ignores differences in internal state like\nattribute \"dirtyness\" or errors",
             "itemtype": "method",
             "name": "isEqual",
@@ -742,7 +742,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 822,
+            "line": 825,
             "description": "Comparison by identity\nreturns `true` if this object has the same type and id as the\n\"other\" object, ignores differences in attrs and relationships",
             "itemtype": "method",
             "name": "isSame",

@@ -558,6 +558,9 @@ class Model {
    * todo.title = 'Buy Cheese'
    * todo.dirtyAttributes
    * => ['title']
+   * todo.note = note1
+   * todo.dirtyAttributes
+   * => ['title', 'relationships.note']
    * ```
    * @method dirtyAttributes
    * @return {Array} dirty attribute paths
