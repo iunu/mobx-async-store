@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.0.2</em>
+            <em>API Docs for: 3.1.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -485,7 +485,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l600"><code>src&#x2F;Model.js:600</code></a>
+        <a href="../files/src_Model.js.html#l603"><code>src&#x2F;Model.js:603</code></a>
         </p>
 
 
@@ -526,7 +526,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l642"><code>src&#x2F;Model.js:642</code></a>
+        <a href="../files/src_Model.js.html#l645"><code>src&#x2F;Model.js:645</code></a>
         </p>
 
 
@@ -567,7 +567,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l582"><code>src&#x2F;Model.js:582</code></a>
+        <a href="../files/src_Model.js.html#l585"><code>src&#x2F;Model.js:585</code></a>
         </p>
 
 
@@ -641,7 +641,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l662"><code>src&#x2F;Model.js:662</code></a>
+        <a href="../files/src_Model.js.html#l665"><code>src&#x2F;Model.js:665</code></a>
         </p>
 
 
@@ -741,6 +741,9 @@ todo.dirtyAttributes
 todo.title = 'Buy Cheese'
 todo.dirtyAttributes
 =&gt; ['title']
+todo.note = note1
+todo.dirtyAttributes
+=&gt; ['title', 'relationships.note']
 </code></pre>
 
     </div>
@@ -808,7 +811,7 @@ any event listeners and don't leak memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l622"><code>src&#x2F;Model.js:622</code></a>
+        <a href="../files/src_Model.js.html#l625"><code>src&#x2F;Model.js:625</code></a>
         </p>
 
 
@@ -849,7 +852,7 @@ any event listeners and don't leak memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l632"><code>src&#x2F;Model.js:632</code></a>
+        <a href="../files/src_Model.js.html#l635"><code>src&#x2F;Model.js:635</code></a>
         </p>
 
 
@@ -896,7 +899,7 @@ any event listeners and don't leak memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l807"><code>src&#x2F;Model.js:807</code></a>
+        <a href="../files/src_Model.js.html#l810"><code>src&#x2F;Model.js:810</code></a>
         </p>
 
 
@@ -962,7 +965,7 @@ attribute &quot;dirtyness&quot; or errors</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l822"><code>src&#x2F;Model.js:822</code></a>
+        <a href="../files/src_Model.js.html#l825"><code>src&#x2F;Model.js:825</code></a>
         </p>
 
 
@@ -1021,7 +1024,7 @@ returns <code>true</code> if this object has the same type and id as the
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l679"><code>src&#x2F;Model.js:679</code></a>
+        <a href="../files/src_Model.js.html#l682"><code>src&#x2F;Model.js:682</code></a>
         </p>
 
 
@@ -1062,7 +1065,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l502"><code>src&#x2F;Model.js:502</code></a>
+        <a href="../files/src_Model.js.html#l491"><code>src&#x2F;Model.js:491</code></a>
         </p>
 
 
@@ -1070,7 +1073,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     </div>
 
     <div class="description">
-        <p>the latest persisted snapshot or the first snapshot if the model was never persisted</p>
+        <p>the latest snapshot</p>
 
     </div>
 
@@ -1093,7 +1096,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l491"><code>src&#x2F;Model.js:491</code></a>
+        <a href="../files/src_Model.js.html#l502"><code>src&#x2F;Model.js:502</code></a>
         </p>
 
 
@@ -1101,7 +1104,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     </div>
 
     <div class="description">
-        <p>the latest snapshot</p>
+        <p>the latest persisted snapshot or the first snapshot if the model was never persisted</p>
 
     </div>
 
@@ -1127,7 +1130,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l611"><code>src&#x2F;Model.js:611</code></a>
+        <a href="../files/src_Model.js.html#l614"><code>src&#x2F;Model.js:614</code></a>
         </p>
 
 
@@ -1168,7 +1171,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l652"><code>src&#x2F;Model.js:652</code></a>
+        <a href="../files/src_Model.js.html#l655"><code>src&#x2F;Model.js:655</code></a>
         </p>
 
 
@@ -1426,7 +1429,7 @@ snapshot.title
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l572"><code>src&#x2F;Model.js:572</code></a>
+        <a href="../files/src_Model.js.html#l575"><code>src&#x2F;Model.js:575</code></a>
         </p>
 
 

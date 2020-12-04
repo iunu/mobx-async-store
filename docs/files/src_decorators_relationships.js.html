@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.0.2</em>
+            <em>API Docs for: 3.1.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -258,7 +258,7 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
     throw new Error(&#x27;Related record must be a valid Model object&#x27;)
   }
 
-  const { relationships } = record
+  const { relationships, _dirtyRelationships } = record
   const relationType = modelType || property
   const referenceRecord = relatedRecord || getRelatedRecord(record, relationType)
 
@@ -270,8 +270,10 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
 
   if (!relatedRecord) {
     delete relationships[relationType]
+    _dirtyRelationships.add(relationType)
   } else if (!data || !(data.type === type &amp;&amp; data.id === id)) {
     relationships[relationType] = { data: { id, type } }
+    _dirtyRelationships.add(relationType)
   } else {
     return relatedRecord
   }

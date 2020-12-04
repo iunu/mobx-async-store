@@ -173,7 +173,7 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
     throw new Error('Related record must be a valid Model object')
   }
 
-  const { relationships } = record
+  const { relationships, _dirtyRelationships } = record
   const relationType = modelType || property
   const referenceRecord = relatedRecord || getRelatedRecord(record, relationType)
 
@@ -185,8 +185,10 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
 
   if (!relatedRecord) {
     delete relationships[relationType]
+    _dirtyRelationships.add(relationType)
   } else if (!data || !(data.type === type && data.id === id)) {
     relationships[relationType] = { data: { id, type } }
+    _dirtyRelationships.add(relationType)
   } else {
     return relatedRecord
   }

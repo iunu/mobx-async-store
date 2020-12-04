@@ -2715,7 +2715,8 @@ function setRelatedRecord(record, relatedRecord, property) {
     throw new Error('Related record must be a valid Model object');
   }
 
-  var relationships = record.relationships;
+  var relationships = record.relationships,
+      _dirtyRelationships = record._dirtyRelationships;
   var relationType = modelType || property;
   var referenceRecord = relatedRecord || getRelatedRecord(record, relationType);
 
@@ -2729,6 +2730,8 @@ function setRelatedRecord(record, relatedRecord, property) {
 
   if (!relatedRecord) {
     delete relationships[relationType];
+
+    _dirtyRelationships.add(relationType);
   } else if (!data || !(data.type === type && data.id === id)) {
     relationships[relationType] = {
       data: {
@@ -2736,6 +2739,8 @@ function setRelatedRecord(record, relatedRecord, property) {
         type: type
       }
     };
+
+    _dirtyRelationships.add(relationType);
   } else {
     return relatedRecord;
   } // hack we don't have a reference to the inverse name so we just use the record type.

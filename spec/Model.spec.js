@@ -28,6 +28,7 @@ class Note extends Model {
 
   @validates
   @relatedToOne organization
+  @relatedToOne todo
 }
 
 class Relationshipless extends Model {
@@ -108,11 +109,36 @@ class Organization extends Model {
   @relatedToOne user
 }
 
+class Todo extends Model {
+  static type = 'todos'
+  static endpoint = 'todos'
+
+  @validates
+  @attribute(String) title = 'NEW TODO'
+
+  @attribute(Date) due_at = timestamp
+
+  @validates(validatesArray)
+  @attribute(Array) tags
+
+  @validates(validatesOptions)
+  @attribute(Object) options = {}
+
+  @relatedToMany(Note) meeting_notes
+
+  @validates(validatesArrayPresence)
+  @relatedToMany notes
+  @relatedToMany awesome_notes
+
+  @relatedToOne user
+}
+
 class AppStore extends Store {
   static types = [
     Organization,
     Note,
     User,
+    Todo,
     Relationshipless
   ]
 }
@@ -577,8 +603,8 @@ describe('Model', () => {
       expect(todo.dirtyAttributes[0]).toEqual('options.size')
     })
 
-    it('tracks removed to relationships', async () => {
-      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+    it('tracks removed toMany relationships', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
@@ -591,8 +617,22 @@ describe('Model', () => {
       expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
     })
 
-    it('tracks added relationship', async () => {
-      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+    it('tracks removed toOne relationships', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      note.todo = todo
+      note.setPreviousSnapshot()
+      expect(note.dirtyAttributes).toEqual([])
+      note.todo = null
+      expect(note.dirtyAttributes).toEqual(['relationships.todo'])
+    })
+
+    it('tracks added toMany relationship', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
@@ -601,6 +641,18 @@ describe('Model', () => {
       expect(todo.dirtyAttributes).toEqual([])
       todo.notes.add(note)
       expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+    })
+
+    it('tracks added toOne relationship', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      expect(note.dirtyAttributes).toEqual([])
+      note.todo = todo
+      expect(note.dirtyAttributes).toEqual(['relationships.todo'])
     })
 
     it('does NOT revert to empty after adding and then removing a relationship', async () => {
