@@ -296,9 +296,9 @@ describe('Store', () => {
         .toEqual('application/vnd.api+json; ext="bulk"')
     })
 
-    it('adds the customExtensions to the request header', async () => {
+    it('adds the extensions to the request header', async () => {
       const todo1 = store.add('todos', { title: 'Pet Dog' })
-      const customExtensions = ['artemis/group', 'artemis/extendDaThings']
+      const extensions = ['artemis/group', 'artemis/extendDaThings']
       const mockTodosData = {
         data: [
           {
@@ -312,15 +312,15 @@ describe('Store', () => {
       const mockTodosResponse = JSON.stringify(mockTodosData)
       fetch.mockResponse(mockTodosResponse)
 
-      await store.bulkSave('todos', [todo1], {customExtensions})
+      await store.bulkSave('todos', [todo1], {extensions})
 
       expect(fetch.mock.calls[0][1].headers['Content-Type'])
         .toEqual('application/vnd.api+json; ext="bulk,artemis/group,artemis/extendDaThings"')
     })
 
-    it('ignores empty customExtensions in the request header', async () => {
+    it('ignores empty extensions in the request header', async () => {
       const todo1 = store.add('todos', { title: 'Pet Dog' })
-      const customExtensions = []
+      const extensions = []
       const mockTodosData = {
         data: [
           {
@@ -334,7 +334,7 @@ describe('Store', () => {
       const mockTodosResponse = JSON.stringify(mockTodosData)
       fetch.mockResponse(mockTodosResponse)
 
-      await store.bulkSave('todos', [todo1], {customExtensions})
+      await store.bulkSave('todos', [todo1], {extensions})
 
       expect(fetch.mock.calls[0][1].headers['Content-Type'])
         .toEqual('application/vnd.api+json; ext="bulk"')

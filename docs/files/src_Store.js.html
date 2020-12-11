@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.1.1</em>
+            <em>API Docs for: 3.2.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -190,10 +190,10 @@ class Store {
    * @method bulkSave
    * @param {String} type
    * @param {Array} records
-   * @param {Object} options {queryParams, customExtensions}
+   * @param {Object} options {queryParams, extensions}
    */
   bulkSave = async (type, records, options = {}) =&gt; {
-    const { queryParams, customExtensions } = options
+    const { queryParams, extensions } = options
 
     // get url for record type
     const url = this.fetchUrl(type, queryParams, null)
@@ -205,8 +205,8 @@ class Store {
     const body = JSON.stringify({ data: recordAttributes })
 
     // build the json api extension string
-    const extensionStr = customExtensions?.length
-      ? &#x60;ext=&quot;bulk,${customExtensions.join()}&quot;&#x60;
+    const extensionStr = extensions?.length
+      ? &#x60;ext=&quot;bulk,${extensions.join()}&quot;&#x60;
       : &#x27;ext=&quot;bulk&quot;&#x27;
 
     // send request

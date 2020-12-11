@@ -911,6 +911,9 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      * todo.title = 'Buy Cheese'
      * todo.dirtyAttributes
      * => ['title']
+     * todo.note = note1
+     * todo.dirtyAttributes
+     * => ['title', 'relationships.note']
      * ```
      * @method dirtyAttributes
      * @return {Array} dirty attribute paths
@@ -1442,7 +1445,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(type, records) {
         var options,
             queryParams,
-            customExtensions,
+            extensions,
             url,
             recordAttributes,
             body,
@@ -1454,7 +1457,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
             switch (_context.prev = _context.next) {
               case 0:
                 options = _args.length > 2 && _args[2] !== undefined ? _args[2] : {};
-                queryParams = options.queryParams, customExtensions = options.customExtensions; // get url for record type
+                queryParams = options.queryParams, extensions = options.extensions; // get url for record type
 
                 url = _this.fetchUrl(type, queryParams, null); // convert records to an appropriate jsonapi attribute/relationship format
 
@@ -1466,7 +1469,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   data: recordAttributes
                 }); // build the json api extension string
 
-                extensionStr = customExtensions !== null && customExtensions !== void 0 && customExtensions.length ? "ext=\"bulk,".concat(customExtensions.join(), "\"") : 'ext="bulk"'; // send request
+                extensionStr = extensions !== null && extensions !== void 0 && extensions.length ? "ext=\"bulk,".concat(extensions.join(), "\"") : 'ext="bulk"'; // send request
 
                 response = _this.fetch(url, {
                   headers: _objectSpread$2(_objectSpread$2({}, _this.defaultFetchOptions.headers), {}, {

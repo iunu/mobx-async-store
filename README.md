@@ -62,6 +62,8 @@ yarn install
 * `dist/mobx-async-store.umd.js`
     a UMD build, suitable for use in any environment (including the browser, as a `<script>` tag), that includes the external dependency. This corresponds to the `"browser"` field in package.json
 
+`yarn run yuidoc` updates the documentation, located in `docs`.
+
 ## Installation
 
 ```
