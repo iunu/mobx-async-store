@@ -105,10 +105,10 @@ class Store {
    * @method bulkSave
    * @param {String} type
    * @param {Array} records
-   * @param {Object} options {queryParams, customExtensions}
+   * @param {Object} options {queryParams, extensions}
    */
   bulkSave = async (type, records, options = {}) => {
-    const { queryParams, customExtensions } = options
+    const { queryParams, extensions } = options
 
     // get url for record type
     const url = this.fetchUrl(type, queryParams, null)
@@ -120,8 +120,8 @@ class Store {
     const body = JSON.stringify({ data: recordAttributes })
 
     // build the json api extension string
-    const extensionStr = customExtensions?.length
-      ? `ext="bulk,${customExtensions.join()}"`
+    const extensionStr = extensions?.length
+      ? `ext="bulk,${extensions.join()}"`
       : 'ext="bulk"'
 
     // send request
