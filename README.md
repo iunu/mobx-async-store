@@ -53,6 +53,9 @@ yarn install
 `yarn test` builds the library, then tests it.
 
 ## Distribution
+
+### Step 1 - Build the dist files
+
 `yarn build` builds the library to `dist`, generating three files:
 
 * `dist/mobx-async-store.cjs.js`
@@ -62,7 +65,13 @@ yarn install
 * `dist/mobx-async-store.umd.js`
     a UMD build, suitable for use in any environment (including the browser, as a `<script>` tag), that includes the external dependency. This corresponds to the `"browser"` field in package.json
 
+### Step 2 - Update the documentation
+
 `yarn run yuidoc` updates the documentation, located in `docs`.
+
+### Step 3 - Publish
+`npm login` to authenticate yourself as someone authorized to publish this package
+`npm publish`
 
 ## Installation
 
