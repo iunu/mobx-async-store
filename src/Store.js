@@ -876,7 +876,7 @@ class Store {
           const data = Array.isArray(json.data) ? json.data : [json.data]
           const { included } = json
 
-          if (data.length !== recordsArray.length) throw new Error('Invariant violated: API response data and records to update do not match')
+          if (data.length < recordsArray.length) throw new Error('Invariant violated: API response to include at least as many records as requested')
 
           data.forEach((targetData, index) => {
             recordsArray[index].updateAttributesFromResponse(targetData, included)

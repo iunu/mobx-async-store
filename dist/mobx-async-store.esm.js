@@ -2295,12 +2295,12 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
 
-                  if (!(data.length !== recordsArray.length)) {
+                  if (!(data.length < recordsArray.length)) {
                     _context4.next = 9;
                     break;
                   }
 
-                  throw new Error('Invariant violated: API response data and records to update do not match');
+                  throw new Error('Invariant violated: API response to include at least as many records as requested');
 
                 case 9:
                   data.forEach(function (targetData, index) {
