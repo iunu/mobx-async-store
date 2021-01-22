@@ -1,4 +1,4 @@
-function ObjectPromiseProxy (promise, target) {
+function ObjectPromiseProxy (promise: Promise<any>, target: any): Promise<any> {
   const result = target.store.updateRecords(promise, target)
 
   // Define proxied attributes

@@ -78,10 +78,24 @@ function stringifyIds (object) {
  * @method belongsTo
  */
 
+interface ModelInterface {
+  store?: any,
+  id?: string,
+  _disposers?: any,
+  meta?: any,
+  relationships: any[]
+}
+
 /**
  @class Model
  */
-class Model {
+class Model implements ModelInterface {
+  store: any
+  id: string
+  _disposers: any
+  relationships: any[]
+  meta: any
+
   /**
    * Initializer for model
    *
@@ -103,7 +117,7 @@ class Model {
   /**
    * The canonical path to the resource on the server. Defined on the class.
    * Defaults to the underscored version of the class name
-   * @property endpoint
+   * @property store
    * @static
    */
 
@@ -257,7 +271,7 @@ class Model {
    * @return {Promise}
    * @param {Object} options
    */
-  save (options = {}) {
+  save (options:any = {}) {
     if (!options.skip_validations && !this.validate()) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -301,7 +315,7 @@ class Model {
 
     const response = this.store.fetch(url, { method, body })
 
-    return new ObjectPromiseProxy(response, this)
+    return ObjectPromiseProxy(response, this)
   }
 
   /**
@@ -315,7 +329,7 @@ class Model {
    * @return {Boolean}
    */
 
-  validate (options = {}) {
+  validate (options:any = {}) {
     this.errors = {}
     const { attributeDefinitions, relationshipDefinitions } = this
 
@@ -333,7 +347,7 @@ class Model {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy (options = {}) {
+  destroy (options:any = {}) {
     const {
       constructor: { type }, id, snapshot, isNew
     } = this
@@ -432,7 +446,7 @@ class Model {
         } else if (isObject(value)) { // handles Objects and Arrays
           // clear out any dirty attrs that start with this attr prefix
           // then we can reset them if they are still (or newly) dirty
-          Array.from(this._dirtyAttributes).forEach((path) => {
+          Array.from(this._dirtyAttributes).forEach((path: string) => {
             if (path.indexOf(`${attr}.`) === 0) {
               this._dirtyAttributes.delete(path)
             }
@@ -515,7 +529,7 @@ class Model {
    * @method _takeSnapshot
    * @param {Object} options
    */
-  _takeSnapshot (options = {}) {
+  _takeSnapshot (options:any = {}) {
     const persisted = options.persisted || false
     this._dirtyRelationships.clear()
     this._dirtyAttributes.clear()
@@ -686,7 +700,7 @@ class Model {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  jsonapi (options = {}) {
+  jsonapi (options:any = {}) {
     const {
       attributeDefinitions,
       attributeNames,
@@ -722,7 +736,7 @@ class Model {
       return attrs
     }, {})
 
-    const data = {
+    const data:any = {
       type,
       attributes,
       id: String(id)
