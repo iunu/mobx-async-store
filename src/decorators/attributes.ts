@@ -2,6 +2,16 @@ import { set } from 'mobx'
 import schema from '../schema'
 import { makeDate } from '../utils'
 
+interface PresenceError {
+  key?:string,
+  message?: string
+}
+
+interface PresenceResult {
+  isValid?: boolean,
+  errors?: PresenceError[]
+}
+
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
  *
@@ -9,7 +19,7 @@ import { makeDate } from '../utils'
  * @param value
  * @return {Boolean}
  */
-export function isPresent (value) {
+export function isPresent (value: any): boolean {
   return value !== null && value !== undefined && value !== ''
 }
 
@@ -18,7 +28,7 @@ export function isPresent (value) {
  * @method validatePresence
  * @param value
  */
-function validatePresence (value) {
+function validatePresence (value: any):PresenceResult  {
   return {
     isValid: isPresent(value),
     errors: [{
@@ -32,18 +42,18 @@ function validatePresence (value) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor (descriptor, DataType) {
+function defaultValueForDescriptor (descriptor: any, dataType: any) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
-    if (DataType.name === 'Date') {
+    if (dataType.name === 'Date') {
       return makeDate(value)
     } else {
-      return DataType(value)
+      return dataType(value)
     }
   }
 
-  if (DataType.name === 'String') return ''
-  if (DataType.name === 'Array') return []
+  if (dataType.name === 'String') return ''
+  if (dataType.name === 'Array') return []
 
   return null
 }
@@ -59,8 +69,8 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * ```
  * @method attribute
  */
-export function attribute (dataType = (obj) => obj) {
-  return function (target, property, descriptor) {
+export function attribute (dataType: (object:any) => any | void = (obj) => obj): void | any {
+  return function (target:any, property: any, descriptor:any) {
     const { type } = target.constructor
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
     // Update the schema
@@ -75,7 +85,7 @@ export function attribute (dataType = (obj) => obj) {
       get () {
         return defaultValue
       },
-      set (value) {
+      set (value:any) {
         set(target, property, value)
       }
     }
@@ -95,7 +105,7 @@ export function attribute (dataType = (obj) => obj) {
  * ```
  * @method validates
  */
-export function validates (target, property) {
+export function validates (target:any, property:any): (target:any, property:any) => void | any {
    let validator = validatePresence
 
    if (typeof target === 'function') {

@@ -24,11 +24,11 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  @attribute(String) description
+  @attribute(String) description: string
 
   @validates
-  @relatedToOne organization
-  @relatedToOne todo
+  @relatedToOne organization: any
+  @relatedToOne todo: any
 }
 
 class Relationshipless extends Model {

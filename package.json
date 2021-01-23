@@ -24,6 +24,7 @@
     "@types/enzyme": "^3.10.8",
     "@types/jest": "^26.0.20",
     "@types/lodash": "^4.14.168",
+    "@types/qs": "^6.9.5",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "8",
     "enzyme": "^3.9.0",
