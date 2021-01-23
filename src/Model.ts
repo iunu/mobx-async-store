@@ -26,8 +26,8 @@ import findLast from 'lodash/findLast'
  * @return {Array} an array of booleans representing results of validations
  */
 
-function validateProperties (model, propertyNames, propertyDefinitions) {
-  return propertyNames.map((property) => {
+function validateProperties (model: any, propertyNames:any, propertyDefinitions:any): Boolean[] {
+  return propertyNames.map((property:any) => {
     const { validator } = propertyDefinitions[property]
 
     if (!validator) return true
@@ -42,7 +42,7 @@ function validateProperties (model, propertyNames, propertyDefinitions) {
   })
 }
 
-function stringifyIds (object) {
+function stringifyIds (object:object): void {
   Object.keys(object).forEach(key => {
     const property = object[key]
     if (typeof property === 'object') {
@@ -86,6 +86,14 @@ interface ModelInterface {
   relationships: any[]
 }
 
+interface JSONApiStruct {
+  id?: string,
+  type?: string,
+  persisted?: boolean,
+  attributes?: any,
+  relationships?: object[]
+}
+
 /**
  @class Model
  */
@@ -107,41 +115,23 @@ class Model implements ModelInterface {
   }
 
   /**
-   * The type of the model. Defined on the class. Defaults to the underscored version of the class name
-   * (eg 'calendar_events').
-   *
-   * @property type
-   * @static
-   */
-
-  /**
-   * The canonical path to the resource on the server. Defined on the class.
-   * Defaults to the underscored version of the class name
-   * @property store
-   * @static
-   */
-
-  /**
     * has this object been destroyed?
     * @property _disposed
-    * @type {Boolean}
     * @default false
     */
-  @observable _disposed = false
+  @observable _disposed: Boolean = false
 
   /**
     * set of relationships which have changed since last snapshot
     * @property _dirtyRelationships
-    * @type {Set}
     */
-  @observable _dirtyRelationships = new Set()
+  @observable _dirtyRelationships: Set<any> = new Set()
 
   /**
     * set of attributes which have changed since last snapshot
     * @property _dirtyAttributes
-    * @type {Set}
     */
-  @observable _dirtyAttributes = new Set()
+  @observable _dirtyAttributes: Set<any> = new Set()
 
   /**
    * True if the instance has been modified from its persisted state
@@ -172,27 +162,24 @@ class Model implements ModelInterface {
    * => false
    * ```
    * @property isDirty
-   * @type {Boolean}
    */
-  get isDirty () {
+  get isDirty (): Boolean {
     return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0
   }
 
   /**
    * have any changes been made since this record was last persisted?
    * @property hasUnpersistedChanges
-   * @type {Boolean}
    */
-  get hasUnpersistedChanges () {
+  get hasUnpersistedChanges (): Boolean {
     return this.isDirty || !this.previousSnapshot.persisted
   }
 
   /**
    * True if the model has not been sent to the store
    * @property isNew
-   * @type {Boolean}
    */
-  @computed get isNew () {
+  @computed get isNew (): Boolean {
     const { id } = this
     if (!id) return true
     if (String(id).indexOf('tmp') === -1) return false
@@ -211,10 +198,9 @@ class Model implements ModelInterface {
    * => false
    * ```
    * @property isInFlight
-   * @type {Boolean}
    * @default false
    */
-  isInFlight = false
+  isInFlight: Boolean = false
 
   /**
    * A hash of errors from the server
@@ -224,19 +210,17 @@ class Model implements ModelInterface {
    * => { authorization: "You do not have access to this resource" }
    * ```
    * @property errors
-   * @type {Object}
    * @default {}
    */
-  @observable errors = {}
+  @observable errors: object = {}
 
   /**
    * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
    *
    * @property snapshots
-   * @type {Array<Snapshot>}
    * @default []
    */
-  _snapshots = []
+  _snapshots: JSONApiStruct[] = []
 
   /**
    * restores data to its last snapshot state
@@ -251,7 +235,7 @@ class Model implements ModelInterface {
    * ```
    * @method rollback
    */
-  rollback () {
+  rollback (): void {
     this._applySnapshot(this.previousSnapshot)
   }
 
@@ -260,7 +244,7 @@ class Model implements ModelInterface {
    * state if the model was never persisted
    * @method rollbackToPersisted
    */
-  rollbackToPersisted () {
+  rollbackToPersisted (): void {
     this._applySnapshot(this.persistedSnapshot)
     this._takeSnapshot({ persisted: true })
   }
@@ -268,10 +252,9 @@ class Model implements ModelInterface {
   /**
    * creates or updates a record.
    * @method save
-   * @return {Promise}
    * @param {Object} options
    */
-  save (options:any = {}) {
+  save (options:any = {}): Promise<any> {
     if (!options.skip_validations && !this.validate()) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -300,9 +283,9 @@ class Model implements ModelInterface {
     })
 
     if (relationships) {
-      relationships.forEach((rel) => {
+      relationships.forEach((rel:any) => {
         if (Array.isArray(this[rel])) {
-          this[rel].forEach((item, i) => {
+          this[rel].forEach((item:any, i:number) => {
             if (item && item.isNew) {
               throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}[${i}]"`)
             }
@@ -328,8 +311,7 @@ class Model implements ModelInterface {
    * @param {Object} options
    * @return {Boolean}
    */
-
-  validate (options:any = {}) {
+  validate (options:any = {}): Boolean {
     this.errors = {}
     const { attributeDefinitions, relationshipDefinitions } = this
 
@@ -347,7 +329,7 @@ class Model implements ModelInterface {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy (options:any = {}) {
+  destroy (options:any = {}): Promise<any> | object {
     const {
       constructor: { type }, id, snapshot, isNew
     } = this
@@ -366,14 +348,14 @@ class Model implements ModelInterface {
     _this.errors = {}
 
     return promise.then(
-      async function (response) {
+      async function (response:any) {
         _this.isInFlight = false
         if ([200, 202, 204].includes(response.status)) {
           if (!skipRemove) {
             _this.store.remove(type, id)
           }
 
-          let json
+          let json:any
           try {
             json = await response.json()
             if (json.data && json.data.attributes) {
@@ -400,7 +382,7 @@ class Model implements ModelInterface {
           return _this
         }
       },
-      function (error) {
+      function (error: Error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false
         _this.errors = error
@@ -417,7 +399,7 @@ class Model implements ModelInterface {
    *
    * @method _makeObservable
    */
-  _makeObservable (initialAttributes) {
+  _makeObservable (initialAttributes: object) {
     const { defaultAttributes } = this
 
     extendObservable(this, {
@@ -437,8 +419,8 @@ class Model implements ModelInterface {
    * _dirtyAttributes set
    * @method _listenForChanges
    */
-  _listenForChanges () {
-    this._disposers = Object.keys(this.attributes).map((attr) => {
+  _listenForChanges (): void {
+    this._disposers = Object.keys(this.attributes).map((attr: string | number) => {
       return reaction(() => this.attributes[attr], (value) => {
         const previousValue = this.previousSnapshot.attributes[attr]
         if (isEqual(previousValue, value)) {
@@ -451,7 +433,7 @@ class Model implements ModelInterface {
               this._dirtyAttributes.delete(path)
             }
           })
-          diff(previousValue, value).forEach((property) => {
+          diff(previousValue, value).forEach((property: string | number) => {
             this._dirtyAttributes.add(`${attr}.${property}`)
           })
         } else {
@@ -468,7 +450,7 @@ class Model implements ModelInterface {
    */
   dispose () {
     this._disposed = true
-    this._disposers.forEach((dispose) => dispose())
+    this._disposers.forEach((dispose: () => void) => dispose())
   }
 
   /**
@@ -486,7 +468,7 @@ class Model implements ModelInterface {
    * @method snapshot
    * @return {Object} current attributes
    */
-  get snapshot () {
+  get snapshot (): JSONApiStruct {
     return {
       attributes: this.attributes,
       relationships: toJS(this.relationships)
@@ -498,7 +480,7 @@ class Model implements ModelInterface {
    *
    * @method setPreviousSnapshot
    */
-  setPreviousSnapshot () {
+  setPreviousSnapshot (): void {
     this._takeSnapshot()
   }
 
@@ -507,7 +489,7 @@ class Model implements ModelInterface {
    *
    * @method previousSnapshot
    */
-  get previousSnapshot () {
+  get previousSnapshot (): JSONApiStruct {
     const length = this._snapshots.length
     if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
@@ -518,7 +500,7 @@ class Model implements ModelInterface {
    *
    * @method previousSnapshot
    */
-  get persistedSnapshot () {
+  get persistedSnapshot (): JSONApiStruct  {
     return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
@@ -529,7 +511,7 @@ class Model implements ModelInterface {
    * @method _takeSnapshot
    * @param {Object} options
    */
-  _takeSnapshot (options:any = {}) {
+  _takeSnapshot (options: JSONApiStruct = {}) {
     const persisted = options.persisted || false
     this._dirtyRelationships.clear()
     this._dirtyAttributes.clear()
@@ -551,7 +533,7 @@ class Model implements ModelInterface {
    * @method _applySnapshot
    * @param {Object} snapshot
    */
-  _applySnapshot (snapshot) {
+  _applySnapshot (snapshot: JSONApiStruct): void | Error {
     if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
     transaction(() => {
       this.attributeNames.forEach((key) => {
@@ -579,8 +561,7 @@ class Model implements ModelInterface {
    * @method dirtyAttributes
    * @return {Array} dirty attribute paths
    */
-
-   get dirtyAttributes () {
+   get dirtyAttributes (): object[] {
     const relationships = Array.from(this._dirtyRelationships).map((property) => `relationships.${property}`)
     const attributes = Array.from(this._dirtyAttributes)
     return [...relationships, ...attributes]
@@ -592,7 +573,7 @@ class Model implements ModelInterface {
    * @method type
    * @return {String} current attributes
   */
-  get type () {
+  get type (): string {
     return this.constructor.type
   }
 
@@ -602,7 +583,7 @@ class Model implements ModelInterface {
    * @method attributes
    * @return {Object} current attributes
    */
-  get attributes () {
+  get attributes (): object {
     return this.attributeNames.reduce((attributes, key) => {
       const value = toJS(this[key])
       if (value == null) {
@@ -620,7 +601,7 @@ class Model implements ModelInterface {
    * @method attributeDefinitions
    * @return {Object}
    */
-  get attributeDefinitions () {
+  get attributeDefinitions ():object {
     const { type } = this.constructor
     return schema.structure[type] || {}
   }
@@ -631,7 +612,7 @@ class Model implements ModelInterface {
    * @method relationshipDefinitions
    * @return {Object}
    */
-  get relationshipDefinitions () {
+  get relationshipDefinitions (): object {
     const { type } = this.constructor
     return schema.relations[type] || {}
   }
@@ -642,7 +623,7 @@ class Model implements ModelInterface {
    * @method hasErrors
    * @return {Boolean}
    */
-  get hasErrors () {
+  get hasErrors (): boolean {
     return Object.keys(this.errors).length > 0
   }
 
@@ -652,7 +633,7 @@ class Model implements ModelInterface {
    * @method hasErrors
    * @return {Boolean}
    */
-  errorForKey (key) {
+  errorForKey (key: string | number): boolean {
     return this.errors[key]
   }
 
@@ -662,7 +643,7 @@ class Model implements ModelInterface {
    * @method attributeNames
    * @return {Array}
    */
-  get attributeNames () {
+  get attributeNames (): any[] {
     return Object.keys(this.attributeDefinitions)
   }
 
@@ -672,7 +653,7 @@ class Model implements ModelInterface {
    * @method relationshipNames
    * @return {Array}
    */
-  get relationshipNames () {
+  get relationshipNames (): any[] {
     return Object.keys(this.relationshipDefinitions)
   }
 
@@ -682,7 +663,7 @@ class Model implements ModelInterface {
    * @method defaultAttributes
    * @return {Object}
    */
-  get defaultAttributes () {
+  get defaultAttributes (): object {
     const { attributeDefinitions } = this
     return this.attributeNames.reduce((defaults, key) => {
       const { defaultValue } = attributeDefinitions[key]
@@ -700,7 +681,7 @@ class Model implements ModelInterface {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  jsonapi (options:any = {}) {
+  jsonapi (options: JSONApiStruct = {}): object {
     const {
       attributeDefinitions,
       attributeNames,
@@ -721,7 +702,7 @@ class Model implements ModelInterface {
       const value = this[key]
       if (value) {
         const { dataType: DataType } = attributeDefinitions[key]
-        let attr
+        let attr: any
         if (DataType.name === 'Array' || DataType.name === 'Object') {
           attr = toJS(value)
         } else if (DataType.name === 'Date') {
@@ -746,7 +727,7 @@ class Model implements ModelInterface {
       filteredRelationshipNames = Object.keys(this.relationships)
         .filter(name => options.relationships.includes(name))
 
-      const relationships = filteredRelationshipNames.reduce((rels, key) => {
+      const relationships = filteredRelationshipNames.reduce((rels: object[], key: string) => {
         rels[key] = toJS(this.relationships[key])
         stringifyIds(rels[key])
         return rels
@@ -766,7 +747,7 @@ class Model implements ModelInterface {
     return data
   }
 
-  updateAttributes (attributes) {
+  updateAttributes (attributes: object): void {
     transaction(() => {
       Object.keys(attributes).forEach(key => {
         this[key] = attributes[key]
@@ -776,7 +757,7 @@ class Model implements ModelInterface {
 
   // TODO: this shares a lot of functionality with Store.createOrUpdateModel
   // Perhaps that shared code
-  updateAttributesFromResponse (data, included) {
+  updateAttributesFromResponse (data: JSONApiStruct, included: any[]) {
     const tmpId = this.id
     const { id, attributes, relationships } = data
 
@@ -831,7 +812,7 @@ class Model implements ModelInterface {
    * @param {Object} other
    * @return {Object}
    */
-  isEqual (other) {
+  isEqual (other: JSONApiStruct): Object {
     if (!other) return false
     return isEqual(this.attributes, other.attributes) && isEqual(this.relationships, other.relationships)
   }
@@ -843,9 +824,9 @@ class Model implements ModelInterface {
    *
    * @method isSame
    * @param {Object} other
-   * @return {Object}
+   * @return {Boolean}
    */
-  isSame (other) {
+  isSame (other: JSONApiStruct): boolean {
     if (!other) return false
     return this.type === other.type && this.id === other.id
   }
