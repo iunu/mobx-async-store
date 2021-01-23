@@ -105,13 +105,13 @@ export function attribute (dataType: (object:any) => any | void = (obj) => obj):
  * ```
  * @method validates
  */
-export function validates (target:any, property:any): (target:any, property:any) => void | any {
+export function validates (target:any, property?:any): void | any {
    let validator = validatePresence
 
    if (typeof target === 'function') {
      validator = target
 
-     return function (target, property) {
+     return function (target:any, property?:any) {
        const { type } = target.constructor
 
        schema.addValidation({
@@ -119,6 +119,7 @@ export function validates (target:any, property:any): (target:any, property:any)
          type,
          validator
        })
+       return <any>null
      }
    } else {
      const { type } = target.constructor
@@ -128,4 +129,5 @@ export function validates (target:any, property:any): (target:any, property:any)
        validator
      })
    }
+   return <any>null
  }
