@@ -1,7 +1,7 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS } from 'mobx'
 import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
-
+import { ModelInterface } from './Model'
 /**
  * Defines the Artemis Data Store class.
  *
@@ -88,7 +88,6 @@ class Store {
 
     // Add the model to the type records index
     this.data[type].records.set(String(id), model)
-
     return model
   }
 
@@ -773,7 +772,6 @@ class Store {
     if (!ModelKlass) {
       throw new Error(`Could not find a model for '${type}'`)
     }
-
     return new ModelKlass({ id, store, relationships, ...attributes })
   }
 

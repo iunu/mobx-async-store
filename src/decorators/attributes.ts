@@ -72,7 +72,6 @@ function defaultValueForDescriptor (descriptor: any, dataType: any) {
  */
 export function attribute (dataType: (object:any) => any | void = (obj) => obj): void | any {
   return function (target:any, property: any, descriptor:any) {
-    console.log('target', target, property, 'descriptor', descriptor, dataType)
     const { type } = target.constructor
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
     // Update the schema

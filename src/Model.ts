@@ -78,7 +78,7 @@ function stringifyIds (obj:any): void {
  * @method belongsTo
  */
 
-interface ModelInterface {
+export interface ModelInterface {
   store?: any,
   id?: string,
   _disposers?: any,
@@ -110,6 +110,7 @@ class Model implements ModelInterface {
    * @method constructor
    */
   constructor (initialAttributes = {}) {
+    console.log('initialAttributes', initialAttributes)
     this._makeObservable(initialAttributes)
     this._takeSnapshot({ persisted: !this.isNew })
   }
@@ -401,7 +402,9 @@ class Model implements ModelInterface {
    */
   _makeObservable (initialAttributes:any) {
     const { defaultAttributes } = this
+    let res = {
 
+    }
     extendObservable(this, {
       ...defaultAttributes,
       ...initialAttributes
