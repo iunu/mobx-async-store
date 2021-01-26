@@ -1,7 +1,5 @@
+/* global fetch */
 import { autorun, isObservable } from 'mobx'
-import { FetchMock } from "jest-fetch-mock";
-
-const fetchMock = fetch as FetchMock;
 
 import {
   Model,
@@ -19,6 +17,17 @@ import {
   exampleRelatedToManyIncludedWithNoiseResponse,
   exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
+
+interface ValidateErrorIF {
+  key?: string,
+  message?: string,
+  data?: any
+}
+
+interface ValidateOptionsIF {
+  isValid?: boolean,
+  errors?: ValidateErrorIF[]
+}
 
 const timestamp = new Date(Date.now())
 
@@ -59,17 +68,6 @@ function validatesArrayPresence (property: any): ValidateOptionsIF {
   }
 }
 
-interface ValidateErrorIF {
-  key?: string,
-  message?: string,
-  data?: any
-}
-
-interface ValidateOptionsIF {
-  isValid?: boolean,
-  errors?: ValidateErrorIF[]
-}
-
 function validatesOptions (property: any, target: any): ValidateOptionsIF {
   const errors = []
 
@@ -108,18 +106,18 @@ class Organization extends Model {
   @attribute(Date) due_at = timestamp
 
   @validates(validatesArray)
-  @attribute(Array) tags: any[]
+  @attribute() tags: any[] = []
 
   @validates(validatesOptions)
-  @attribute(Object) options: any = {}
+  @attribute() options: any = {}
 
-  @relatedToMany(Note) meeting_notes: any[]
+  @relatedToMany(Note) meeting_notes: any[] = []
 
   @validates(validatesArrayPresence)
-  @relatedToMany notes: any[]
-  @relatedToMany awesome_notes: any[]
+  @relatedToMany notes: any[] = []
+  @relatedToMany awesome_notes: any[] = []
 
-  @relatedToOne user: any
+  @relatedToOne(User) user: any
 }
 
 class Todo extends Model {
@@ -127,21 +125,21 @@ class Todo extends Model {
   static endpoint = 'todos'
 
   @validates
-  @attribute(String) title = 'NEW TODO'
+  @attribute() title = 'NEW TODO'
 
-  @attribute(Date) due_at = timestamp
+  @attribute() due_at = timestamp
 
   @validates(validatesArray)
-  @attribute(Array) tags: any[]
+  @attribute() tags: any[] = []
 
   @validates(validatesOptions)
-  @attribute(Object) options: any = {}
+  @attribute() options: any = {}
 
-  @relatedToMany(Note) meeting_notes: any[]
+  @relatedToMany(Note) meeting_notes: any[] = []
 
   @validates(validatesArrayPresence)
-  @relatedToMany notes: any[]
-  @relatedToMany awesome_notes: any[]
+  @relatedToMany notes: any[] = []
+  @relatedToMany awesome_notes: any[] = []
 
   @relatedToOne user: any
 }
@@ -194,7 +192,8 @@ const mockNoteWithErrorResponse = JSON.stringify(mockNoteDataWithErrors)
 
 describe('Model', () => {
   beforeEach(() => {
-    fetchMock.resetMocks()
+    // @ts-ignore
+    fetch.resetMocks()
     store.reset()
   })
 
@@ -320,8 +319,8 @@ describe('Model', () => {
 
     it('builds relatedToMany relationship with existing models', async () => {
       store.add('notes', { id: 1, description: 'Example description' })
-
-      fetchMock.mockResponse(exampleRelatedToManyResponse)
+      // @ts-ignore
+      fetch.mockResponse(exampleRelatedToManyResponse)
       const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
@@ -330,7 +329,8 @@ describe('Model', () => {
     })
 
     it('builds relatedToMany relationship with included data', async () => {
-      fetchMock.mockResponse(exampleRelatedToManyIncludedResponse)
+      // @ts-ignore
+      fetch.mockResponse(exampleRelatedToManyIncludedResponse)
       const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
@@ -339,7 +339,8 @@ describe('Model', () => {
     })
 
     it('builds relatedToMany relationship without included data', async () => {
-      fetchMock.mockResponse(exampleRelatedToOneUnmatchedTypeResponse)
+      // @ts-ignore
+      fetch.mockResponse(exampleRelatedToOneUnmatchedTypeResponse)
       const organization = await store.findOne('organizations', 1)
 
       expect(organization.name).toEqual('Do laundry')
@@ -350,7 +351,8 @@ describe('Model', () => {
     })
 
     it('builds aliased relatedToMany relationship', async () => {
-      fetchMock.mockResponse(exampleRelatedToManyIncludedResponse)
+      // @ts-ignore
+      fetch.mockResponse(exampleRelatedToManyIncludedResponse)
       const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
@@ -359,7 +361,8 @@ describe('Model', () => {
     })
 
     it('ignores unexpected types in relationship data', async () => {
-      fetchMock.mockResponse(exampleRelatedToManyWithNoiseResponse)
+      // @ts-ignore
+      fetch.mockResponse(exampleRelatedToManyWithNoiseResponse)
       const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
@@ -367,7 +370,8 @@ describe('Model', () => {
     })
 
     it('ignores unexpected types in included data', async () => {
-      fetchMock.mockResponse(exampleRelatedToManyIncludedWithNoiseResponse)
+      // @ts-ignore
+      fetch.mockResponse(exampleRelatedToManyIncludedWithNoiseResponse)
       const todo = await store.findOne('organizations', 1)
 
       expect(todo.title).toEqual('Do laundry')
@@ -868,7 +872,8 @@ describe('Model', () => {
       const todo = store.add('organizations', { title: savedTitle })
       todo.notes.add(note)
       // Mock the API response
-      fetchMock.mockResponse(mockTodoResponse)
+      // @ts-ignore
+      fetch.mockResponse(mockTodoResponse)
       // Trigger the save function and subsequent request
       await todo.save()
       expect(todo.title).toEqual(savedTitle)
@@ -1050,7 +1055,8 @@ describe('Model', () => {
     xit('handles in flight behavior', (done) => {
       // expect.assertions(3)
       // Mock slow server response
-      fetchMock.mockResponseOnce(() => {
+      // @ts-ignore
+      fetch.mockResponseOnce(() => {
         return new Promise(resolve => {
           return setTimeout(() => resolve({
             body: mockTodoResponse
@@ -1091,15 +1097,20 @@ describe('Model', () => {
       // Check the the tmp id has the correct length
       expect(todo.id).toHaveLength(40)
       // Mock the API response
-      fetchMock.mockResponse(mockTodoResponse)
+      // @ts-ignore
+      fetch.mockResponse(mockTodoResponse)
       // Trigger the save function and subsequent request
       await todo.save()
       // Assert the request was made with the correct
       // url and fetchMock options
-      expect(fetchMock.mock.calls).toHaveLength(1)
-      expect(fetchMock.mock.calls[0][0]).toEqual('/example_api/organizations')
-      expect(fetchMock.mock.calls[0][1].method).toEqual('POST')
-      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      // @ts-ignore
+      expect(fetch.mock.calls).toHaveLength(1)
+      // @ts-ignore
+      expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations')
+      // @ts-ignore
+      expect(fetch.mock.calls[0][1].method).toEqual('POST')
+      // @ts-ignore
+      expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
         data: {
           type: 'organizations',
           attributes: {
@@ -1126,7 +1137,8 @@ describe('Model', () => {
       })
       const todo = store.add('organizations', { title: 'Buy Milk' })
       todo.notes.add(note)
-      fetchMock.mockResponse(mockTodoResponse)
+      // @ts-ignore
+      fetch.mockResponse(mockTodoResponse)
       expect(todo.hasUnpersistedChanges).toBe(true)
       await todo.save()
       expect(todo.hasUnpersistedChanges).toBe(false)
@@ -1139,7 +1151,8 @@ describe('Model', () => {
 
       expect(note.hasUnpersistedChanges).toBe(true)
       // Mock the API response
-      fetchMock.mockResponse(mockNoteWithErrorResponse, { status: 422 })
+      // @ts-ignore
+      fetch.mockResponse(mockNoteWithErrorResponse, { status: 422 })
 
       // Trigger the save function and subsequent request
       try {
@@ -1156,7 +1169,8 @@ describe('Model', () => {
       })
       const todo = store.add('organizations', { title: 'Good title' })
       todo.notes.add(note)
-      fetchMock.mockResponse(mockTodoResponse)
+      // @ts-ignore
+      fetch.mockResponse(mockTodoResponse)
       expect(todo.hasUnpersistedChanges).toBe(true)
       await todo.save({ relationships: ['user'] })
       expect(todo.hasUnpersistedChanges).toBe(false)
@@ -1165,20 +1179,25 @@ describe('Model', () => {
 
   describe('.destroy', () => {
     it('makes request and removes model from the store store', async () => {
-      fetchMock.mockResponses([JSON.stringify({}), { status: 204 }])
+      // @ts-ignore
+      fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
       expect(store.findAll('organizations', { fromServer: false }))
         .toHaveLength(1)
       await todo.destroy()
-      expect(fetchMock.mock.calls).toHaveLength(1)
-      expect(fetchMock.mock.calls[0][0]).toEqual('/example_api/organizations/1')
-      expect(fetchMock.mock.calls[0][1].method).toEqual('DELETE')
+      // @ts-ignore
+      expect(fetch.mock.calls).toHaveLength(1)
+      // @ts-ignore
+      expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations/1')
+      // @ts-ignore
+      expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
       expect(store.findAll('organizations', { fromServer: false }))
         .toHaveLength(0)
     })
 
     it('calls dispose', async () => {
-      fetchMock.mockResponses([JSON.stringify({}), { status: 204 }])
+      // @ts-ignore
+      fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
       todo.dispose = jest.fn()
       await todo.destroy()

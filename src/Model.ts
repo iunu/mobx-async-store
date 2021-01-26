@@ -42,9 +42,9 @@ function validateProperties (model: any, propertyNames:any, propertyDefinitions:
   })
 }
 
-function stringifyIds (object:object): void {
-  Object.keys(object).forEach(key => {
-    const property = object[key]
+function stringifyIds (obj:any): void {
+  Object.keys(obj).forEach(key => {
+    const property = obj[key]
     if (typeof property === 'object') {
       if (property.id) {
         property.id = String(property.id)
@@ -91,7 +91,7 @@ interface JSONApiStruct {
   type?: string,
   persisted?: boolean,
   attributes?: any,
-  relationships?: object[]
+  relationships?:any[]
 }
 
 /**
@@ -212,7 +212,7 @@ class Model implements ModelInterface {
    * @property errors
    * @default {}
    */
-  @observable errors: object = {}
+  @observable errors:any = {}
 
   /**
    * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
@@ -329,7 +329,7 @@ class Model implements ModelInterface {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy (options:any = {}): Promise<any> | object {
+  destroy (options:any = {}): Promise<any> | any {
     const {
       constructor: { type }, id, snapshot, isNew
     } = this
@@ -399,14 +399,13 @@ class Model implements ModelInterface {
    *
    * @method _makeObservable
    */
-  _makeObservable (initialAttributes: object) {
+  _makeObservable (initialAttributes:any) {
     const { defaultAttributes } = this
 
     extendObservable(this, {
       ...defaultAttributes,
       ...initialAttributes
     })
-
     this._listenForChanges()
   }
 
@@ -500,7 +499,7 @@ class Model implements ModelInterface {
    *
    * @method previousSnapshot
    */
-  get persistedSnapshot (): JSONApiStruct  {
+  get persistedSnapshot (): JSONApiStruct {
     return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
@@ -561,7 +560,7 @@ class Model implements ModelInterface {
    * @method dirtyAttributes
    * @return {Array} dirty attribute paths
    */
-   get dirtyAttributes (): object[] {
+   get dirtyAttributes ():any[] {
     const relationships = Array.from(this._dirtyRelationships).map((property) => `relationships.${property}`)
     const attributes = Array.from(this._dirtyAttributes)
     return [...relationships, ...attributes]
@@ -583,7 +582,7 @@ class Model implements ModelInterface {
    * @method attributes
    * @return {Object} current attributes
    */
-  get attributes (): object {
+  get attributes ():any {
     return this.attributeNames.reduce((attributes, key) => {
       const value = toJS(this[key])
       if (value == null) {
@@ -601,7 +600,7 @@ class Model implements ModelInterface {
    * @method attributeDefinitions
    * @return {Object}
    */
-  get attributeDefinitions ():object {
+  get attributeDefinitions ():any {
     const { type } = this.constructor
     return schema.structure[type] || {}
   }
@@ -612,7 +611,7 @@ class Model implements ModelInterface {
    * @method relationshipDefinitions
    * @return {Object}
    */
-  get relationshipDefinitions (): object {
+  get relationshipDefinitions ():any {
     const { type } = this.constructor
     return schema.relations[type] || {}
   }
@@ -663,7 +662,7 @@ class Model implements ModelInterface {
    * @method defaultAttributes
    * @return {Object}
    */
-  get defaultAttributes (): object {
+  get defaultAttributes ():any {
     const { attributeDefinitions } = this
     return this.attributeNames.reduce((defaults, key) => {
       const { defaultValue } = attributeDefinitions[key]
@@ -681,7 +680,7 @@ class Model implements ModelInterface {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  jsonapi (options: JSONApiStruct = {}): object {
+  jsonapi (options: JSONApiStruct = {}):any {
     const {
       attributeDefinitions,
       attributeNames,
@@ -727,7 +726,7 @@ class Model implements ModelInterface {
       filteredRelationshipNames = Object.keys(this.relationships)
         .filter(name => options.relationships.includes(name))
 
-      const relationships = filteredRelationshipNames.reduce((rels: object[], key: string) => {
+      const relationships = filteredRelationshipNames.reduce((rels:any[], key: string) => {
         rels[key] = toJS(this.relationships[key])
         stringifyIds(rels[key])
         return rels
@@ -747,7 +746,7 @@ class Model implements ModelInterface {
     return data
   }
 
-  updateAttributes (attributes: object): void {
+  updateAttributes (attributes:any): void {
     transaction(() => {
       Object.keys(attributes).forEach(key => {
         this[key] = attributes[key]
@@ -812,7 +811,7 @@ class Model implements ModelInterface {
    * @param {Object} other
    * @return {Object}
    */
-  isEqual (other: JSONApiStruct): Object {
+  isEqual (other: JSONApiStruct):any {
     if (!other) return false
     return isEqual(this.attributes, other.attributes) && isEqual(this.relationships, other.relationships)
   }

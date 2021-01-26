@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 interface Function {
-    type: string
+    type: string,
+    types: any
 }
 
 interface Array<T> {

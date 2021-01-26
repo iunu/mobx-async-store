@@ -75,8 +75,8 @@
       "^.+\\.(ts|tsx)$": "ts-jest"
     },
     "testPathIgnorePatterns": [
-      "/tests/fixtures/",
-      "/tests/support/",
+      "/spec/fixtures/",
+      "/spec/support/",
       "/dist/",
       "/node_modules/",
       "/rollup.config.js",

@@ -17,7 +17,7 @@ import { singularizeType } from '../utils'
  * ```
  * @method relatedToMany
  */
-export function relatedToMany (targetOrModelKlass:any, property:any, descriptor?:any): void | any {
+export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor?:any): void | any {
   if (typeof targetOrModelKlass === 'function') {
     return function (target2, property2, descriptor2) {
       schema.addRelationship({
@@ -54,7 +54,7 @@ export function relatedToMany (targetOrModelKlass:any, property:any, descriptor?
  *
  * @method relatedToOne
  */
-export function relatedToOne (targetOrModelKlass, property, descriptor): void | any {
+export function relatedToOne (targetOrModelKlass, property?, descriptor?): void | any {
   if (typeof targetOrModelKlass === 'function') {
     return function (target2, property2, descriptor2) {
       schema.addRelationship({
@@ -215,6 +215,8 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
  */
 
 export class RelatedRecordsArray extends Array {
+  property: any
+  record: any
   constructor (array, record, property) {
     super(...array)
     this.property = property

@@ -8,13 +8,13 @@ const pending = {}
 const counter = {}
 export const URL_MAX_LENGTH = 1024
 
-const incrementor = (key) => () => {
+const incrementor = (key: string | number) => () => {
   const count = (counter[key] || 0) + 1
   counter[key] = count
   return count
 }
 
-const decrementor = (key) => () => {
+const decrementor = (key: string | number) => () => {
   const count = (counter[key] || 0) - 1
   counter[key] = count
   return count
@@ -26,7 +26,7 @@ const decrementor = (key) => () => {
  * @param {String} recordType type of record
  * @return {String}
  */
-export function singularizeType (recordType) {
+export function singularizeType (recordType: string) {
   let typeParts = recordType.split('_')
   let endPart = typeParts[typeParts.length - 1]
 
@@ -42,7 +42,7 @@ export function singularizeType (recordType) {
  * @method requestUrl
  * @return {String} formatted url string
  */
-export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
+export function requestUrl (baseUrl: any, endpoint: any, queryParams:any = {}, id?: any) {
   let queryParamString = ''
   if (Object.keys(queryParams).length > 0) {
     queryParamString = `?${QueryString.stringify(queryParams)}`
@@ -59,7 +59,7 @@ export function newId () {
   return `tmp-${uuidv1()}`
 }
 
-export function dbOrNewId (properties) {
+export function dbOrNewId (properties: { id: any }) {
   return properties.id || newId()
 }
 
@@ -73,14 +73,14 @@ export function dbOrNewId (properties) {
  * @param {Function} fn the function the generates the promise
  * @return {Promise}
  */
-export function combineRacedRequests (key, fn) {
+export function combineRacedRequests (key: string, fn: { (): Promise<any>; call?: any }) {
   const incrementBlocked = incrementor(key)
   const decrementBlocked = decrementor(key)
 
   // keep track of the number of callers waiting for this promise to resolve
   incrementBlocked()
 
-  function handleResponse (response) {
+  function handleResponse (response: { clone: () => any }) {
     const count = decrementBlocked()
     // if there are other callers waiting for this request to resolve, we should
     // clone the response before returning so that we can re-use it for the
@@ -111,9 +111,9 @@ export function combineRacedRequests (key, fn) {
  * @param {Array} key
  * @return {Function}
  */
-export function uniqueByReducer (key) {
-  return function (accumulator, current) {
-    return accumulator.some(item => item[key] === current[key])
+export function uniqueByReducer (key: string | number) {
+  return function (accumulator: any[], current: { [x: string]: any }) {
+    return accumulator.some((item: { [x: string]: any }) => item[key] === current[key])
       ? accumulator
       : [...accumulator, current]
   }
@@ -127,11 +127,11 @@ export function uniqueByReducer (key) {
  * @param {String} key
  * @return {Array}
  */
-export function uniqueBy (array, key) {
+export function uniqueBy (array: any[], key: string) {
   return array.reduce(uniqueByReducer(key), [])
 }
 
-export function stringifyIds (object) {
+export function stringifyIds (object: { [x: string]: any }) {
   Object.keys(object).forEach(key => {
     const property = object[key]
 
@@ -152,7 +152,7 @@ export function stringifyIds (object) {
  * @param {*} value
  * @return {Date|Moment}
  */
-export function makeDate (value) {
+export function makeDate (value: any) {
   if (value instanceof Date || value._isAMomentObject) return value
   return new Date(Date.parse(value))
 }
@@ -166,7 +166,7 @@ export function makeDate (value) {
  * @param {String} prefix
  * @return Array
  */
-export function walk (obj, iteratee, prefix) {
+export function walk (obj: { [x: string]: any }, iteratee: { (prevValue: any, path: any): any; (arg0: any, arg1: any): any }, prefix: string) {
   if (obj != null && typeof obj === 'object') {
     return Object.keys(obj).map((prop) => {
       return walk(obj[prop], iteratee, [prefix, prop].filter(x => x).join('.'))
@@ -187,10 +187,10 @@ export function walk (obj, iteratee, prefix) {
  * @return Array<String>
  */
 export function diff (a = {}, b = {}) {
-  return flattenDeep(walk(a, (prevValue, path) => {
+  return flattenDeep(walk(a, (prevValue: any, path: any) => {
     const currValue = dig(b, path)
     return prevValue === currValue ? undefined : path
-  })).filter((x) => x)
+  }, null)).filter((x) => x)
 }
 
 /**
@@ -237,8 +237,8 @@ export function parseErrorPointer (error = {}) {
  * @param {String} restOfUrl the additional text URL that will be passed to the server
  */
 
-export function deriveIdQueryStrings (ids, restOfUrl = '') {
-  const idLength = Math.max(...ids.map(id => String(id).length))
+export function deriveIdQueryStrings (ids: any[], restOfUrl = '') {
+  const idLength = Math.max(...ids.map((id: any) => String(id).length))
   const maxLength = URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length
 
   const encodedIds = encodeURIComponent(ids.join(','))

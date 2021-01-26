@@ -43,6 +43,7 @@ function validatePresence (value: any):PresenceResult  {
  * @method defaultValueForDescriptor
  */
 function defaultValueForDescriptor (descriptor: any, dataType: any) {
+  if(!descriptor) return null
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (dataType.name === 'Date') {

@@ -24,6 +24,7 @@ const store = new AppStore()
 
 describe('Example React App', () => {
   beforeEach(() => {
+    // @ts-ignore
     fetch.resetMocks()
     store.reset()
   })
@@ -43,6 +44,7 @@ describe('Example React App', () => {
 
   it('can create a new model', async () => {
     expect.assertions(2)
+    // @ts-ignore
     fetch.mockResponse(JSON.stringify([]))
 
     const wrapper = mount(
