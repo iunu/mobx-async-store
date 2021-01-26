@@ -402,9 +402,6 @@ class Model implements ModelInterface {
    */
   _makeObservable (initialAttributes:any) {
     const { defaultAttributes } = this
-    let res = {
-
-    }
     extendObservable(this, {
       ...defaultAttributes,
       ...initialAttributes

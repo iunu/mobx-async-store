@@ -1,18 +1,22 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
-        "allowJs": true,
-        "checkJs": true,
-        "target": "es5",
-        "jsx": "react",
-        "forceConsistentCasingInFileNames": true,
-        "noFallthroughCasesInSwitch": true,
-        "experimentalDecorators": true,
-        "esModuleInterop": true,
-        "sourceMap": true
-    },
-    "include": [
-        "./src/**/*",
-        "./spec/**/*"
-    ]
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+      "outDir": "./dist",
+      "allowJs": true,
+      "checkJs": false,
+      "jsx": "react",
+      "forceConsistentCasingInFileNames": true,
+      "noFallthroughCasesInSwitch": true,
+      "experimentalDecorators": true,
+      "esModuleInterop": true,
+      "strictPropertyInitialization": false,
+      "suppressImplicitAnyIndexErrors": true,
+      "noImplicitAny": false,
+      "sourceMap": true
+  },
+  "include": [
+      "./src/**/*",
+      "./spec/**/*"
+  ],
+  "exclude": ["node_modules"]
 }

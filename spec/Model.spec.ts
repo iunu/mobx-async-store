@@ -69,7 +69,7 @@ function validatesArrayPresence (property: any): ValidateOptionsIF {
 }
 
 function validatesOptions (property: any, target: any): ValidateOptionsIF {
-  const errors = []
+  const errors:any = []
 
   if (target.requiredOptions) {
     target.requiredOptions.forEach((optionKey: string | number) => {

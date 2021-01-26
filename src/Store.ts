@@ -627,7 +627,7 @@ class Store {
     // Get the url the request would use
     const url = this.fetchUrl(type, queryParams, id)
     // Get the matching ids from the response
-    const ids = this.getCachedIds(type, url)
+    const ids:any = this.getCachedIds(type, url)
     // Get the records matching the ids
     return this.getRecordsById(type, ids)
   }

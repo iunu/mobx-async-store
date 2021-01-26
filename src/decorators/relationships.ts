@@ -137,7 +137,7 @@ export function getRelatedRecords (record, property, modelType = null) {
  *
  * @method getRelatedRecord
  */
-export function getRelatedRecord (record: any, property: any, modelType = null) {
+export function getRelatedRecord (record: any, property: any, modelType:any = null) {
   // Get relationships
   const { relationships } = record
 

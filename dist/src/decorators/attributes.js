@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validates = exports.attribute = exports.isPresent = void 0;
-var mobx_1 = require("mobx");
-var schema_1 = __importDefault(require("../schema"));
-var utils_1 = require("../utils");
+const mobx_1 = require("mobx");
+const schema_1 = __importDefault(require("../schema"));
+const utils_1 = require("../utils");
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
  *
@@ -36,19 +36,21 @@ function validatePresence(value) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor(descriptor, DataType) {
+function defaultValueForDescriptor(descriptor, dataType) {
+    if (!descriptor)
+        return null;
     if (typeof descriptor.initializer === 'function') {
-        var value = descriptor.initializer();
-        if (DataType.name === 'Date') {
+        const value = descriptor.initializer();
+        if (dataType.name === 'Date') {
             return utils_1.makeDate(value);
         }
         else {
-            return DataType(value);
+            return dataType(value);
         }
     }
-    if (DataType.name === 'String')
+    if (dataType.name === 'String')
         return '';
-    if (DataType.name === 'Array')
+    if (dataType.name === 'Array')
         return [];
     return null;
 }
@@ -63,24 +65,23 @@ function defaultValueForDescriptor(descriptor, DataType) {
  * ```
  * @method attribute
  */
-function attribute(dataType) {
-    if (dataType === void 0) { dataType = function (obj) { return obj; }; }
+function attribute(dataType = (obj) => obj) {
     return function (target, property, descriptor) {
-        var type = target.constructor.type;
-        var defaultValue = defaultValueForDescriptor(descriptor, dataType);
+        const { type } = target.constructor;
+        const defaultValue = defaultValueForDescriptor(descriptor, dataType);
         // Update the schema
         schema_1.default.addAttribute({
-            dataType: dataType,
-            defaultValue: defaultValue,
-            property: property,
-            type: type
+            dataType,
+            defaultValue,
+            property,
+            type
         });
         // Return custom descriptor
         return {
-            get: function () {
+            get() {
                 return defaultValue;
             },
-            set: function (value) {
+            set(value) {
                 mobx_1.set(target, property, value);
             }
         };
@@ -101,26 +102,28 @@ exports.attribute = attribute;
  * @method validates
  */
 function validates(target, property) {
-    var validator = validatePresence;
+    let validator = validatePresence;
     if (typeof target === 'function') {
         validator = target;
         return function (target, property) {
-            var type = target.constructor.type;
+            const { type } = target.constructor;
             schema_1.default.addValidation({
-                property: property,
-                type: type,
-                validator: validator
+                property,
+                type,
+                validator
             });
+            return null;
         };
     }
     else {
-        var type = target.constructor.type;
+        const { type } = target.constructor;
         schema_1.default.addValidation({
-            property: property,
-            type: type,
-            validator: validator
+            property,
+            type,
+            validator
         });
     }
+    return null;
 }
 exports.validates = validates;
 //# sourceMappingURL=attributes.js.map

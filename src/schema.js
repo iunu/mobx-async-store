@@ -1,42 +1,45 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 /**
  * Utility class used to store the schema
  * of model attribute definitions
  *
  * @class Schema
  */
-class Schema {
-    constructor() {
+var Schema = /** @class */ (function () {
+    function Schema() {
         this.structure = {};
         this.relations = {};
     }
-    addAttribute({ type, property, dataType, defaultValue }) {
+    Schema.prototype.addAttribute = function (_a) {
+        var type = _a.type, property = _a.property, dataType = _a.dataType, defaultValue = _a.defaultValue;
         this.structure[type] = this.structure[type] || {};
         this.structure[type][property] = {
-            defaultValue, dataType
+            defaultValue: defaultValue, dataType: dataType
         };
-    }
-    addRelationship({ type, property, dataType }) {
+    };
+    Schema.prototype.addRelationship = function (_a) {
+        var type = _a.type, property = _a.property, dataType = _a.dataType;
         this.relations[type] = this.relations[type] || {};
         this.relations[type][property] = {
-            dataType
+            dataType: dataType
         };
-    }
+    };
     /**
      * Adds a validation to either the schema `structure` (for attributes) or `relations` (for relationships)
      * @method addValidation
      * @param {Object} options includes `type`, `property`, and `validator`
      */
-    addValidation({ type, property, validator }) {
+    Schema.prototype.addValidation = function (_a) {
+        var type = _a.type, property = _a.property, validator = _a.validator;
         if (this.structure[type][property]) {
             this.structure[type][property].validator = validator;
         }
         else {
             this.relations[type][property].validator = validator;
         }
-    }
-}
-const schema = new Schema();
-exports.default = schema;
-//# sourceMappingURL=schema.js.map
+    };
+    return Schema;
+}());
+var schema = new Schema();
+exports["default"] = schema;

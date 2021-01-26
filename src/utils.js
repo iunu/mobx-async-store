@@ -1,27 +1,31 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.deriveIdQueryStrings = exports.parseErrorPointer = exports.diff = exports.walk = exports.makeDate = exports.stringifyIds = exports.uniqueBy = exports.uniqueByReducer = exports.combineRacedRequests = exports.dbOrNewId = exports.newId = exports.requestUrl = exports.singularizeType = exports.URL_MAX_LENGTH = void 0;
-const v1_1 = __importDefault(require("uuid/v1"));
-const QueryString_1 = __importDefault(require("./QueryString"));
-const pluralize_1 = __importDefault(require("pluralize"));
-const get_1 = __importDefault(require("lodash/get"));
-const flattenDeep_1 = __importDefault(require("lodash/flattenDeep"));
-const pending = {};
-const counter = {};
+var v1_1 = require("uuid/v1");
+var QueryString_1 = require("./QueryString");
+var pluralize_1 = require("pluralize");
+var get_1 = require("lodash/get");
+var flattenDeep_1 = require("lodash/flattenDeep");
+var pending = {};
+var counter = {};
 exports.URL_MAX_LENGTH = 1024;
-const incrementor = (key) => () => {
-    const count = (counter[key] || 0) + 1;
+var incrementor = function (key) { return function () {
+    var count = (counter[key] || 0) + 1;
     counter[key] = count;
     return count;
-};
-const decrementor = (key) => () => {
-    const count = (counter[key] || 0) - 1;
+}; };
+var decrementor = function (key) { return function () {
+    var count = (counter[key] || 0) - 1;
     counter[key] = count;
     return count;
-};
+}; };
 /**
  * Singularizes record type
  * @method singularizeType
@@ -29,11 +33,11 @@ const decrementor = (key) => () => {
  * @return {String}
  */
 function singularizeType(recordType) {
-    let typeParts = recordType.split('_');
-    let endPart = typeParts[typeParts.length - 1];
+    var typeParts = recordType.split('_');
+    var endPart = typeParts[typeParts.length - 1];
     typeParts = typeParts.slice(0, -1);
-    endPart = pluralize_1.default.singular(endPart);
-    return [...typeParts, endPart].join('_');
+    endPart = pluralize_1["default"].singular(endPart);
+    return __spreadArrays(typeParts, [endPart]).join('_');
 }
 exports.singularizeType = singularizeType;
 /**
@@ -42,21 +46,22 @@ exports.singularizeType = singularizeType;
  * @method requestUrl
  * @return {String} formatted url string
  */
-function requestUrl(baseUrl, endpoint, queryParams = {}, id) {
-    let queryParamString = '';
+function requestUrl(baseUrl, endpoint, queryParams, id) {
+    if (queryParams === void 0) { queryParams = {}; }
+    var queryParamString = '';
     if (Object.keys(queryParams).length > 0) {
-        queryParamString = `?${QueryString_1.default.stringify(queryParams)}`;
+        queryParamString = "?" + QueryString_1["default"].stringify(queryParams);
     }
-    let idForPath = '';
+    var idForPath = '';
     if (id) {
-        idForPath = `/${id}`;
+        idForPath = "/" + id;
     }
     // Return full url
-    return `${baseUrl}/${endpoint}${idForPath}${queryParamString}`;
+    return baseUrl + "/" + endpoint + idForPath + queryParamString;
 }
 exports.requestUrl = requestUrl;
 function newId() {
-    return `tmp-${v1_1.default()}`;
+    return "tmp-" + v1_1["default"]();
 }
 exports.newId = newId;
 function dbOrNewId(properties) {
@@ -74,12 +79,12 @@ exports.dbOrNewId = dbOrNewId;
  * @return {Promise}
  */
 function combineRacedRequests(key, fn) {
-    const incrementBlocked = incrementor(key);
-    const decrementBlocked = decrementor(key);
+    var incrementBlocked = incrementor(key);
+    var decrementBlocked = decrementor(key);
     // keep track of the number of callers waiting for this promise to resolve
     incrementBlocked();
     function handleResponse(response) {
-        const count = decrementBlocked();
+        var count = decrementBlocked();
         // if there are other callers waiting for this request to resolve, we should
         // clone the response before returning so that we can re-use it for the
         // remaining callers
@@ -111,9 +116,9 @@ exports.combineRacedRequests = combineRacedRequests;
  */
 function uniqueByReducer(key) {
     return function (accumulator, current) {
-        return accumulator.some((item) => item[key] === current[key])
+        return accumulator.some(function (item) { return item[key] === current[key]; })
             ? accumulator
-            : [...accumulator, current];
+            : __spreadArrays(accumulator, [current]);
     };
 }
 exports.uniqueByReducer = uniqueByReducer;
@@ -130,8 +135,8 @@ function uniqueBy(array, key) {
 }
 exports.uniqueBy = uniqueBy;
 function stringifyIds(object) {
-    Object.keys(object).forEach(key => {
-        const property = object[key];
+    Object.keys(object).forEach(function (key) {
+        var property = object[key];
         if (typeof property === 'object') {
             if (property.id) {
                 property.id = String(property.id);
@@ -165,8 +170,8 @@ exports.makeDate = makeDate;
  */
 function walk(obj, iteratee, prefix) {
     if (obj != null && typeof obj === 'object') {
-        return Object.keys(obj).map((prop) => {
-            return walk(obj[prop], iteratee, [prefix, prop].filter(x => x).join('.'));
+        return Object.keys(obj).map(function (prop) {
+            return walk(obj[prop], iteratee, [prefix, prop].filter(function (x) { return x; }).join('.'));
         });
     }
     return iteratee(obj, prefix);
@@ -183,11 +188,13 @@ exports.walk = walk;
  * @param {Object} b
  * @return Array<String>
  */
-function diff(a = {}, b = {}) {
-    return flattenDeep_1.default(walk(a, (prevValue, path) => {
-        const currValue = get_1.default(b, path);
+function diff(a, b) {
+    if (a === void 0) { a = {}; }
+    if (b === void 0) { b = {}; }
+    return flattenDeep_1["default"](walk(a, function (prevValue, path) {
+        var currValue = get_1["default"](b, path);
         return prevValue === currValue ? undefined : path;
-    }, null)).filter((x) => x);
+    }, null)).filter(function (x) { return x; });
 }
 exports.diff = diff;
 /**
@@ -215,10 +222,11 @@ exports.diff = diff;
  * @param {Object} error
  * @return {Object} the matching parts of the pointer
  */
-function parseErrorPointer(error = {}) {
-    const regex = /\/data\/(?<index>\d+)?\/?attributes\/(?<key>.*)$/;
-    const match = get_1.default(error, 'source.pointer', '').match(regex);
-    const { index = 0, key } = (match === null || match === void 0 ? void 0 : match.groups) || {};
+function parseErrorPointer(error) {
+    if (error === void 0) { error = {}; }
+    var regex = /\/data\/(?<index>\d+)?\/?attributes\/(?<key>.*)$/;
+    var match = get_1["default"](error, 'source.pointer', '').match(regex);
+    var _a = (match === null || match === void 0 ? void 0 : match.groups) || {}, _b = _a.index, index = _b === void 0 ? 0 : _b, key = _a.key;
     return {
         index: parseInt(index),
         key: key === null || key === void 0 ? void 0 : key.replace(/\//g, '.')
@@ -232,21 +240,21 @@ exports.parseErrorPointer = parseErrorPointer;
  * @param {Array} ids an array of ids that will be used in the string
  * @param {String} restOfUrl the additional text URL that will be passed to the server
  */
-function deriveIdQueryStrings(ids, restOfUrl = '') {
-    const idLength = Math.max(...ids.map((id) => String(id).length));
-    const maxLength = exports.URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length;
-    const encodedIds = encodeURIComponent(ids.join(','));
+function deriveIdQueryStrings(ids, restOfUrl) {
+    if (restOfUrl === void 0) { restOfUrl = ''; }
+    var idLength = Math.max.apply(Math, ids.map(function (id) { return String(id).length; }));
+    var maxLength = exports.URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length;
+    var encodedIds = encodeURIComponent(ids.join(','));
     if (encodedIds.length <= maxLength) {
         return [ids.join(',')];
     }
-    const minLength = maxLength - idLength;
-    const regexp = new RegExp(`.{${minLength},${maxLength}}%2C`, 'g');
+    var minLength = maxLength - idLength;
+    var regexp = new RegExp(".{" + minLength + "," + maxLength + "}%2C", 'g');
     // the matches
-    const matched = encodedIds.match(regexp);
+    var matched = encodedIds.match(regexp);
     // everything that doesn't match, ie the last of the ids
-    const tail = encodedIds.replace(regexp, '');
+    var tail = encodedIds.replace(regexp, '');
     // we manually strip the ',' at the end because javascript's non-capturing regex groups are hard to manage
-    return [...matched, tail].map(decodeURIComponent).map(string => string.replace(/,$/, ''));
+    return __spreadArrays(matched, [tail]).map(decodeURIComponent).map(function (string) { return string.replace(/,$/, ''); });
 }
 exports.deriveIdQueryStrings = deriveIdQueryStrings;
-//# sourceMappingURL=utils.js.map
