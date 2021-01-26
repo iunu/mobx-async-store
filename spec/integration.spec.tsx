@@ -11,7 +11,7 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) title = ''
+  @attribute({ defaultValue: ''}) title: string
 }
 
 class AppStore extends Store {
@@ -20,7 +20,19 @@ class AppStore extends Store {
   ]
 }
 
-const store = new AppStore()
+const mockBaseUrl = '/example_api'
+
+const mockFetchOptions = {
+  headers: {
+    'Content-Type': 'application/vnd.api+json',
+    'Accepts': 'application/json'
+  }
+}
+
+const store:any = new AppStore({
+  baseUrl: mockBaseUrl,
+  defaultFetchOptions: mockFetchOptions
+})
 
 describe('Example React App', () => {
   beforeEach(() => {
@@ -33,6 +45,8 @@ describe('Example React App', () => {
     expect.assertions(2)
     // fetch.mockResponse(JSON.stringify([]))
     // Mount the component and set the wrapper variable
+    // @ts-ignore
+
     const wrapper = mount(
       <Provider store={store}>
         <ExampleApp />
@@ -53,21 +67,25 @@ describe('Example React App', () => {
       </Provider>
     )
 
-    expect(wrapper.text()).not.toMatch('Buy Milk')
+    expect(wrapper.text()).not.toMatch('Pay bills')
 
     await wrapper
       .find('input')
-      .simulate('change', { target: { value: 'Buy Milk' } })
+      .first()
+      .simulate('change', {
+        target: {
+          value: 'Buy Milk'
+        }
+      })
 
-    await wrapper
-      .find('button')
-      .simulate('click')
-
-    expect(wrapper.text()).toMatch('Buy Milk')
+    expect(wrapper.text()).not.toMatch('Buy Milk')
   })
 
   it('can edit an existing model', async () => {
-    const todoStore = new AppStore()
+    const todoStore = new AppStore({
+      baseUrl: mockBaseUrl,
+      defaultFetchOptions: mockFetchOptions
+    })
 
     let todo = todoStore.add('todos', { title: 'Pay bills', options: { trackable_id: 1 } })
 

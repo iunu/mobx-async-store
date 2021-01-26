@@ -8,14 +8,8 @@ import {
 } from 'mobx'
 
 import { inject, observer } from 'mobx-react'
-
-const todoCardPropTypes = {
-  store: PropTypes.object.isRequired,
-  todo: PropTypes.object.isRequired
-}
-
 @inject('store') @observer
-class TodoCard extends Component {
+class TodoCard extends Component<any, any> {
   @computed get todo () {
     return this.props.todo
   }
@@ -26,6 +20,7 @@ class TodoCard extends Component {
 
   render () {
     const { onChange, todo } = this
+
     return (
       <li>
         <label>{ todo.title }</label>
@@ -38,9 +33,7 @@ class TodoCard extends Component {
   }
 }
 
-TodoCard.wrappedComponent.propTypes = todoCardPropTypes
-
-function TodoList ({ todos }) {
+function TodoList ({ todos }): any {
   return (
     <ul>
       {
@@ -53,13 +46,8 @@ function TodoList ({ todos }) {
 TodoList.propTypes = {
   todos: PropTypes.array.isRequired
 }
-
-const exampleAppPropTypes = {
-  store: PropTypes.object.isRequired
-}
-
 @inject('store') @observer
-class ExampleApp extends Component {
+class ExampleApp extends Component<{store?:any}, any> {
   @observable title = ''
 
   @action onChange = ({ target }) => {
@@ -81,6 +69,7 @@ class ExampleApp extends Component {
     return (
       <div>
         <h1>Todos</h1>
+        <p>{this.title}</p>
         <input onChange={onChange}/>
         <button onClick={onClick}>Submit</button>
         <TodoList todos={todos} />
@@ -88,7 +77,5 @@ class ExampleApp extends Component {
     )
   }
 }
-
-ExampleApp.wrappedComponent.propTypes = exampleAppPropTypes
 
 export default ExampleApp

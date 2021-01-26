@@ -2,6 +2,7 @@
   "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
       "outDir": "./dist",
+      "module": "CommonJS",
       "allowJs": true,
       "checkJs": false,
       "jsx": "react",
