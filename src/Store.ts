@@ -1,7 +1,6 @@
 /* global fetch */
 import { action, observable, transaction, set, toJS, makeObservable } from 'mobx'
 import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
-import { ModelInterface } from './Model'
 /**
  * Defines the Artemis Data Store class.
  *

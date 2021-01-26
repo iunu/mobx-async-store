@@ -23,7 +23,7 @@ export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor
       schema.addRelationship({
         type: target2.constructor.type,
         property: property2,
-        dataType: new Array()
+        dataType: []
       })
 
       return {
@@ -37,7 +37,7 @@ export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor
     schema.addRelationship({
       type: targetOrModelKlass.constructor.type,
       property,
-      dataType: new Array
+      dataType: []
     })
 
     return {
