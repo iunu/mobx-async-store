@@ -7,7 +7,7 @@
   "dependencies": {
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.19",
-    "mobx": "5.5.0",
+    "mobx": "^6",
     "pluralize": "^8.0.0",
     "qs": "^6.9.4",
     "react-native-uuid": "^1.4.9",
@@ -40,7 +40,6 @@
     "jest": "^24.7.1",
     "jest-coverage-badges": "^1.1.2",
     "jest-fetch-mock": "^2.1.2",
-    "mobx": "5.5.0",
     "mobx-react": "^5.4.3",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",

@@ -10,7 +10,8 @@ describe('deriveIdQueryStrings', () => {
     const idQueryStrings = deriveIdQueryStrings(longIds, baseUrl)
     expect(idQueryStrings).toHaveLength(8)
     idQueryStrings.forEach(ids => {
-      expect(baseUrl.length + QueryString.stringify({ filter: { ids } }).length).toBeLessThan(URL_MAX_LENGTH)
+      let filter: any = { filter: { ids } }
+      expect(baseUrl.length + QueryString.stringify(filter).length).toBeLessThan(URL_MAX_LENGTH)
     })
   })
 

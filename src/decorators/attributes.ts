@@ -70,21 +70,20 @@ function defaultValueForDescriptor (descriptor: any, dataType: any) {
  * ```
  * @method attribute
  */
-export function attribute (dataType: (object:any) => any | void = (obj) => obj): void | any {
+export function attribute (options?:any, dataType: (object:any) => any | void = (obj) => obj): void | any {
   return function (target:any, property: any, descriptor:any) {
     const { type } = target.constructor
-    const defaultValue = defaultValueForDescriptor(descriptor, dataType)
     // Update the schema
     schema.addAttribute({
       dataType,
-      defaultValue,
+      defaultValue: options?.defaultValue,
       property,
       type
     })
     // Return custom descriptor
     return {
       get () {
-        return defaultValue
+        return target[property] || options?.defaultValue
       },
       set (value:any) {
         set(target, property, value)

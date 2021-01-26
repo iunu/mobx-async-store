@@ -186,11 +186,11 @@ export function walk (obj: { [x: string]: any }, iteratee: { (prevValue: any, pa
  * @param {Object} b
  * @return Array<String>
  */
-export function diff (a = {}, b = {}) {
+export function diff (a = {}, b = {}): any {
   return flattenDeep(walk(a, (prevValue: any, path: any) => {
     const currValue = dig(b, path)
     return prevValue === currValue ? undefined : path
-  }, null)).filter((x) => x)
+  }, '')).filter((x) => x)
 }
 
 /**
@@ -250,7 +250,7 @@ export function deriveIdQueryStrings (ids: any[], restOfUrl = '') {
 
   const regexp = new RegExp(`.{${minLength},${maxLength}}%2C`, 'g')
   // the matches
-  const matched = encodedIds.match(regexp)
+  const matched: RegExpMatchArray | null = encodedIds.match(regexp) || []
   // everything that doesn't match, ie the last of the ids
   const tail = encodedIds.replace(regexp, '')
 

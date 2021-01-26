@@ -1,5 +1,5 @@
 /* global fetch */
-import { action, observable, transaction, set, toJS } from 'mobx'
+import { action, observable, transaction, set, toJS, makeObservable } from 'mobx'
 import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
 import { ModelInterface } from './Model'
 /**
@@ -17,7 +17,7 @@ class Store {
    * @type {Object}
    * @default {}
    */
-  @observable data = {}
+  @observable data:any = {}
 
   defaultFetchOptions: any
   baseUrl: string
@@ -31,6 +31,7 @@ class Store {
    * @method constructor
    */
   constructor (options) {
+    makeObservable(this)
     this.init(options)
   }
 
@@ -85,7 +86,6 @@ class Store {
   addModel = (type, attributes) => {
     const id = dbOrNewId(attributes)
     const model = this.createModel(type, id, { attributes })
-
     // Add the model to the type records index
     this.data[type].records.set(String(id), model)
     return model

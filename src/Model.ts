@@ -1,6 +1,8 @@
 import {
   computed,
+  configure,
   extendObservable,
+  makeObservable,
   reaction,
   set,
   toJS,
@@ -16,6 +18,10 @@ import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
+
+configure({
+  enforceActions: "never",
+})
 
 /**
  * Maps the passed-in property names through and runs validations against those properties
@@ -80,7 +86,7 @@ function stringifyIds (obj:any): void {
 
 export interface ModelInterface {
   store?: any,
-  id?: string,
+  id?: string,  
   _disposers?: any,
   meta?: any,
   relationships: any[]
@@ -90,27 +96,27 @@ interface JSONApiStruct {
   id?: string,
   type?: string,
   persisted?: boolean,
-  attributes?: any,
-  relationships?:any[]
+  attributes: any,
+  relationships:any[]
 }
 
 /**
  @class Model
  */
-class Model implements ModelInterface {
+class Model {
   store: any
   id: string
   _disposers: any
   relationships: any[]
   meta: any
-
+  options: any
   /**
    * Initializer for model
    *
    * @method constructor
    */
   constructor (initialAttributes = {}) {
-    console.log('initialAttributes', initialAttributes)
+    makeObservable(this)
     this._makeObservable(initialAttributes)
     this._takeSnapshot({ persisted: !this.isNew })
   }
@@ -269,7 +275,7 @@ class Model implements ModelInterface {
 
     const { constructor, id, isNew } = this
 
-    let requestId = id
+    let requestId:any = id
     let method = 'PATCH'
 
     if (isNew) {
@@ -405,7 +411,7 @@ class Model implements ModelInterface {
     extendObservable(this, {
       ...defaultAttributes,
       ...initialAttributes
-    })
+    }, { deep: true })
     this._listenForChanges()
   }
 
@@ -432,7 +438,7 @@ class Model implements ModelInterface {
               this._dirtyAttributes.delete(path)
             }
           })
-          diff(previousValue, value).forEach((property: string | number) => {
+          diff(previousValue, value).forEach((property: unknown) => {
             this._dirtyAttributes.add(`${attr}.${property}`)
           })
         } else {
@@ -500,7 +506,7 @@ class Model implements ModelInterface {
    * @method previousSnapshot
    */
   get persistedSnapshot (): JSONApiStruct {
-    return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
+    return <any>findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
   /**
@@ -510,7 +516,7 @@ class Model implements ModelInterface {
    * @method _takeSnapshot
    * @param {Object} options
    */
-  _takeSnapshot (options: JSONApiStruct = {}) {
+  _takeSnapshot (options: any = {}) {
     const persisted = options.persisted || false
     this._dirtyRelationships.clear()
     this._dirtyAttributes.clear()
@@ -680,7 +686,7 @@ class Model implements ModelInterface {
    * @method jsonapi
    * @return {Object} data in JSON::API format
    */
-  jsonapi (options: JSONApiStruct = {}):any {
+  jsonapi (options: any = {}):any {
     const {
       attributeDefinitions,
       attributeNames,
@@ -690,7 +696,7 @@ class Model implements ModelInterface {
     } = this
 
     let filteredAttributeNames = attributeNames
-    let filteredRelationshipNames = []
+    let filteredRelationshipNames: any = []
 
     if (options.attributes) {
       filteredAttributeNames = attributeNames
@@ -698,13 +704,14 @@ class Model implements ModelInterface {
     }
 
     const attributes = filteredAttributeNames.reduce((attrs, key) => {
-      const value = this[key]
+      const value: any = this[key]
       if (value) {
         const { dataType: DataType } = attributeDefinitions[key]
         let attr: any
-        if (DataType.name === 'Array' || DataType.name === 'Object') {
+        // @ts-ignore
+        if (typeof value === 'Array' || typeof value === 'Object') {
           attr = toJS(value)
-        } else if (DataType.name === 'Date') {
+        } else if (value instanceof Date) {
           attr = makeDate(value).toISOString()
         } else {
           attr = DataType(value)

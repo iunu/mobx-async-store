@@ -29,7 +29,7 @@ export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor
       return {
         get () {
           const { type } = targetOrModelKlass
-          return getRelatedRecords(this, property2, type)
+          return getRelatedRecords(this, property2, type) || []
         }
       }
     }
@@ -42,7 +42,7 @@ export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor
 
     return {
       get () {
-        return getRelatedRecords(this, property)
+        return getRelatedRecords(this, property) || []
       }
     }
   }

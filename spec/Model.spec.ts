@@ -1,3 +1,4 @@
+/* eslint-disable standard/object-curly-even-spacing */
 /* global fetch */
 import { autorun, isObservable } from 'mobx'
 
@@ -35,7 +36,7 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  @attribute() description: string
+  @attribute({ defaultValue: ''}) description: string
 
   @validates
   @relatedToOne organization: any
@@ -93,7 +94,13 @@ class User extends Model {
   static type = 'users'
   static endpoint = 'users'
 
-  @attribute(String) name: string
+  @attribute({ defaultValue: ''}) name: string
+}
+interface OptionsHash {
+  test?:string,
+  color?: string,
+  variety?: string,
+  size?: string
 }
 
 class Organization extends Model {
@@ -101,15 +108,15 @@ class Organization extends Model {
   static endpoint = 'organizations'
 
   @validates
-  @attribute(String) title: string = 'NEW TODO'
+  @attribute({ defaultValue: ''}) title: string
 
-  @attribute(Date) due_at = timestamp
+  @attribute({ defaultValue: timestamp }) due_at: any
 
   @validates(validatesArray)
-  @attribute(Array) tags: any[]
+  @attribute({ defaultValue: []}) tags: any[]
 
   @validates(validatesOptions)
-  @attribute() options: any = {}
+  @attribute({ defaultValue: {}}) options: OptionsHash
 
   @relatedToMany(Note) meeting_notes: any[]
 
@@ -117,7 +124,7 @@ class Organization extends Model {
   @relatedToMany notes: any[]
   @relatedToMany awesome_notes: any[]
 
-  @relatedToOne(User) user: any
+  @relatedToOne user: any
 }
 
 class Todo extends Model {
@@ -125,21 +132,21 @@ class Todo extends Model {
   static endpoint = 'todos'
 
   @validates
-  @attribute() title = 'NEW TODO'
+  @attribute({ defaultValue: ''}) title: string
 
-  @attribute() due_at = timestamp
+  @attribute({ defaultValue: timestamp}) due_at: string
 
   @validates(validatesArray)
-  @attribute() tags: any[] = []
+  @attribute({ defaultValue: []}) tags: any[]
 
   @validates(validatesOptions)
-  @attribute() options: any = {}
+  @attribute({ defaultValue: {}}) options: OptionsHash
 
-  @relatedToMany(Note) meeting_notes: any[] = []
+  @relatedToMany(Note) meeting_notes: any[]
 
   @validates(validatesArrayPresence)
-  @relatedToMany(Note) notes: any[] = []
-  @relatedToMany(Todo) awesome_notes: any[] = []
+  @relatedToMany notes: any[]
+  @relatedToMany awesome_notes: any[]
 
   @relatedToOne user: any
 }
@@ -200,19 +207,20 @@ describe('Model', () => {
   describe('initialization', () => {
     it('attributes default to specified type', () => {
       const todo = new Organization()
-      // expect(todo.tags).toBeInstanceOf(Array)
+      expect(todo.tags).toBeInstanceOf(Array)
       const note = new Note()
-      expect(note.description).toEqual(null)
+      expect(note.description).toEqual('')
     })
 
     it('attributes can have default values', () => {
       const todo = new Organization()
-      expect(todo.title).toEqual('NEW TODO')
       todo.title = 'test'
       expect(todo.title).toEqual('test')
-    })
 
-    it('attributes are observable 3', (done) => {
+      const otherTodo = new Organization({ title: 'test'})
+      expect(otherTodo.title).toEqual('test')
+    })
+  it('attributes are observable 3', (done) => {
       const todo = new Organization({ title: 'one' })
       expect(isObservable(todo)).toBe(true)
 
@@ -227,6 +235,7 @@ describe('Model', () => {
       })
 
       todo.title = 'two'
+
       todo.title = 'three'
     })
 
@@ -245,7 +254,7 @@ describe('Model', () => {
     })
 
     it('attributes are observable 1', (done) => {
-      const todo = new Organization({})
+      const todo = new Organization({ options: {}})
 
       let runs = 0
       const expected = [undefined, 'one', 'two']
@@ -261,8 +270,8 @@ describe('Model', () => {
       todo.options.test = 'two'
     })
 
-    it('attributes are observable 2', async () => {
-      const todo = await store.add('organizations', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
+    it('attributes are observable 2', () => {
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
       expect(todo.options.test).toEqual('one')
     })
 
@@ -720,7 +729,8 @@ describe('Model', () => {
   describe('.jsonapi', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      expect(todo.jsonapi()).toEqual({
+      let val = todo.jsonapi()
+      expect(val).toEqual({
         id: '1',
         type: 'organizations',
         attributes: {
