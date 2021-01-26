@@ -1,7 +1,8 @@
 {
   "name": "@artemisag/mobx-async-store",
   "version": "3.2.2",
-  "module": "dist/mobx-async-store.esm.js",
+  "module": "dist/main.js",
+  "types":"dist/main.d.ts",
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
@@ -54,6 +55,7 @@
     "yuidocjs": "^0.10.2"
   },
   "scripts": {
+    "prepublish": "tsc",
     "build": "tsc",
     "watch": "rollup -c -w",
     "test": "jest --verbose",

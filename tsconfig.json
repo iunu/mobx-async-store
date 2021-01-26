@@ -13,11 +13,11 @@
       "strictPropertyInitialization": false,
       "suppressImplicitAnyIndexErrors": true,
       "noImplicitAny": false,
-      "sourceMap": true
+      "sourceMap": true,
+      "declaration": true
   },
   "include": [
-      "./src/**/*",
-      "./spec/**/*"
+      "./src/**/*"
   ],
   "exclude": ["node_modules"]
 }
