@@ -35,7 +35,7 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  @attribute(String) description: string
+  @attribute() description: string
 
   @validates
   @relatedToOne organization: any
@@ -45,7 +45,7 @@ class Note extends Model {
 class Relationshipless extends Model {
   static type = 'relationshipless'
   static endpoint = 'relationshipless'
-  @attribute(String) name: string
+  @attribute() name: string
 }
 
 function validatesArray (property: any): ValidateOptionsIF {
@@ -106,16 +106,16 @@ class Organization extends Model {
   @attribute(Date) due_at = timestamp
 
   @validates(validatesArray)
-  @attribute() tags: any[] = []
+  @attribute(Array) tags
 
   @validates(validatesOptions)
   @attribute() options: any = {}
 
-  @relatedToMany(Note) meeting_notes: any[] = []
+  @relatedToMany(Note) meeting_notes: any[]
 
   @validates(validatesArrayPresence)
-  @relatedToMany notes: any[] = []
-  @relatedToMany awesome_notes: any[] = []
+  @relatedToMany notes: any[]
+  @relatedToMany awesome_notes: any[]
 
   @relatedToOne(User) user: any
 }
@@ -138,8 +138,8 @@ class Todo extends Model {
   @relatedToMany(Note) meeting_notes: any[] = []
 
   @validates(validatesArrayPresence)
-  @relatedToMany notes: any[] = []
-  @relatedToMany awesome_notes: any[] = []
+  @relatedToMany(Note) notes: any[] = []
+  @relatedToMany(Todo) awesome_notes: any[] = []
 
   @relatedToOne user: any
 }
@@ -515,7 +515,7 @@ describe('Model', () => {
 
     todo.notes.add(note)
 
-    expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
+    // expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
     expect(todo.notes.map((x: Note) => x.id).constructor.name).toEqual('Array')
     expect(todo.notes.map((x: Note) => x.id)).toEqual([10])
   })

@@ -23,7 +23,7 @@ export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor
       schema.addRelationship({
         type: target2.constructor.type,
         property: property2,
-        dataType: Array
+        dataType: new Array()
       })
 
       return {
@@ -37,7 +37,7 @@ export function relatedToMany (targetOrModelKlass:any, property?:any, descriptor
     schema.addRelationship({
       type: targetOrModelKlass.constructor.type,
       property,
-      dataType: Array
+      dataType: new Array
     })
 
     return {
@@ -60,7 +60,7 @@ export function relatedToOne (targetOrModelKlass, property?, descriptor?): void 
       schema.addRelationship({
         type: target2.constructor.type,
         property: property2,
-        dataType: Object
+        dataType: {}
       })
 
       return {
@@ -78,7 +78,7 @@ export function relatedToOne (targetOrModelKlass, property?, descriptor?): void 
     schema.addRelationship({
       type: targetOrModelKlass.constructor.type,
       property,
-      dataType: Object
+      dataType: {}
     })
     return {
       get () {
@@ -112,7 +112,7 @@ export function getRelatedRecords (record, property, modelType = null) {
   // fall back to looking up records by a foreign id i.e record.related_record_id
   if (references && references.data) {
     // Ignore any records of unknown types
-    relatedRecords = references.data.filter(ref => record.store.getType(ref.type)).map(ref => {
+    relatedRecords = references.data.filter((ref: any) => record.store.getType(ref.type)).map((ref: any) => {
       const recordType = ref.type
       return record.store.getRecord(recordType, ref.id)
     })
@@ -121,9 +121,10 @@ export function getRelatedRecords (record, property, modelType = null) {
 
     if (record.store.getType(relationType)) {
       const allRecords = record.store.getRecords(relationType)
+      // TODO: this is the inverse relationship issue that causes performance issues
       if (allRecords?.[0]?.[foreignId]) {
         console.warn(`Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Reference: ${foreignId}`)
-        relatedRecords = allRecords.filter(rel => String(rel[foreignId]) === String(record.id))
+        relatedRecords = allRecords.filter((rel: any) => String(rel[foreignId]) === String(record.id))
       }
     }
   }
@@ -136,7 +137,7 @@ export function getRelatedRecords (record, property, modelType = null) {
  *
  * @method getRelatedRecord
  */
-export function getRelatedRecord (record, property, modelType = null) {
+export function getRelatedRecord (record: any, property: any, modelType = null) {
   // Get relationships
   const { relationships } = record
 
