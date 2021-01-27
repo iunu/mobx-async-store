@@ -122,7 +122,7 @@ export function getRelatedRecords (record, property, modelType = null) {
     if (record.store.getType(relationType)) {
       const allRecords = record.store.getRecords(relationType)
       if (allRecords?.[0]?.[foreignId]) {
-        console.warn(`Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Reference: ${foreignId}`)
+        console.warn(`Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.`)
         relatedRecords = allRecords.filter(rel => String(rel[foreignId]) === String(record.id))
       }
     }

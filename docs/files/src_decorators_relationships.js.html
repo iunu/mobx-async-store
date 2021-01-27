@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.2.2</em>
+            <em>API Docs for: 3.2.3</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -207,7 +207,7 @@ export function getRelatedRecords (record, property, modelType = null) {
     if (record.store.getType(relationType)) {
       const allRecords = record.store.getRecords(relationType)
       if (allRecords?.[0]?.[foreignId]) {
-        console.warn(&#x60;Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Reference: ${foreignId}&#x60;)
+        console.warn(&#x60;Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.&#x60;)
         relatedRecords = allRecords.filter(rel =&gt; String(rel[foreignId]) === String(record.id))
       }
     }
