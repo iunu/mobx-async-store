@@ -2665,7 +2665,7 @@ function getRelatedRecords(record, property) {
       var allRecords = record.store.getRecords(relationType);
 
       if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && _allRecords$[foreignId]) {
-        console.warn("Support for including non-canonical jsonapi references will be removed in future versions. Record type: ".concat(record.type, ". Reference: ").concat(foreignId));
+        console.warn("Support for including non-canonical jsonapi references will be removed in future versions. Record type: ".concat(record.type, ". Relation: ").concat(relationType, ". Reference: ").concat(foreignId, "."));
         relatedRecords = allRecords.filter(function (rel) {
           return String(rel[foreignId]) === String(record.id);
         });
