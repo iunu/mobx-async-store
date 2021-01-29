@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.2.3</em>
+            <em>API Docs for: 3.2.4</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -202,11 +202,14 @@ export function getRelatedRecords (record, property, modelType = null) {
       return record.store.getRecord(recordType, ref.id)
     })
   } else {
-    const foreignId = &#x60;${singularizeType(record.type)}_id&#x60;
+    const foreignReferenceName = singularizeType(record.type)
+    const foreignId = &#x60;${foreignReferenceName}_id&#x60;
 
     if (record.store.getType(relationType)) {
       const allRecords = record.store.getRecords(relationType)
-      if (allRecords?.[0]?.[foreignId]) {
+      if (allRecords?.[0]?.relationships?.[foreignReferenceName]?.data) {
+        relatedRecords = allRecords.filter(rel =&gt; String(rel.relationships[foreignReferenceName].data.id) === String(record.id))
+      } else if (allRecords?.[0]?.[foreignId]) {
         console.warn(&#x60;Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.&#x60;)
         relatedRecords = allRecords.filter(rel =&gt; String(rel[foreignId]) === String(record.id))
       }

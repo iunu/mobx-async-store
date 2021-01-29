@@ -117,11 +117,14 @@ export function getRelatedRecords (record, property, modelType = null) {
       return record.store.getRecord(recordType, ref.id)
     })
   } else {
-    const foreignId = `${singularizeType(record.type)}_id`
+    const foreignReferenceName = singularizeType(record.type)
+    const foreignId = `${foreignReferenceName}_id`
 
     if (record.store.getType(relationType)) {
       const allRecords = record.store.getRecords(relationType)
-      if (allRecords?.[0]?.[foreignId]) {
+      if (allRecords?.[0]?.relationships?.[foreignReferenceName]?.data) {
+        relatedRecords = allRecords.filter(rel => String(rel.relationships[foreignReferenceName].data.id) === String(record.id))
+      } else if (allRecords?.[0]?.[foreignId]) {
         console.warn(`Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.`)
         relatedRecords = allRecords.filter(rel => String(rel[foreignId]) === String(record.id))
       }

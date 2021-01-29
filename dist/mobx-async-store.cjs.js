@@ -2663,14 +2663,19 @@ function getRelatedRecords(record, property) {
       return record.store.getRecord(recordType, ref.id);
     });
   } else {
-    var foreignId = "".concat(singularizeType(record.type), "_id");
+    var foreignReferenceName = singularizeType(record.type);
+    var foreignId = "".concat(foreignReferenceName, "_id");
 
     if (record.store.getType(relationType)) {
-      var _allRecords$;
+      var _allRecords$, _allRecords$$relation, _allRecords$$relation2, _allRecords$2;
 
       var allRecords = record.store.getRecords(relationType);
 
-      if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && _allRecords$[foreignId]) {
+      if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && (_allRecords$$relation = _allRecords$.relationships) !== null && _allRecords$$relation !== void 0 && (_allRecords$$relation2 = _allRecords$$relation[foreignReferenceName]) !== null && _allRecords$$relation2 !== void 0 && _allRecords$$relation2.data) {
+        relatedRecords = allRecords.filter(function (rel) {
+          return String(rel.relationships[foreignReferenceName].data.id) === String(record.id);
+        });
+      } else if (allRecords !== null && allRecords !== void 0 && (_allRecords$2 = allRecords[0]) !== null && _allRecords$2 !== void 0 && _allRecords$2[foreignId]) {
         console.warn("Support for including non-canonical jsonapi references will be removed in future versions. Record type: ".concat(record.type, ". Relation: ").concat(relationType, ". Reference: ").concat(foreignId, "."));
         relatedRecords = allRecords.filter(function (rel) {
           return String(rel[foreignId]) === String(record.id);
