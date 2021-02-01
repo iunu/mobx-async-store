@@ -2545,6 +2545,10 @@ var _Symbol$species;
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -2657,20 +2661,34 @@ function getRelatedRecords(record, property) {
       return record.store.getRecord(recordType, ref.id);
     });
   } else {
-    var foreignId = "".concat(singularizeType(record.type), "_id");
+    var foreignReferenceName = singularizeType(record.type);
+    var foreignId = "".concat(foreignReferenceName, "_id");
 
     if (record.store.getType(relationType)) {
-      var _allRecords$;
+      var _allRecords$, _allRecords$$relation, _allRecords$$relation2, _allRecords$2;
 
       var allRecords = record.store.getRecords(relationType);
 
-      if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && _allRecords$[foreignId]) {
+      if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && (_allRecords$$relation = _allRecords$.relationships) !== null && _allRecords$$relation !== void 0 && (_allRecords$$relation2 = _allRecords$$relation[foreignReferenceName]) !== null && _allRecords$$relation2 !== void 0 && _allRecords$$relation2.data) {
+        relatedRecords = allRecords.filter(function (rel) {
+          return String(rel.relationships[foreignReferenceName].data.id) === String(record.id);
+        });
+      } else if (allRecords !== null && allRecords !== void 0 && (_allRecords$2 = allRecords[0]) !== null && _allRecords$2 !== void 0 && _allRecords$2[foreignId]) {
         console.warn("Support for including non-canonical jsonapi references will be removed in future versions. Record type: ".concat(record.type, ". Relation: ").concat(relationType, ". Reference: ").concat(foreignId, "."));
         relatedRecords = allRecords.filter(function (rel) {
           return String(rel[foreignId]) === String(record.id);
         });
       }
     }
+
+    record.relationships = _objectSpread$3(_objectSpread$3({}, relationships), {}, _defineProperty({}, relationType, _objectSpread$3(_objectSpread$3({}, references), {}, {
+      data: relatedRecords.map(function (r) {
+        return {
+          type: r.type,
+          id: r.id
+        };
+      })
+    })));
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType);

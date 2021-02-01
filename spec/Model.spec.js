@@ -489,6 +489,132 @@ describe('Model', () => {
     expect(note.organization).toBeFalsy()
   })
 
+  it('inverse relationships are used when the base model did not load the relationship', () => {
+    // For this test, we need to create seed data using JSON in order to simulate the results of API calls
+    // where Notes are loaded separately, and Organizations don't include notes directly.
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 10,
+      attributes: { description: 'Note 1 for Org 100' },
+      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+    })
+
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 11,
+      attributes: { description: 'Note 2 for Org 100' },
+      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+    })
+
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 12,
+      attributes: { description: 'Note 1 for Org 200' },
+      relationships: { organization: { data: { type: 'organizations', id: 200 } } }
+    })
+
+    const org100 = store.createOrUpdateModel({
+      type: 'organizations',
+      id: 100,
+      attributes: { description: 'Org 100' },
+      relationships: { notes: { included: false } }
+    })
+
+    const org200 = store.createOrUpdateModel({
+      type: 'organizations',
+      id: 200,
+      attributes: { description: 'Org 200' },
+      relationships: { notes: { included: false } }
+    })
+
+    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 100'])
+    expect(org200.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 200'])
+  })
+
+  it('relationship data is cached when falling back to inverse relationships', () => {
+    // For this test, we need to create seed data using JSON in order to simulate the results of API calls
+    // where Notes are loaded separately, and Organizations don't include notes directly.
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 10,
+      attributes: { description: 'Note 1 for Org 100' },
+      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+    })
+
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 11,
+      attributes: { description: 'Note 2 for Org 100' },
+      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+    })
+
+    const org100 = store.createOrUpdateModel({
+      type: 'organizations',
+      id: 100,
+      attributes: { description: 'Org 100' },
+      relationships: { notes: { included: false } }
+    })
+
+    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 100'])
+
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 11,
+      attributes: { description: 'Note 2 for Org 101' },
+      relationships: { organization: { data: { type: 'organizations', id: 101 } } }
+    })
+
+    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 101'])
+  })
+
+  it('id attributes used when there are no inverse relationships and the base model did not load the relationship', () => {
+    // For this test, we need to create seed data using JSON in order to simulate the results of API calls
+    // where Notes are loaded separately, and Organizations don't include notes directly.
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 10,
+      attributes: { description: 'Note 1 for Org 100', organization_id: 100 }
+    })
+
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 11,
+      attributes: { description: 'Note 2 for Org 100', organization_id: 100 }
+    })
+
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 12,
+      attributes: { description: 'Note 1 for Org 200', organization_id: 200 }
+    })
+
+    const org100 = store.createOrUpdateModel({
+      type: 'organizations',
+      id: 100,
+      attributes: { description: 'Org 100' },
+      relationships: { notes: { included: false } }
+    })
+
+    const org200 = store.createOrUpdateModel({
+      type: 'organizations',
+      id: 200,
+      attributes: { description: 'Org 200' },
+      relationships: { notes: { included: false } }
+    })
+
+    const originalWarnFn = console.warn
+    console.warn = jest.fn()
+
+    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 100'])
+    expect(org200.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 200'])
+    expect(console.warn.mock.calls).toEqual([
+      ['Support for including non-canonical jsonapi references will be removed in future versions. Record type: organizations. Relation: notes. Reference: organization_id.'],
+      ['Support for including non-canonical jsonapi references will be removed in future versions. Record type: organizations. Relation: notes. Reference: organization_id.']
+    ])
+
+    console.warn = originalWarnFn
+  })
+
   it('relationship arrays provide regular arrays for derived objects', () => {
     const note = store.add('notes', {
       id: 10,
