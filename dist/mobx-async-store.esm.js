@@ -2671,7 +2671,9 @@ function getRelatedRecords(record, property) {
 
       if (allRecords !== null && allRecords !== void 0 && (_allRecords$ = allRecords[0]) !== null && _allRecords$ !== void 0 && (_allRecords$$relation = _allRecords$.relationships) !== null && _allRecords$$relation !== void 0 && (_allRecords$$relation2 = _allRecords$$relation[foreignReferenceName]) !== null && _allRecords$$relation2 !== void 0 && _allRecords$$relation2.data) {
         relatedRecords = allRecords.filter(function (rel) {
-          return String(rel.relationships[foreignReferenceName].data.id) === String(record.id);
+          var _rel$relationships$fo, _rel$relationships$fo2;
+
+          return String((_rel$relationships$fo = rel.relationships[foreignReferenceName]) === null || _rel$relationships$fo === void 0 ? void 0 : (_rel$relationships$fo2 = _rel$relationships$fo.data) === null || _rel$relationships$fo2 === void 0 ? void 0 : _rel$relationships$fo2.id) === String(record.id);
         });
       } else if (allRecords !== null && allRecords !== void 0 && (_allRecords$2 = allRecords[0]) !== null && _allRecords$2 !== void 0 && _allRecords$2[foreignId]) {
         console.warn("Support for including non-canonical jsonapi references will be removed in future versions. Record type: ".concat(record.type, ". Relation: ").concat(relationType, ". Reference: ").concat(foreignId, "."));
