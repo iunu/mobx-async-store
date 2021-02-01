@@ -68,7 +68,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/decorators/relationships.js",
-            "line": 211,
+            "line": 219,
             "description": "An array that allows for updating store references and relationships",
             "is_constructor": 1,
             "params": [
@@ -219,7 +219,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 137,
+            "line": 145,
             "description": "Handles getting polymorphic has_one/belong_to.",
             "itemtype": "method",
             "name": "getRelatedRecord",
@@ -227,7 +227,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 162,
+            "line": 170,
             "description": "Handles setting polymorphic has_one/belong_to.\n- Validates the related record to make sure it inherits from `Model` class\n- Sets the relationship\n- Attempts to find an inverse relationship, and if successful adds it as well",
             "itemtype": "method",
             "name": "setRelatedRecord",
@@ -257,7 +257,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 242,
+            "line": 250,
             "description": "Adds a record to the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "add",
@@ -276,7 +276,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 284,
+            "line": 292,
             "description": "Removes a record from the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "remove",

@@ -101,7 +101,7 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  * @param {String} modelType an override of the modelType
  */
 export function getRelatedRecords (record, property, modelType = null) {
-  const { relationships } = record
+  let { relationships } = record
 
   const relationType = modelType || property
 
@@ -127,6 +127,14 @@ export function getRelatedRecords (record, property, modelType = null) {
       } else if (allRecords?.[0]?.[foreignId]) {
         console.warn(`Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.`)
         relatedRecords = allRecords.filter(rel => String(rel[foreignId]) === String(record.id))
+      }
+    }
+
+    record.relationships = {
+      ...relationships,
+      [relationType]: {
+        ...references,
+        data: relatedRecords.map(r => ({ type: r.type, id: r.id }))
       }
     }
   }
