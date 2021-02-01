@@ -513,6 +513,13 @@ describe('Model', () => {
       relationships: { organization: { data: { type: 'organizations', id: 200 } } }
     })
 
+    store.createOrUpdateModel({
+      type: 'notes',
+      id: 13,
+      attributes: { description: 'Orphaned note' },
+      relationships: { }
+    })
+
     const org100 = store.createOrUpdateModel({
       type: 'organizations',
       id: 100,
