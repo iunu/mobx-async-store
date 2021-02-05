@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.2.5"
+        "version": "3.2.7"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -68,7 +68,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/decorators/relationships.js",
-            "line": 221,
+            "line": 224,
             "description": "An array that allows for updating store references and relationships",
             "is_constructor": 1,
             "params": [
@@ -219,7 +219,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 147,
+            "line": 150,
             "description": "Handles getting polymorphic has_one/belong_to.",
             "itemtype": "method",
             "name": "getRelatedRecord",
@@ -227,7 +227,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 172,
+            "line": 175,
             "description": "Handles setting polymorphic has_one/belong_to.\n- Validates the related record to make sure it inherits from `Model` class\n- Sets the relationship\n- Attempts to find an inverse relationship, and if successful adds it as well",
             "itemtype": "method",
             "name": "setRelatedRecord",
@@ -257,7 +257,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 252,
+            "line": 255,
             "description": "Adds a record to the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "add",
@@ -276,7 +276,7 @@
         },
         {
             "file": "src/decorators/relationships.js",
-            "line": 294,
+            "line": 297,
             "description": "Removes a record from the array, and updates references in the store, as well as inverse references",
             "itemtype": "method",
             "name": "remove",
