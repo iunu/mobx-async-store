@@ -2652,9 +2652,15 @@ function relatedToOne(targetOrModelKlass, property, descriptor) {
 
 function getRelatedRecords(record, property) {
   var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-  var relationships = record.relationships;
+  var relationships = record.relationships,
+      cachedRelationships = record.cachedRelationships;
   var relationType = modelType || property;
   var references = relationships && relationships[relationType];
+
+  if (!references || !references.data) {
+    references = cachedRelationships && cachedRelationships[relationType];
+  }
+
   var relatedRecords = []; // NOTE: If the record doesn't have a matching references for the relation type
   // fall back to looking up records by a foreign id i.e record.related_record_id
 
@@ -2689,14 +2695,14 @@ function getRelatedRecords(record, property) {
       }
     }
 
-    record.relationships = _objectSpread$3(_objectSpread$3({}, relationships), {}, _defineProperty({}, relationType, _objectSpread$3(_objectSpread$3({}, references), {}, {
+    record.cachedRelationships = _objectSpread$3(_objectSpread$3({}, cachedRelationships), {}, _defineProperty({}, relationType, {
       data: relatedRecords.map(function (r) {
         return {
           type: r.type,
           id: r.id
         };
       })
-    })));
+    }));
   }
 
   return new RelatedRecordsArray(relatedRecords, record, relationType);

@@ -101,11 +101,15 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  * @param {String} modelType an override of the modelType
  */
 export function getRelatedRecords (record, property, modelType = null) {
-  let { relationships } = record
+  let { relationships, cachedRelationships } = record
 
   const relationType = modelType || property
 
-  const references = relationships && relationships[relationType]
+  let references = relationships && relationships[relationType]
+  if (!references || !references.data) {
+    references = cachedRelationships && cachedRelationships[relationType]
+  }
+
   let relatedRecords = []
 
   // NOTE: If the record doesn't have a matching references for the relation type
@@ -132,10 +136,9 @@ export function getRelatedRecords (record, property, modelType = null) {
       }
     }
 
-    record.relationships = {
-      ...relationships,
+    record.cachedRelationships = {
+      ...cachedRelationships,
       [relationType]: {
-        ...references,
         data: relatedRecords.map(r => ({ type: r.type, id: r.id }))
       }
     }

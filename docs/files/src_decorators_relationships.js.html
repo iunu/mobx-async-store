@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.2.5</em>
+            <em>API Docs for: 3.2.7</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -186,11 +186,15 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  * @param {String} modelType an override of the modelType
  */
 export function getRelatedRecords (record, property, modelType = null) {
-  let { relationships } = record
+  let { relationships, cachedRelationships } = record
 
   const relationType = modelType || property
 
-  const references = relationships &amp;&amp; relationships[relationType]
+  let references = relationships &amp;&amp; relationships[relationType]
+  if (!references || !references.data) {
+    references = cachedRelationships &amp;&amp; cachedRelationships[relationType]
+  }
+
   let relatedRecords = []
 
   // NOTE: If the record doesn&#x27;t have a matching references for the relation type
@@ -217,10 +221,9 @@ export function getRelatedRecords (record, property, modelType = null) {
       }
     }
 
-    record.relationships = {
-      ...relationships,
+    record.cachedRelationships = {
+      ...cachedRelationships,
       [relationType]: {
-        ...references,
         data: relatedRecords.map(r =&gt; ({ type: r.type, id: r.id }))
       }
     }
