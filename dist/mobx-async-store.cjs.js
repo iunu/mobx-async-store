@@ -25,7 +25,7 @@ var pluralize = _interopDefault(require('pluralize'));
 var dig = _interopDefault(require('lodash/get'));
 var flattenDeep = _interopDefault(require('lodash/flattenDeep'));
 var cloneDeep = _interopDefault(require('lodash/cloneDeep'));
-var _isEqual = _interopDefault(require('lodash/isEqual'));
+var isEqual = _interopDefault(require('lodash/isEqual'));
 var isObject = _interopDefault(require('lodash/isObject'));
 var findLast = _interopDefault(require('lodash/findLast'));
 var pick = _interopDefault(require('lodash/pick'));
@@ -1004,23 +1004,6 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
       });
     }
     /**
-     * Comparison by value
-     * returns `true` if this object has the same attrs and relationships
-     * as the "other" object, ignores differences in internal state like
-     * attribute "dirtyness" or errors
-     *
-     * @method isEqual
-     * @param {Object} other
-     * @return {Object}
-     */
-
-  }, {
-    key: "isEqual",
-    value: function isEqual(other) {
-      if (!other) return false;
-      return _isEqual(this.attributes, other.attributes) && _isEqual(this.relationships, other.relationships);
-    }
-    /**
      * Comparison by identity
      * returns `true` if this object has the same type and id as the
      * "other" object, ignores differences in attrs and relationships
@@ -1071,7 +1054,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
           diff(currentValue, previousValue).forEach(function (property) {
             dirtyAccumulator.add("".concat(attr, ".").concat(property));
           });
-        } else if (!_isEqual(previousValue, currentValue)) {
+        } else if (!isEqual(previousValue, currentValue)) {
           dirtyAccumulator.add(attr);
         }
 
@@ -1117,7 +1100,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
           return [value.id, value.type];
         }).sort() : [previousValues.id, previousValues.type];
 
-        if (!_isEqual(currentIds, previousIds)) {
+        if (!isEqual(currentIds, previousIds)) {
           dirtyAccumulator.add(name);
         }
 
