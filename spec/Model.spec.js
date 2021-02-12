@@ -1266,16 +1266,16 @@ describe('Model', () => {
   })
 
   describe('.destroy', () => {
-    it('makes request and removes model from the store store', async () => {
+    it('makes request and removes model from the store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      expect(store.findAll('organizations', { fromServer: false }))
+      expect(store.getAll('organizations'))
         .toHaveLength(1)
       await todo.destroy()
       expect(fetch.mock.calls).toHaveLength(1)
       expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations/1')
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
-      expect(store.findAll('organizations', { fromServer: false }))
+      expect(store.getAll('organizations'))
         .toHaveLength(0)
     })
 
