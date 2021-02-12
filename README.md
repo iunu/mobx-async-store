@@ -11,9 +11,11 @@ Mobx-based store for async data fetching and state management. https://artemis-a
 This library is experimental and not advised for use in production use.
 
 # TODO
+
 - [ ] Improve documentation
 
 ## Table of Contents
+
 - Introduction
 - Development Setup
 - Testing
@@ -23,14 +25,13 @@ This library is experimental and not advised for use in production use.
   - Creating models by extending `Model`
   - Creating stores by extending `Store`
   - Initializing stores
-  - Fetching multiple records with `Store#findAll`
-  - `Store#findAll` options
-  - Fetching individual records with `Store#findOne`
-  - `Store#findOne` options
+  - Finding single records with `Store#getOne`, `Store#fetchOne`, `Store#findOne`
+  - Finding records by id with `Store#getMany`, `Store#fetchMany`, `Store#findMany`
+  - Fetching all records with `Store#getAll`, `Store#fetchAll`, `Store#findAll`
+  - Find/fetch options
   - Adding records with `Store#add`
   - Persisting records with `Model#save`
   - Handling errors with `Model#errors`
-
 
 ## Introduction
 
@@ -58,18 +59,19 @@ yarn install
 
 `yarn build` builds the library to `dist`, generating three files:
 
-* `dist/mobx-async-store.cjs.js`
-    A CommonJS bundle, suitable for use in Node.js, that `require`s the external dependency. This corresponds to the `"main"` field in package.json
-* `dist/mobx-async-store.esm.js`
-    an ES module bundle, suitable for use in other people's libraries and applications, that `import`s the external dependency. This corresponds to the `"module"` field in package.json
-* `dist/mobx-async-store.umd.js`
-    a UMD build, suitable for use in any environment (including the browser, as a `<script>` tag), that includes the external dependency. This corresponds to the `"browser"` field in package.json
+- `dist/mobx-async-store.cjs.js`
+  A CommonJS bundle, suitable for use in Node.js, that `require`s the external dependency. This corresponds to the `"main"` field in package.json
+- `dist/mobx-async-store.esm.js`
+  an ES module bundle, suitable for use in other people's libraries and applications, that `import`s the external dependency. This corresponds to the `"module"` field in package.json
+- `dist/mobx-async-store.umd.js`
+  a UMD build, suitable for use in any environment (including the browser, as a `<script>` tag), that includes the external dependency. This corresponds to the `"browser"` field in package.json
 
 ### Step 2 - Update the documentation
 
 `yarn run yuidoc` updates the documentation, located in `docs`.
 
 ### Step 3 - Publish
+
 `npm login` to authenticate yourself as someone authorized to publish this package
 `npm publish`
 
@@ -132,46 +134,121 @@ const store = new AppStore({
 
 ```
 
-### Fetching multiple records with `Store#findAll`
+### Getting all records with `Store#getAll`
 
-The default behavior for `mobx-async-store` is to fetch all records matching the type provided from the server. Calling the `.findAll` method will kick off an AJAX request and return a promise with the returns data. Subsequent calls to `.findAll` with no options provided with hit a local cache instead of making anothrer request.
+Gets all records matching the type provided from the store. This never hits the server.
+
+```JavaScript
+// No request is made, return result from the store
+store.getAll('todos')
+```
+
+### Fetching all records with `Store#fetchAll`
+
+Fetches all records matching the given type from the server.
+This will always fetch from the server and return a promise.
 
 ```JavaScript
 // GET /todos
-const todos = await store.findAll('todos')
+await store.fetchAll('todos')
+```
 
-// No request is made, return result in the store
+### Finding all records with `Store#findAll`
+
+Finds all records first in the store, otherwise will fetch from the server.
+Subsequent calls to `.findAll` will hit a local cache instead of making another request.
+
+```JavaScript
+// GET /todos
+await store.findAll('todos')
+
+// No request is made, return result from the store
 await store.findAll('todos')
 ```
 
-### `Store#findAll` options
+### Getting records by id with `Store#getMany`
 
-The `findAll` method takes and options object as a second argument.
+Gets records with the given ids and type provided from the store.
+This will never fetch from the server.
 
-``` JavaScript
-store.findAll(MODEL_TYPE, OPTIONS)
+```JavaScript
+// No request is made, return result from the store
+const ids = ['2', '3', '4']
+store.getMany('todos', ids)
+```
+
+### Fetching records by id with `Store#fetchMany`
+
+Fetches records with the given ids and type from the server.
+This will always fetch from the server and return a promise.
+
+```JavaScript
+// GET /todos with ids 4, 5
+const ids = ['4', '5']
+await store.fetchMany('todos', ids)
+```
+
+### Finding records by id with `Store#findMany`
+
+Finds records with the given ids and type first in the store, otherwise will fetch from the server.
+Subsequent calls to `.findMany` will hit a local cache instead of making another request.
+
+```JavaScript
+// GET /todos with ids 1, 4
+const ids = ['1', '4']
+await store.findMany('todos', ids)
+
+// No request is made, return result from the store
+await store.findMany('todos', ids)
+```
+
+### find/fetch options
+
+The `find` and `fetch` methods can take an options object as a second argument.
+
+```JavaScript
+await store.fetchOne(MODEL_TYPE, OPTIONS)
+await store.findOne(MODEL_TYPE, OPTIONS)
+
+await store.fetchAll(MODEL_TYPE, OPTIONS)
+await store.findAll(MODEL_TYPE, OPTIONS)
+
+await store.fetchMany(MODEL_TYPE, OPTIONS)
+await store.findMany(MODEL_TYPE, OPTIONS)
 ```
 
 #### `fromServer` option
 
-You can force an `mobx-async-store`-based store to fetch data from the server (and break the cache), by providing the `fromServer` option as true.
+DEPRECATION WARNING: the fromServer option is deprecated and will be removed in favor of using get, fetch, and find methods.
+Currently you can still pass this in for `Store#findOne`, `Store#findMany`, `Store#findAll` methods.
+
+Passing `fromServer: true` will force requests to fetch data from the server (and break the cache).
+Passing `fromServer: false` will prevent requests from being made and only return data on client-side.
+A promise will always be returned.
 
 ```JavaScript
 await store.findAll('todos', { fromServer: true })
 ```
 
-Passing `fromServer: false` will prevent requests from being made and only return data on client-side. It will also never return a promise. This is useful in computed contexts.
-
 #### `queryParams` options
 
-`mobx-async-store` builds queries that are `JSON::API` compliant. By default, making a request with `queryParams` will trigger an API request, even if a previous call of  `.findAll` was made without options.
+`mobx-async-store` builds queries that are `JSON::API` compliant. Requests are cached from the previous call - including any `queryParams` given.
+
+```JavaScript
+store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { overdue: true } } })
+// The query is: '/example_api/todos?filter[title]=Do taxes&filter[overdue]=true'
+// This fetches from the server and stores the result of the query in the cache.
+
+store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { overdue: true } } })
+// Returns result from the cache.
+```
 
 ##### `queryParams.filter`
 
 To filter API results you can use the `filter` key. See the [JSON::API filter documentation](https://jsonapi.org/format/#fetching-filtering) for more information.
 
 ```JavaScript
-store.findAll('todos', {
+store.findMany('todos', ['1', '2'], {
   queryParams: {
     filter: {
       completed: true,
@@ -187,7 +264,7 @@ If the record type you are fetching has related data you need to side-load you c
 See [JSON::API includes documentation](https://jsonapi.org/format/#fetching-includes) and the relationships section blow for details.
 
 ```JavaScript
-store.findAll('todos', {
+store.fetchAll('todos', {
   queryParams: {
     filter: {
       include: 'todos.notes'
@@ -208,21 +285,50 @@ store.findAll('todos', { queryParams: { foo: 'bar' } })
 
 `mobx-async-store` needs additional options for keeping the local store in sync with the server-side. These options are pending an RFC.
 
-### Fetching single records with `Store#findOne`
+### Getting single records with `Store#getOne`
 
-You can fetch a single record from the server with the `findOne` method. The same caching behavior applies for findOne as well.
+You can get a single record from the store with the `getOne` method.
+This will never fetch from the server.
 
 ```JavaScript
-// GET /todos
-const todos = await store.findOne('todos', 1)
+const todo = store.add('todos', { title: 'Buy Milk' })
 
-// No request is made, return result in the store
-store.findOne('todos', 1)
+// Returns record from the store, no request made.
+store.getOne('todos', todo.id)
+
+// No record returned as it never fetches from the server.
+store.reset('todos')
+store.getOne('todos', todo.id)
 ```
 
-### `findOne` options
+### Fetching single records with `Store#fetchOne`
 
-The `findOne` method also supports the `fromServer` and `queryParam` options.
+Fetches a single record with the given id from the server.
+This will always fetch from the server.
+It will soon be updated to always return a promise
+
+```JavaScript
+const todo = store.add('todos', { title: 'Pay bills' })
+
+// Request made, record is always returned from the server.
+await store.fetchOne('todos', todo.id)
+```
+
+### Finding single records with `Store#findOne`
+
+Finds a single record with the given id and type first in the store, otherwise will fetch from the server.
+Subsequent calls to `.findOne` will hit a local cache instead of making another request.
+
+```JavaScript
+const todo = store.add('todos', { title: 'Buy Milk' })
+
+// Returns record from the store, no request made.
+store.findOne('todos', todo.id)
+
+// Returns record from the server if it's not in the store.
+store.reset('todos')
+store.findOne('todos', todo.id)
+```
 
 ### Adding records with `Store#add`
 
@@ -241,8 +347,8 @@ todo.id
 // => tmp-6b46fa20-db49-11e9-8256-1be9dad543b1
 ```
 
-
 Multiple records can be added at the same time.
+
 ```JavaScript
 const todos = store.add('todos', [
   { title: 'Buy Milk', category: 'chores' },
@@ -266,11 +372,11 @@ todo.id
 ```
 
 The newly built record will be ephemeral and will not be added to the store
+
 ```JavaScript
 store.findOne('todos', todo.id)
 // => undefined
 ```
-
 
 ### Persisting records with `Model#save`
 
