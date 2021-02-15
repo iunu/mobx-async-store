@@ -33,7 +33,7 @@ class Store {
    *
    * @method constructor
    */
-  constructor(options) {
+  constructor (options) {
     this.init(options)
   }
 
@@ -187,7 +187,7 @@ class Store {
    * @param {Object} options { queryParams }
    * @return {Promise} Promise.resolve(record) or Promise.reject(status)
    */
-  async fetchOne(type, id, options = {}) {
+  async fetchOne (type, id, options = {}) {
     const { queryParams } = options
     const url = this.fetchUrl(type, queryParams, id)
     const response = await this.fetch(url, { method: 'GET' })
@@ -383,7 +383,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  fetchUrl(type, queryParams, id, options) {
+  fetchUrl (type, queryParams, id, options) {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
@@ -518,7 +518,7 @@ class Store {
    *
    * @method reset
    */
-  reset(type) {
+  reset (type) {
     if (type) {
       this.data[type] = {
         records: observable.map({}),
@@ -537,7 +537,7 @@ class Store {
    * @method init
    * @param {Object} options passed to constructor
    */
-  init(options) {
+  init (options) {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
@@ -549,7 +549,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
-  initializeNetworkConfiguration(options = {}) {
+  initializeNetworkConfiguration (options = {}) {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
   }
@@ -560,7 +560,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
-  initializeModelTypeIndex() {
+  initializeModelTypeIndex () {
     const { types } = this.constructor
     this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
       modelTypeIndex[modelKlass.type] = modelKlass
@@ -576,7 +576,7 @@ class Store {
    *
    * @method initializeObservableDataProperty
    */
-  initializeObservableDataProperty() {
+  initializeObservableDataProperty () {
     const { types } = this.constructor
 
     // NOTE: Is there a performance cost to setting
@@ -596,7 +596,7 @@ class Store {
    * @param {String} url
    * @param {Object} options
    */
-  fetch(url, options = {}) {
+  fetch (url, options = {}) {
     const { defaultFetchOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const key = JSON.stringify({ url, fetchOptions })
@@ -613,7 +613,7 @@ class Store {
    * @param {String} type
    * @return {Object} observable type object structure
    */
-  getType(type) {
+  getType (type) {
     return this.data[type]
   }
 
@@ -625,7 +625,7 @@ class Store {
    * @param {Number} id
    * @return {Object} record
    */
-  getRecord(type, id) {
+  getRecord (type, id) {
     if (!this.getType(type)) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
@@ -651,7 +651,7 @@ class Store {
    * @param {String} type
    * @return {Array} array of objects
    */
-  getRecords(type) {
+  getRecords (type) {
     const records = Array.from(this.getType(type).records.values()).filter(
       (value) => value && value !== 'undefined'
     )
@@ -666,7 +666,7 @@ class Store {
    * @param {Array} ids
    * @return {Array} array or records
    */
-  getRecordsById(type, ids = []) {
+  getRecordsById (type, ids = []) {
     // NOTE: Is there a better way to do this?
     return ids
       .map((id) => this.getRecord(type, id))
@@ -683,7 +683,7 @@ class Store {
    * @param {Object} queryParams
    * @return {Object} record
    */
-  getCachedRecord(type, id, queryParams) {
+  getCachedRecord (type, id, queryParams) {
     const cachedRecords = this.getCachedRecords(type, queryParams, id)
 
     return cachedRecords && cachedRecords[0]
@@ -698,7 +698,7 @@ class Store {
    * @param {String} id optional param if only getting 1 cached record by id
    * @return {Array} array of records
    */
-  getCachedRecords(type, queryParams, id) {
+  getCachedRecords (type, queryParams, id) {
     // Get the url the request would use
     const url = this.fetchUrl(type, queryParams, id)
     // Get the matching ids from the response
@@ -715,7 +715,7 @@ class Store {
    * @param {String} url
    * @return {Array} array of ids
    */
-  getCachedIds(type, url) {
+  getCachedIds (type, url) {
     const ids = this.getType(type).cache.get(url)
     if (!ids) return []
     const idsSet = new Set(toJS(ids))
@@ -730,7 +730,7 @@ class Store {
    * @param {String} url
    * @return {Array} array of ids
    */
-  getCachedId(type, id) {
+  getCachedId (type, id) {
     return this.getType(type).cache.get(String(id))
   }
 
@@ -741,7 +741,7 @@ class Store {
    * @param {String} type
    * @return {Class} model class
    */
-  getKlass(type) {
+  getKlass (type) {
     return this.modelTypeIndex[type]
   }
 
@@ -751,7 +751,7 @@ class Store {
    * @method createOrUpdateModel
    * @param {Object} dataObject
    */
-  createOrUpdateModel(dataObject) {
+  createOrUpdateModel (dataObject) {
     const { attributes = {}, id, relationships = {}, type } = dataObject
 
     let record = this.getRecord(type, id)
@@ -790,7 +790,7 @@ class Store {
    * @method createModelsFromData
    * @param {Array} data
    */
-  createModelsFromData(data) {
+  createModelsFromData (data) {
     return transaction(() =>
       data.map((dataObject) => {
         // Only build objects for which we have a type defined.
@@ -812,7 +812,7 @@ class Store {
    * @param {Object} attributes
    * @return {Object} model instance
    */
-  createModel(type, id, data) {
+  createModel (type, id, data) {
     const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
     const ModelKlass = this.getKlass(type)
@@ -832,7 +832,7 @@ class Store {
    * @param {Promise} a request to the API
    * @param {Model|Array} records to be updated
    */
-  updateRecords(promise, records) {
+  updateRecords (promise, records) {
     // records may be a single record, if so wrap it in an array to make
     // iteration simpler
     const recordsArray = Array.isArray(records) ? records : [records]
