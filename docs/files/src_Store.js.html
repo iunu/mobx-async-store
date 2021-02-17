@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.2.7</em>
+            <em>API Docs for: 3.2.8</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -956,6 +956,9 @@ class Store {
     return promise.then(
       async (response) =&gt; {
         const { status } = response
+
+        recordsArray.forEach(record =&gt; { record.isInFlight = false })
+
         if (status === 200 || status === 201) {
           const json = await response.json()
           const data = Array.isArray(json.data) ? json.data : [json.data]
@@ -975,8 +978,6 @@ class Store {
           // again - this may be a single record so preserve the structure
           return records
         } else {
-          recordsArray.forEach(record =&gt; { record.isInFlight = false })
-
           let json = {}
           try {
             json = await response.json()

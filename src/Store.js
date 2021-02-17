@@ -871,6 +871,9 @@ class Store {
     return promise.then(
       async (response) => {
         const { status } = response
+
+        recordsArray.forEach(record => { record.isInFlight = false })
+
         if (status === 200 || status === 201) {
           const json = await response.json()
           const data = Array.isArray(json.data) ? json.data : [json.data]
@@ -890,8 +893,6 @@ class Store {
           // again - this may be a single record so preserve the structure
           return records
         } else {
-          recordsArray.forEach(record => { record.isInFlight = false })
-
           let json = {}
           try {
             json = await response.json()
