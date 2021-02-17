@@ -2,7 +2,7 @@ version: 2
 jobs:
   yarn_install:
     docker:
-      - image: circleci/node:10.15.0
+      - image: circleci/node:12.18.4
 
     steps:
       - checkout
@@ -20,7 +20,7 @@ jobs:
 
   yuidoc:
     docker:
-      - image: circleci/node:10.15.0
+      - image: circleci/node:12.18.4
     steps:
       - checkout
       - run:
@@ -29,7 +29,7 @@ jobs:
 
   eslint:
     docker:
-      - image: circleci/node:10.15.0
+      - image: circleci/node:12.18.4
     steps:
       - checkout
       - restore_cache:
@@ -41,7 +41,7 @@ jobs:
 
   jest:
     docker:
-      - image: circleci/node:10.15.0
+      - image: circleci/node:12.18.4
     steps:
       - checkout
       - restore_cache:
@@ -53,7 +53,7 @@ jobs:
 
   verify_docs:
     docker:
-      - image: circleci/node:10.15.0
+      - image: circleci/node:12.18.4
     steps:
       - checkout
       - restore_cache:
@@ -68,7 +68,7 @@ jobs:
 
   verify_build:
     docker:
-      - image: circleci/node:10.15.0
+      - image: circleci/node:12.18.4
     steps:
       - checkout
       - restore_cache:
