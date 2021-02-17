@@ -2287,28 +2287,31 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
               switch (_context4.prev = _context4.next) {
                 case 0:
                   status = response.status;
+                  recordsArray.forEach(function (record) {
+                    record.isInFlight = false;
+                  });
 
                   if (!(status === 200 || status === 201)) {
-                    _context4.next = 14;
+                    _context4.next = 15;
                     break;
                   }
 
-                  _context4.next = 4;
+                  _context4.next = 5;
                   return response.json();
 
-                case 4:
+                case 5:
                   json = _context4.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
 
                   if (!(data.length !== recordsArray.length)) {
-                    _context4.next = 9;
+                    _context4.next = 10;
                     break;
                   }
 
                   throw new Error('Invariant violated: API response data and records to update do not match');
 
-                case 9:
+                case 10:
                   data.forEach(function (targetData, index) {
                     recordsArray[index].updateAttributesFromResponse(targetData, included);
                   });
@@ -2321,10 +2324,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
                   return _context4.abrupt("return", records);
 
-                case 14:
-                  recordsArray.forEach(function (record) {
-                    record.isInFlight = false;
-                  });
+                case 15:
                   _json = {};
                   _context4.prev = 16;
                   _context4.next = 19;
