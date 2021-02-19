@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.2.9</em>
+            <em>API Docs for: 3.3.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -83,10 +83,10 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-import { transaction } from &#x27;mobx&#x27;
 import Model from &#x27;../Model&#x27;
 import schema from &#x27;../schema&#x27;
 import { singularizeType } from &#x27;../utils&#x27;
+import { transaction } from &#x27;mobx&#x27;
 
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
@@ -103,32 +103,15 @@ import { singularizeType } from &#x27;../utils&#x27;
  * @method relatedToMany
  */
 export function relatedToMany (targetOrModelKlass, property, descriptor) {
-  if (typeof targetOrModelKlass === &#x27;function&#x27;) {
-    return function (target2, property2, descriptor2) {
-      schema.addRelationship({
-        type: target2.constructor.type,
-        property: property2,
-        dataType: Array
-      })
+  schema.addRelationship({
+    type: targetOrModelKlass.constructor.type,
+    property,
+    dataType: Array
+  })
 
-      return {
-        get () {
-          const { type } = targetOrModelKlass
-          return getRelatedRecords(this, property2, type)
-        }
-      }
-    }
-  } else {
-    schema.addRelationship({
-      type: targetOrModelKlass.constructor.type,
-      property,
-      dataType: Array
-    })
-
-    return {
-      get () {
-        return getRelatedRecords(this, property)
-      }
+  return {
+    get () {
+      return getRelatedRecords(this, property)
     }
   }
 }
@@ -140,38 +123,17 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
  * @method relatedToOne
  */
 export function relatedToOne (targetOrModelKlass, property, descriptor) {
-  if (typeof targetOrModelKlass === &#x27;function&#x27;) {
-    return function (target2, property2, descriptor2) {
-      schema.addRelationship({
-        type: target2.constructor.type,
-        property: property2,
-        dataType: Object
-      })
-
-      return {
-        get () {
-          const { type } = targetOrModelKlass
-          return getRelatedRecord(this, property2, type)
-        },
-        set (record) {
-          const { type } = targetOrModelKlass
-          return setRelatedRecord(this, record, property2, type)
-        }
-      }
-    }
-  } else {
-    schema.addRelationship({
-      type: targetOrModelKlass.constructor.type,
-      property,
-      dataType: Object
-    })
-    return {
-      get () {
-        return getRelatedRecord(this, property)
-      },
-      set (record) {
-        return setRelatedRecord(this, record, property)
-      }
+  schema.addRelationship({
+    type: targetOrModelKlass.constructor.type,
+    property,
+    dataType: Object
+  })
+  return {
+    get () {
+      return getRelatedRecord(this, property)
+    },
+    set (record) {
+      return setRelatedRecord(this, record, property)
     }
   }
 }
@@ -201,10 +163,12 @@ export function getRelatedRecords (record, property, modelType = null) {
   // fall back to looking up records by a foreign id i.e record.related_record_id
   if (references &amp;&amp; references.data) {
     // Ignore any records of unknown types
-    relatedRecords = references.data.filter(ref =&gt; record.store.getType(ref.type)).map(ref =&gt; {
-      const recordType = ref.type
-      return record.store.getRecord(recordType, ref.id)
-    })
+    relatedRecords = references.data
+      .filter(ref =&gt; record.store.getType(ref.type))
+      .map(ref =&gt; {
+        const recordType = ref.type
+        return record.store.getRecord(recordType, ref.id)
+      })
   } else {
     const foreignReferenceName = singularizeType(record.type)
     const foreignId = &#x60;${foreignReferenceName}_id&#x60;
@@ -213,11 +177,18 @@ export function getRelatedRecords (record, property, modelType = null) {
       const allRecords = record.store.getRecords(relationType)
       if (allRecords?.[0]?.relationships?.[foreignReferenceName]?.data) {
         relatedRecords = allRecords.filter(rel =&gt; {
-          return String(rel.relationships[foreignReferenceName]?.data?.id) === String(record.id)
+          return (
+            String(rel.relationships[foreignReferenceName]?.data?.id) ===
+            String(record.id)
+          )
         })
       } else if (allRecords?.[0]?.[foreignId]) {
-        console.warn(&#x60;Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.&#x60;)
-        relatedRecords = allRecords.filter(rel =&gt; String(rel[foreignId]) === String(record.id))
+        console.warn(
+          &#x60;Support for including non-canonical jsonapi references will be removed in future versions. Record type: ${record.type}. Relation: ${relationType}. Reference: ${foreignId}.&#x60;
+        )
+        relatedRecords = allRecords.filter(
+          (rel) =&gt; String(rel[foreignId]) === String(record.id)
+        )
       }
     }
 
@@ -269,16 +240,24 @@ export function getRelatedRecord (record, property, modelType = null) {
  * @param {String} property the related property to set
  * @param {String} modelType an override of the modelType
  */
-export function setRelatedRecord (record, relatedRecord, property, modelType = null) {
+export function setRelatedRecord (
+  record,
+  relatedRecord,
+  property,
+  modelType = null
+) {
   if (relatedRecord &amp;&amp; !(relatedRecord instanceof Model)) {
     throw new Error(&#x27;Related record must be a valid Model object&#x27;)
   }
 
   const { relationships, _dirtyRelationships } = record
   const relationType = modelType || property
-  const referenceRecord = relatedRecord || getRelatedRecord(record, relationType)
+  const referenceRecord =
+    relatedRecord || getRelatedRecord(record, relationType)
 
-  if (!referenceRecord) { return }
+  if (!referenceRecord) {
+    return
+  }
 
   const { id } = referenceRecord
   const { type } = referenceRecord.constructor
@@ -296,7 +275,11 @@ export function setRelatedRecord (record, relatedRecord, property, modelType = n
 
   // hack we don&#x27;t have a reference to the inverse name so we just use the record type.
   // this may cause problems with polymorphic relationships
-  const inverseRelatedToMany = getRelatedRecords(referenceRecord, null, record.constructor.type)
+  const inverseRelatedToMany = getRelatedRecords(
+    referenceRecord,
+    null,
+    record.constructor.type
+  )
 
   if (inverseRelatedToMany) {
     const inverseMethod = relatedRecord ? &#x27;add&#x27; : &#x27;remove&#x27;
@@ -343,10 +326,15 @@ export class RelatedRecordsArray extends Array {
    * @param {Object} relatedRecord the record to add to the array
    * @return {Object} the original relatedRecord
    */
-  add = (relatedRecord) =&gt; {
+  add = relatedRecord =&gt; {
     const { record, property } = this
-    const { constructor: { type: recordType } } = record
-    const { id, constructor: { type } } = relatedRecord
+    const {
+      constructor: { type: recordType }
+    } = record
+    const {
+      id,
+      constructor: { type }
+    } = relatedRecord
 
     if (!relatedRecord || !(relatedRecord instanceof Model)) {
       throw new Error(&#x27;Related record must be a valid Model object&#x27;)
@@ -367,13 +355,21 @@ export class RelatedRecordsArray extends Array {
     }
 
     const existingRelationships = relationships[property]
-    const alreadyThere = existingRelationships &amp;&amp; existingRelationships.data.find((model) =&gt; model.id === id &amp;&amp; model.type === type)
+    const alreadyThere =
+      existingRelationships &amp;&amp;
+      existingRelationships.data.find(
+        model =&gt; model.id === id &amp;&amp; model.type === type
+      )
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
       this.push(relatedRecord)
       record._dirtyRelationships.add(property)
       // setting the inverse - hack this will only work with singularized relationships.
-      setRelatedRecord(relatedRecord, record, recordType.slice(0, recordType.length - 1))
+      setRelatedRecord(
+        relatedRecord,
+        record,
+        recordType.slice(0, recordType.length - 1)
+      )
     }
 
     return relatedRecord
@@ -385,16 +381,26 @@ export class RelatedRecordsArray extends Array {
    * @param {Object} relatedRecord the record to remove from the array
    * @return {Object} the original relatedRecord
    */
-  remove = (relatedRecord) =&gt; {
+  remove = relatedRecord =&gt; {
     const { record, property } = this
-    const { relationships, constructor: { type: recordType } } = record
-    const { id, constructor: { type } } = relatedRecord
+    const {
+      relationships,
+      constructor: { type: recordType }
+    } = record
+    const {
+      id,
+      constructor: { type }
+    } = relatedRecord
 
     if (relationships &amp;&amp; relationships[property] &amp;&amp; relatedRecord) {
-      const referenceIndexToRemove = relationships[property].data.findIndex((model) =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type)
-      if (referenceIndexToRemove &gt;= 0) relationships[property].data.splice(referenceIndexToRemove, 1)
+      const referenceIndexToRemove = relationships[property].data.findIndex(
+        model =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type
+      )
+      if (referenceIndexToRemove &gt;= 0) { relationships[property].data.splice(referenceIndexToRemove, 1) }
 
-      const recordIndexToRemove = this.findIndex((model) =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type)
+      const recordIndexToRemove = this.findIndex(
+        model =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type
+      )
       if (recordIndexToRemove &gt;= 0) this.splice(recordIndexToRemove, 1)
 
       if (!relationships[property].data.length) {
@@ -408,13 +414,17 @@ export class RelatedRecordsArray extends Array {
       record._dirtyRelationships.add(property)
 
       // hack this will only work with singularized relationships.
-      setRelatedRecord(relatedRecord, null, recordType.slice(0, recordType.length - 1))
+      setRelatedRecord(
+        relatedRecord,
+        null,
+        recordType.slice(0, recordType.length - 1)
+      )
     }
 
     return relatedRecord
   }
 
-  replace = (array) =&gt; {
+  replace = array =&gt; {
     const { record, property } = this
     const { relationships } = record
 

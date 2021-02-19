@@ -8,7 +8,7 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _typeof from '@babel/runtime/helpers/typeof';
-import { observable, computed, set, extendObservable, reaction, transaction, toJS, action } from 'mobx';
+import { observable, computed, set, extendObservable, reaction, toJS, transaction, action } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
@@ -513,8 +513,86 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
 
 
   _createClass(Model, [{
-    key: "rollback",
+    key: "isDirty",
+    get:
+    /**
+     * True if the instance has been modified from its persisted state
+     *
+     * NOTE that isDirty does _NOT_ track changes to the related objects
+     * but it _does_ track changes to the relationships themselves.
+     *
+     * For example, adding or removing a related object will mark this record as dirty,
+     * but changing a related object's properties will not mark this record as dirty.
+     *
+     * The caller is reponsible for asking related objects about their
+     * own dirty state.
+     *
+     * ```
+     * kpi = store.add('kpis', { name: 'A good thing to measure' })
+     * kpi.isDirty
+     * => true
+     * kpi.name
+     * => "A good thing to measure"
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * kpi.name = "Another good thing to measure"
+     * kpi.isDirty
+     * => true
+     * await kpi.save()
+     * kpi.isDirty
+     * => false
+     * ```
+     * @property isDirty
+     * @type {Boolean}
+     */
+    function get() {
+      return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0;
+    }
+    /**
+     * have any changes been made since this record was last persisted?
+     * @property hasUnpersistedChanges
+     * @type {Boolean}
+     */
 
+  }, {
+    key: "hasUnpersistedChanges",
+    get: function get() {
+      return this.isDirty || !this.previousSnapshot.persisted;
+    }
+    /**
+     * True if the model has not been sent to the store
+     * @property isNew
+     * @type {Boolean}
+     */
+
+  }, {
+    key: "isNew",
+    get: function get() {
+      var id = this.id;
+      if (!id) return true;
+      if (String(id).indexOf('tmp') === -1) return false;
+      return true;
+    }
+    /**
+     * True if the instance is coming from / going to the server
+     * ```
+     * kpi = store.find('kpis', 5)
+     * // fetch started
+     * kpi.isInFlight
+     * => true
+     * // fetch finished
+     * kpi.isInFlight
+     * => false
+     * ```
+     * @property isInFlight
+     * @type {Boolean}
+     * @default false
+     */
+
+  }, {
+    key: "rollback",
+    value:
     /**
      * restores data to its last snapshot state
      * ```
@@ -528,7 +606,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      * ```
      * @method rollback
      */
-    value: function rollback() {
+    function rollback() {
       this._applySnapshot(this.previousSnapshot);
     }
     /**
@@ -830,13 +908,21 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      */
 
   }, {
-    key: "setPreviousSnapshot",
-
+    key: "snapshot",
+    get: function get() {
+      return {
+        attributes: this.attributes,
+        relationships: toJS(this.relationships)
+      };
+    }
     /**
      * Sets previous snapshot to current snapshot
      *
      * @method setPreviousSnapshot
      */
+
+  }, {
+    key: "setPreviousSnapshot",
     value: function setPreviousSnapshot() {
       this._takeSnapshot();
     }
@@ -847,8 +933,25 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      */
 
   }, {
-    key: "_takeSnapshot",
+    key: "previousSnapshot",
+    get: function get() {
+      var length = this._snapshots.length;
+      if (length === 0) throw new Error('Invariant violated: model has no snapshots');
+      return this._snapshots[length - 1];
+    }
+    /**
+     * the latest persisted snapshot or the first snapshot if the model was never persisted
+     *
+     * @method previousSnapshot
+     */
 
+  }, {
+    key: "persistedSnapshot",
+    get: function get() {
+      return findLast(this._snapshots, function (ss) {
+        return ss.persisted;
+      }) || this._snapshots[0];
+    }
     /**
      * take a snapshot of the current model state.
      * if persisted, clear the stack and push this snapshot to the top
@@ -856,6 +959,9 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      * @method _takeSnapshot
      * @param {Object} options
      */
+
+  }, {
+    key: "_takeSnapshot",
     value: function _takeSnapshot() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var persisted = options.persisted || false;
@@ -920,312 +1026,6 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      */
 
   }, {
-    key: "errorForKey",
-
-    /**
-     * Getter to check if the record has errors.
-     *
-     * @method hasErrors
-     * @return {Boolean}
-     */
-    value: function errorForKey(key) {
-      return this.errors[key];
-    }
-    /**
-     * Getter to just get the names of a records attributes.
-     *
-     * @method attributeNames
-     * @return {Array}
-     */
-
-  }, {
-    key: "jsonapi",
-
-    /**
-     * getter method to get data in api compliance format
-     * TODO: Figure out how to handle unpersisted ids
-     *
-     * @method jsonapi
-     * @return {Object} data in JSON::API format
-     */
-    value: function jsonapi() {
-      var _this5 = this;
-
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var attributeDefinitions = this.attributeDefinitions,
-          attributeNames = this.attributeNames,
-          meta = this.meta,
-          id = this.id,
-          type = this.constructor.type;
-      var filteredAttributeNames = attributeNames;
-      var filteredRelationshipNames = [];
-
-      if (options.attributes) {
-        filteredAttributeNames = attributeNames.filter(function (name) {
-          return options.attributes.includes(name);
-        });
-      }
-
-      var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this5[key];
-
-        if (value) {
-          var DataType = attributeDefinitions[key].dataType;
-          var attr;
-
-          if (DataType.name === 'Array' || DataType.name === 'Object') {
-            attr = toJS(value);
-          } else if (DataType.name === 'Date') {
-            attr = makeDate(value).toISOString();
-          } else {
-            attr = DataType(value);
-          }
-
-          attrs[key] = attr;
-        } else {
-          attrs[key] = value;
-        }
-
-        return attrs;
-      }, {});
-      var data = {
-        type: type,
-        attributes: attributes,
-        id: String(id)
-      };
-
-      if (options.relationships) {
-        filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
-          return options.relationships.includes(name);
-        });
-        var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = toJS(_this5.relationships[key]);
-          stringifyIds(rels[key]);
-          return rels;
-        }, {});
-        data.relationships = relationships;
-      }
-
-      if (meta) {
-        data['meta'] = meta;
-      }
-
-      if (String(id).match(/tmp/)) {
-        delete data.id;
-      }
-
-      return data;
-    }
-  }, {
-    key: "updateAttributes",
-    value: function updateAttributes(attributes) {
-      var _this6 = this;
-
-      transaction(function () {
-        Object.keys(attributes).forEach(function (key) {
-          _this6[key] = attributes[key];
-        });
-      });
-    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
-    // Perhaps that shared code
-
-  }, {
-    key: "updateAttributesFromResponse",
-    value: function updateAttributesFromResponse(data, included) {
-      var _this7 = this;
-
-      var tmpId = this.id;
-      var id = data.id,
-          attributes = data.attributes,
-          relationships = data.relationships;
-      transaction(function () {
-        set(_this7, 'id', id);
-        Object.keys(attributes).forEach(function (key) {
-          set(_this7, key, attributes[key]);
-        });
-
-        if (relationships) {
-          Object.keys(relationships).forEach(function (key) {
-            if (!relationships[key].hasOwnProperty('meta')) {
-              // todo: throw error if relationship is not defined in model
-              set(_this7.relationships, key, relationships[key]);
-            }
-          });
-        }
-
-        if (included) {
-          _this7.store.createModelsFromData(included);
-        }
-      }); // Update target isInFlight
-
-      this.isInFlight = false;
-
-      this._takeSnapshot({
-        persisted: true
-      });
-
-      transaction(function () {
-        // NOTE: This resolves an issue where a record is persisted but the
-        // index key is still a temp uuid. We can't simply remove the temp
-        // key because there may be associated records that have the temp
-        // uuid id as its only reference to the newly persisted record.
-        // TODO: Figure out a way to update associated records to use the
-        // newly persisted id.
-        _this7.store.data[_this7.type].records.set(String(tmpId), _this7);
-
-        _this7.store.data[_this7.type].records.set(String(_this7.id), _this7);
-      });
-    }
-  }, {
-    key: "clone",
-    value: function clone() {
-      var attributes = cloneDeep(this.snapshot.attributes);
-      var relationships = cloneDeep(this.snapshot.relationships);
-      return this.store.createModel(this.type, this.id, {
-        attributes: attributes,
-        relationships: relationships
-      });
-    }
-    /**
-     * Comparison by value
-     * returns `true` if this object has the same attrs and relationships
-     * as the "other" object, ignores differences in internal state like
-     * attribute "dirtyness" or errors
-     *
-     * @method isEqual
-     * @param {Object} other
-     * @return {Object}
-     */
-
-  }, {
-    key: "isEqual",
-    value: function isEqual(other) {
-      if (!other) return false;
-      return _isEqual(this.attributes, other.attributes) && _isEqual(this.relationships, other.relationships);
-    }
-    /**
-     * Comparison by identity
-     * returns `true` if this object has the same type and id as the
-     * "other" object, ignores differences in attrs and relationships
-     *
-     * @method isSame
-     * @param {Object} other
-     * @return {Object}
-     */
-
-  }, {
-    key: "isSame",
-    value: function isSame(other) {
-      if (!other) return false;
-      return this.type === other.type && this.id === other.id;
-    }
-  }, {
-    key: "isDirty",
-
-    /**
-     * True if the instance has been modified from its persisted state
-     *
-     * NOTE that isDirty does _NOT_ track changes to the related objects
-     * but it _does_ track changes to the relationships themselves.
-     *
-     * For example, adding or removing a related object will mark this record as dirty,
-     * but changing a related object's properties will not mark this record as dirty.
-     *
-     * The caller is reponsible for asking related objects about their
-     * own dirty state.
-     *
-     * ```
-     * kpi = store.add('kpis', { name: 'A good thing to measure' })
-     * kpi.isDirty
-     * => true
-     * kpi.name
-     * => "A good thing to measure"
-     * await kpi.save()
-     * kpi.isDirty
-     * => false
-     * kpi.name = "Another good thing to measure"
-     * kpi.isDirty
-     * => true
-     * await kpi.save()
-     * kpi.isDirty
-     * => false
-     * ```
-     * @property isDirty
-     * @type {Boolean}
-     */
-    get: function get() {
-      return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0;
-    }
-    /**
-     * have any changes been made since this record was last persisted?
-     * @property hasUnpersistedChanges
-     * @type {Boolean}
-     */
-
-  }, {
-    key: "hasUnpersistedChanges",
-    get: function get() {
-      return this.isDirty || !this.previousSnapshot.persisted;
-    }
-    /**
-     * True if the model has not been sent to the store
-     * @property isNew
-     * @type {Boolean}
-     */
-
-  }, {
-    key: "isNew",
-    get: function get() {
-      var id = this.id;
-      if (!id) return true;
-      if (String(id).indexOf('tmp') === -1) return false;
-      return true;
-    }
-    /**
-     * True if the instance is coming from / going to the server
-     * ```
-     * kpi = store.find('kpis', 5)
-     * // fetch started
-     * kpi.isInFlight
-     * => true
-     * // fetch finished
-     * kpi.isInFlight
-     * => false
-     * ```
-     * @property isInFlight
-     * @type {Boolean}
-     * @default false
-     */
-
-  }, {
-    key: "snapshot",
-    get: function get() {
-      return {
-        attributes: this.attributes,
-        relationships: toJS(this.relationships)
-      };
-    }
-  }, {
-    key: "previousSnapshot",
-    get: function get() {
-      var length = this._snapshots.length;
-      if (length === 0) throw new Error('Invariant violated: model has no snapshots');
-      return this._snapshots[length - 1];
-    }
-    /**
-     * the latest persisted snapshot or the first snapshot if the model was never persisted
-     *
-     * @method previousSnapshot
-     */
-
-  }, {
-    key: "persistedSnapshot",
-    get: function get() {
-      return findLast(this._snapshots, function (ss) {
-        return ss.persisted;
-      }) || this._snapshots[0];
-    }
-  }, {
     key: "dirtyAttributes",
     get: function get() {
       var relationships = Array.from(this._dirtyRelationships).map(function (property) {
@@ -1256,10 +1056,10 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this8 = this;
+      var _this5 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = toJS(_this8[key]);
+        var value = toJS(_this5[key]);
 
         if (value == null) {
           delete attributes[key];
@@ -1308,6 +1108,25 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
     get: function get() {
       return Object.keys(this.errors).length > 0;
     }
+    /**
+     * Getter to check if the record has errors.
+     *
+     * @method hasErrors
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "errorForKey",
+    value: function errorForKey(key) {
+      return this.errors[key];
+    }
+    /**
+     * Getter to just get the names of a records attributes.
+     *
+     * @method attributeNames
+     * @return {Array}
+     */
+
   }, {
     key: "attributeNames",
     get: function get() {
@@ -1343,6 +1162,187 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
       }, {
         relationships: {}
       });
+    }
+    /**
+     * getter method to get data in api compliance format
+     * TODO: Figure out how to handle unpersisted ids
+     *
+     * @method jsonapi
+     * @return {Object} data in JSON::API format
+     */
+
+  }, {
+    key: "jsonapi",
+    value: function jsonapi() {
+      var _this6 = this;
+
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var attributeDefinitions = this.attributeDefinitions,
+          attributeNames = this.attributeNames,
+          meta = this.meta,
+          id = this.id,
+          type = this.constructor.type;
+      var filteredAttributeNames = attributeNames;
+      var filteredRelationshipNames = [];
+
+      if (options.attributes) {
+        filteredAttributeNames = attributeNames.filter(function (name) {
+          return options.attributes.includes(name);
+        });
+      }
+
+      var attributes = filteredAttributeNames.reduce(function (attrs, key) {
+        var value = _this6[key];
+
+        if (value) {
+          var DataType = attributeDefinitions[key].dataType;
+          var attr;
+
+          if (DataType.name === 'Array' || DataType.name === 'Object') {
+            attr = toJS(value);
+          } else if (DataType.name === 'Date') {
+            attr = makeDate(value).toISOString();
+          } else {
+            attr = DataType(value);
+          }
+
+          attrs[key] = attr;
+        } else {
+          attrs[key] = value;
+        }
+
+        return attrs;
+      }, {});
+      var data = {
+        type: type,
+        attributes: attributes,
+        id: String(id)
+      };
+
+      if (options.relationships) {
+        filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
+          return options.relationships.includes(name);
+        });
+        var relationships = filteredRelationshipNames.reduce(function (rels, key) {
+          rels[key] = toJS(_this6.relationships[key]);
+          stringifyIds(rels[key]);
+          return rels;
+        }, {});
+        data.relationships = relationships;
+      }
+
+      if (meta) {
+        data['meta'] = meta;
+      }
+
+      if (String(id).match(/tmp/)) {
+        delete data.id;
+      }
+
+      return data;
+    }
+  }, {
+    key: "updateAttributes",
+    value: function updateAttributes(attributes) {
+      var _this7 = this;
+
+      transaction(function () {
+        Object.keys(attributes).forEach(function (key) {
+          _this7[key] = attributes[key];
+        });
+      });
+    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
+    // Perhaps that shared code
+
+  }, {
+    key: "updateAttributesFromResponse",
+    value: function updateAttributesFromResponse(data, included) {
+      var _this8 = this;
+
+      var tmpId = this.id;
+      var id = data.id,
+          attributes = data.attributes,
+          relationships = data.relationships;
+      transaction(function () {
+        set(_this8, 'id', id);
+        Object.keys(attributes).forEach(function (key) {
+          set(_this8, key, attributes[key]);
+        });
+
+        if (relationships) {
+          Object.keys(relationships).forEach(function (key) {
+            if (!relationships[key].hasOwnProperty('meta')) {
+              // todo: throw error if relationship is not defined in model
+              set(_this8.relationships, key, relationships[key]);
+            }
+          });
+        }
+
+        if (included) {
+          _this8.store.createModelsFromData(included);
+        }
+      }); // Update target isInFlight
+
+      this.isInFlight = false;
+
+      this._takeSnapshot({
+        persisted: true
+      });
+
+      transaction(function () {
+        // NOTE: This resolves an issue where a record is persisted but the
+        // index key is still a temp uuid. We can't simply remove the temp
+        // key because there may be associated records that have the temp
+        // uuid id as its only reference to the newly persisted record.
+        // TODO: Figure out a way to update associated records to use the
+        // newly persisted id.
+        _this8.store.data[_this8.type].records.set(String(tmpId), _this8);
+
+        _this8.store.data[_this8.type].records.set(String(_this8.id), _this8);
+      });
+    }
+  }, {
+    key: "clone",
+    value: function clone() {
+      var attributes = cloneDeep(this.snapshot.attributes);
+      var relationships = cloneDeep(this.snapshot.relationships);
+      return this.store.createModel(this.type, this.id, {
+        attributes: attributes,
+        relationships: relationships
+      });
+    }
+    /**
+     * Comparison by value
+     * returns `true` if this object has the same attrs and relationships
+     * as the "other" object, ignores differences in internal state like
+     * attribute "dirtyness" or errors
+     *
+     * @method isEqual
+     * @param {Object} other
+     * @return {Object}
+     */
+
+  }, {
+    key: "isEqual",
+    value: function isEqual(other) {
+      if (!other) return false;
+      return _isEqual(this.attributes, other.attributes) && _isEqual(this.relationships, other.relationships);
+    }
+    /**
+     * Comparison by identity
+     * returns `true` if this object has the same type and id as the
+     * "other" object, ignores differences in attrs and relationships
+     *
+     * @method isSame
+     * @param {Object} other
+     * @return {Object}
+     */
+
+  }, {
+    key: "isSame",
+    value: function isSame(other) {
+      if (!other) return false;
+      return this.type === other.type && this.id === other.id;
     }
   }]);
 
@@ -1496,44 +1496,87 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     _initializerDefineProperty(this, "remove", _descriptor3$1, this);
 
-    this.findOne = function (type, id) {
+    this.getOne = function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      var fromServer = options.fromServer,
-          queryParams = options.queryParams;
+      var queryParams = options.queryParams;
 
-      if (fromServer === true) {
-        // If fromServer is true always fetch the data and return
-        return _this.fetchOne(type, id, queryParams);
-      } else if (fromServer === false) {
-        // If fromServer is false never fetch the data and return
-        return _this.getRecord(type, id, queryParams);
+      if (queryParams) {
+        return _this.getCachedRecord(type, id, queryParams);
       } else {
-        return _this.findOrFetchOne(type, id, queryParams);
+        return _this.getRecord(type, id);
       }
     };
 
-    this.findOrFetchOne = function (type, id, queryParams) {
-      // Get the matching record
-      var record = _this.getMatchingRecord(type, id, queryParams); // If the cached record is present
+    this.findOne = function (type, id) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var fromServer = options.fromServer;
 
+      if ([true, false].includes(fromServer)) {
+        console.warn('DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getOne, fetchOne, or findOne.');
+      }
 
-      if (record && record.id) {
-        // Return data
+      if (fromServer === true) {
+        return _this.fetchOne(type, id, options);
+      } else if (fromServer === false) {
+        return _this.getOne(type, id, options);
+      }
+
+      var record = _this.getOne(type, id, options);
+
+      if (record !== null && record !== void 0 && record.id) {
         return record;
       } else {
-        // Otherwise fetch it from the server
-        return _this.fetchOne(type, id, queryParams);
+        return _this.fetchOne(type, id, options);
       }
+    };
+
+    this.getMany = function (type, ids) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var idsToQuery = ids.slice().map(String);
+
+      var records = _this.getAll(type, options);
+
+      return records.filter(function (record) {
+        return idsToQuery.includes(record.id);
+      });
+    };
+
+    this.fetchMany = function (type, ids) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var idsToQuery = ids.slice().map(String);
+      var queryParams = options.queryParams || {};
+      queryParams.filter = queryParams.filter || {};
+
+      var baseUrl = _this.fetchUrl(type, queryParams);
+
+      var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
+      var queries = idQueries.map(function (queryIds) {
+        queryParams.filter.ids = queryIds;
+        return _this.fetchAll(type, {
+          queryParams: queryParams
+        });
+      });
+      return Promise.all(queries).then(function (records) {
+        var _ref2;
+
+        return (_ref2 = []).concat.apply(_ref2, _toConsumableArray(records));
+      }).catch(function (err) {
+        return Promise.reject(err);
+      });
     };
 
     this.findMany = function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var fromServer = options.fromServer;
+
+      if ([true, false].includes(fromServer)) {
+        console.warn('DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getMany, fetchMany, or findMany.');
+      }
+
       var idsToQuery = ids.slice().map(String);
 
       if (fromServer === false) {
-        // If fromServer is false never fetch the data and return
-        return _this.getRecords(type).filter(function (record) {
+        return _this.getAll(type).filter(function (record) {
           return idsToQuery.includes(record.id);
         });
       }
@@ -1546,15 +1589,13 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
         });
 
         if (recordsInStore.length === idsToQuery.length) {
-          // if fromServer is not false or true, but all the records are in store, wrap it in a promise
-          return Promise.resolve(recordsInStore);
+          return recordsInStore;
         }
 
-        var recordIdsInStore = recordsInStore.map(function (_ref2) {
-          var id = _ref2.id;
+        var recordIdsInStore = recordsInStore.map(function (_ref3) {
+          var id = _ref3.id;
           return String(id);
-        }); // If fromServer is not true, we will only query records that are not already in the store
-
+        });
         idsToQuery = idsToQuery.filter(function (id) {
           return !recordIdsInStore.includes(id);
         });
@@ -1568,7 +1609,9 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
       var query = Promise.all(idQueries.map(function (queryIds) {
         queryParams.filter.ids = queryIds;
-        return _this.fetchAll(type, queryParams);
+        return _this.fetchAll(type, {
+          queryParams: queryParams
+        });
       }));
       return query.then(function (recordsFromServer) {
         var _recordsInStore;
@@ -1577,69 +1620,38 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       });
     };
 
+    this.getAll = function (type) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var queryParams = options.queryParams;
+
+      if (queryParams) {
+        return _this.getCachedRecords(type, queryParams);
+      } else {
+        return _this.getRecords(type);
+      }
+    };
+
     this.findAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var fromServer = options.fromServer,
-          queryParams = options.queryParams;
+      var fromServer = options.fromServer;
+
+      if ([true, false].includes(fromServer)) {
+        console.warn('DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getAll, fetchAll, or findAll.');
+      }
 
       if (fromServer === true) {
-        // If fromServer is true always fetch the data and return
-        return _this.fetchAll(type, queryParams);
+        return _this.fetchAll(type, options);
       } else if (fromServer === false) {
-        // If fromServer is false never fetch the data and return
-        return _this.getMatchingRecords(type, queryParams) || [];
+        var records = _this.getAll(type, options) || [];
+        return records;
       } else {
-        return _this.findOrFetchAll(type, queryParams) || [];
-      }
-    };
+        var _records = _this.getAll(type, options);
 
-    this.findAndFetchAll = function (type) {
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var beforeFetch = options.beforeFetch,
-          afterFetch = options.afterFetch,
-          beforeRefetch = options.beforeRefetch,
-          afterRefetch = options.afterRefetch,
-          afterError = options.afterError,
-          queryParams = options.queryParams;
-
-      var records = _this.getMatchingRecords(type, queryParams); // NOTE: See note findOrFetchAll about this conditional logic.
-
-
-      if (records.length > 0) {
-        beforeRefetch && beforeRefetch(records);
-
-        _this.fetchAll(type, queryParams).then(function (result) {
-          return afterRefetch && afterRefetch(result);
-        }).catch(function (error) {
-          return afterError && afterError(error);
-        });
-      } else {
-        beforeFetch && beforeFetch(records);
-
-        _this.fetchAll(type, queryParams).then(function (result) {
-          return afterFetch && afterFetch(result);
-        }).catch(function (error) {
-          return afterError && afterError(error);
-        });
-      }
-
-      return records || [];
-    };
-
-    this.findOrFetchAll = function (type, queryParams) {
-      // Get any matching records
-      var records = _this.getMatchingRecords(type, queryParams); // NOTE: A broader RFC is in development to improve how we keep data in sync
-      // with the server. We likely will want to getMatchingRecords and getRecords
-      // to return null if nothing is found. However, this causes several regressions
-      // in portal we will need to address in a larger PR for mobx-async-store updates.
-
-
-      if (records.length > 0) {
-        // Return data
-        return Promise.resolve(records);
-      } else {
-        // Otherwise fetch it from the server
-        return _this.fetchAll(type, queryParams);
+        if (_records.length > 0) {
+          return Promise.resolve(_records);
+        } else {
+          return _this.fetchAll(type, options);
+        }
       }
     };
 
@@ -1661,8 +1673,277 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
 
   _createClass(Store, [{
-    key: "reset",
+    key: "fetchOne",
+    value:
+    /**
+     * Fetches record by `id` from the server and returns a Promise.
+     *
+     * @async
+     * @method fetchOne
+     * @param {String} type the record type to fetch
+     * @param {String} id the id of the record to fetch
+     * @param {Object} options { queryParams }
+     * @return {Object} record
+     */
+    function () {
+      var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, id) {
+        var options,
+            queryParams,
+            url,
+            response,
+            json,
+            data,
+            included,
+            record,
+            _args2 = arguments;
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                options = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : {};
+                queryParams = options.queryParams;
+                url = this.fetchUrl(type, queryParams, id);
+                _context2.next = 5;
+                return this.fetch(url, {
+                  method: 'GET'
+                });
 
+              case 5:
+                response = _context2.sent;
+
+                if (!(response.status === 200)) {
+                  _context2.next = 17;
+                  break;
+                }
+
+                _context2.next = 9;
+                return response.json();
+
+              case 9:
+                json = _context2.sent;
+                data = json.data, included = json.included;
+
+                if (included) {
+                  this.createModelsFromData(included);
+                }
+
+                record = this.createOrUpdateModel(data);
+                this.data[type].cache.set(url, [record.id]);
+                return _context2.abrupt("return", record);
+
+              case 17:
+                return _context2.abrupt("return", null);
+
+              case 18:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function fetchOne(_x4, _x5) {
+        return _fetchOne.apply(this, arguments);
+      }
+
+      return fetchOne;
+    }()
+    /**
+     * Finds a record by `id`.
+     * If available in the store, it returns that record. Otherwise, it fetches the record from the server.
+     *
+     *   store.findOne('todos', 5)
+     *   // fetch triggered
+     *   => event1
+     *   store.findOne('todos', 5)
+     *   // no fetch triggered
+     *   => event1
+     *
+     * Deprecated: Passing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.
+     * Otherwise, it will trigger the default behavior
+     *
+     *   store.findOne('todos', 5, { fromServer: false })
+     *   // no fetch triggered
+     *   => undefined
+     *
+     *   store.findOne('todos', 5)
+     *   // fetch triggered
+     *   => event1
+     *
+     *   store.findOne('todos', 5, { fromServer: true })
+     *   // fetch triggered
+     *   => event1
+     *
+     * @method findOne
+     * @param {String} type the type to find
+     * @param {String} id the id of the record to find
+     * @param {Object} options { fromServer, queryParams }
+     * @return {Object} record
+     */
+
+  }, {
+    key: "fetchUrl",
+    value:
+    /**
+     * Builds fetch url based
+     *
+     * @method fetchUrl
+     * @param {String} type the type to find
+     * @param {Object} options
+     */
+    function fetchUrl(type, queryParams, id, options) {
+      var baseUrl = this.baseUrl,
+          modelTypeIndex = this.modelTypeIndex;
+      var endpoint = modelTypeIndex[type].endpoint;
+      return requestUrl(baseUrl, endpoint, queryParams, id, options);
+    }
+    /**
+     * Gets all records with the given `type` from the store. This will never fetch from the server.
+     *
+     * @method getAll
+     * @param {String} type the type to find
+     * @param {Object} options
+     * @return {Array} array of records
+     */
+
+  }, {
+    key: "fetchAll",
+    value:
+    /**
+     * Finds all records with the given `type`. Always fetches from the server.
+     *
+     * @async
+     * @method fetchAll
+     * @param {String} type the type to find
+     * @param {Object} options
+     * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+     */
+    function () {
+      var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type) {
+        var _this2 = this;
+
+        var options,
+            store,
+            queryParams,
+            url,
+            response,
+            json,
+            _args3 = arguments;
+        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                options = _args3.length > 1 && _args3[1] !== undefined ? _args3[1] : {};
+                store = this;
+                queryParams = options.queryParams;
+                url = this.fetchUrl(type, queryParams);
+                _context3.next = 6;
+                return this.fetch(url, {
+                  method: 'GET'
+                });
+
+              case 6:
+                response = _context3.sent;
+
+                if (!(response.status === 200)) {
+                  _context3.next = 16;
+                  break;
+                }
+
+                this.data[type].cache.set(url, []);
+                _context3.next = 11;
+                return response.json();
+
+              case 11:
+                json = _context3.sent;
+
+                if (json.included) {
+                  this.createModelsFromData(json.included);
+                }
+
+                return _context3.abrupt("return", transaction(function () {
+                  return json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute = dataObject.attributes,
+                        attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
+                        _dataObject$relations = dataObject.relationships,
+                        relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
+                    var ModelKlass = _this2.modelTypeIndex[type];
+                    var record = new ModelKlass(_objectSpread$2({
+                      store: store,
+                      relationships: relationships
+                    }, attributes));
+
+                    var cachedIds = _this2.data[type].cache.get(url);
+
+                    _this2.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
+
+                    _this2.data[type].records.set(String(id), record);
+
+                    return record;
+                  });
+                }));
+
+              case 16:
+                return _context3.abrupt("return", Promise.reject(response.status));
+
+              case 17:
+              case "end":
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      function fetchAll(_x6) {
+        return _fetchAll.apply(this, arguments);
+      }
+
+      return fetchAll;
+    }()
+    /**
+     * Finds all records of the given `type`.
+     * If all records are in the store, it returns those.
+     * Otherwise, it fetches all records from the server.
+     * Deprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.
+     *
+     *   store.findAll('todos')
+     *   // fetch triggered
+     *   => [todo1, todo2, todo3]
+     *
+     *   store.findAll('todos')
+     *   // no fetch triggered
+     *   => [todo1, todo2, todo3]
+     *
+     * Query params can be passed as part of the options hash.
+     * The response will be cached, so the next time `findAll`
+     * is called with identical params and values, the store will
+     * first look for the local result.
+     *
+     *   store.findAll('todos', {
+     *     queryParams: {
+     *       filter: {
+     *         start_time: '2020-06-01T00:00:00.000Z',
+     *         end_time: '2020-06-02T00:00:00.000Z'
+     *       }
+     *     }
+     *   })
+     *
+     *
+     * NOTE: A broader RFC is in development to improve how we keep data in sync
+     * with the server. We likely will want to getAll and getRecords
+     * to return null if nothing is found. However, this causes several regressions
+     * in portal we will need to address in a larger PR for mobx-async-store updates.
+     *
+     * @method findAll
+     * @param {String} type the type to find
+     * @param {Object} options { fromServer, queryParams }
+     * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+     */
+
+  }, {
+    key: "reset",
+    value:
     /**
      * Clears the store of a given type, or clears all if no type given
      *
@@ -1673,7 +1954,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      *
      * @method reset
      */
-    value: function reset(type) {
+    function reset(type) {
       if (type) {
         this.data[type] = {
           records: observable.map({}),
@@ -1741,13 +2022,13 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }, {
     key: "initializeObservableDataProperty",
     value: function initializeObservableDataProperty() {
-      var _this2 = this;
+      var _this3 = this;
 
       var types = this.constructor.types; // NOTE: Is there a performance cost to setting
       // each property individually?
 
       types.forEach(function (modelKlass) {
-        _this2.data[modelKlass.type] = {
+        _this3.data[modelKlass.type] = {
           records: observable.map({}),
           cache: observable.map({})
         };
@@ -1786,7 +2067,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       return combineRacedRequests(key, function () {
         return fetch(url, _objectSpread$2(_objectSpread$2({}, defaultFetchOptions), options));
       });
-    })
+    }
     /**
      * Gets type of collection from data observable
      *
@@ -1794,31 +2075,11 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * @param {String} type
      * @return {Object} observable type object structure
      */
-
+    )
   }, {
     key: "getType",
     value: function getType(type) {
       return this.data[type];
-    }
-    /**
-     * Get single all record
-     * based on query params
-     *
-     * @method getMatchingRecord
-     * @param {String} type
-     * @param id
-     * @param {Object} queryParams
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getMatchingRecord",
-    value: function getMatchingRecord(type, id, queryParams) {
-      if (queryParams) {
-        return this.getCachedRecord(type, id, queryParams);
-      } else {
-        return this.getRecord(type, id);
-      }
     }
     /**
      * Gets individual record from store
@@ -1843,6 +2104,13 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     /**
      * Gets records for type of collection from observable
      *
+     * NOTE: We only return records by unique id, this handles a scenario
+     * where the store keeps around a reference to a newly persisted record by its temp uuid.
+     * We can't simply remove the temp uuid reference because other
+     * related models may be still using the temp uuid in their relationships
+     * data object. However, when we are listing out records we want them
+     * to be unique by the persisted id (which is updated after a Model.save)
+     *
      * @method getRecords
      * @param {String} type
      * @return {Array} array of objects
@@ -1853,14 +2121,32 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     value: function getRecords(type) {
       var records = Array.from(this.getType(type).records.values()).filter(function (value) {
         return value && value !== 'undefined';
-      }); // NOTE: Handles a scenario where the store keeps around a reference
-      // to a newly persisted record by its temp uuid. This is required
-      // because we can't simply remove the temp uuid reference because other
-      // related models may be still using the temp uuid in their relationships
-      // data object. However, when we are listing out records we want them
-      // to be unique by the persisted id (which is updated after a Model.save)
-
+      });
       return uniqueBy(records, 'id');
+    }
+    /**
+     * Get multiple records by id
+     *
+     * @method getRecordsById
+     * @param {String} type
+     * @param {Array} ids
+     * @return {Array} array or records
+     */
+
+  }, {
+    key: "getRecordsById",
+    value: function getRecordsById(type) {
+      var _this4 = this;
+
+      var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+      // NOTE: Is there a better way to do this?
+      return ids.map(function (id) {
+        return _this4.getRecord(type, id);
+      }).filter(function (record) {
+        return record;
+      }).filter(function (record) {
+        return typeof record !== 'undefined';
+      });
     }
     /**
      * Gets single from store based on cached query
@@ -1869,7 +2155,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * @param {String} type
      * @param id
      * @param {Object} queryParams
-     * @return {Array} array or records
+     * @return {Object} record
      */
 
   }, {
@@ -1882,9 +2168,10 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * Gets records from store based on cached query
      *
      * @method getCachedRecords
-     * @param {String} type
+     * @param {String} type type of records to get
      * @param {Object} queryParams
-     * @return {Array} array or records
+     * @param {String} id optional param if only getting 1 cached record by id
+     * @return {Array} array of records
      */
 
   }, {
@@ -1929,49 +2216,6 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       return this.getType(type).cache.get(String(id));
     }
     /**
-     * Get multiple records by id
-     *
-     * @method getRecordsById
-     * @param {String} type
-     * @param {Array} ids
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getRecordsById",
-    value: function getRecordsById(type) {
-      var _this3 = this;
-
-      var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-      // NOTE: Is there a better way to do this?
-      return ids.map(function (id) {
-        return _this3.getRecord(type, id);
-      }).filter(function (record) {
-        return record;
-      }).filter(function (record) {
-        return typeof record !== 'undefined';
-      });
-    }
-    /**
-     * Gets records all records or records
-     * based on query params
-     *
-     * @method getMatchingRecords
-     * @param {String} type
-     * @param {Object} queryParams
-     * @return {Array} array or records
-     */
-
-  }, {
-    key: "getMatchingRecords",
-    value: function getMatchingRecords(type, queryParams) {
-      if (queryParams) {
-        return this.getCachedRecords(type, queryParams);
-      } else {
-        return this.getRecords(type);
-      }
-    }
-    /**
      * Helper to look up model class for type.
      *
      * @method getKlass
@@ -1994,11 +2238,11 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }, {
     key: "createOrUpdateModel",
     value: function createOrUpdateModel(dataObject) {
-      var _dataObject$attribute = dataObject.attributes,
-          attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
+      var _dataObject$attribute2 = dataObject.attributes,
+          attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
           id = dataObject.id,
-          _dataObject$relations = dataObject.relationships,
-          relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations,
+          _dataObject$relations2 = dataObject.relationships,
+          relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2,
           type = dataObject.type;
       var record = this.getRecord(type, id);
 
@@ -2041,15 +2285,15 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }, {
     key: "createModelsFromData",
     value: function createModelsFromData(data) {
-      var _this4 = this;
+      var _this5 = this;
 
       return transaction(function () {
         return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
-          if (_this4.getType(dataObject.type)) {
-            return _this4.createOrUpdateModel(dataObject);
+          if (_this5.getType(dataObject.type)) {
+            return _this5.createOrUpdateModel(dataObject);
           }
         });
       });
@@ -2087,172 +2331,6 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       }, attributes));
     }
     /**
-     * Builds fetch url based
-     *
-     * @method fetchUrl
-     * @param {String} type the type to find
-     * @param {Object} options
-     */
-
-  }, {
-    key: "fetchUrl",
-    value: function fetchUrl(type, queryParams, id, options) {
-      var baseUrl = this.baseUrl,
-          modelTypeIndex = this.modelTypeIndex;
-      var endpoint = modelTypeIndex[type].endpoint;
-      return requestUrl(baseUrl, endpoint, queryParams, id, options);
-    }
-    /**
-     * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
-     *
-     * @method fetchAll
-     * @param {String} type the type to find
-     * @param {Object} options
-     */
-
-  }, {
-    key: "fetchAll",
-    value: function () {
-      var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, queryParams) {
-        var _this5 = this;
-
-        var store, url, response, json;
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                store = this;
-                url = this.fetchUrl(type, queryParams);
-                _context2.next = 4;
-                return this.fetch(url, {
-                  method: 'GET'
-                });
-
-              case 4:
-                response = _context2.sent;
-
-                if (!(response.status === 200)) {
-                  _context2.next = 14;
-                  break;
-                }
-
-                this.data[type].cache.set(url, []);
-                _context2.next = 9;
-                return response.json();
-
-              case 9:
-                json = _context2.sent;
-
-                if (json.included) {
-                  this.createModelsFromData(json.included);
-                }
-
-                return _context2.abrupt("return", transaction(function () {
-                  return json.data.map(function (dataObject) {
-                    var id = dataObject.id,
-                        _dataObject$attribute2 = dataObject.attributes,
-                        attributes = _dataObject$attribute2 === void 0 ? {} : _dataObject$attribute2,
-                        _dataObject$relations2 = dataObject.relationships,
-                        relationships = _dataObject$relations2 === void 0 ? {} : _dataObject$relations2;
-                    var ModelKlass = _this5.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread$2({
-                      store: store,
-                      relationships: relationships
-                    }, attributes));
-
-                    var cachedIds = _this5.data[type].cache.get(url);
-
-                    _this5.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
-
-                    _this5.data[type].records.set(String(id), record);
-
-                    return record;
-                  });
-                }));
-
-              case 14:
-                return _context2.abrupt("return", Promise.reject(response.status));
-
-              case 15:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2, this);
-      }));
-
-      function fetchAll(_x4, _x5) {
-        return _fetchAll.apply(this, arguments);
-      }
-
-      return fetchAll;
-    }()
-    /**
-     * fetches record by `id`.
-     *
-     * @async
-     * @method fetchOne
-     * @param {String} type the type to find
-     * @param {String} id
-     */
-
-  }, {
-    key: "fetchOne",
-    value: function () {
-      var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type, id, queryParams) {
-        var url, response, json, data, included, record;
-        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                url = this.fetchUrl(type, queryParams, id); // Trigger request
-
-                _context3.next = 3;
-                return this.fetch(url, {
-                  method: 'GET'
-                });
-
-              case 3:
-                response = _context3.sent;
-
-                if (!(response.status === 200)) {
-                  _context3.next = 15;
-                  break;
-                }
-
-                _context3.next = 7;
-                return response.json();
-
-              case 7:
-                json = _context3.sent;
-                data = json.data, included = json.included;
-
-                if (included) {
-                  this.createModelsFromData(included);
-                }
-
-                record = this.createOrUpdateModel(data);
-                this.data[type].cache.set(url, [record.id]);
-                return _context3.abrupt("return", record);
-
-              case 15:
-                return _context3.abrupt("return", null);
-
-              case 16:
-              case "end":
-                return _context3.stop();
-            }
-          }
-        }, _callee3, this);
-      }));
-
-      function fetchOne(_x6, _x7, _x8) {
-        return _fetchOne.apply(this, arguments);
-      }
-
-      return fetchOne;
-    }()
-    /**
      * Defines a resolution for an API call that will update a record or
      * set of records with the data returned from the API
      *
@@ -2273,7 +2351,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
+        var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, _json, errorString;
 
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -2363,8 +2441,8 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
           }, _callee4, null, [[16, 22]]);
         }));
 
-        return function (_x9) {
-          return _ref3.apply(this, arguments);
+        return function (_x7) {
+          return _ref4.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -2565,32 +2643,16 @@ function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { 
  */
 
 function relatedToMany(targetOrModelKlass, property, descriptor) {
-  if (typeof targetOrModelKlass === 'function') {
-    return function (target2, property2, descriptor2) {
-      schema.addRelationship({
-        type: target2.constructor.type,
-        property: property2,
-        dataType: Array
-      });
-      return {
-        get: function get() {
-          var type = targetOrModelKlass.type;
-          return getRelatedRecords(this, property2, type);
-        }
-      };
-    };
-  } else {
-    schema.addRelationship({
-      type: targetOrModelKlass.constructor.type,
-      property: property,
-      dataType: Array
-    });
-    return {
-      get: function get() {
-        return getRelatedRecords(this, property);
-      }
-    };
-  }
+  schema.addRelationship({
+    type: targetOrModelKlass.constructor.type,
+    property: property,
+    dataType: Array
+  });
+  return {
+    get: function get() {
+      return getRelatedRecords(this, property);
+    }
+  };
 }
 /**
  * Syntactic sugar of relatedToMany relationship. Basically
@@ -2600,39 +2662,19 @@ function relatedToMany(targetOrModelKlass, property, descriptor) {
  */
 
 function relatedToOne(targetOrModelKlass, property, descriptor) {
-  if (typeof targetOrModelKlass === 'function') {
-    return function (target2, property2, descriptor2) {
-      schema.addRelationship({
-        type: target2.constructor.type,
-        property: property2,
-        dataType: Object
-      });
-      return {
-        get: function get() {
-          var type = targetOrModelKlass.type;
-          return getRelatedRecord(this, property2, type);
-        },
-        set: function set(record) {
-          var type = targetOrModelKlass.type;
-          return setRelatedRecord(this, record, property2, type);
-        }
-      };
-    };
-  } else {
-    schema.addRelationship({
-      type: targetOrModelKlass.constructor.type,
-      property: property,
-      dataType: Object
-    });
-    return {
-      get: function get() {
-        return getRelatedRecord(this, property);
-      },
-      set: function set(record) {
-        return setRelatedRecord(this, record, property);
-      }
-    };
-  }
+  schema.addRelationship({
+    type: targetOrModelKlass.constructor.type,
+    property: property,
+    dataType: Object
+  });
+  return {
+    get: function get() {
+      return getRelatedRecord(this, property);
+    },
+    set: function set(record) {
+      return setRelatedRecord(this, record, property);
+    }
+  };
 }
 /**
  * Handles getting polymorphic records or only a specific
@@ -2870,7 +2912,10 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
         var referenceIndexToRemove = relationships[property].data.findIndex(function (model) {
           return model.id.toString() === id.toString() && model.type === type;
         });
-        if (referenceIndexToRemove >= 0) relationships[property].data.splice(referenceIndexToRemove, 1);
+
+        if (referenceIndexToRemove >= 0) {
+          relationships[property].data.splice(referenceIndexToRemove, 1);
+        }
 
         var recordIndexToRemove = _this.findIndex(function (model) {
           return model.id.toString() === id.toString() && model.type === type;
