@@ -1,6 +1,13 @@
 /* global fetch */
-import { action, observable, transaction, set, toJS } from 'mobx'
-import { dbOrNewId, parseErrorPointer, requestUrl, uniqueBy, combineRacedRequests, deriveIdQueryStrings } from './utils'
+import { action, observable, set, toJS, transaction } from 'mobx'
+import {
+  combineRacedRequests,
+  dbOrNewId,
+  deriveIdQueryStrings,
+  parseErrorPointer,
+  requestUrl,
+  uniqueBy
+} from './utils'
 
 /**
  * Defines the Artemis Data Store class.
@@ -126,7 +133,10 @@ class Store {
 
     // send request
     const response = this.fetch(url, {
-      headers: { ...this.defaultFetchOptions.headers, 'Content-Type': `application/vnd.api+json; ${extensionStr}` },
+      headers: {
+        ...this.defaultFetchOptions.headers,
+        'Content-Type': `application/vnd.api+json; ${extensionStr}`
+      },
       method: 'POST',
       body
     })
@@ -150,7 +160,60 @@ class Store {
   }
 
   /**
-   * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
+   * Gets a record from the store, will not fetch from the server if it doesn't exist in store.
+   * If given queryParams, it will check the cache for the record.
+   *
+   * @method getOne
+   * @param {String} type the type to find
+   * @param {String} id the id of the record to get
+   * @param {Object} options { queryParams }
+   * @return {Object} record
+   */
+  getOne = (type, id, options = {}) => {
+    const { queryParams } = options
+    if (queryParams) {
+      return this.getCachedRecord(type, id, queryParams)
+    } else {
+      return this.getRecord(type, id)
+    }
+  }
+
+  /**
+   * Fetches record by `id` from the server and returns a Promise.
+   *
+   * @async
+   * @method fetchOne
+   * @param {String} type the record type to fetch
+   * @param {String} id the id of the record to fetch
+   * @param {Object} options { queryParams }
+   * @return {Object} record
+   */
+  async fetchOne (type, id, options = {}) {
+    const { queryParams } = options
+    const url = this.fetchUrl(type, queryParams, id)
+    const response = await this.fetch(url, { method: 'GET' })
+
+    if (response.status === 200) {
+      const json = await response.json()
+      const { data, included } = json
+
+      if (included) {
+        this.createModelsFromData(included)
+      }
+
+      const record = this.createOrUpdateModel(data)
+
+      this.data[type].cache.set(url, [record.id])
+      return record
+    } else {
+      // TODO: return Promise.reject(response.status)
+      return null
+    }
+  }
+
+  /**
+   * Finds a record by `id`.
+   * If available in the store, it returns that record. Otherwise, it fetches the record from the server.
    *
    *   store.findOne('todos', 5)
    *   // fetch triggered
@@ -159,7 +222,7 @@ class Store {
    *   // no fetch triggered
    *   => event1
    *
-   * Passing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.
+   * Deprecated: Passing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.
    * Otherwise, it will trigger the default behavior
    *
    *   store.findOne('todos', 5, { fromServer: false })
@@ -176,122 +239,132 @@ class Store {
    *
    * @method findOne
    * @param {String} type the type to find
-   * @param id
-   * @param {Object} options
+   * @param {String} id the id of the record to find
+   * @param {Object} options { fromServer, queryParams }
+   * @return {Object} record
    */
   findOne = (type, id, options = {}) => {
-    const { fromServer, queryParams } = options
+    const { fromServer } = options
+    if ([true, false].includes(fromServer)) {
+      console.warn(
+        'DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getOne, fetchOne, or findOne.'
+      )
+    }
 
     if (fromServer === true) {
-      // If fromServer is true always fetch the data and return
-      return this.fetchOne(type, id, queryParams)
+      return this.fetchOne(type, id, options)
     } else if (fromServer === false) {
-      // If fromServer is false never fetch the data and return
-      return this.getRecord(type, id, queryParams)
-    } else {
-      return this.findOrFetchOne(type, id, queryParams)
+      return this.getOne(type, id, options)
     }
-  }
 
-  /**
-   * returns cache if exists, returns promise if not
-   *
-   * @method findOrFetchOne
-   * @param {String} type record type
-   * @param id
-   * @param {Object} queryParams will inform whether to return cached or fetch
-   */
-  findOrFetchOne = (type, id, queryParams) => {
-    // Get the matching record
-    const record = this.getMatchingRecord(type, id, queryParams)
-
-    // If the cached record is present
-    if (record && record.id) {
-      // Return data
+    const record = this.getOne(type, id, options)
+    if (record?.id) {
       return record
     } else {
-      // Otherwise fetch it from the server
-      return this.fetchOne(type, id, queryParams)
+      return this.fetchOne(type, id, options)
     }
   }
 
   /**
-   * Like 'findOne', but with an array ids. If there are instances available in the store,
-   * it will return those, otherwise it will trigger a fetch
+   * Get all records with the given `type` and `ids` from the store. This will never fetch from the server.
+   *
+   * @method getMany
+   * @param {String} type the type to get
+   * @param {String} ids the ids of the records to get
+   * @param {Object} options { queryParams }
+   * @return {Array} array of records
+   */
+  getMany = (type, ids, options = {}) => {
+    const idsToQuery = ids.slice().map(String)
+    const records = this.getAll(type, options)
+
+    return records.filter((record) => idsToQuery.includes(record.id))
+  }
+
+  /**
+   * Fetch all records with the given `type` and `ids` from the server.
+   *
+   * @method fetchMany
+   * @param {String} type the type to get
+   * @param {String} ids the ids of the records to get
+   * @param {Object} options { queryParams }
+   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   */
+  fetchMany = (type, ids, options = {}) => {
+    let idsToQuery = ids.slice().map(String)
+    const queryParams = options.queryParams || {}
+    queryParams.filter = queryParams.filter || {}
+
+    const baseUrl = this.fetchUrl(type, queryParams)
+    const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
+    const queries = idQueries.map((queryIds) => {
+      queryParams.filter.ids = queryIds
+      return this.fetchAll(type, { queryParams })
+    })
+
+    return Promise.all(queries)
+      .then(records => [].concat(...records))
+      .catch(err => Promise.reject(err))
+  }
+
+  /**
+   * Finds multiple records of the given `type` with the given `ids`.
+   * If all records are in the store, it returns those.
+   * If some records are in the store, it returns those plus fetches all other records.
+   * Otherwise, it fetches all records from the server.
+   * Deprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.
    *
    *   store.findMany('todos', [1, 2, 3])
    *   // fetch triggered
-   *   => [event1, event2, event3]
+   *   => [todo1, todo2, todo3]
+   *
    *   store.findMany('todos', [3, 2, 1])
    *   // no fetch triggered
-   *   => [event1, event2, event3]
+   *   => [todo1, todo2, todo3]
    *
-   * passing `fromServer` as an option will always trigger a
-   * fetch if `true` and never trigger a fetch if `false`.
-   * Otherwise, it will trigger the default behavior
-   *
-   *   store.findMany('todos', [1, 2])
-   *   // fetch triggered
-   *   => [event1, event2]
-   *
-   *   store.findMany('todos', [1, 2, 3], { fromServer: false })
+   *   store.findMany('todos', [1, 2, 3, 4], { fromServer: false })
    *   // no fetch triggered, only returns the records already in the store
-   *   => [event1, event2]
-   *
-   *   store.findMany('todos')
+   *   => [todo1, todo2, todo3]
+
+   *   store.findMany('todos', [1, 2, 3, 4], { fromServer: true })
    *   // fetch triggered
-   *   => [event1, event2, event3]
-   *
-   *   // async stuff happens on the server
-   *   store.findMany('todos', [1, 2, 3])
-   *   // no fetch triggered
-   *   => [event1, event2, event3]
-   *
-   *   store.findMany('todos', [1, 2, 3], { fromServer: true })
-   *   // fetch triggered
-   *   => [event1, event2, event3]
-   *
-   * Query params can be passed as part of the options hash.
-   * The response will be cached, so the next time `findMany`
-   * is called with identical params and values, the store will
-   * first look for the local result (unless `fromServer` is `true`)
-   *
-   *   store.findMany('todos', [1, 2, 3], {
-   *     queryParams: {
-   *       filter: {
-   *         start_time: '2020-06-01T00:00:00.000Z',
-   *         end_time: '2020-06-02T00:00:00.000Z'
-   *       }
-   *     }
-   *   })
+   *   => [todo1, todo2, todo3, event4]
    *
    * @method findMany
    * @param {String} type the type to find
-   * @param {Object} options
+   * @param {String} ids the ids of the records to find
+   * @param {Object} options { fromServer, queryParams }
+   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   findMany = (type, ids, options = {}) => {
     const { fromServer } = options
+    if ([true, false].includes(fromServer)) {
+      console.warn(
+        'DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getMany, fetchMany, or findMany.'
+      )
+    }
 
     let idsToQuery = ids.slice().map(String)
 
     if (fromServer === false) {
-      // If fromServer is false never fetch the data and return
-      return this.getRecords(type).filter(record => idsToQuery.includes(record.id))
+      return this.getAll(type).filter((record) =>
+        idsToQuery.includes(record.id)
+      )
     }
 
     let recordsInStore = []
 
     if (fromServer !== true) {
-      recordsInStore = this.getRecords(type).filter(record => idsToQuery.includes(record.id))
+      recordsInStore = this.getRecords(type).filter((record) =>
+        idsToQuery.includes(record.id)
+      )
 
       if (recordsInStore.length === idsToQuery.length) {
-        // if fromServer is not false or true, but all the records are in store, wrap it in a promise
-        return Promise.resolve(recordsInStore)
+        return recordsInStore
       }
 
       const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
-      // If fromServer is not true, we will only query records that are not already in the store
-      idsToQuery = idsToQuery.filter(id => !recordIdsInStore.includes(id))
+      idsToQuery = idsToQuery.filter((id) => !recordIdsInStore.includes(id))
     }
 
     const queryParams = options.queryParams || {}
@@ -302,49 +375,107 @@ class Store {
     const query = Promise.all(
       idQueries.map((queryIds) => {
         queryParams.filter.ids = queryIds
-        return this.fetchAll(type, queryParams)
+        return this.fetchAll(type, { queryParams })
       })
     )
 
-    return query.then(recordsFromServer => recordsInStore.concat(...recordsFromServer))
+    return query.then((recordsFromServer) =>
+      recordsInStore.concat(...recordsFromServer)
+    )
   }
 
   /**
-   * finds all of the instances of a given type. If there are instances available in the store,
-   * it will return those, otherwise it will trigger a fetch
+   * Builds fetch url based
+   *
+   * @method fetchUrl
+   * @param {String} type the type to find
+   * @param {Object} options
+   */
+  fetchUrl (type, queryParams, id, options) {
+    const { baseUrl, modelTypeIndex } = this
+    const { endpoint } = modelTypeIndex[type]
+
+    return requestUrl(baseUrl, endpoint, queryParams, id, options)
+  }
+
+  /**
+   * Gets all records with the given `type` from the store. This will never fetch from the server.
+   *
+   * @method getAll
+   * @param {String} type the type to find
+   * @param {Object} options
+   * @return {Array} array of records
+   */
+  getAll = (type, options = {}) => {
+    const { queryParams } = options
+    if (queryParams) {
+      return this.getCachedRecords(type, queryParams)
+    } else {
+      return this.getRecords(type)
+    }
+  }
+
+  /**
+   * Finds all records with the given `type`. Always fetches from the server.
+   *
+   * @async
+   * @method fetchAll
+   * @param {String} type the type to find
+   * @param {Object} options
+   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   */
+  async fetchAll (type, options = {}) {
+    const store = this
+    const { queryParams } = options
+    const url = this.fetchUrl(type, queryParams)
+    const response = await this.fetch(url, { method: 'GET' })
+
+    if (response.status === 200) {
+      this.data[type].cache.set(url, [])
+      const json = await response.json()
+
+      if (json.included) {
+        this.createModelsFromData(json.included)
+      }
+
+      return transaction(() =>
+        json.data.map((dataObject) => {
+          const { id, attributes = {}, relationships = {} } = dataObject
+          const ModelKlass = this.modelTypeIndex[type]
+          const record = new ModelKlass({
+            store,
+            relationships,
+            ...attributes
+          })
+          const cachedIds = this.data[type].cache.get(url)
+          this.data[type].cache.set(url, [...cachedIds, id])
+          this.data[type].records.set(String(id), record)
+          return record
+        })
+      )
+    } else {
+      return Promise.reject(response.status)
+    }
+  }
+
+  /**
+   * Finds all records of the given `type`.
+   * If all records are in the store, it returns those.
+   * Otherwise, it fetches all records from the server.
+   * Deprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.
    *
    *   store.findAll('todos')
    *   // fetch triggered
-   *   => [event1, event2, event3]
-   *   store.findAll('todos')
-   *   // no fetch triggered
-   *   => [event1, event2, event3]
-   *
-   * passing `fromServer` as an option will always trigger a
-   * fetch if `true` and never trigger a fetch if `false`.
-   * Otherwise, it will trigger the default behavior
-   *
-   *   store.findAll('todos', { fromServer: false })
-   *   // no fetch triggered
-   *   => []
+   *   => [todo1, todo2, todo3]
    *
    *   store.findAll('todos')
-   *   // fetch triggered
-   *   => [event1, event2, event3]
-   *
-   *   // async stuff happens on the server
-   *   store.findAll('todos')
    *   // no fetch triggered
-   *   => [event1, event2, event3]
-   *
-   *   store.findAll('todos', { fromServer: true })
-   *   // fetch triggered
-   *   => [event1, event2, event3, event4]
+   *   => [todo1, todo2, todo3]
    *
    * Query params can be passed as part of the options hash.
    * The response will be cached, so the next time `findAll`
    * is called with identical params and values, the store will
-   * first look for the local result (unless `fromServer` is `true`)
+   * first look for the local result.
    *
    *   store.findAll('todos', {
    *     queryParams: {
@@ -355,80 +486,37 @@ class Store {
    *     }
    *   })
    *
+   *
+   * NOTE: A broader RFC is in development to improve how we keep data in sync
+   * with the server. We likely will want to getAll and getRecords
+   * to return null if nothing is found. However, this causes several regressions
+   * in portal we will need to address in a larger PR for mobx-async-store updates.
+   *
    * @method findAll
    * @param {String} type the type to find
-   * @param {Object} options
+   * @param {Object} options { fromServer, queryParams }
+   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   findAll = (type, options = {}) => {
-    const { fromServer, queryParams } = options
+    const { fromServer } = options
+    if ([true, false].includes(fromServer)) {
+      console.warn(
+        'DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getAll, fetchAll, or findAll.'
+      )
+    }
 
     if (fromServer === true) {
-      // If fromServer is true always fetch the data and return
-      return this.fetchAll(type, queryParams)
+      return this.fetchAll(type, options)
     } else if (fromServer === false) {
-      // If fromServer is false never fetch the data and return
-      return this.getMatchingRecords(type, queryParams) || []
+      const records = this.getAll(type, options) || []
+      return records
     } else {
-      return this.findOrFetchAll(type, queryParams) || []
-    }
-  }
-
-  /**
-   * @method findAndFetchAll
-   * @param {String} type the type to find
-   * @param {Object} options
-   * @return {Array}
-   */
-  findAndFetchAll = (type, options = {}) => {
-    const {
-      beforeFetch,
-      afterFetch,
-      beforeRefetch,
-      afterRefetch,
-      afterError,
-      queryParams
-    } = options
-
-    const records = this.getMatchingRecords(type, queryParams)
-
-    // NOTE: See note findOrFetchAll about this conditional logic.
-    if (records.length > 0) {
-      beforeRefetch && beforeRefetch(records)
-      this.fetchAll(type, queryParams)
-          .then((result) => afterRefetch && afterRefetch(result))
-          .catch((error) => afterError && afterError(error))
-    } else {
-      beforeFetch && beforeFetch(records)
-      this.fetchAll(type, queryParams)
-          .then((result) => afterFetch && afterFetch(result))
-          .catch((error) => afterError && afterError(error))
-    }
-
-    return records || []
-  }
-
-  /**
-   * returns cache if exists, returns promise if not
-   *
-   * @method findOrFetchAll
-   * @param {String} type record type
-   * @param {Object} queryParams will inform whether to return cached or fetch
-   */
-  findOrFetchAll = (type, queryParams) => {
-    // Get any matching records
-    const records = this.getMatchingRecords(type, queryParams)
-
-    // NOTE: A broader RFC is in development to improve how we keep data in sync
-    // with the server. We likely will want to getMatchingRecords and getRecords
-    // to return null if nothing is found. However, this causes several regressions
-    // in portal we will need to address in a larger PR for mobx-async-store updates.
-
-    if (records.length > 0) {
-      // Return data
-      return Promise.resolve(records)
-    } else {
-      // Otherwise fetch it from the server
-      return this.fetchAll(type, queryParams)
+      const records = this.getAll(type, options)
+      if (records.length > 0) {
+        return Promise.resolve(records)
+      } else {
+        return this.fetchAll(type, options)
+      }
     }
   }
 
@@ -505,7 +593,7 @@ class Store {
 
     // NOTE: Is there a performance cost to setting
     // each property individually?
-    types.forEach(modelKlass => {
+    types.forEach((modelKlass) => {
       this.data[modelKlass.type] = {
         records: observable.map({}),
         cache: observable.map({})
@@ -525,7 +613,9 @@ class Store {
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const key = JSON.stringify({ url, fetchOptions })
 
-    return combineRacedRequests(key, () => fetch(url, { ...defaultFetchOptions, ...options }))
+    return combineRacedRequests(key, () =>
+      fetch(url, { ...defaultFetchOptions, ...options })
+    )
   }
 
   /**
@@ -537,24 +627,6 @@ class Store {
    */
   getType (type) {
     return this.data[type]
-  }
-
-  /**
-   * Get single all record
-   * based on query params
-   *
-   * @method getMatchingRecord
-   * @param {String} type
-   * @param id
-   * @param {Object} queryParams
-   * @return {Array} array or records
-   */
-  getMatchingRecord (type, id, queryParams) {
-    if (queryParams) {
-      return this.getCachedRecord(type, id, queryParams)
-    } else {
-      return this.getRecord(type, id)
-    }
   }
 
   /**
@@ -580,21 +652,38 @@ class Store {
   /**
    * Gets records for type of collection from observable
    *
+   * NOTE: We only return records by unique id, this handles a scenario
+   * where the store keeps around a reference to a newly persisted record by its temp uuid.
+   * We can't simply remove the temp uuid reference because other
+   * related models may be still using the temp uuid in their relationships
+   * data object. However, when we are listing out records we want them
+   * to be unique by the persisted id (which is updated after a Model.save)
+   *
    * @method getRecords
    * @param {String} type
    * @return {Array} array of objects
    */
   getRecords (type) {
-    const records = Array.from(this.getType(type).records.values())
-                         .filter(value => value && value !== 'undefined')
-
-    // NOTE: Handles a scenario where the store keeps around a reference
-    // to a newly persisted record by its temp uuid. This is required
-    // because we can't simply remove the temp uuid reference because other
-    // related models may be still using the temp uuid in their relationships
-    // data object. However, when we are listing out records we want them
-    // to be unique by the persisted id (which is updated after a Model.save)
+    const records = Array.from(this.getType(type).records.values()).filter(
+      (value) => value && value !== 'undefined'
+    )
     return uniqueBy(records, 'id')
+  }
+
+  /**
+   * Get multiple records by id
+   *
+   * @method getRecordsById
+   * @param {String} type
+   * @param {Array} ids
+   * @return {Array} array or records
+   */
+  getRecordsById (type, ids = []) {
+    // NOTE: Is there a better way to do this?
+    return ids
+      .map((id) => this.getRecord(type, id))
+      .filter((record) => record)
+      .filter((record) => typeof record !== 'undefined')
   }
 
   /**
@@ -604,7 +693,7 @@ class Store {
    * @param {String} type
    * @param id
    * @param {Object} queryParams
-   * @return {Array} array or records
+   * @return {Object} record
    */
   getCachedRecord (type, id, queryParams) {
     const cachedRecords = this.getCachedRecords(type, queryParams, id)
@@ -616,9 +705,10 @@ class Store {
    * Gets records from store based on cached query
    *
    * @method getCachedRecords
-   * @param {String} type
+   * @param {String} type type of records to get
    * @param {Object} queryParams
-   * @return {Array} array or records
+   * @param {String} id optional param if only getting 1 cached record by id
+   * @return {Array} array of records
    */
   getCachedRecords (type, queryParams, id) {
     // Get the url the request would use
@@ -657,38 +747,6 @@ class Store {
   }
 
   /**
-   * Get multiple records by id
-   *
-   * @method getRecordsById
-   * @param {String} type
-   * @param {Array} ids
-   * @return {Array} array or records
-   */
-  getRecordsById (type, ids = []) {
-    // NOTE: Is there a better way to do this?
-    return ids.map(id => this.getRecord(type, id))
-              .filter(record => record)
-              .filter(record => typeof record !== 'undefined')
-  }
-
-  /**
-   * Gets records all records or records
-   * based on query params
-   *
-   * @method getMatchingRecords
-   * @param {String} type
-   * @param {Object} queryParams
-   * @return {Array} array or records
-   */
-  getMatchingRecords (type, queryParams) {
-    if (queryParams) {
-      return this.getCachedRecords(type, queryParams)
-    } else {
-      return this.getRecords(type)
-    }
-  }
-
-  /**
    * Helper to look up model class for type.
    *
    * @method getKlass
@@ -712,17 +770,20 @@ class Store {
 
     if (record) {
       // Update existing object attributes
-      Object.keys(attributes).forEach(key => {
+      Object.keys(attributes).forEach((key) => {
         set(record, key, attributes[key])
       })
 
       // If relationships are present, update relationships
       if (relationships) {
-        Object.keys(relationships).forEach(key => {
+        Object.keys(relationships).forEach((key) => {
           // Don't try to create relationship if meta included false
           if (!relationships[key].meta) {
             // defensive against existingRecord.relationships being undefined
-            set(record, 'relationships', { ...record.relationships, [key]: relationships[key] })
+            set(record, 'relationships', {
+              ...record.relationships,
+              [key]: relationships[key]
+            })
           }
         })
       }
@@ -742,14 +803,16 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
-    return transaction(() => data.map(dataObject => {
-      // Only build objects for which we have a type defined.
-      // And ignore silently anything else included in the JSON response.
-      // TODO: Put some console message in development mode
-      if (this.getType(dataObject.type)) {
-        return this.createOrUpdateModel(dataObject)
-      }
-    }))
+    return transaction(() =>
+      data.map((dataObject) => {
+        // Only build objects for which we have a type defined.
+        // And ignore silently anything else included in the JSON response.
+        // TODO: Put some console message in development mode
+        if (this.getType(dataObject.type)) {
+          return this.createOrUpdateModel(dataObject)
+        }
+      })
+    )
   }
 
   /**
@@ -774,87 +837,6 @@ class Store {
   }
 
   /**
-   * Builds fetch url based
-   *
-   * @method fetchUrl
-   * @param {String} type the type to find
-   * @param {Object} options
-   */
-  fetchUrl (type, queryParams, id, options) {
-    const { baseUrl, modelTypeIndex } = this
-    const { endpoint } = modelTypeIndex[type]
-
-    return requestUrl(baseUrl, endpoint, queryParams, id, options)
-  }
-
-  /**
-   * finds an instance by `id`. If available in the store, returns that instance. Otherwise, triggers a fetch.
-   *
-   * @method fetchAll
-   * @param {String} type the type to find
-   * @param {Object} options
-   */
-  async fetchAll (type, queryParams) {
-    const store = this
-    const url = this.fetchUrl(type, queryParams)
-    const response = await this.fetch(url, { method: 'GET' })
-
-    if (response.status === 200) {
-      this.data[type].cache.set(url, [])
-      const json = await response.json()
-
-      if (json.included) {
-        this.createModelsFromData(json.included)
-      }
-
-      return transaction(() => json.data.map((dataObject) => {
-        const { id, attributes = {}, relationships = {} } = dataObject
-        const ModelKlass = this.modelTypeIndex[type]
-        const record = new ModelKlass({ store, relationships, ...attributes })
-        const cachedIds = this.data[type].cache.get(url)
-        this.data[type].cache.set(url, [...cachedIds, id])
-        this.data[type].records.set(String(id), record)
-        return record
-      }))
-    } else {
-      return Promise.reject(response.status)
-    }
-  }
-
-  /**
-   * fetches record by `id`.
-   *
-   * @async
-   * @method fetchOne
-   * @param {String} type the type to find
-   * @param {String} id
-   */
-  async fetchOne (type, id, queryParams) {
-    const url = this.fetchUrl(type, queryParams, id)
-    // Trigger request
-    const response = await this.fetch(url, { method: 'GET' })
-
-    // Handle response
-    if (response.status === 200) {
-      const json = await response.json()
-      const { data, included } = json
-
-      if (included) {
-        this.createModelsFromData(included)
-      }
-
-      const record = this.createOrUpdateModel(data)
-
-      this.data[type].cache.set(url, [record.id])
-
-      return record
-    } else {
-      // Return null if record is not found
-      return null
-    }
-  }
-
-  /**
    * Defines a resolution for an API call that will update a record or
    * set of records with the data returned from the API
    *
@@ -866,23 +848,34 @@ class Store {
     // records may be a single record, if so wrap it in an array to make
     // iteration simpler
     const recordsArray = Array.isArray(records) ? records : [records]
-    recordsArray.forEach((record) => { record.isInFlight = true })
+    recordsArray.forEach((record) => {
+      record.isInFlight = true
+    })
 
     return promise.then(
       async (response) => {
         const { status } = response
 
-        recordsArray.forEach(record => { record.isInFlight = false })
+        recordsArray.forEach((record) => {
+          record.isInFlight = false
+        })
 
         if (status === 200 || status === 201) {
           const json = await response.json()
           const data = Array.isArray(json.data) ? json.data : [json.data]
           const { included } = json
 
-          if (data.length !== recordsArray.length) throw new Error('Invariant violated: API response data and records to update do not match')
+          if (data.length !== recordsArray.length) {
+            throw new Error(
+              'Invariant violated: API response data and records to update do not match'
+            )
+          }
 
           data.forEach((targetData, index) => {
-            recordsArray[index].updateAttributesFromResponse(targetData, included)
+            recordsArray[index].updateAttributesFromResponse(
+              targetData,
+              included
+            )
           })
 
           if (json.included) {
@@ -904,7 +897,7 @@ class Store {
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
-          json.errors.forEach(error => {
+          json.errors.forEach((error) => {
             const { index, key } = parseErrorPointer(error)
             if (key != null) {
               const errors = recordsArray[index].errors[key] || []
@@ -914,14 +907,16 @@ class Store {
           })
 
           const errorString = recordsArray
-            .map(record => JSON.stringify(record.errors))
+            .map((record) => JSON.stringify(record.errors))
             .join(';')
           return Promise.reject(new Error(errorString))
         }
       },
       function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
-        recordsArray.forEach(record => { record.isInFlight = false })
+        recordsArray.forEach((record) => {
+          record.isInFlight = false
+        })
         recordsArray[0].errors = error
         throw error
       }

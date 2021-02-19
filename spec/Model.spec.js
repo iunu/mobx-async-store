@@ -1,6 +1,3 @@
-/* global fetch */
-import { autorun, isObservable } from 'mobx'
-
 import {
   Model,
   Store,
@@ -9,12 +6,13 @@ import {
   relatedToOne,
   validates
 } from '../src/main'
-
+/* global fetch */
+import { autorun, isObservable } from 'mobx'
 import {
-  exampleRelatedToManyResponse,
-  exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToManyIncludedResponse,
   exampleRelatedToManyIncludedWithNoiseResponse,
+  exampleRelatedToManyResponse,
+  exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
 
@@ -100,8 +98,6 @@ class Organization extends Model {
   @validates(validatesOptions)
   @attribute(Object) options = {}
 
-  @relatedToMany(Note) meeting_notes
-
   @validates(validatesArrayPresence)
   @relatedToMany notes
   @relatedToMany awesome_notes
@@ -123,8 +119,6 @@ class Todo extends Model {
 
   @validates(validatesOptions)
   @attribute(Object) options = {}
-
-  @relatedToMany(Note) meeting_notes
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
@@ -332,19 +326,7 @@ describe('Model', () => {
       expect(organization.name).toEqual('Do laundry')
       expect(organization.awesome_notes).toHaveLength(0)
       expect(organization.awesome_notes).toBeInstanceOf(Array)
-      expect(organization.meeting_notes).toHaveLength(0)
-      expect(organization.meeting_notes).toBeInstanceOf(Array)
     })
-
-    it('builds aliased relatedToMany relationship', async () => {
-      fetch.mockResponse(exampleRelatedToManyIncludedResponse)
-      const todo = await store.findOne('organizations', 1)
-
-      expect(todo.title).toEqual('Do laundry')
-      expect(todo.meeting_notes).toHaveLength(1)
-      expect(todo.meeting_notes[0].description).toEqual('Use fabric softener')
-    })
-
     it('ignores unexpected types in relationship data', async () => {
       fetch.mockResponse(exampleRelatedToManyWithNoiseResponse)
       const todo = await store.findOne('organizations', 1)
@@ -1284,16 +1266,16 @@ describe('Model', () => {
   })
 
   describe('.destroy', () => {
-    it('makes request and removes model from the store store', async () => {
+    it('makes request and removes model from the store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
       const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      expect(store.findAll('organizations', { fromServer: false }))
+      expect(store.getAll('organizations'))
         .toHaveLength(1)
       await todo.destroy()
       expect(fetch.mock.calls).toHaveLength(1)
       expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations/1')
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
-      expect(store.findAll('organizations', { fromServer: false }))
+      expect(store.getAll('organizations'))
         .toHaveLength(0)
     })
 

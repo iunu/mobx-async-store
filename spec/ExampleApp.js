@@ -1,13 +1,12 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-
 import {
   action,
   computed,
   observable
 } from 'mobx'
-
 import { inject, observer } from 'mobx-react'
+
+import PropTypes from 'prop-types'
 
 const todoCardPropTypes = {
   store: PropTypes.object.isRequired,
@@ -73,7 +72,7 @@ class ExampleApp extends Component {
 
   @computed get todos () {
     const { store } = this.props
-    return store.findAll('todos', { fromServer: false })
+    return store.getAll('todos')
   }
 
   render () {
