@@ -94,7 +94,6 @@ import {
 
 import { diff, makeDate } from &#x27;./utils&#x27;
 
-import ObjectPromiseProxy from &#x27;./ObjectPromiseProxy&#x27;
 import schema from &#x27;./schema&#x27;
 import cloneDeep from &#x27;lodash/cloneDeep&#x27;
 import isEqual from &#x27;lodash/isEqual&#x27;
@@ -433,8 +432,12 @@ class Model {
     }
 
     const response = this.store.fetch(url, { method, body })
+    const result = this.store.updateRecords(response, this)
+    Object.defineProperties(result, {
+      isInFlight: { value: this.isInFlight }
+    })
 
-    return new ObjectPromiseProxy(response, this)
+    return result
   }
 
   /**
