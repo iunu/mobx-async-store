@@ -1,7 +1,6 @@
 import {
   computed,
   extendObservable,
-  reaction,
   set,
   toJS,
   transaction,
@@ -108,28 +107,6 @@ class Model {
    */
 
   /**
-    * has this object been destroyed?
-    * @property _disposed
-    * @type {Boolean}
-    * @default false
-    */
-  @observable _disposed = false
-
-  /**
-    * set of relationships which have changed since last snapshot
-    * @property _dirtyRelationships
-    * @type {Set}
-    */
-  @observable _dirtyRelationships = new Set()
-
-  /**
-    * set of attributes which have changed since last snapshot
-    * @property _dirtyAttributes
-    * @type {Set}
-    */
-  @observable _dirtyAttributes = new Set()
-
-  /**
    * True if the instance has been modified from its persisted state
    *
    * NOTE that isDirty does _NOT_ track changes to the related objects
@@ -161,11 +138,82 @@ class Model {
    * @type {Boolean}
    */
   get isDirty () {
-    return this._dirtyAttributes.size > 0 || this._dirtyRelationships.size > 0
+    return this.dirtyAttributes.length > 0 || this.dirtyRelationships.length > 0
   }
 
   /**
-   * have any changes been made since this record was last persisted?
+   * A list of any attribute paths which have been changed since the previous snapshot
+   *
+   * const todo = new Todo({ title: 'Buy Milk' })
+   * todo.dirtyAttributes
+   * => []
+   * todo.title = 'Buy Cheese'
+   * todo.dirtyAttributes
+   * => ['title']
+   * todo.options = { variety: 'Cheddar' }
+   * todo.dirtyAttributes
+   * => ['title', 'options.variety']
+   *
+   * @method dirtyAttributes
+   * @return {Array} dirty attribute paths
+   */
+  get dirtyAttributes () {
+    return Array.from(Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
+      const currentValue = this.attributes[attr]
+      const previousValue = this.previousSnapshot.attributes[attr]
+
+      if (isObject(currentValue)) {
+        diff(currentValue, previousValue).forEach((property) => {
+          dirtyAccumulator.add(`${attr}.${property}`)
+        })
+      } else if (!isEqual(previousValue, currentValue)) {
+        dirtyAccumulator.add(attr)
+      }
+
+      return dirtyAccumulator
+    }, new Set()))
+  }
+
+  /**
+   * A list of any relationship paths which have been changed since the previous snapshot
+   * We check changes to both ids and types in case there are polymorphic relationships
+   *
+   * const todo = new Todo({ title: 'Buy Milk' })
+   * todo.dirtyRelationships
+   * => []
+   * todo.note = note1
+   * todo.dirtyRelationships
+   * => ['relationships.note']
+   *
+   * @method dirtyRelationships
+   * @return {Array} dirty relationship paths
+   */
+  get dirtyRelationships () {
+    // TODO: make what returns from this.relationships to be more consistent
+    const previousRelationships = this.previousSnapshot.relationships || {}
+    const currentRelationships = this.relationships || {}
+    const schemaRelationships = this.relationshipNames
+
+    if (Object.keys(currentRelationships).length === 0) {
+      return Object.keys(previousRelationships)
+    }
+
+    return Array.from(schemaRelationships.reduce((dirtyAccumulator, name) => {
+      const currentValues = currentRelationships[name]?.data || []
+      const previousValues = previousRelationships[name]?.data || []
+      const currentIds = Array.isArray(currentValues) ? currentValues.map(value => [value.id, value.type]).sort() : [currentValues.id, currentValues.type]
+      const previousIds = Array.isArray(previousValues) ? previousValues.map(value => [value.id, value.type]).sort() : [previousValues.id, previousValues.type]
+
+      if (!isEqual(currentIds, previousIds)) {
+        dirtyAccumulator.add(name)
+      }
+
+      return dirtyAccumulator
+    }, new Set()))
+  }
+
+  /**
+   * Have any changes been made since this record was last persisted?
    * @property hasUnpersistedChanges
    * @type {Boolean}
    */
@@ -378,8 +426,6 @@ class Model {
             _this.store.createModelsFromData(json.included)
           }
 
-          _this.dispose()
-
           return _this
         } else {
           _this.errors = { status: response.status }
@@ -410,51 +456,6 @@ class Model {
       ...defaultAttributes,
       ...initialAttributes
     })
-
-    this._listenForChanges()
-  }
-
-  /**
-   * sets up a reaction for each top-level attribute so we can compare
-   * values after each mutation and keep track of dirty attr states
-   * if an attr is different than the last snapshot, add it to the
-   * _dirtyAttributes set
-   * if it's the same as the last snapshot, make sure it's _not_ in the
-   * _dirtyAttributes set
-   * @method _listenForChanges
-   */
-  _listenForChanges () {
-    this._disposers = Object.keys(this.attributes).map((attr) => {
-      return reaction(() => this.attributes[attr], (value) => {
-        const previousValue = this.previousSnapshot.attributes[attr]
-        if (isEqual(previousValue, value)) {
-          this._dirtyAttributes.delete(attr)
-        } else if (isObject(value)) { // handles Objects and Arrays
-          // clear out any dirty attrs that start with this attr prefix
-          // then we can reset them if they are still (or newly) dirty
-          Array.from(this._dirtyAttributes).forEach((path) => {
-            if (path.indexOf(`${attr}.`) === 0) {
-              this._dirtyAttributes.delete(path)
-            }
-          })
-          diff(previousValue, value).forEach((property) => {
-            this._dirtyAttributes.add(`${attr}.${property}`)
-          })
-        } else {
-          this._dirtyAttributes.add(attr)
-        }
-      })
-    })
-  }
-
-  /**
-   * call this when destroying an object to make sure that we clean up
-   * any event listeners and don't leak memory
-   * @method dispose
-   */
-  dispose () {
-    this._disposed = true
-    this._disposers.forEach((dispose) => dispose())
   }
 
   /**
@@ -517,8 +518,6 @@ class Model {
    */
   _takeSnapshot (options = {}) {
     const persisted = options.persisted || false
-    this._dirtyRelationships.clear()
-    this._dirtyAttributes.clear()
     const { attributes, relationships } = this.snapshot
     const snapshot = {
       persisted,
@@ -547,30 +546,6 @@ class Model {
       this.errors = {}
     })
   }
-
-  /**
-   * a list of any property paths which have been changed since the previous
-   * snapshot
-   * ```
-   * const todo = new Todo({ title: 'Buy Milk' })
-   * todo.dirtyAttributes
-   * => []
-   * todo.title = 'Buy Cheese'
-   * todo.dirtyAttributes
-   * => ['title']
-   * todo.note = note1
-   * todo.dirtyAttributes
-   * => ['title', 'relationships.note']
-   * ```
-   * @method dirtyAttributes
-   * @return {Array} dirty attribute paths
-   */
-
-   get dirtyAttributes () {
-    const relationships = Array.from(this._dirtyRelationships).map((property) => `relationships.${property}`)
-    const attributes = Array.from(this._dirtyAttributes)
-    return [...relationships, ...attributes]
-   }
 
   /**
    * shortcut to get the static
