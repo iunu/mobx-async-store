@@ -98,7 +98,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Model.js",
-            "line": 80
+            "line": 79
         },
         "Store": {
             "name": "Store",
@@ -295,7 +295,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 19,
+            "line": 18,
             "description": "Maps the passed-in property names through and runs validations against those properties",
             "itemtype": "method",
             "name": "validateProperties",
@@ -324,7 +324,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 84,
+            "line": 83,
             "description": "Initializer for model",
             "itemtype": "method",
             "name": "constructor",
@@ -332,7 +332,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 94,
+            "line": 93,
             "description": "The type of the model. Defined on the class. Defaults to the underscored version of the class name\n(eg 'calendar_events').",
             "itemtype": "property",
             "name": "type",
@@ -341,7 +341,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 102,
+            "line": 101,
             "description": "The canonical path to the resource on the server. Defined on the class.\nDefaults to the underscored version of the class name",
             "itemtype": "property",
             "name": "endpoint",
@@ -350,7 +350,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 109,
+            "line": 108,
             "description": "True if the instance has been modified from its persisted state\n\nNOTE that isDirty does _NOT_ track changes to the related objects\nbut it _does_ track changes to the relationships themselves.\n\nFor example, adding or removing a related object will mark this record as dirty,\nbut changing a related object's properties will not mark this record as dirty.\n\nThe caller is reponsible for asking related objects about their\nown dirty state.\n\n```\nkpi = store.add('kpis', { name: 'A good thing to measure' })\nkpi.isDirty\n=> true\nkpi.name\n=> \"A good thing to measure\"\nawait kpi.save()\nkpi.isDirty\n=> false\nkpi.name = \"Another good thing to measure\"\nkpi.isDirty\n=> true\nawait kpi.save()\nkpi.isDirty\n=> false\n```",
             "itemtype": "property",
             "name": "isDirty",
@@ -359,7 +359,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 144,
+            "line": 143,
             "description": "A list of any attribute paths which have been changed since the previous snapshot\n\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyAttributes\n=> []\ntodo.title = 'Buy Cheese'\ntodo.dirtyAttributes\n=> ['title']\ntodo.options = { variety: 'Cheddar' }\ntodo.dirtyAttributes\n=> ['title', 'options.variety']",
             "itemtype": "method",
             "name": "dirtyAttributes",
@@ -371,7 +371,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 177,
+            "line": 176,
             "description": "A list of any relationship paths which have been changed since the previous snapshot\nWe check changes to both ids and types in case there are polymorphic relationships\n\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyRelationships\n=> []\ntodo.note = note1\ntodo.dirtyRelationships\n=> ['relationships.note']",
             "itemtype": "method",
             "name": "dirtyRelationships",
@@ -383,7 +383,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 215,
+            "line": 214,
             "description": "Have any changes been made since this record was last persisted?",
             "itemtype": "property",
             "name": "hasUnpersistedChanges",
@@ -392,7 +392,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 224,
+            "line": 223,
             "description": "True if the model has not been sent to the store",
             "itemtype": "property",
             "name": "isNew",
@@ -401,7 +401,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 236,
+            "line": 235,
             "description": "True if the instance is coming from / going to the server\n```\nkpi = store.find('kpis', 5)\n// fetch started\nkpi.isInFlight\n=> true\n// fetch finished\nkpi.isInFlight\n=> false\n```",
             "itemtype": "property",
             "name": "isInFlight",
@@ -411,7 +411,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 253,
+            "line": 252,
             "description": "A hash of errors from the server\n```\nkpi = store.find('kpis', 5)\nkpi.errors\n=> { authorization: \"You do not have access to this resource\" }\n```",
             "itemtype": "property",
             "name": "errors",
@@ -421,7 +421,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 266,
+            "line": 265,
             "description": "a list of snapshots that have been taken since the record was either last persisted or since it was instantiated",
             "itemtype": "property",
             "name": "snapshots",
@@ -431,7 +431,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 275,
+            "line": 274,
             "description": "restores data to its last snapshot state\n```\nkpi = store.find('kpis', 5)\nkpi.name\n=> \"A good thing to measure\"\nkpi.name = \"Another good thing to measure\"\nkpi.rollback()\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "rollback",
@@ -439,7 +439,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 292,
+            "line": 291,
             "description": "restores data to its last persisted state or the oldest snapshot\nstate if the model was never persisted",
             "itemtype": "method",
             "name": "rollbackToPersisted",
@@ -447,7 +447,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 302,
+            "line": 301,
             "description": "creates or updates a record.",
             "itemtype": "method",
             "name": "save",
