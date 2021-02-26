@@ -302,30 +302,6 @@ function deriveIdQueryStrings(ids) {
   });
 }
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function ObjectPromiseProxy(promise, target) {
-  var result = target.store.updateRecords(promise, target); // Define proxied attributes
-
-  var attributeNames = Object.keys(target.attributeNames);
-  var tempProperties = attributeNames.reduce(function (attrs, key) {
-    attrs[key] = {
-      value: target[key],
-      writable: false
-    };
-    return attrs;
-  }, {});
-  Object.defineProperties(result, _objectSpread({
-    isInFlight: {
-      value: target.isInFlight
-    }
-  }, tempProperties)); // Return promise
-
-  return result;
-}
-
 /**
  * Utility class used to store the schema
  * of model attribute definitions
@@ -392,9 +368,9 @@ var schema = new Schema();
 
 var _class, _descriptor, _temp;
 
-function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Maps the passed-in property names through and runs validations against those properties
  * @method validateProperties
@@ -624,7 +600,8 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
         method: method,
         body: body
       });
-      return new ObjectPromiseProxy(response, this);
+      var result = this.store.updateRecords(response, this);
+      return result;
     }
     /**
      * Checks all validations, adding errors where necessary and returning `false` if any are not valid
@@ -770,7 +747,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      extendObservable(this, _objectSpread$1(_objectSpread$1({}, defaultAttributes), initialAttributes));
+      extendObservable(this, _objectSpread(_objectSpread({}, defaultAttributes), initialAttributes));
     }
     /**
      * The current state of defined attributes and relationships of the instance
@@ -1336,9 +1313,9 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
 
 var _class$1, _descriptor$1, _descriptor2, _descriptor3, _temp$1;
 
-function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Defines the Artemis Data Store class.
  *
@@ -1429,7 +1406,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                 extensionStr = extensions !== null && extensions !== void 0 && extensions.length ? "ext=\"bulk,".concat(extensions.join(), "\"") : 'ext="bulk"'; // send request
 
                 response = _this.fetch(url, {
-                  headers: _objectSpread$2(_objectSpread$2({}, _this.defaultFetchOptions.headers), {}, {
+                  headers: _objectSpread$1(_objectSpread$1({}, _this.defaultFetchOptions.headers), {}, {
                     'Content-Type': "application/vnd.api+json; ".concat(extensionStr)
                   }),
                   method: 'POST',
@@ -1826,7 +1803,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                         _dataObject$relations = dataObject.relationships,
                         relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
                     var ModelKlass = _this2.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread$2({
+                    var record = new ModelKlass(_objectSpread$1({
                       store: store,
                       relationships: relationships
                     }, attributes));
@@ -2015,14 +1992,14 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions;
 
-      var fetchOptions = _objectSpread$2(_objectSpread$2({}, defaultFetchOptions), options);
+      var fetchOptions = _objectSpread$1(_objectSpread$1({}, defaultFetchOptions), options);
 
       var key = JSON.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
       return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$2(_objectSpread$2({}, defaultFetchOptions), options));
+        return fetch(url, _objectSpread$1(_objectSpread$1({}, defaultFetchOptions), options));
       });
     })
     /**
@@ -2214,7 +2191,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              set(record, 'relationships', _objectSpread$2(_objectSpread$2({}, record.relationships), {}, _defineProperty({}, key, relationships[key])));
+              set(record, 'relationships', _objectSpread$1(_objectSpread$1({}, record.relationships), {}, _defineProperty({}, key, relationships[key])));
             }
           });
         }
@@ -2281,7 +2258,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
         throw new Error("Could not find a model for '".concat(type, "'"));
       }
 
-      return new ModelKlass(_objectSpread$2({
+      return new ModelKlass(_objectSpread$1({
         id: id,
         store: store,
         relationships: relationships
@@ -2581,9 +2558,9 @@ function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflec
 
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
-function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -2688,7 +2665,7 @@ function getRelatedRecords(record, property) {
       }
     }
 
-    record.cachedRelationships = _objectSpread$3(_objectSpread$3({}, cachedRelationships), {}, _defineProperty({}, relationType, {
+    record.cachedRelationships = _objectSpread$2(_objectSpread$2({}, cachedRelationships), {}, _defineProperty({}, relationType, {
       data: relatedRecords.map(function (r) {
         return {
           type: r.type,
@@ -2938,4 +2915,4 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   return RelatedRecordsArray;
 }( /*#__PURE__*/_wrapNativeSuper(Array));
 
-export { Model, ObjectPromiseProxy, QueryString, Store, attribute, relatedToMany, relatedToOne, validates };
+export { Model, QueryString, Store, attribute, relatedToMany, relatedToOne, validates };
