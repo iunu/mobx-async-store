@@ -348,9 +348,6 @@ class Model {
 
     const response = this.store.fetch(url, { method, body })
     const result = this.store.updateRecords(response, this)
-    Object.defineProperties(result, {
-      isInFlight: { value: this.isInFlight }
-    })
 
     return result
   }
