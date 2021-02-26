@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.3.0</em>
+            <em>API Docs for: 3.4.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -250,7 +250,7 @@ export function setRelatedRecord (
     throw new Error(&#x27;Related record must be a valid Model object&#x27;)
   }
 
-  const { relationships, _dirtyRelationships } = record
+  const { relationships } = record
   const relationType = modelType || property
   const referenceRecord =
     relatedRecord || getRelatedRecord(record, relationType)
@@ -265,10 +265,8 @@ export function setRelatedRecord (
 
   if (!relatedRecord) {
     delete relationships[relationType]
-    _dirtyRelationships.add(relationType)
   } else if (!data || !(data.type === type &amp;&amp; data.id === id)) {
     relationships[relationType] = { data: { id, type } }
-    _dirtyRelationships.add(relationType)
   } else {
     return relatedRecord
   }
@@ -363,7 +361,6 @@ export class RelatedRecordsArray extends Array {
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
       this.push(relatedRecord)
-      record._dirtyRelationships.add(property)
       // setting the inverse - hack this will only work with singularized relationships.
       setRelatedRecord(
         relatedRecord,
@@ -411,8 +408,6 @@ export class RelatedRecordsArray extends Array {
         delete record.relationships
       }
 
-      record._dirtyRelationships.add(property)
-
       // hack this will only work with singularized relationships.
       setRelatedRecord(
         relatedRecord,
@@ -431,7 +426,6 @@ export class RelatedRecordsArray extends Array {
     transaction(() =&gt; {
       relationships[property] = { data: [] }
       array.forEach(object =&gt; this.add(object))
-      record._dirtyRelationships.add(property)
     })
   }
 }
