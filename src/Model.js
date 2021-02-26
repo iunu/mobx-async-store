@@ -9,7 +9,6 @@ import {
 
 import { diff, makeDate } from './utils'
 
-import ObjectPromiseProxy from './ObjectPromiseProxy'
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
@@ -348,8 +347,9 @@ class Model {
     }
 
     const response = this.store.fetch(url, { method, body })
+    const result = this.store.updateRecords(response, this)
 
-    return new ObjectPromiseProxy(response, this)
+    return result
   }
 
   /**
