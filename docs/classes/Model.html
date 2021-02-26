@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.3.0</em>
+            <em>API Docs for: 3.4.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -84,7 +84,7 @@
 
 
         <div class="foundat">
-            Defined in: <a href="../files/src_Model.js.html#l81"><code>src&#x2F;Model.js:81</code></a>
+            Defined in: <a href="../files/src_Model.js.html#l80"><code>src&#x2F;Model.js:80</code></a>
         </div>
 
 
@@ -114,10 +114,6 @@
                     <ul class="index-list methods">
                             <li class="index-item method">
                                 <a href="#method__applySnapshot">_applySnapshot</a>
-
-                            </li>
-                            <li class="index-item method">
-                                <a href="#method__listenForChanges">_listenForChanges</a>
 
                             </li>
                             <li class="index-item method">
@@ -157,7 +153,7 @@
 
                             </li>
                             <li class="index-item method">
-                                <a href="#method_dispose">dispose</a>
+                                <a href="#method_dirtyRelationships">dirtyRelationships</a>
 
                             </li>
                             <li class="index-item method">
@@ -236,18 +232,6 @@
 
                     <ul class="index-list properties">
                             <li class="index-item property">
-                                <a href="#property__dirtyAttributes">_dirtyAttributes</a>
-
-                            </li>
-                            <li class="index-item property">
-                                <a href="#property__dirtyRelationships">_dirtyRelationships</a>
-
-                            </li>
-                            <li class="index-item property">
-                                <a href="#property__disposed">_disposed</a>
-
-                            </li>
-                            <li class="index-item property">
                                 <a href="#property_endpoint">endpoint</a>
 
                                     <span class="flag static">static</span>
@@ -311,7 +295,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l534"><code>src&#x2F;Model.js:534</code></a>
+        <a href="../files/src_Model.js.html#l533"><code>src&#x2F;Model.js:533</code></a>
         </p>
 
 
@@ -344,42 +328,6 @@ and relationships of the snapshot to be applied. also reset errors</p>
 
 
 </div>
-<div id="method__listenForChanges" class="method item">
-    <h3 class="name"><code>_listenForChanges</code></h3>
-
-        <span class="paren">()</span>
-
-
-
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/src_Model.js.html#l417"><code>src&#x2F;Model.js:417</code></a>
-        </p>
-
-
-
-    </div>
-
-    <div class="description">
-        <p>sets up a reaction for each top-level attribute so we can compare
-values after each mutation and keep track of dirty attr states
-if an attr is different than the last snapshot, add it to the
-_dirtyAttributes set
-if it's the same as the last snapshot, make sure it's <em>not</em> in the
-_dirtyAttributes set</p>
-
-    </div>
-
-
-
-
-</div>
 <div id="method__makeObservable" class="method item">
     <h3 class="name"><code>_makeObservable</code></h3>
 
@@ -395,7 +343,7 @@ _dirtyAttributes set</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l400"><code>src&#x2F;Model.js:400</code></a>
+        <a href="../files/src_Model.js.html#l446"><code>src&#x2F;Model.js:446</code></a>
         </p>
 
 
@@ -433,7 +381,7 @@ observable</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l511"><code>src&#x2F;Model.js:511</code></a>
+        <a href="../files/src_Model.js.html#l512"><code>src&#x2F;Model.js:512</code></a>
         </p>
 
 
@@ -485,7 +433,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l603"><code>src&#x2F;Model.js:603</code></a>
+        <a href="../files/src_Model.js.html#l578"><code>src&#x2F;Model.js:578</code></a>
         </p>
 
 
@@ -526,7 +474,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l645"><code>src&#x2F;Model.js:645</code></a>
+        <a href="../files/src_Model.js.html#l620"><code>src&#x2F;Model.js:620</code></a>
         </p>
 
 
@@ -567,7 +515,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l585"><code>src&#x2F;Model.js:585</code></a>
+        <a href="../files/src_Model.js.html#l560"><code>src&#x2F;Model.js:560</code></a>
         </p>
 
 
@@ -607,7 +555,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l85"><code>src&#x2F;Model.js:85</code></a>
+        <a href="../files/src_Model.js.html#l84"><code>src&#x2F;Model.js:84</code></a>
         </p>
 
 
@@ -641,7 +589,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l665"><code>src&#x2F;Model.js:665</code></a>
+        <a href="../files/src_Model.js.html#l640"><code>src&#x2F;Model.js:640</code></a>
         </p>
 
 
@@ -682,7 +630,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l331"><code>src&#x2F;Model.js:331</code></a>
+        <a href="../files/src_Model.js.html#l379"><code>src&#x2F;Model.js:379</code></a>
         </p>
 
 
@@ -725,7 +673,7 @@ if not persisted, push this snapshot to the top of the stack</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l551"><code>src&#x2F;Model.js:551</code></a>
+        <a href="../files/src_Model.js.html#l144"><code>src&#x2F;Model.js:144</code></a>
         </p>
 
 
@@ -733,18 +681,16 @@ if not persisted, push this snapshot to the top of the stack</p>
     </div>
 
     <div class="description">
-        <p>a list of any property paths which have been changed since the previous
-snapshot</p>
-<pre class="code prettyprint"><code>const todo = new Todo({ title: 'Buy Milk' })
+        <p>A list of any attribute paths which have been changed since the previous snapshot</p>
+<p>const todo = new Todo({ title: 'Buy Milk' })
 todo.dirtyAttributes
 =&gt; []
 todo.title = 'Buy Cheese'
 todo.dirtyAttributes
 =&gt; ['title']
-todo.note = note1
+todo.options = { variety: 'Cheddar' }
 todo.dirtyAttributes
-=&gt; ['title', 'relationships.note']
-</code></pre>
+=&gt; ['title', 'options.variety']</p>
 
     </div>
 
@@ -761,11 +707,14 @@ todo.dirtyAttributes
 
 
 </div>
-<div id="method_dispose" class="method item">
-    <h3 class="name"><code>dispose</code></h3>
+<div id="method_dirtyRelationships" class="method item">
+    <h3 class="name"><code>dirtyRelationships</code></h3>
 
         <span class="paren">()</span>
 
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
 
 
 
@@ -776,7 +725,7 @@ todo.dirtyAttributes
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l450"><code>src&#x2F;Model.js:450</code></a>
+        <a href="../files/src_Model.js.html#l177"><code>src&#x2F;Model.js:177</code></a>
         </p>
 
 
@@ -784,12 +733,27 @@ todo.dirtyAttributes
     </div>
 
     <div class="description">
-        <p>call this when destroying an object to make sure that we clean up
-any event listeners and don't leak memory</p>
+        <p>A list of any relationship paths which have been changed since the previous snapshot
+We check changes to both ids and types in case there are polymorphic relationships</p>
+<p>const todo = new Todo({ title: 'Buy Milk' })
+todo.dirtyRelationships
+=&gt; []
+todo.note = note1
+todo.dirtyRelationships
+=&gt; ['relationships.note']</p>
 
     </div>
 
 
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+                    <p>dirty relationship paths</p>
+
+            </div>
+        </div>
 
 
 </div>
@@ -811,7 +775,7 @@ any event listeners and don't leak memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l625"><code>src&#x2F;Model.js:625</code></a>
+        <a href="../files/src_Model.js.html#l600"><code>src&#x2F;Model.js:600</code></a>
         </p>
 
 
@@ -852,7 +816,7 @@ any event listeners and don't leak memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l635"><code>src&#x2F;Model.js:635</code></a>
+        <a href="../files/src_Model.js.html#l610"><code>src&#x2F;Model.js:610</code></a>
         </p>
 
 
@@ -899,7 +863,7 @@ any event listeners and don't leak memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l810"><code>src&#x2F;Model.js:810</code></a>
+        <a href="../files/src_Model.js.html#l785"><code>src&#x2F;Model.js:785</code></a>
         </p>
 
 
@@ -965,7 +929,7 @@ attribute &quot;dirtyness&quot; or errors</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l825"><code>src&#x2F;Model.js:825</code></a>
+        <a href="../files/src_Model.js.html#l800"><code>src&#x2F;Model.js:800</code></a>
         </p>
 
 
@@ -1024,7 +988,7 @@ returns <code>true</code> if this object has the same type and id as the
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l682"><code>src&#x2F;Model.js:682</code></a>
+        <a href="../files/src_Model.js.html#l657"><code>src&#x2F;Model.js:657</code></a>
         </p>
 
 
@@ -1065,7 +1029,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l491"><code>src&#x2F;Model.js:491</code></a>
+        <a href="../files/src_Model.js.html#l492"><code>src&#x2F;Model.js:492</code></a>
         </p>
 
 
@@ -1096,7 +1060,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l502"><code>src&#x2F;Model.js:502</code></a>
+        <a href="../files/src_Model.js.html#l503"><code>src&#x2F;Model.js:503</code></a>
         </p>
 
 
@@ -1130,7 +1094,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l614"><code>src&#x2F;Model.js:614</code></a>
+        <a href="../files/src_Model.js.html#l589"><code>src&#x2F;Model.js:589</code></a>
         </p>
 
 
@@ -1171,7 +1135,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l655"><code>src&#x2F;Model.js:655</code></a>
+        <a href="../files/src_Model.js.html#l630"><code>src&#x2F;Model.js:630</code></a>
         </p>
 
 
@@ -1209,7 +1173,7 @@ TODO: Figure out how to handle unpersisted ids</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l227"><code>src&#x2F;Model.js:227</code></a>
+        <a href="../files/src_Model.js.html#l275"><code>src&#x2F;Model.js:275</code></a>
         </p>
 
 
@@ -1248,7 +1212,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l244"><code>src&#x2F;Model.js:244</code></a>
+        <a href="../files/src_Model.js.html#l292"><code>src&#x2F;Model.js:292</code></a>
         </p>
 
 
@@ -1289,7 +1253,7 @@ state if the model was never persisted</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l254"><code>src&#x2F;Model.js:254</code></a>
+        <a href="../files/src_Model.js.html#l302"><code>src&#x2F;Model.js:302</code></a>
         </p>
 
 
@@ -1343,7 +1307,7 @@ state if the model was never persisted</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l482"><code>src&#x2F;Model.js:482</code></a>
+        <a href="../files/src_Model.js.html#l483"><code>src&#x2F;Model.js:483</code></a>
         </p>
 
 
@@ -1377,7 +1341,7 @@ state if the model was never persisted</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l460"><code>src&#x2F;Model.js:460</code></a>
+        <a href="../files/src_Model.js.html#l461"><code>src&#x2F;Model.js:461</code></a>
         </p>
 
 
@@ -1429,7 +1393,7 @@ snapshot.title
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l575"><code>src&#x2F;Model.js:575</code></a>
+        <a href="../files/src_Model.js.html#l550"><code>src&#x2F;Model.js:550</code></a>
         </p>
 
 
@@ -1478,7 +1442,7 @@ snapshot.title
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l307"><code>src&#x2F;Model.js:307</code></a>
+        <a href="../files/src_Model.js.html#l355"><code>src&#x2F;Model.js:355</code></a>
         </p>
 
 
@@ -1552,7 +1516,7 @@ Default is to check all validations, but they can be selectively run via options
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l20"><code>src&#x2F;Model.js:20</code></a>
+        <a href="../files/src_Model.js.html#l19"><code>src&#x2F;Model.js:19</code></a>
         </p>
 
 
@@ -1621,82 +1585,6 @@ Default is to check all validations, but they can be selectively run via options
             <div id="properties" class="api-class-tabpanel">
                 <h2 class="off-left">Properties</h2>
 
-<div id="property__dirtyAttributes" class="property item">
-    <h3 class="name"><code>_dirtyAttributes</code></h3>
-    <span class="type">Set</span>
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/src_Model.js.html#l125"><code>src&#x2F;Model.js:125</code></a>
-        </p>
-
-
-    </div>
-
-    <div class="description">
-        <p>set of attributes which have changed since last snapshot</p>
-
-    </div>
-
-
-
-</div>
-<div id="property__dirtyRelationships" class="property item">
-    <h3 class="name"><code>_dirtyRelationships</code></h3>
-    <span class="type">Set</span>
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/src_Model.js.html#l118"><code>src&#x2F;Model.js:118</code></a>
-        </p>
-
-
-    </div>
-
-    <div class="description">
-        <p>set of relationships which have changed since last snapshot</p>
-
-    </div>
-
-
-
-</div>
-<div id="property__disposed" class="property item">
-    <h3 class="name"><code>_disposed</code></h3>
-    <span class="type">Boolean</span>
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/src_Model.js.html#l110"><code>src&#x2F;Model.js:110</code></a>
-        </p>
-
-
-    </div>
-
-    <div class="description">
-        <p>has this object been destroyed?</p>
-
-    </div>
-
-        <p><strong>Default:</strong> false</p>
-
-
-</div>
 <div id="property_endpoint" class="property item">
     <h3 class="name"><code>endpoint</code></h3>
     <span class="type">Unknown</span>
@@ -1709,7 +1597,7 @@ Default is to check all validations, but they can be selectively run via options
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l103"><code>src&#x2F;Model.js:103</code></a>
+        <a href="../files/src_Model.js.html#l102"><code>src&#x2F;Model.js:102</code></a>
         </p>
 
 
@@ -1735,7 +1623,7 @@ Defaults to the underscored version of the class name</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l205"><code>src&#x2F;Model.js:205</code></a>
+        <a href="../files/src_Model.js.html#l253"><code>src&#x2F;Model.js:253</code></a>
         </p>
 
 
@@ -1765,14 +1653,14 @@ kpi.errors
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l167"><code>src&#x2F;Model.js:167</code></a>
+        <a href="../files/src_Model.js.html#l215"><code>src&#x2F;Model.js:215</code></a>
         </p>
 
 
     </div>
 
     <div class="description">
-        <p>have any changes been made since this record was last persisted?</p>
+        <p>Have any changes been made since this record was last persisted?</p>
 
     </div>
 
@@ -1790,7 +1678,7 @@ kpi.errors
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l132"><code>src&#x2F;Model.js:132</code></a>
+        <a href="../files/src_Model.js.html#l109"><code>src&#x2F;Model.js:109</code></a>
         </p>
 
 
@@ -1836,7 +1724,7 @@ kpi.isDirty
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l188"><code>src&#x2F;Model.js:188</code></a>
+        <a href="../files/src_Model.js.html#l236"><code>src&#x2F;Model.js:236</code></a>
         </p>
 
 
@@ -1870,7 +1758,7 @@ kpi.isInFlight
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l176"><code>src&#x2F;Model.js:176</code></a>
+        <a href="../files/src_Model.js.html#l224"><code>src&#x2F;Model.js:224</code></a>
         </p>
 
 
@@ -1895,7 +1783,7 @@ kpi.isInFlight
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l218"><code>src&#x2F;Model.js:218</code></a>
+        <a href="../files/src_Model.js.html#l266"><code>src&#x2F;Model.js:266</code></a>
         </p>
 
 
@@ -1922,7 +1810,7 @@ kpi.isInFlight
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Model.js.html#l95"><code>src&#x2F;Model.js:95</code></a>
+        <a href="../files/src_Model.js.html#l94"><code>src&#x2F;Model.js:94</code></a>
         </p>
 
 

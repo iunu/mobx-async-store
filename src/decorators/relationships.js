@@ -165,7 +165,7 @@ export function setRelatedRecord (
     throw new Error('Related record must be a valid Model object')
   }
 
-  const { relationships, _dirtyRelationships } = record
+  const { relationships } = record
   const relationType = modelType || property
   const referenceRecord =
     relatedRecord || getRelatedRecord(record, relationType)
@@ -180,10 +180,8 @@ export function setRelatedRecord (
 
   if (!relatedRecord) {
     delete relationships[relationType]
-    _dirtyRelationships.add(relationType)
   } else if (!data || !(data.type === type && data.id === id)) {
     relationships[relationType] = { data: { id, type } }
-    _dirtyRelationships.add(relationType)
   } else {
     return relatedRecord
   }
@@ -278,7 +276,6 @@ export class RelatedRecordsArray extends Array {
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
       this.push(relatedRecord)
-      record._dirtyRelationships.add(property)
       // setting the inverse - hack this will only work with singularized relationships.
       setRelatedRecord(
         relatedRecord,
@@ -326,8 +323,6 @@ export class RelatedRecordsArray extends Array {
         delete record.relationships
       }
 
-      record._dirtyRelationships.add(property)
-
       // hack this will only work with singularized relationships.
       setRelatedRecord(
         relatedRecord,
@@ -346,7 +341,6 @@ export class RelatedRecordsArray extends Array {
     transaction(() => {
       relationships[property] = { data: [] }
       array.forEach(object => this.add(object))
-      record._dirtyRelationships.add(property)
     })
   }
 }

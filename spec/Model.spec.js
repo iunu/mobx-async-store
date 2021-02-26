@@ -101,6 +101,7 @@ class Organization extends Model {
   @validates(validatesArrayPresence)
   @relatedToMany notes
   @relatedToMany awesome_notes
+  @relatedToMany categories
 
   @relatedToOne user
 }
@@ -123,8 +124,19 @@ class Todo extends Model {
   @validates(validatesArrayPresence)
   @relatedToMany notes
   @relatedToMany awesome_notes
+  @relatedToMany categories
 
   @relatedToOne user
+}
+
+class Category extends Model {
+  static type = 'categories'
+  static endpoint = 'categories'
+
+  @validates
+  @attribute(String) name
+
+  @relatedToMany targets // polymorphic
 }
 
 class AppStore extends Store {
@@ -133,7 +145,8 @@ class AppStore extends Store {
     Note,
     User,
     Todo,
-    Relationshipless
+    Relationshipless,
+    Category
   ]
 }
 
@@ -609,7 +622,7 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
 
@@ -620,7 +633,7 @@ describe('Model', () => {
 
   describe('.snapshot', () => {
     it('a snapshot of the current attributes and relationship', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.snapshot.attributes).toEqual({
         due_at: timestamp,
         tags: [],
@@ -630,7 +643,7 @@ describe('Model', () => {
     })
 
     it('doesn\'t exclude falsey values', async () => {
-      const todo = new Organization({ title: '' })
+      const todo = new Todo({ title: '' })
       expect(todo.snapshot.attributes).toEqual({
         due_at: timestamp,
         tags: [],
@@ -642,7 +655,7 @@ describe('Model', () => {
 
   describe('.previousSnapshot', () => {
     it('return the previous snapshot', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       todo.title = 'something different'
       expect(todo.previousSnapshot.attributes).toEqual({
         due_at: timestamp,
@@ -655,31 +668,29 @@ describe('Model', () => {
 
   describe('.hasUnpersistedChanges', () => {
     it('is true on initialization', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.hasUnpersistedChanges).toBe(true)
     })
 
     it('is false on initialization if an id is present', async () => {
-      const todo = new Organization({ id: 10, title: 'Buy Milk' })
+      const todo = new Todo({ id: 10, title: 'Buy Milk' })
       expect(todo.hasUnpersistedChanges).toBe(false)
     })
 
     it('is true on initialization if the id is a tmp id', async () => {
-      const todo = new Organization({ id: 'tmp-123', title: 'Buy Milk' })
+      const todo = new Todo({ id: 'tmp-123', title: 'Buy Milk' })
       expect(todo.hasUnpersistedChanges).toBe(true)
     })
 
     it('is true after attribute mutation', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
-      todo._takeSnapshot({ persisted: true })
+      const todo = new Todo({ id: 1, title: 'Buy Milk' })
       expect(todo.hasUnpersistedChanges).toBe(false)
       todo.title = 'Buy something else'
       expect(todo.hasUnpersistedChanges).toBe(true)
     })
 
     it('is false after nested attribute mutation', async () => {
-      const todo = new Organization({ title: 'Buy Milk', options: { color: 'red' } })
-      todo._takeSnapshot({ persisted: true })
+      const todo = new Todo({ id: 1, title: 'Buy Milk', options: { color: 'red' } })
       expect(todo.hasUnpersistedChanges).toBe(false)
       todo.options.color = 'blue'
       expect(todo.hasUnpersistedChanges).toBe(true)
@@ -687,8 +698,14 @@ describe('Model', () => {
   })
 
   describe('.dirtyAttributes', () => {
+    it('returns an empty array on a new model', () => {
+      const todo = store.add('todos', { title: 'Buy Milk' })
+      expect(todo.isNew).toBeTruthy()
+      expect(todo.dirtyAttributes).toEqual([])
+    })
+
     it('returns a list of paths for attributes that have been mutated since the last snapshot', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.dirtyAttributes).toHaveLength(0)
       todo.title = 'Buy Cheese'
       expect(todo.dirtyAttributes).toHaveLength(1)
@@ -696,7 +713,7 @@ describe('Model', () => {
     })
 
     it('works on nested attributes', async () => {
-      const todo = new Organization({ title: 'Buy Milk', options: { variety: '2%' } })
+      const todo = new Todo({ title: 'Buy Milk', options: { variety: '2%' } })
       expect(todo.dirtyAttributes).toHaveLength(0)
       todo.options.variety = 'Skim'
       expect(todo.dirtyAttributes).toHaveLength(1)
@@ -704,7 +721,7 @@ describe('Model', () => {
     })
 
     it('tracks sibling changes on nested attributes', async () => {
-      const todo = new Organization({ title: 'Buy Milk', options: { size: 'Quart', variety: '2%' } })
+      const todo = new Todo({ id: 1, title: 'Buy Milk', options: { size: 'Quart', variety: '2%' } })
       expect(todo.dirtyAttributes).toHaveLength(0)
       todo.options.variety = 'Skim'
       expect(todo.dirtyAttributes).toHaveLength(1)
@@ -718,8 +735,58 @@ describe('Model', () => {
       expect(todo.dirtyAttributes[0]).toEqual('options.size')
     })
 
-    it('tracks removed toMany relationships', async () => {
+    it('dirties attributes that didnt exist in the previous snapshot', () => {
+      const todo = store.add('todos', { title: 'Buy Milk' })
+      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.previousSnapshot.attributes.options).toEqual({})
+      todo.options.variety = 'Coconut'
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+    })
+
+    it('reverts to empty after changing and then reverting an attribute', async () => {
       const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+
+      expect(todo.dirtyAttributes).toEqual([])
+      todo.title = 'Clean clothes'
+      expect(todo.dirtyAttributes).toEqual(['title'])
+      todo.title = 'Buy Milk'
+      expect(todo.dirtyAttributes).toEqual([])
+    })
+
+    it('does NOT track attribute changes to the related models', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      todo.notes.add(note)
+      note.description = 'something different'
+      expect(todo.dirtyAttributes).toEqual([])
+      expect(note.dirtyAttributes).toEqual(['description'])
+    })
+  })
+
+  describe('.dirtyRelationships', () => {
+    it('returns an empty array if previous and current relationships are empty or null', () => {
+      const relationshipless = store.add('relationshipless', { id: 1 })
+      expect(relationshipless.relationships).toEqual({})
+      relationshipless.previousSnapshot.relationships = null
+      expect(relationshipless.dirtyRelationships).toEqual([])
+      relationshipless.relationships = null
+      relationshipless.previousSnapshot.relationships = {}
+      expect(relationshipless.dirtyRelationships).toEqual([])
+    })
+
+    it('returns an empty array if the model is new', () => {
+      const todo = store.add('todos', { title: 'Buy Milk' })
+      expect(todo.isNew).toBeTruthy()
+      expect(todo.dirtyRelationships).toEqual([])
+    })
+
+    it('tracks removed toMany relationships', async () => {
+      const todo = store.add('todos', { title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
@@ -727,13 +794,13 @@ describe('Model', () => {
 
       todo.notes.add(note)
       todo.setPreviousSnapshot()
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyRelationships).toEqual([])
       todo.notes.remove(note)
-      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+      expect(todo.dirtyRelationships).toEqual(['notes'])
     })
 
     it('tracks removed toOne relationships', async () => {
-      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const todo = store.add('todos', { title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
@@ -741,33 +808,33 @@ describe('Model', () => {
 
       note.todo = todo
       note.setPreviousSnapshot()
-      expect(note.dirtyAttributes).toEqual([])
+      expect(note.dirtyRelationships).toEqual([])
       note.todo = null
-      expect(note.dirtyAttributes).toEqual(['relationships.todo'])
+      expect(note.dirtyRelationships).toEqual(['todo'])
     })
 
     it('tracks added toMany relationship', async () => {
-      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const todo = store.add('todos', { title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
       })
 
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyRelationships).toEqual([])
       todo.notes.add(note)
-      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+      expect(todo.dirtyRelationships).toEqual(['notes'])
     })
 
     it('tracks added toOne relationship', async () => {
-      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const todo = store.add('todos', { title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
       })
 
-      expect(note.dirtyAttributes).toEqual([])
+      expect(note.dirtyRelationships).toEqual([])
       note.todo = todo
-      expect(note.dirtyAttributes).toEqual(['relationships.todo'])
+      expect(note.dirtyRelationships).toEqual(['todo'])
     })
 
     it('tracks updated toOne relationship', async () => {
@@ -781,29 +848,46 @@ describe('Model', () => {
 
       note.todo = todo1
 
-      note._dirtyRelationships.clear()
-      expect(note.dirtyAttributes).toEqual([])
+      note.setPreviousSnapshot()
+      expect(note.dirtyRelationships).toEqual([])
 
       note.todo = todo2
-      expect(note.dirtyAttributes).toEqual(['relationships.todo'])
+      expect(note.dirtyRelationships).toEqual(['todo'])
     })
 
-    it('does NOT revert to empty after adding and then removing a relationship', async () => {
-      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+    it('handles polymorphic relationships', () => {
+      const category = store.add('categories', { id: 1, name: 'Very important' })
+      const todo = store.add('todos', { id: 1 })
+      const organization = store.add('organizations', { id: 1 })
+
+      category.targets.add(todo)
+      category.setPreviousSnapshot()
+      expect(category.dirtyRelationships).toEqual([])
+
+      category.targets.remove(todo)
+      category.targets.add(organization)
+      expect(category.dirtyRelationships).toEqual(['targets'])
+
+      organization.categories.add(category)
+      expect(organization.dirtyRelationships).toEqual(['categories'])
+    })
+
+    it('reverts to empty after adding and then removing a relationship and vice versa', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
       })
 
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyRelationships).toEqual([])
       todo.notes.add(note)
-      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+      expect(todo.dirtyRelationships).toEqual(['notes'])
       todo.notes.remove(note)
-      expect(todo.dirtyAttributes).toEqual(['relationships.notes'])
+      expect(todo.dirtyRelationships).toEqual([])
     })
 
-    it('does NOT track changes to the related objects themselves', async () => {
-      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+    it('reverts to empty after removing and then adding back a relationship', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
@@ -811,17 +895,33 @@ describe('Model', () => {
 
       todo.notes.add(note)
       todo.setPreviousSnapshot()
-      note.description = 'something different'
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyRelationships).toEqual([])
+      todo.notes.remove(note)
+      expect(todo.dirtyRelationships).toEqual(['notes'])
+      todo.notes.add(note)
+      expect(todo.dirtyRelationships).toEqual([])
+    })
+
+    it('does NOT track changes to the related objects themselves', async () => {
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      todo.notes.add(note)
+      todo.setPreviousSnapshot()
+      expect(todo.dirtyRelationships).toEqual([])
+      expect(note.dirtyRelationships).toEqual(['todo'])
     })
   })
 
   describe('.jsonapi', () => {
     it('returns data in valid jsonapi structure with coerced values', async () => {
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
       expect(todo.jsonapi()).toEqual({
         id: '1',
-        type: 'organizations',
+        type: 'todos',
         attributes: {
           due_at: timestamp.toISOString(),
           tags: [],
@@ -837,13 +937,13 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
 
       todo.notes.add(note)
 
       expect(todo.jsonapi({ relationships: ['notes'] })).toEqual({
         id: '11',
-        type: 'organizations',
+        type: 'todos',
         attributes: {
           due_at: timestamp.toISOString(),
           tags: [],
@@ -860,19 +960,24 @@ describe('Model', () => {
   })
 
   describe('.isDirty', () => {
-    it('is initially false', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
-      expect(todo.isDirty).toBe(false)
+    it('is initially false if the model is new', async () => {
+      const todo = new Todo({ title: 'Buy Milk' })
+      expect(todo.isDirty).toBeFalsy()
+    })
+
+    it('is initially false if the model is not new', async () => {
+      const todo = new Todo({ id: 1, title: 'Buy Milk' })
+      expect(todo.isDirty).toBeFalsy()
     })
 
     it('is set to true if record changes', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       todo.title = 'Do the laundry'
       expect(todo.isDirty).toBe(true)
     })
 
     it('is set back to false if changed back to original value', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       todo.title = 'Do the laundry'
       expect(todo.isDirty).toBe(true)
       todo.title = 'Buy Milk'
@@ -880,7 +985,7 @@ describe('Model', () => {
     })
 
     it('is set to true if a relationship is added', async () => {
-      const todo = store.add('organizations', { id: 11, title: 'Buy Milk' })
+      const todo = store.add('todos', { title: 'Buy Milk' })
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'
@@ -898,7 +1003,7 @@ describe('Model', () => {
         id: 10,
         description: 'Example description'
       })
-      const todo = store.add('organizations', { title: 'Good title' })
+      const todo = store.add('todos', { title: 'Good title' })
       todo.notes.add(note)
 
       expect(todo.validate()).toBeTruthy()
@@ -906,7 +1011,7 @@ describe('Model', () => {
     })
 
     it('uses default validation to check for presence of attribute', () => {
-      const todo = store.add('organizations', { title: '' })
+      const todo = store.add('todos', { title: '' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.title[0].key).toEqual('blank')
       expect(todo.errors.title[0].message).toEqual('can\'t be blank')
@@ -920,21 +1025,21 @@ describe('Model', () => {
     })
 
     it('validates for a non-empty many relationship', () => {
-      const todo = store.add('organizations', {})
+      const todo = store.add('todos', {})
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.notes[0].key).toEqual('empty')
       expect(todo.errors.notes[0].message).toEqual('must have at least one record')
     })
 
     it('uses custom validation', () => {
-      const todo = store.add('organizations', { tags: 'not an array' })
+      const todo = store.add('todos', { tags: 'not an array' })
       expect(todo.validate()).toBeFalsy()
       expect(todo.errors.tags[0].key).toEqual('must_be_an_array')
       expect(todo.errors.tags[0].message).toEqual('must be an array')
     })
 
     it('uses introspective custom validation', () => {
-      const todo = store.add('organizations', { options: { foo: 'bar', baz: null } })
+      const todo = store.add('todos', { options: { foo: 'bar', baz: null } })
 
       todo.requiredOptions = ['foo', 'baz']
 
@@ -951,7 +1056,7 @@ describe('Model', () => {
 
   describe('.rollback', () => {
     it('rollback restores data to last snapshot state ', async () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
       expect(todo.title).toEqual('Do Laundry')
@@ -967,7 +1072,7 @@ describe('Model', () => {
         description: 'Example description'
       })
       const savedTitle = mockTodoData.data.attributes.title
-      const todo = store.add('organizations', { title: savedTitle })
+      const todo = store.add('todos', { title: savedTitle })
       todo.notes.add(note)
       // Mock the API response
       fetch.mockResponse(mockTodoResponse)
@@ -983,7 +1088,7 @@ describe('Model', () => {
 
   describe('.rollbackToPersisted', () => {
     it('rollback restores data to last persisted state ', () => {
-      const todo = new Organization({ title: 'Buy Milk', id: 10 })
+      const todo = new Todo({ title: 'Buy Milk', id: 10 })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
       expect(todo.title).toEqual('Do Laundry')
@@ -995,7 +1100,7 @@ describe('Model', () => {
     })
 
     it('will restore the original (unpersisted) state if model was never persisted', () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
       todo._takeSnapshot()
@@ -1005,7 +1110,7 @@ describe('Model', () => {
     })
 
     it('it removes unpersisted snapshots from the stack', () => {
-      const todo = new Organization({ title: 'Buy Milk', id: 10 })
+      const todo = new Todo({ title: 'Buy Milk', id: 10 })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       expect(todo._snapshots.length).toEqual(1)
       todo.title = 'Do Laundry'
@@ -1025,7 +1130,7 @@ describe('Model', () => {
         id: 11,
         description: 'Example description'
       })
-      original = store.add('organizations', {
+      original = store.add('todos', {
         id: 11,
         title: 'Buy Milk',
         options: { color: 'green' }
@@ -1070,7 +1175,7 @@ describe('Model', () => {
         id: 11,
         description: 'Example description'
       })
-      original = store.add('organizations', {
+      original = store.add('todos', {
         id: 11,
         title: 'Buy Milk',
         options: { color: 'green' }
@@ -1109,7 +1214,7 @@ describe('Model', () => {
         id: 11,
         description: 'Example description'
       })
-      original = store.add('organizations', {
+      original = store.add('todos', {
         id: 11,
         title: 'Buy Milk',
         options: { color: 'green' }
@@ -1183,7 +1288,7 @@ describe('Model', () => {
       })
       // expect.assertions(9)
       // Add record to store
-      const todo = store.add('organizations', { title: 'Buy Milk' })
+      const todo = store.add('todos', { title: 'Buy Milk' })
       todo.notes.add(note)
       // Check the model doesn't have attributes
       // only provided by an API request
@@ -1199,11 +1304,11 @@ describe('Model', () => {
       // Assert the request was made with the correct
       // url and fetch options
       expect(fetch.mock.calls).toHaveLength(1)
-      expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations')
+      expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos')
       expect(fetch.mock.calls[0][1].method).toEqual('POST')
       expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
         data: {
-          type: 'organizations',
+          type: 'todos',
           attributes: {
             due_at: timestamp.toISOString(),
             tags: [],
@@ -1226,7 +1331,7 @@ describe('Model', () => {
         id: 10,
         description: 'Example description'
       })
-      const todo = store.add('organizations', { title: 'Buy Milk' })
+      const todo = store.add('todos', { title: 'Buy Milk' })
       todo.notes.add(note)
       fetch.mockResponse(mockTodoResponse)
       expect(todo.hasUnpersistedChanges).toBe(true)
@@ -1256,7 +1361,7 @@ describe('Model', () => {
         id: 10,
         description: ''
       })
-      const todo = store.add('organizations', { title: 'Good title' })
+      const todo = store.add('todos', { title: 'Good title' })
       todo.notes.add(note)
       fetch.mockResponse(mockTodoResponse)
       expect(todo.hasUnpersistedChanges).toBe(true)
@@ -1268,41 +1373,15 @@ describe('Model', () => {
   describe('.destroy', () => {
     it('makes request and removes model from the store', async () => {
       fetch.mockResponses([JSON.stringify({}), { status: 204 }])
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      expect(store.getAll('organizations'))
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      expect(store.getAll('todos'))
         .toHaveLength(1)
       await todo.destroy()
       expect(fetch.mock.calls).toHaveLength(1)
-      expect(fetch.mock.calls[0][0]).toEqual('/example_api/organizations/1')
+      expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos/1')
       expect(fetch.mock.calls[0][1].method).toEqual('DELETE')
-      expect(store.getAll('organizations'))
+      expect(store.getAll('todos'))
         .toHaveLength(0)
-    })
-
-    it('calls dispose', async () => {
-      fetch.mockResponses([JSON.stringify({}), { status: 204 }])
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      todo.dispose = jest.fn()
-      await todo.destroy()
-      expect(todo.dispose.mock.calls).toHaveLength(1)
-    })
-  })
-
-  describe('.dispose', () => {
-    it('sets _disposed = true', () => {
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      expect(todo._disposed).toBe(false)
-      todo.dispose()
-      expect(todo._disposed).toBe(true)
-    })
-
-    it('no longer tracks dirty changes', () => {
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      expect(todo.isDirty).toBe(false)
-      todo.dispose()
-      todo.title = 'I Changed'
-      // dirty status is unchanged because the object has been disposed
-      expect(todo.isDirty).toBe(false)
     })
   })
 })
