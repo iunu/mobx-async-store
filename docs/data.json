@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.5.0"
+        "version": "3.5.1"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -1539,7 +1539,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 23,
+            "line": 24,
             "description": "Singularizes record type",
             "itemtype": "method",
             "name": "singularizeType",
@@ -1558,7 +1558,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 39,
+            "line": 40,
             "description": "Build request url from base url, endpoint, query params, and ids.",
             "itemtype": "method",
             "name": "requestUrl",
@@ -1570,7 +1570,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 66,
+            "line": 67,
             "description": "Avoids making racing requests by blocking a request if an identical one is\nalready in-flight. Blocked requests will be resolved when the initial request\nresolves by cloning the response.",
             "itemtype": "method",
             "name": "combineRacedRequests",
@@ -1594,7 +1594,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 105,
+            "line": 106,
             "description": "Reducer function for filtering out duplicate records\nby a key provided. Returns a function that has a accumulator and\ncurrent record per Array.reduce.",
             "itemtype": "method",
             "name": "uniqueByReducer",
@@ -1613,7 +1613,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 122,
+            "line": 123,
             "description": "Returns objects unique by key provided",
             "itemtype": "method",
             "name": "uniqueBy",
@@ -1637,7 +1637,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 148,
+            "line": 149,
             "description": "convert a value into a date, pass Date or Moment instances thru\nuntouched",
             "itemtype": "method",
             "name": "makeDate",
@@ -1656,7 +1656,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 160,
+            "line": 161,
             "description": "recursively walk an object and call the `iteratee` function for\neach property. returns an array of results of calls to the iteratee.",
             "itemtype": "method",
             "name": "walk",
@@ -1684,7 +1684,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 178,
+            "line": 179,
             "description": "deeply compare objects a and b and return object paths for attributes\nwhich differ. it is important to note that this comparison is biased\ntoward object a. object a is walked and compared against values in\nobject b. if a property exists in object b, but not in object a, it\nwill not be counted as a difference.",
             "itemtype": "method",
             "name": "diff",
@@ -1707,7 +1707,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 196,
+            "line": 197,
             "description": "Parses the pointer of the error to retrieve the index of the\nrecord the error belongs to and the full path to the attribute\nwhich will serve as the key for the error.\n\nIf there is no parsed index, then assume the payload was for\na single record and default to 0.\n\nex.\n  error = {\n    detail: \"Foo can't be blank\",\n    source: { pointer: '/data/1/attributes/options/foo' },\n    title: 'Invalid foo'\n  }\n\nparsePointer(error)\n> {\n    index: 1,\n    key: 'options.foo'\n  }",
             "itemtype": "method",
             "name": "parseErrorPointer",
@@ -1726,7 +1726,7 @@
         },
         {
             "file": "src/utils.js",
-            "line": 232,
+            "line": 233,
             "description": "Splits an array of ids into a series of strings that can be used to form\nqueries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.",
             "itemtype": "method",
             "name": "deriveIdQueryStrings",
