@@ -47,6 +47,7 @@ function _wrapRegExp(re, groups) { _wrapRegExp = function _wrapRegExp(re, groups
 var pending = {};
 var counter = {};
 var URL_MAX_LENGTH = 1024;
+var ENCODED_COMMA = encodeURIComponent(',');
 
 var incrementor = function incrementor(key) {
   return function () {
@@ -286,26 +287,22 @@ function parseErrorPointer() {
 
 function deriveIdQueryStrings(ids) {
   var restOfUrl = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
-  var idLength = Math.max.apply(Math, _toConsumableArray(ids.map(function (id) {
-    return String(id).length;
-  })));
   var maxLength = URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length;
-  var encodedIds = encodeURIComponent(ids.join(','));
+  ids = ids.map(String);
+  var firstId = ids.shift();
+  var encodedIds = ids.reduce(function (nestedArray, id) {
+    var workingString = nestedArray[nestedArray.length - 1];
+    var longerString = "".concat(workingString).concat(ENCODED_COMMA).concat(id);
 
-  if (encodedIds.length <= maxLength) {
-    return [ids.join(',')];
-  }
+    if (longerString.length < maxLength) {
+      nestedArray[nestedArray.length - 1] = longerString;
+    } else {
+      nestedArray.push(id);
+    }
 
-  var minLength = maxLength - idLength;
-  var regexp = new RegExp(".{".concat(minLength, ",").concat(maxLength, "}%2C"), 'g'); // the matches
-
-  var matched = encodedIds.match(regexp); // everything that doesn't match, ie the last of the ids
-
-  var tail = encodedIds.replace(regexp, ''); // we manually strip the ',' at the end because javascript's non-capturing regex groups are hard to manage
-
-  return [].concat(_toConsumableArray(matched), [tail]).map(decodeURIComponent).map(function (string) {
-    return string.replace(/,$/, '');
-  });
+    return nestedArray;
+  }, [firstId]);
+  return encodedIds.map(decodeURIComponent);
 }
 
 /**

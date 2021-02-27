@@ -7,6 +7,7 @@ import flattenDeep from 'lodash/flattenDeep'
 const pending = {}
 const counter = {}
 export const URL_MAX_LENGTH = 1024
+const ENCODED_COMMA = encodeURIComponent(',')
 
 const incrementor = (key) => () => {
   const count = (counter[key] || 0) + 1
@@ -238,22 +239,23 @@ export function parseErrorPointer (error = {}) {
  */
 
 export function deriveIdQueryStrings (ids, restOfUrl = '') {
-  const idLength = Math.max(...ids.map(id => String(id).length))
   const maxLength = URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length
 
-  const encodedIds = encodeURIComponent(ids.join(','))
-  if (encodedIds.length <= maxLength) {
-    return [ids.join(',')]
-  }
+  ids = ids.map(String)
+  const firstId = ids.shift()
 
-  const minLength = maxLength - idLength
+  const encodedIds = ids.reduce((nestedArray, id) => {
+    const workingString = nestedArray[nestedArray.length - 1]
+    const longerString = `${workingString}${ENCODED_COMMA}${id}`
 
-  const regexp = new RegExp(`.{${minLength},${maxLength}}%2C`, 'g')
-  // the matches
-  const matched = encodedIds.match(regexp)
-  // everything that doesn't match, ie the last of the ids
-  const tail = encodedIds.replace(regexp, '')
+    if (longerString.length < maxLength) {
+      nestedArray[nestedArray.length - 1] = longerString
+    } else {
+      nestedArray.push(id)
+    }
 
-  // we manually strip the ',' at the end because javascript's non-capturing regex groups are hard to manage
-  return [...matched, tail].map(decodeURIComponent).map(string => string.replace(/,$/, ''))
+    return nestedArray
+  }, [firstId])
+
+  return encodedIds.map(decodeURIComponent)
 }
