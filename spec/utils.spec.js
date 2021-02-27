@@ -9,6 +9,7 @@ describe('deriveIdQueryStrings', () => {
   it('splits ids into an expected length', () => {
     const idQueryStrings = deriveIdQueryStrings(longIds, baseUrl)
     expect(idQueryStrings).toHaveLength(8)
+    expect(longIds.join()).toEqual(idQueryStrings.join().split().join())
     idQueryStrings.forEach(ids => {
       expect(baseUrl.length + QueryString.stringify({ filter: { ids } }).length).toBeLessThan(URL_MAX_LENGTH)
     })
