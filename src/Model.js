@@ -7,7 +7,7 @@ import {
   observable
 } from 'mobx'
 
-import { diff, makeDate } from './utils'
+import { diff, makeDate, stringifyIds } from './utils'
 
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
@@ -37,18 +37,6 @@ function validateProperties (model, propertyNames, propertyDefinitions) {
     }
 
     return validationResult.isValid
-  })
-}
-
-function stringifyIds (object) {
-  Object.keys(object).forEach(key => {
-    const property = object[key]
-    if (typeof property === 'object') {
-      if (property.id) {
-        property.id = String(property.id)
-      }
-      stringifyIds(property)
-    }
   })
 }
 
