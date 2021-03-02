@@ -6,12 +6,12 @@ import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
 import _createClass from '@babel/runtime/helpers/createClass';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
-import _typeof from '@babel/runtime/helpers/typeof';
 import { computed, observable, set, extendObservable, transaction, toJS, action } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
 import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
+import _typeof from '@babel/runtime/helpers/typeof';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import uuidv1 from 'uuid/v1';
 import qs from 'qs';
@@ -169,6 +169,19 @@ function uniqueByReducer(key) {
 
 function uniqueBy(array, key) {
   return array.reduce(uniqueByReducer(key), []);
+}
+function stringifyIds(object) {
+  Object.keys(object).forEach(function (key) {
+    var property = object[key];
+
+    if (_typeof(property) === 'object') {
+      if (property.id) {
+        property.id = String(property.id);
+      }
+
+      stringifyIds(property);
+    }
+  });
 }
 /**
  * convert a value into a date, pass Date or Moment instances thru
@@ -388,20 +401,6 @@ function validateProperties(model, propertyNames, propertyDefinitions) {
     }
 
     return validationResult.isValid;
-  });
-}
-
-function stringifyIds(object) {
-  Object.keys(object).forEach(function (key) {
-    var property = object[key];
-
-    if (_typeof(property) === 'object') {
-      if (property.id) {
-        property.id = String(property.id);
-      }
-
-      stringifyIds(property);
-    }
   });
 }
 /*
@@ -1440,22 +1439,11 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     this.findOne = function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      var fromServer = options.fromServer;
-
-      if ([true, false].includes(fromServer)) {
-        console.warn('DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getOne, fetchOne, or findOne.');
-      }
-
-      if (fromServer === true) {
-        return _this.fetchOne(type, id, options);
-      } else if (fromServer === false) {
-        return _this.getOne(type, id, options);
-      }
 
       var record = _this.getOne(type, id, options);
 
       if (record !== null && record !== void 0 && record.id) {
-        return record;
+        return Promise.resolve(record);
       } else {
         return _this.fetchOne(type, id, options);
       }
@@ -1498,40 +1486,23 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     this.findMany = function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      var fromServer = options.fromServer;
-
-      if ([true, false].includes(fromServer)) {
-        console.warn('DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getMany, fetchMany, or findMany.');
-      }
-
       var idsToQuery = ids.slice().map(String);
 
-      if (fromServer === false) {
-        return _this.getAll(type).filter(function (record) {
-          return idsToQuery.includes(record.id);
-        });
+      var recordsInStore = _this.getAll(type, options).filter(function (record) {
+        return idsToQuery.includes(String(record.id));
+      });
+
+      if (recordsInStore.length === idsToQuery.length) {
+        return Promise.resolve(recordsInStore);
       }
 
-      var recordsInStore = [];
-
-      if (fromServer !== true) {
-        recordsInStore = _this.getRecords(type).filter(function (record) {
-          return idsToQuery.includes(record.id);
-        });
-
-        if (recordsInStore.length === idsToQuery.length) {
-          return recordsInStore;
-        }
-
-        var recordIdsInStore = recordsInStore.map(function (_ref3) {
-          var id = _ref3.id;
-          return String(id);
-        });
-        idsToQuery = idsToQuery.filter(function (id) {
-          return !recordIdsInStore.includes(id);
-        });
-      }
-
+      var recordIdsInStore = recordsInStore.map(function (_ref3) {
+        var id = _ref3.id;
+        return String(id);
+      });
+      idsToQuery = idsToQuery.filter(function (id) {
+        return !recordIdsInStore.includes(id);
+      });
       var queryParams = options.queryParams || {};
       queryParams.filter = queryParams.filter || {};
 
@@ -1545,9 +1516,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
         });
       }));
       return query.then(function (recordsFromServer) {
-        var _recordsInStore;
-
-        return (_recordsInStore = recordsInStore).concat.apply(_recordsInStore, _toConsumableArray(recordsFromServer));
+        return recordsInStore.concat.apply(recordsInStore, _toConsumableArray(recordsFromServer));
       });
     };
 
@@ -1564,25 +1533,13 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     this.findAll = function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var fromServer = options.fromServer;
 
-      if ([true, false].includes(fromServer)) {
-        console.warn('DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getAll, fetchAll, or findAll.');
-      }
+      var records = _this.getAll(type, options);
 
-      if (fromServer === true) {
-        return _this.fetchAll(type, options);
-      } else if (fromServer === false) {
-        var records = _this.getAll(type, options) || [];
-        return records;
+      if (records.length > 0) {
+        return Promise.resolve(records);
       } else {
-        var _records = _this.getAll(type, options);
-
-        if (_records.length > 0) {
-          return Promise.resolve(_records);
-        } else {
-          return _this.fetchAll(type, options);
-        }
+        return _this.fetchAll(type, options);
       }
     };
 
@@ -1607,14 +1564,14 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     key: "fetchOne",
 
     /**
-     * Fetches record by `id` from the server and returns a Promise.
+     * Fetches record by `id` from the server and returns it wrapped in a Promise.
      *
      * @async
      * @method fetchOne
      * @param {String} type the record type to fetch
      * @param {String} id the id of the record to fetch
      * @param {Object} options { queryParams }
-     * @return {Object} record
+     * @return {Promise} Promise.resolve(record) or Promise.reject(status)
      */
     value: function () {
       var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, id) {
@@ -1663,7 +1620,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                 return _context2.abrupt("return", record);
 
               case 17:
-                return _context2.abrupt("return", null);
+                return _context2.abrupt("return", Promise.reject(response.status));
 
               case 18:
               case "end":
@@ -1680,36 +1637,22 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       return fetchOne;
     }()
     /**
-     * Finds a record by `id`.
-     * If available in the store, it returns that record. Otherwise, it fetches the record from the server.
+     * Finds a record by `id` and returns it wrapped in a Promise.
+     * If available in the store, it returns that record.
+     * Otherwise, it fetches the record from the server.
      *
      *   store.findOne('todos', 5)
      *   // fetch triggered
      *   => event1
      *   store.findOne('todos', 5)
      *   // no fetch triggered
-     *   => event1
-     *
-     * Deprecated: Passing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.
-     * Otherwise, it will trigger the default behavior
-     *
-     *   store.findOne('todos', 5, { fromServer: false })
-     *   // no fetch triggered
-     *   => undefined
-     *
-     *   store.findOne('todos', 5)
-     *   // fetch triggered
-     *   => event1
-     *
-     *   store.findOne('todos', 5, { fromServer: true })
-     *   // fetch triggered
      *   => event1
      *
      * @method findOne
      * @param {String} type the type to find
      * @param {String} id the id of the record to find
-     * @param {Object} options { fromServer, queryParams }
-     * @return {Object} record
+     * @param {Object} options { queryParams }
+     * @return {Promise} Promise.resolve(record) or Promise.reject(status)
      */
 
   }, {
@@ -1833,10 +1776,9 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       return fetchAll;
     }()
     /**
-     * Finds all records of the given `type`.
-     * If all records are in the store, it returns those.
+     * Finds all records of the given `type` and returns them wrapped in a Promise.
+     * If there are records of the given type in the store, it returns those.
      * Otherwise, it fetches all records from the server.
-     * Deprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.
      *
      *   store.findAll('todos')
      *   // fetch triggered
@@ -1868,7 +1810,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      *
      * @method findAll
      * @param {String} type the type to find
-     * @param {Object} options { fromServer, queryParams }
+     * @param {Object} options { queryParams }
      * @return {Promise} Promise.resolve(records) or Promise.reject(status)
      */
 
