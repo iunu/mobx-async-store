@@ -222,41 +222,13 @@ class Store {
    *   // no fetch triggered
    *   => event1
    *
-   * Deprecated: Passing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.
-   * Otherwise, it will trigger the default behavior
-   *
-   *   store.findOne('todos', 5, { fromServer: false })
-   *   // no fetch triggered
-   *   => undefined
-   *
-   *   store.findOne('todos', 5)
-   *   // fetch triggered
-   *   => event1
-   *
-   *   store.findOne('todos', 5, { fromServer: true })
-   *   // fetch triggered
-   *   => event1
-   *
    * @method findOne
    * @param {String} type the type to find
    * @param {String} id the id of the record to find
-   * @param {Object} options { fromServer, queryParams }
-   * @return {Object} record
+   * @param {Object} options { queryParams }
+   * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findOne = (type, id, options = {}) => {
-    const { fromServer } = options
-    if ([true, false].includes(fromServer)) {
-      console.warn(
-        'DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getOne, fetchOne, or findOne.'
-      )
-    }
-
-    if (fromServer === true) {
-      return this.fetchOne(type, id, options)
-    } else if (fromServer === false) {
-      return this.getOne(type, id, options)
-    }
-
     const record = this.getOne(type, id, options)
     if (record?.id) {
       return record
@@ -307,12 +279,11 @@ class Store {
       .catch(err => Promise.reject(err))
   }
 
-  /**
-   * Finds multiple records of the given `type` with the given `ids`.
+ /**
+   * Finds multiple records of the given `type` with the given `ids` and returns them wrapped in a Promise.
    * If all records are in the store, it returns those.
    * If some records are in the store, it returns those plus fetches all other records.
    * Otherwise, it fetches all records from the server.
-   * Deprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.
    *
    *   store.findMany('todos', [1, 2, 3])
    *   // fetch triggered
@@ -322,50 +293,24 @@ class Store {
    *   // no fetch triggered
    *   => [todo1, todo2, todo3]
    *
-   *   store.findMany('todos', [1, 2, 3, 4], { fromServer: false })
-   *   // no fetch triggered, only returns the records already in the store
-   *   => [todo1, todo2, todo3]
-
-   *   store.findMany('todos', [1, 2, 3, 4], { fromServer: true })
-   *   // fetch triggered
-   *   => [todo1, todo2, todo3, event4]
-   *
    * @method findMany
    * @param {String} type the type to find
    * @param {String} ids the ids of the records to find
-   * @param {Object} options { fromServer, queryParams }
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @param {Object} options { queryParams }
+   * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findMany = (type, ids, options = {}) => {
-    const { fromServer } = options
-    if ([true, false].includes(fromServer)) {
-      console.warn(
-        'DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getMany, fetchMany, or findMany.'
-      )
-    }
-
     let idsToQuery = ids.slice().map(String)
+    const recordsInStore = this.getAll(type, options).filter((record) =>
+      idsToQuery.includes(String(record.id))
+    )
 
-    if (fromServer === false) {
-      return this.getAll(type).filter((record) =>
-        idsToQuery.includes(record.id)
-      )
+    if (recordsInStore.length === idsToQuery.length) {
+      return recordsInStore
     }
 
-    let recordsInStore = []
-
-    if (fromServer !== true) {
-      recordsInStore = this.getRecords(type).filter((record) =>
-        idsToQuery.includes(record.id)
-      )
-
-      if (recordsInStore.length === idsToQuery.length) {
-        return recordsInStore
-      }
-
-      const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
-      idsToQuery = idsToQuery.filter((id) => !recordIdsInStore.includes(id))
-    }
+    const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
+    idsToQuery = idsToQuery.filter((id) => !recordIdsInStore.includes(id))
 
     const queryParams = options.queryParams || {}
     queryParams.filter = queryParams.filter || {}
@@ -462,7 +407,6 @@ class Store {
    * Finds all records of the given `type`.
    * If all records are in the store, it returns those.
    * Otherwise, it fetches all records from the server.
-   * Deprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.
    *
    *   store.findAll('todos')
    *   // fetch triggered
@@ -494,29 +438,15 @@ class Store {
    *
    * @method findAll
    * @param {String} type the type to find
-   * @param {Object} options { fromServer, queryParams }
+   * @param {Object} options { queryParams }
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   findAll = (type, options = {}) => {
-    const { fromServer } = options
-    if ([true, false].includes(fromServer)) {
-      console.warn(
-        'DeprecationWarning: using `fromServer` options is deprecated and will be removed - use getAll, fetchAll, or findAll.'
-      )
-    }
-
-    if (fromServer === true) {
-      return this.fetchAll(type, options)
-    } else if (fromServer === false) {
-      const records = this.getAll(type, options) || []
+    const records = this.getAll(type, options)
+    if (records.length > 0) {
       return records
     } else {
-      const records = this.getAll(type, options)
-      if (records.length > 0) {
-        return Promise.resolve(records)
-      } else {
-        return this.fetchAll(type, options)
-      }
+      return this.fetchAll(type, options)
     }
   }
 
