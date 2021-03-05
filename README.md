@@ -217,19 +217,6 @@ await store.fetchMany(MODEL_TYPE, OPTIONS)
 await store.findMany(MODEL_TYPE, OPTIONS)
 ```
 
-#### `fromServer` option
-
-DEPRECATION WARNING: the fromServer option is deprecated and will be removed in favor of using get, fetch, and find methods.
-Currently you can still pass this in for `Store#findOne`, `Store#findMany`, `Store#findAll` methods.
-
-Passing `fromServer: true` will force requests to fetch data from the server (and break the cache).
-Passing `fromServer: false` will prevent requests from being made and only return data on client-side.
-A promise will always be returned.
-
-```JavaScript
-await store.findAll('todos', { fromServer: true })
-```
-
 #### `queryParams` options
 
 `mobx-async-store` builds queries that are `JSON::API` compliant. Requests are cached from the previous call - including any `queryParams` given.

@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.5.1"
+        "version": "3.6.0"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -946,7 +946,7 @@
         {
             "file": "src/Store.js",
             "line": 214,
-            "description": "Finds a record by `id`.\nIf available in the store, it returns that record. Otherwise, it fetches the record from the server.\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n  store.findOne('todos', 5)\n  // no fetch triggered\n  => event1\n\nDeprecated: Passing `fromServer` as an option will always trigger a fetch if `true` and never trigger a fetch if `false`.\nOtherwise, it will trigger the default behavior\n\n  store.findOne('todos', 5, { fromServer: false })\n  // no fetch triggered\n  => undefined\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n\n  store.findOne('todos', 5, { fromServer: true })\n  // fetch triggered\n  => event1",
+            "description": "Finds a record by `id`.\nIf available in the store, it returns that record. Otherwise, it fetches the record from the server.\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n  store.findOne('todos', 5)\n  // no fetch triggered\n  => event1",
             "itemtype": "method",
             "name": "findOne",
             "params": [
@@ -962,19 +962,19 @@
                 },
                 {
                     "name": "options",
-                    "description": "{ fromServer, queryParams }",
+                    "description": "{ queryParams }",
                     "type": "Object"
                 }
             ],
             "return": {
-                "description": "record",
-                "type": "Object"
+                "description": "// TODO: make this always return a Promise",
+                "type": "Promise||Object"
             },
             "class": "Store"
         },
         {
             "file": "src/Store.js",
-            "line": 268,
+            "line": 240,
             "description": "Get all records with the given `type` and `ids` from the store. This will never fetch from the server.",
             "itemtype": "method",
             "name": "getMany",
@@ -1003,7 +1003,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 284,
+            "line": 256,
             "description": "Fetch all records with the given `type` and `ids` from the server.",
             "itemtype": "method",
             "name": "fetchMany",
@@ -1032,8 +1032,8 @@
         },
         {
             "file": "src/Store.js",
-            "line": 310,
-            "description": "Finds multiple records of the given `type` with the given `ids`.\nIf all records are in the store, it returns those.\nIf some records are in the store, it returns those plus fetches all other records.\nOtherwise, it fetches all records from the server.\nDeprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.\n\n  store.findMany('todos', [1, 2, 3])\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findMany('todos', [3, 2, 1])\n  // no fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findMany('todos', [1, 2, 3, 4], { fromServer: false })\n  // no fetch triggered, only returns the records already in the store\n  => [todo1, todo2, todo3]\n\n  store.findMany('todos', [1, 2, 3, 4], { fromServer: true })\n  // fetch triggered\n  => [todo1, todo2, todo3, event4]",
+            "line": 282,
+            "description": "Finds multiple records of the given `type` with the given `ids` and returns them wrapped in a Promise.\nIf all records are in the store, it returns those.\nIf some records are in the store, it returns those plus fetches all other records.\nOtherwise, it fetches all records from the server.\n\n  store.findMany('todos', [1, 2, 3])\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findMany('todos', [3, 2, 1])\n  // no fetch triggered\n  => [todo1, todo2, todo3]",
             "itemtype": "method",
             "name": "findMany",
             "params": [
@@ -1049,19 +1049,19 @@
                 },
                 {
                     "name": "options",
-                    "description": "{ fromServer, queryParams }",
+                    "description": "{ queryParams }",
                     "type": "Object"
                 }
             ],
             "return": {
-                "description": "Promise.resolve(records) or Promise.reject(status)",
-                "type": "Promise"
+                "description": "// TODO: make this always return a Promise",
+                "type": "Promise||Object"
             },
             "class": "Store"
         },
         {
             "file": "src/Store.js",
-            "line": 387,
+            "line": 332,
             "description": "Builds fetch url based",
             "itemtype": "method",
             "name": "fetchUrl",
@@ -1081,7 +1081,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 401,
+            "line": 346,
             "description": "Gets all records with the given `type` from the store. This will never fetch from the server.",
             "itemtype": "method",
             "name": "getAll",
@@ -1105,7 +1105,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 418,
+            "line": 363,
             "description": "Finds all records with the given `type`. Always fetches from the server.",
             "async": 1,
             "itemtype": "method",
@@ -1130,8 +1130,8 @@
         },
         {
             "file": "src/Store.js",
-            "line": 461,
-            "description": "Finds all records of the given `type`.\nIf all records are in the store, it returns those.\nOtherwise, it fetches all records from the server.\nDeprecated: Passing `fromServer` as an option will fetch all records from the server if `true` and never fetch from the server if `false`.\n\n  store.findAll('todos')\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findAll('todos')\n  // no fetch triggered\n  => [todo1, todo2, todo3]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result.\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })\n\n\nNOTE: A broader RFC is in development to improve how we keep data in sync\nwith the server. We likely will want to getAll and getRecords\nto return null if nothing is found. However, this causes several regressions\nin portal we will need to address in a larger PR for mobx-async-store updates.",
+            "line": 406,
+            "description": "Finds all records of the given `type`.\nIf all records are in the store, it returns those.\nOtherwise, it fetches all records from the server.\n\n  store.findAll('todos')\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findAll('todos')\n  // no fetch triggered\n  => [todo1, todo2, todo3]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result.\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })\n\n\nNOTE: A broader RFC is in development to improve how we keep data in sync\nwith the server. We likely will want to getAll and getRecords\nto return null if nothing is found. However, this causes several regressions\nin portal we will need to address in a larger PR for mobx-async-store updates.",
             "itemtype": "method",
             "name": "findAll",
             "params": [
@@ -1142,7 +1142,7 @@
                 },
                 {
                     "name": "options",
-                    "description": "{ fromServer, queryParams }",
+                    "description": "{ queryParams }",
                     "type": "Object"
                 }
             ],
@@ -1154,7 +1154,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 523,
+            "line": 453,
             "description": "Clears the store of a given type, or clears all if no type given\n\n  store.reset('todos')\n  // removes all todos from store\n  store.reset()\n  // clears store",
             "itemtype": "method",
             "name": "reset",
@@ -1162,7 +1162,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 546,
+            "line": 476,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "init",
@@ -1177,7 +1177,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 558,
+            "line": 488,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1192,7 +1192,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 569,
+            "line": 499,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1207,7 +1207,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 583,
+            "line": 513,
             "description": "Creates an obserable index with model types\nas the primary key\n\nObservable({ todos: {} })",
             "itemtype": "method",
             "name": "initializeObservableDataProperty",
@@ -1215,7 +1215,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 604,
+            "line": 534,
             "description": "Wrapper around fetch applies user defined fetch options",
             "itemtype": "method",
             "name": "fetch",
@@ -1235,7 +1235,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 621,
+            "line": 551,
             "description": "Gets type of collection from data observable",
             "itemtype": "method",
             "name": "getType",
@@ -1254,7 +1254,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 632,
+            "line": 562,
             "description": "Gets individual record from store",
             "itemtype": "method",
             "name": "getRecord",
@@ -1278,7 +1278,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 652,
+            "line": 582,
             "description": "Gets records for type of collection from observable\n\nNOTE: We only return records by unique id, this handles a scenario\nwhere the store keeps around a reference to a newly persisted record by its temp uuid.\nWe can't simply remove the temp uuid reference because other\nrelated models may be still using the temp uuid in their relationships\ndata object. However, when we are listing out records we want them\nto be unique by the persisted id (which is updated after a Model.save)",
             "itemtype": "method",
             "name": "getRecords",
@@ -1297,7 +1297,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 673,
+            "line": 603,
             "description": "Get multiple records by id",
             "itemtype": "method",
             "name": "getRecordsById",
@@ -1321,7 +1321,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 689,
+            "line": 619,
             "description": "Gets single from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecord",
@@ -1349,7 +1349,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 704,
+            "line": 634,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecords",
@@ -1378,7 +1378,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 722,
+            "line": 652,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedIds",
@@ -1402,7 +1402,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 737,
+            "line": 667,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedId",
@@ -1426,7 +1426,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 749,
+            "line": 679,
             "description": "Helper to look up model class for type.",
             "itemtype": "method",
             "name": "getKlass",
@@ -1445,7 +1445,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 760,
+            "line": 690,
             "description": "Creates or updates a model",
             "itemtype": "method",
             "name": "createOrUpdateModel",
@@ -1460,7 +1460,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 799,
+            "line": 729,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1475,7 +1475,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 818,
+            "line": 748,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1504,7 +1504,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 839,
+            "line": 769,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",
