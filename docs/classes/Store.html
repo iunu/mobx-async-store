@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.5.1</em>
+            <em>API Docs for: 3.6.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -776,7 +776,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l818"><code>src&#x2F;Store.js:818</code></a>
+        <a href="../files/src_Store.js.html#l748"><code>src&#x2F;Store.js:748</code></a>
         </p>
 
 
@@ -858,7 +858,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l799"><code>src&#x2F;Store.js:799</code></a>
+        <a href="../files/src_Store.js.html#l729"><code>src&#x2F;Store.js:729</code></a>
         </p>
 
 
@@ -911,7 +911,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l760"><code>src&#x2F;Store.js:760</code></a>
+        <a href="../files/src_Store.js.html#l690"><code>src&#x2F;Store.js:690</code></a>
         </p>
 
 
@@ -967,7 +967,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l604"><code>src&#x2F;Store.js:604</code></a>
+        <a href="../files/src_Store.js.html#l534"><code>src&#x2F;Store.js:534</code></a>
         </p>
 
 
@@ -1037,7 +1037,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l418"><code>src&#x2F;Store.js:418</code></a>
+        <a href="../files/src_Store.js.html#l363"><code>src&#x2F;Store.js:363</code></a>
         </p>
 
 
@@ -1119,7 +1119,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l284"><code>src&#x2F;Store.js:284</code></a>
+        <a href="../files/src_Store.js.html#l256"><code>src&#x2F;Store.js:256</code></a>
         </p>
 
 
@@ -1302,7 +1302,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l387"><code>src&#x2F;Store.js:387</code></a>
+        <a href="../files/src_Store.js.html#l332"><code>src&#x2F;Store.js:332</code></a>
         </p>
 
 
@@ -1372,7 +1372,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l461"><code>src&#x2F;Store.js:461</code></a>
+        <a href="../files/src_Store.js.html#l406"><code>src&#x2F;Store.js:406</code></a>
         </p>
 
 
@@ -1382,8 +1382,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="description">
         <p>Finds all records of the given <code>type</code>.
 If all records are in the store, it returns those.
-Otherwise, it fetches all records from the server.
-Deprecated: Passing <code>fromServer</code> as an option will fetch all records from the server if <code>true</code> and never fetch from the server if <code>false</code>.</p>
+Otherwise, it fetches all records from the server.</p>
 <p>store.findAll('todos')
 // fetch triggered
 =&gt; [todo1, todo2, todo3]</p>
@@ -1430,7 +1429,7 @@ in portal we will need to address in a larger PR for mobx-async-store updates.</
 
 
                     <div class="param-description">
-                        <p>{ fromServer, queryParams }</p>
+                        <p>{ queryParams }</p>
 
                     </div>
 
@@ -1468,7 +1467,7 @@ in portal we will need to address in a larger PR for mobx-async-store updates.</
         </div>
 
         <span class="returns-inline">
-            <span class="type">Promise</span>
+            <span class="type">Promise |  | Object</span>
         </span>
 
 
@@ -1480,7 +1479,7 @@ in portal we will need to address in a larger PR for mobx-async-store updates.</
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l310"><code>src&#x2F;Store.js:310</code></a>
+        <a href="../files/src_Store.js.html#l282"><code>src&#x2F;Store.js:282</code></a>
         </p>
 
 
@@ -1488,23 +1487,16 @@ in portal we will need to address in a larger PR for mobx-async-store updates.</
     </div>
 
     <div class="description">
-        <p>Finds multiple records of the given <code>type</code> with the given <code>ids</code>.
+        <p>Finds multiple records of the given <code>type</code> with the given <code>ids</code> and returns them wrapped in a Promise.
 If all records are in the store, it returns those.
 If some records are in the store, it returns those plus fetches all other records.
-Otherwise, it fetches all records from the server.
-Deprecated: Passing <code>fromServer</code> as an option will fetch all records from the server if <code>true</code> and never fetch from the server if <code>false</code>.</p>
+Otherwise, it fetches all records from the server.</p>
 <p>store.findMany('todos', [1, 2, 3])
 // fetch triggered
 =&gt; [todo1, todo2, todo3]</p>
 <p>store.findMany('todos', [3, 2, 1])
 // no fetch triggered
 =&gt; [todo1, todo2, todo3]</p>
-<p>store.findMany('todos', [1, 2, 3, 4], { fromServer: false })
-// no fetch triggered, only returns the records already in the store
-=&gt; [todo1, todo2, todo3]</p>
-<p>store.findMany('todos', [1, 2, 3, 4], { fromServer: true })
-// fetch triggered
-=&gt; [todo1, todo2, todo3, event4]</p>
 
     </div>
 
@@ -1540,7 +1532,7 @@ Deprecated: Passing <code>fromServer</code> as an option will fetch all records 
 
 
                     <div class="param-description">
-                        <p>{ fromServer, queryParams }</p>
+                        <p>{ queryParams }</p>
 
                     </div>
 
@@ -1552,8 +1544,8 @@ Deprecated: Passing <code>fromServer</code> as an option will fetch all records 
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                        <span class="type">Promise</span>:
-                    <p>Promise.resolve(records) or Promise.reject(status)</p>
+                        <span class="type">Promise |  | Object</span>:
+                    <p>// TODO: make this always return a Promise</p>
 
             </div>
         </div>
@@ -1578,7 +1570,7 @@ Deprecated: Passing <code>fromServer</code> as an option will fetch all records 
         </div>
 
         <span class="returns-inline">
-            <span class="type">Object</span>
+            <span class="type">Promise |  | Object</span>
         </span>
 
 
@@ -1605,17 +1597,6 @@ If available in the store, it returns that record. Otherwise, it fetches the rec
 =&gt; event1
 store.findOne('todos', 5)
 // no fetch triggered
-=&gt; event1</p>
-<p>Deprecated: Passing <code>fromServer</code> as an option will always trigger a fetch if <code>true</code> and never trigger a fetch if <code>false</code>.
-Otherwise, it will trigger the default behavior</p>
-<p>store.findOne('todos', 5, { fromServer: false })
-// no fetch triggered
-=&gt; undefined</p>
-<p>store.findOne('todos', 5)
-// fetch triggered
-=&gt; event1</p>
-<p>store.findOne('todos', 5, { fromServer: true })
-// fetch triggered
 =&gt; event1</p>
 
     </div>
@@ -1652,7 +1633,7 @@ Otherwise, it will trigger the default behavior</p>
 
 
                     <div class="param-description">
-                        <p>{ fromServer, queryParams }</p>
+                        <p>{ queryParams }</p>
 
                     </div>
 
@@ -1664,8 +1645,8 @@ Otherwise, it will trigger the default behavior</p>
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                        <span class="type">Object</span>:
-                    <p>record</p>
+                        <span class="type">Promise |  | Object</span>:
+                    <p>// TODO: make this always return a Promise</p>
 
             </div>
         </div>
@@ -1699,7 +1680,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l401"><code>src&#x2F;Store.js:401</code></a>
+        <a href="../files/src_Store.js.html#l346"><code>src&#x2F;Store.js:346</code></a>
         </p>
 
 
@@ -1778,7 +1759,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l737"><code>src&#x2F;Store.js:737</code></a>
+        <a href="../files/src_Store.js.html#l667"><code>src&#x2F;Store.js:667</code></a>
         </p>
 
 
@@ -1856,7 +1837,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l722"><code>src&#x2F;Store.js:722</code></a>
+        <a href="../files/src_Store.js.html#l652"><code>src&#x2F;Store.js:652</code></a>
         </p>
 
 
@@ -1937,7 +1918,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l689"><code>src&#x2F;Store.js:689</code></a>
+        <a href="../files/src_Store.js.html#l619"><code>src&#x2F;Store.js:619</code></a>
         </p>
 
 
@@ -2028,7 +2009,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l704"><code>src&#x2F;Store.js:704</code></a>
+        <a href="../files/src_Store.js.html#l634"><code>src&#x2F;Store.js:634</code></a>
         </p>
 
 
@@ -2115,7 +2096,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l749"><code>src&#x2F;Store.js:749</code></a>
+        <a href="../files/src_Store.js.html#l679"><code>src&#x2F;Store.js:679</code></a>
         </p>
 
 
@@ -2186,7 +2167,7 @@ Otherwise, it will trigger the default behavior</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l268"><code>src&#x2F;Store.js:268</code></a>
+        <a href="../files/src_Store.js.html#l240"><code>src&#x2F;Store.js:240</code></a>
         </p>
 
 
@@ -2372,7 +2353,7 @@ If given queryParams, it will check the cache for the record.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l632"><code>src&#x2F;Store.js:632</code></a>
+        <a href="../files/src_Store.js.html#l562"><code>src&#x2F;Store.js:562</code></a>
         </p>
 
 
@@ -2447,7 +2428,7 @@ If given queryParams, it will check the cache for the record.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l652"><code>src&#x2F;Store.js:652</code></a>
+        <a href="../files/src_Store.js.html#l582"><code>src&#x2F;Store.js:582</code></a>
         </p>
 
 
@@ -2521,7 +2502,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l673"><code>src&#x2F;Store.js:673</code></a>
+        <a href="../files/src_Store.js.html#l603"><code>src&#x2F;Store.js:603</code></a>
         </p>
 
 
@@ -2596,7 +2577,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l621"><code>src&#x2F;Store.js:621</code></a>
+        <a href="../files/src_Store.js.html#l551"><code>src&#x2F;Store.js:551</code></a>
         </p>
 
 
@@ -2658,7 +2639,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l546"><code>src&#x2F;Store.js:546</code></a>
+        <a href="../files/src_Store.js.html#l476"><code>src&#x2F;Store.js:476</code></a>
         </p>
 
 
@@ -2712,7 +2693,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l569"><code>src&#x2F;Store.js:569</code></a>
+        <a href="../files/src_Store.js.html#l488"><code>src&#x2F;Store.js:488</code></a>
         </p>
 
 
@@ -2766,7 +2747,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l558"><code>src&#x2F;Store.js:558</code></a>
+        <a href="../files/src_Store.js.html#l499"><code>src&#x2F;Store.js:499</code></a>
         </p>
 
 
@@ -2814,7 +2795,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l583"><code>src&#x2F;Store.js:583</code></a>
+        <a href="../files/src_Store.js.html#l513"><code>src&#x2F;Store.js:513</code></a>
         </p>
 
 
@@ -2916,7 +2897,7 @@ in mobx.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l523"><code>src&#x2F;Store.js:523</code></a>
+        <a href="../files/src_Store.js.html#l453"><code>src&#x2F;Store.js:453</code></a>
         </p>
 
 
@@ -2960,7 +2941,7 @@ store.reset()
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l839"><code>src&#x2F;Store.js:839</code></a>
+        <a href="../files/src_Store.js.html#l769"><code>src&#x2F;Store.js:769</code></a>
         </p>
 
 

@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.5.1</em>
+            <em>API Docs for: 3.6.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -307,41 +307,13 @@ class Store {
    *   // no fetch triggered
    *   =&gt; event1
    *
-   * Deprecated: Passing &#x60;fromServer&#x60; as an option will always trigger a fetch if &#x60;true&#x60; and never trigger a fetch if &#x60;false&#x60;.
-   * Otherwise, it will trigger the default behavior
-   *
-   *   store.findOne(&#x27;todos&#x27;, 5, { fromServer: false })
-   *   // no fetch triggered
-   *   =&gt; undefined
-   *
-   *   store.findOne(&#x27;todos&#x27;, 5)
-   *   // fetch triggered
-   *   =&gt; event1
-   *
-   *   store.findOne(&#x27;todos&#x27;, 5, { fromServer: true })
-   *   // fetch triggered
-   *   =&gt; event1
-   *
    * @method findOne
    * @param {String} type the type to find
    * @param {String} id the id of the record to find
-   * @param {Object} options { fromServer, queryParams }
-   * @return {Object} record
+   * @param {Object} options { queryParams }
+   * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findOne = (type, id, options = {}) =&gt; {
-    const { fromServer } = options
-    if ([true, false].includes(fromServer)) {
-      console.warn(
-        &#x27;DeprecationWarning: using &#x60;fromServer&#x60; options is deprecated and will be removed - use getOne, fetchOne, or findOne.&#x27;
-      )
-    }
-
-    if (fromServer === true) {
-      return this.fetchOne(type, id, options)
-    } else if (fromServer === false) {
-      return this.getOne(type, id, options)
-    }
-
     const record = this.getOne(type, id, options)
     if (record?.id) {
       return record
@@ -392,12 +364,11 @@ class Store {
       .catch(err =&gt; Promise.reject(err))
   }
 
-  /**
-   * Finds multiple records of the given &#x60;type&#x60; with the given &#x60;ids&#x60;.
+ /**
+   * Finds multiple records of the given &#x60;type&#x60; with the given &#x60;ids&#x60; and returns them wrapped in a Promise.
    * If all records are in the store, it returns those.
    * If some records are in the store, it returns those plus fetches all other records.
    * Otherwise, it fetches all records from the server.
-   * Deprecated: Passing &#x60;fromServer&#x60; as an option will fetch all records from the server if &#x60;true&#x60; and never fetch from the server if &#x60;false&#x60;.
    *
    *   store.findMany(&#x27;todos&#x27;, [1, 2, 3])
    *   // fetch triggered
@@ -407,50 +378,24 @@ class Store {
    *   // no fetch triggered
    *   =&gt; [todo1, todo2, todo3]
    *
-   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3, 4], { fromServer: false })
-   *   // no fetch triggered, only returns the records already in the store
-   *   =&gt; [todo1, todo2, todo3]
-
-   *   store.findMany(&#x27;todos&#x27;, [1, 2, 3, 4], { fromServer: true })
-   *   // fetch triggered
-   *   =&gt; [todo1, todo2, todo3, event4]
-   *
    * @method findMany
    * @param {String} type the type to find
    * @param {String} ids the ids of the records to find
-   * @param {Object} options { fromServer, queryParams }
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @param {Object} options { queryParams }
+   * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findMany = (type, ids, options = {}) =&gt; {
-    const { fromServer } = options
-    if ([true, false].includes(fromServer)) {
-      console.warn(
-        &#x27;DeprecationWarning: using &#x60;fromServer&#x60; options is deprecated and will be removed - use getMany, fetchMany, or findMany.&#x27;
-      )
-    }
-
     let idsToQuery = ids.slice().map(String)
+    const recordsInStore = this.getAll(type, options).filter((record) =&gt;
+      idsToQuery.includes(String(record.id))
+    )
 
-    if (fromServer === false) {
-      return this.getAll(type).filter((record) =&gt;
-        idsToQuery.includes(record.id)
-      )
+    if (recordsInStore.length === idsToQuery.length) {
+      return recordsInStore
     }
 
-    let recordsInStore = []
-
-    if (fromServer !== true) {
-      recordsInStore = this.getRecords(type).filter((record) =&gt;
-        idsToQuery.includes(record.id)
-      )
-
-      if (recordsInStore.length === idsToQuery.length) {
-        return recordsInStore
-      }
-
-      const recordIdsInStore = recordsInStore.map(({ id }) =&gt; String(id))
-      idsToQuery = idsToQuery.filter((id) =&gt; !recordIdsInStore.includes(id))
-    }
+    const recordIdsInStore = recordsInStore.map(({ id }) =&gt; String(id))
+    idsToQuery = idsToQuery.filter((id) =&gt; !recordIdsInStore.includes(id))
 
     const queryParams = options.queryParams || {}
     queryParams.filter = queryParams.filter || {}
@@ -547,7 +492,6 @@ class Store {
    * Finds all records of the given &#x60;type&#x60;.
    * If all records are in the store, it returns those.
    * Otherwise, it fetches all records from the server.
-   * Deprecated: Passing &#x60;fromServer&#x60; as an option will fetch all records from the server if &#x60;true&#x60; and never fetch from the server if &#x60;false&#x60;.
    *
    *   store.findAll(&#x27;todos&#x27;)
    *   // fetch triggered
@@ -579,29 +523,15 @@ class Store {
    *
    * @method findAll
    * @param {String} type the type to find
-   * @param {Object} options { fromServer, queryParams }
+   * @param {Object} options { queryParams }
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   findAll = (type, options = {}) =&gt; {
-    const { fromServer } = options
-    if ([true, false].includes(fromServer)) {
-      console.warn(
-        &#x27;DeprecationWarning: using &#x60;fromServer&#x60; options is deprecated and will be removed - use getAll, fetchAll, or findAll.&#x27;
-      )
-    }
-
-    if (fromServer === true) {
-      return this.fetchAll(type, options)
-    } else if (fromServer === false) {
-      const records = this.getAll(type, options) || []
+    const records = this.getAll(type, options)
+    if (records.length &gt; 0) {
       return records
     } else {
-      const records = this.getAll(type, options)
-      if (records.length &gt; 0) {
-        return Promise.resolve(records)
-      } else {
-        return this.fetchAll(type, options)
-      }
+      return this.fetchAll(type, options)
     }
   }
 
