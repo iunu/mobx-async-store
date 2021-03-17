@@ -8,6 +8,7 @@ import {
   requestUrl,
   uniqueBy
 } from './utils'
+import schema from './schema'
 
 /**
  * Defines the Artemis Data Store class.
@@ -35,6 +36,7 @@ class Store {
    */
   constructor (options) {
     this.init(options)
+    this.schema = schema
   }
 
   /**

@@ -6,6 +6,7 @@ import {
   relatedToOne
 } from '../src/main'
 import { isObservable, toJS } from 'mobx'
+import { Schema } from '../src/schema'
 
 import { URL_MAX_LENGTH } from '../src/utils'
 
@@ -138,6 +139,10 @@ describe('Store', () => {
   beforeEach(() => {
     fetch.resetMocks()
     store.reset()
+  })
+
+  it('has a reference to the schema object', () => {
+    expect(store.schema).toBeInstanceOf(Schema)
   })
 
   it('has observable data property', () => {

@@ -4,7 +4,7 @@
  *
  * @class Schema
  */
-class Schema {
+export class Schema {
   structure = {}
   relations = {}
 

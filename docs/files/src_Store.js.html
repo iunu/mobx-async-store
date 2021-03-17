@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.6.0</em>
+            <em>API Docs for: 3.6.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -93,6 +93,7 @@ import {
   requestUrl,
   uniqueBy
 } from &#x27;./utils&#x27;
+import schema from &#x27;./schema&#x27;
 
 /**
  * Defines the Artemis Data Store class.
@@ -120,6 +121,7 @@ class Store {
    */
   constructor (options) {
     this.init(options)
+    this.schema = schema
   }
 
   /**
