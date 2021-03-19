@@ -360,7 +360,6 @@ var Schema = /*#__PURE__*/function () {
 
   return Schema;
 }();
-
 var schema = new Schema();
 
 var _class, _descriptor, _temp;
@@ -1545,6 +1544,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     };
 
     this.init(_options);
+    this.schema = schema;
   }
   /**
    * Adds an instance or an array of instances to the store.
