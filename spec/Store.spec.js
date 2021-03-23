@@ -70,7 +70,6 @@ const mockTodoData = {
     id: '1',
     type: 'todos',
     attributes: {
-      id: '1',
       title: 'Do taxes'
     }
   }
@@ -81,7 +80,6 @@ const mockTodoData2 = {
     id: '2',
     type: 'todos',
     attributes: {
-      id: '2',
       title: 'Sort pills'
     }
   }
@@ -826,12 +824,16 @@ describe('Store', () => {
 
   describe('fetchAll', () => {
     it('always fetches the records with the given type from the server', async () => {
-      expect.assertions(5)
+      expect.assertions(7)
       fetch.mockResponse(mockAllTodosResponse)
       const todos = await store.fetchAll('todos')
+
       expect(todos).toHaveLength(2)
       expect(todos[0].title).toBe('Do taxes')
+      expect(todos[0].id).toBe('1')
       expect(todos[1].title).toBe('Sort pills')
+      expect(todos[1].id).toBe('2')
+
       expect(fetch.mock.calls).toHaveLength(1)
       expect(fetch.mock.calls[0][0]).toEqual('/example_api/todos')
     })
