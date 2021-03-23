@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.6.1</em>
+            <em>API Docs for: 3.6.3</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -457,7 +457,6 @@ class Store {
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   async fetchAll (type, options = {}) {
-    const store = this
     const { queryParams } = options
     const url = this.fetchUrl(type, queryParams)
     const response = await this.fetch(url, { method: &#x27;GET&#x27; })
@@ -473,12 +472,7 @@ class Store {
       return transaction(() =&gt;
         json.data.map((dataObject) =&gt; {
           const { id, attributes = {}, relationships = {} } = dataObject
-          const ModelKlass = this.modelTypeIndex[type]
-          const record = new ModelKlass({
-            store,
-            relationships,
-            ...attributes
-          })
+          const record = this.createModel(type, id, { attributes, relationships })
           const cachedIds = this.data[type].cache.get(url)
           this.data[type].cache.set(url, [...cachedIds, id])
           this.data[type].records.set(String(id), record)

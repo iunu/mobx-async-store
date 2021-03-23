@@ -1703,7 +1703,6 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
         var _this2 = this;
 
         var options,
-            store,
             queryParams,
             url,
             response,
@@ -1714,27 +1713,26 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
             switch (_context3.prev = _context3.next) {
               case 0:
                 options = _args3.length > 1 && _args3[1] !== undefined ? _args3[1] : {};
-                store = this;
                 queryParams = options.queryParams;
                 url = this.fetchUrl(type, queryParams);
-                _context3.next = 6;
+                _context3.next = 5;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
-              case 6:
+              case 5:
                 response = _context3.sent;
 
                 if (!(response.status === 200)) {
-                  _context3.next = 16;
+                  _context3.next = 15;
                   break;
                 }
 
                 this.data[type].cache.set(url, []);
-                _context3.next = 11;
+                _context3.next = 10;
                 return response.json();
 
-              case 11:
+              case 10:
                 json = _context3.sent;
 
                 if (json.included) {
@@ -1748,11 +1746,11 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                         attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
                         _dataObject$relations = dataObject.relationships,
                         relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
-                    var ModelKlass = _this2.modelTypeIndex[type];
-                    var record = new ModelKlass(_objectSpread$1({
-                      store: store,
+
+                    var record = _this2.createModel(type, id, {
+                      attributes: attributes,
                       relationships: relationships
-                    }, attributes));
+                    });
 
                     var cachedIds = _this2.data[type].cache.get(url);
 
@@ -1764,10 +1762,10 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   });
                 }));
 
-              case 16:
+              case 15:
                 return _context3.abrupt("return", Promise.reject(response.status));
 
-              case 17:
+              case 16:
               case "end":
                 return _context3.stop();
             }
