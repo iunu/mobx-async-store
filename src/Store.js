@@ -372,7 +372,6 @@ class Store {
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   async fetchAll (type, options = {}) {
-    const store = this
     const { queryParams } = options
     const url = this.fetchUrl(type, queryParams)
     const response = await this.fetch(url, { method: 'GET' })
@@ -388,12 +387,7 @@ class Store {
       return transaction(() =>
         json.data.map((dataObject) => {
           const { id, attributes = {}, relationships = {} } = dataObject
-          const ModelKlass = this.modelTypeIndex[type]
-          const record = new ModelKlass({
-            store,
-            relationships,
-            ...attributes
-          })
+          const record = this.createModel(type, id, { attributes, relationships })
           const cachedIds = this.data[type].cache.get(url)
           this.data[type].cache.set(url, [...cachedIds, id])
           this.data[type].records.set(String(id), record)
