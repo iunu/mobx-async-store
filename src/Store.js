@@ -73,7 +73,7 @@ class Store {
    * @method pickAttributes
    * @param {Object} properties
    * @param {String} type
-   * @returns {Object}
+   * @return {Object}
    */
   pickAttributes = (properties, type) => {
     const attributeNames = Object.keys(this.schema.structure[type])
@@ -98,7 +98,7 @@ class Store {
    * @method pickRelationships
    * @param {Object} properties
    * @param {String} type
-   * @returns {Object}
+   * @return {Object}
    */
   pickRelationships = (properties, type) => {
     const relationshipNames = Object.keys(this.schema.relations[type] || {})

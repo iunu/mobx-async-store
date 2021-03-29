@@ -1508,7 +1508,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 792,
+            "line": 793,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1523,7 +1523,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 811,
+            "line": 812,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1552,7 +1552,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 832,
+            "line": 833,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",
@@ -1793,14 +1793,5 @@
             "class": ""
         }
     ],
-    "warnings": [
-        {
-            "message": "replacing incorrect tag: returns with return",
-            "line": " src/Store.js:65"
-        },
-        {
-            "message": "replacing incorrect tag: returns with return",
-            "line": " src/Store.js:83"
-        }
-    ]
+    "warnings": []
 }

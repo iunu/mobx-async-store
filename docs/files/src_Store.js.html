@@ -158,7 +158,7 @@ class Store {
    * @method pickAttributes
    * @param {Object} properties
    * @param {String} type
-   * @returns {Object}
+   * @return {Object}
    */
   pickAttributes = (properties, type) =&gt; {
     const attributeNames = Object.keys(this.schema.structure[type])
@@ -183,10 +183,10 @@ class Store {
    * @method pickRelationships
    * @param {Object} properties
    * @param {String} type
-   * @returns {Object}
+   * @return {Object}
    */
   pickRelationships = (properties, type) =&gt; {
-    const relationshipNames = Object.keys(this.schema.relations[type])
+    const relationshipNames = Object.keys(this.schema.relations[type] || {})
     const allRelationships = pick(properties, relationshipNames)
 
     return Object.keys(allRelationships).reduce((references, key) =&gt; {
@@ -853,6 +853,7 @@ class Store {
       })
 
       // If relationships are present, update relationships
+      // TODO: relationships will always be truthy since we&#x27;ve defined a default above.
       if (relationships) {
         Object.keys(relationships).forEach((key) =&gt; {
           // Don&#x27;t try to create relationship if meta included false
