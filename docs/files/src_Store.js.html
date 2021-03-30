@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.6.3</em>
+            <em>API Docs for: 3.6.4</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -85,9 +85,11 @@
     <pre class="code prettyprint linenums">
 /* global fetch */
 import { action, observable, set, toJS, transaction } from &#x27;mobx&#x27;
+import pick from &#x27;lodash/pick&#x27;
+
 import {
   combineRacedRequests,
-  dbOrNewId,
+  idOrNewId,
   deriveIdQueryStrings,
   parseErrorPointer,
   requestUrl,
@@ -146,7 +148,66 @@ class Store {
   }
 
   /**
+   * Given a set of properties and type, returns an object with only the properties
+   * that are defined as attributes in the schema for that type.
+   * &#x60;&#x60;&#x60;
+   * properties = { title: &#x27;Do laundry&#x27;, unrelatedProperty: &#x27;Do nothing&#x27; }
+   * pickAttributes(properties, &#x27;todos&#x27;)
+   * =&gt; { title: &#x27;Do laundry&#x27; }
+   * &#x60;&#x60;&#x60;
+   * @method pickAttributes
+   * @param {Object} properties
+   * @param {String} type
+   * @return {Object}
+   */
+  pickAttributes = (properties, type) =&gt; {
+    const attributeNames = Object.keys(this.schema.structure[type])
+    return pick(properties, attributeNames)
+  }
+
+  /**
+   * Given a set of properties and type, returns an object with only the properties
+   * that are defined as relationships in the schema for that type.
+   * &#x60;&#x60;&#x60;
+   * properties = { notes: [note1, note2], category: cat1, title: &#x27;Fold Laundry&#x27; }
+   * pickRelationships(properties, &#x27;todos&#x27;)
+   * =&gt; {
+   *       notes: {
+   *         data: [{ id: &#x27;1&#x27;, type: &#x27;notes&#x27; }, { id: &#x27;2&#x27;, type: &#x27;notes&#x27; }]
+   *       },
+   *       category: {
+   *         data: { id: &#x27;1&#x27;, type: &#x27;categories&#x27; }
+   *       }
+   *    }
+   * &#x60;&#x60;&#x60;
+   * @method pickRelationships
+   * @param {Object} properties
+   * @param {String} type
+   * @return {Object}
+   */
+  pickRelationships = (properties, type) =&gt; {
+    const relationshipNames = Object.keys(this.schema.relations[type] || {})
+    const allRelationships = pick(properties, relationshipNames)
+
+    return Object.keys(allRelationships).reduce((references, key) =&gt; {
+      const relatedModel = allRelationships[key]
+      let data
+      if (Array.isArray(relatedModel)) {
+        data = relatedModel.map((model) =&gt; ({
+          id: model.id,
+          type: model.type
+        }))
+      } else {
+        data = { id: relatedModel.id, type: relatedModel.type }
+      }
+      references[key] = { data }
+      return references
+    }, {})
+  }
+
+  /**
    * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.
+   * Does not support relationships, since they require references to objects in the store.
    * &#x60;&#x60;&#x60;
    * kpiHash = { name: &quot;A good thing to measure&quot; }
    * kpi = store.build(&#x27;kpis&#x27;, kpiHash)
@@ -158,8 +219,10 @@ class Store {
    * @param {Object} properties the properties to use
    * @return {Object} the new record
    */
-  build = (type, attributes) =&gt; {
-    const id = dbOrNewId(attributes)
+  build = (type, properties) =&gt; {
+    const id = idOrNewId(properties.id)
+
+    const attributes = this.pickAttributes(properties, type)
     const model = this.createModel(type, id, { attributes })
 
     return model
@@ -172,12 +235,16 @@ class Store {
    * @return {Object} Artemis Data record
    */
   @action
-  addModel = (type, attributes) =&gt; {
-    const id = dbOrNewId(attributes)
-    const model = this.createModel(type, id, { attributes })
+  addModel = (type, properties) =&gt; {
+    const id = idOrNewId(properties.id)
+
+    const attributes = this.pickAttributes(properties, type)
+    const relationships = this.pickRelationships(properties, type)
+
+    const model = this.createModel(type, id, { attributes, relationships })
 
     // Add the model to the type records index
-    this.data[type].records.set(String(id), model)
+    this.data[type].records.set(String(model.id), model)
 
     return model
   }
@@ -786,6 +853,7 @@ class Store {
       })
 
       // If relationships are present, update relationships
+      // TODO: relationships will always be truthy since we&#x27;ve defined a default above.
       if (relationships) {
         Object.keys(relationships).forEach((key) =&gt; {
           // Don&#x27;t try to create relationship if meta included false

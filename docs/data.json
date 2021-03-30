@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.6.3"
+        "version": "3.6.4"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -109,7 +109,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Store.js",
-            "line": 13,
+            "line": 15,
             "description": "Defines the Artemis Data Store class.",
             "is_constructor": 1
         },
@@ -729,7 +729,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 20,
+            "line": 22,
             "description": "Observable property used to store data and\nhandle changes to state",
             "itemtype": "property",
             "name": "data",
@@ -739,7 +739,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 32,
+            "line": 34,
             "description": "Initializer for Store class",
             "itemtype": "method",
             "name": "constructor",
@@ -747,7 +747,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 42,
+            "line": 44,
             "description": "Adds an instance or an array of instances to the store.\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.add('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "add",
@@ -771,8 +771,56 @@
         },
         {
             "file": "src/Store.js",
-            "line": 63,
-            "description": "Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.build('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
+            "line": 65,
+            "description": "Given a set of properties and type, returns an object with only the properties\nthat are defined as attributes in the schema for that type.\n```\nproperties = { title: 'Do laundry', unrelatedProperty: 'Do nothing' }\npickAttributes(properties, 'todos')\n=> { title: 'Do laundry' }\n```",
+            "itemtype": "method",
+            "name": "pickAttributes",
+            "params": [
+                {
+                    "name": "properties",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "type",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Object"
+            },
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 83,
+            "description": "Given a set of properties and type, returns an object with only the properties\nthat are defined as relationships in the schema for that type.\n```\nproperties = { notes: [note1, note2], category: cat1, title: 'Fold Laundry' }\npickRelationships(properties, 'todos')\n=> {\n      notes: {\n        data: [{ id: '1', type: 'notes' }, { id: '2', type: 'notes' }]\n      },\n      category: {\n        data: { id: '1', type: 'categories' }\n      }\n   }\n```",
+            "itemtype": "method",
+            "name": "pickRelationships",
+            "params": [
+                {
+                    "name": "properties",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "type",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Object"
+            },
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 123,
+            "description": "Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.\nDoes not support relationships, since they require references to objects in the store.\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.build('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "build",
             "params": [
@@ -795,7 +843,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 83,
+            "line": 146,
             "itemtype": "method",
             "name": "addModel",
             "params": [
@@ -818,7 +866,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 100,
+            "line": 167,
             "itemtype": "method",
             "name": "addModels",
             "params": [
@@ -841,7 +889,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 110,
+            "line": 177,
             "description": "Saves a collection of records via a bulk-supported JSONApi\nendpoint. All records need to be of the same type.",
             "itemtype": "method",
             "name": "bulkSave",
@@ -866,7 +914,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 150,
+            "line": 217,
             "description": "Adds a record from the store. We can't simply remove the record\nby deleting the records property/key via delete due to a bug\nin mobx.",
             "itemtype": "method",
             "name": "remove",
@@ -886,7 +934,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 164,
+            "line": 231,
             "description": "Gets a record from the store, will not fetch from the server if it doesn't exist in store.\nIf given queryParams, it will check the cache for the record.",
             "itemtype": "method",
             "name": "getOne",
@@ -915,7 +963,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 183,
+            "line": 250,
             "description": "Fetches record by `id` from the server and returns a Promise.",
             "async": 1,
             "itemtype": "method",
@@ -945,7 +993,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 216,
+            "line": 283,
             "description": "Finds a record by `id`.\nIf available in the store, it returns that record. Otherwise, it fetches the record from the server.\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n  store.findOne('todos', 5)\n  // no fetch triggered\n  => event1",
             "itemtype": "method",
             "name": "findOne",
@@ -974,7 +1022,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 242,
+            "line": 309,
             "description": "Get all records with the given `type` and `ids` from the store. This will never fetch from the server.",
             "itemtype": "method",
             "name": "getMany",
@@ -1003,7 +1051,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 258,
+            "line": 325,
             "description": "Fetch all records with the given `type` and `ids` from the server.",
             "itemtype": "method",
             "name": "fetchMany",
@@ -1032,7 +1080,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 284,
+            "line": 351,
             "description": "Finds multiple records of the given `type` with the given `ids` and returns them wrapped in a Promise.\nIf all records are in the store, it returns those.\nIf some records are in the store, it returns those plus fetches all other records.\nOtherwise, it fetches all records from the server.\n\n  store.findMany('todos', [1, 2, 3])\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findMany('todos', [3, 2, 1])\n  // no fetch triggered\n  => [todo1, todo2, todo3]",
             "itemtype": "method",
             "name": "findMany",
@@ -1061,7 +1109,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 334,
+            "line": 401,
             "description": "Builds fetch url based",
             "itemtype": "method",
             "name": "fetchUrl",
@@ -1081,7 +1129,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 348,
+            "line": 415,
             "description": "Gets all records with the given `type` from the store. This will never fetch from the server.",
             "itemtype": "method",
             "name": "getAll",
@@ -1105,7 +1153,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 365,
+            "line": 432,
             "description": "Finds all records with the given `type`. Always fetches from the server.",
             "async": 1,
             "itemtype": "method",
@@ -1130,7 +1178,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 402,
+            "line": 469,
             "description": "Finds all records of the given `type`.\nIf all records are in the store, it returns those.\nOtherwise, it fetches all records from the server.\n\n  store.findAll('todos')\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findAll('todos')\n  // no fetch triggered\n  => [todo1, todo2, todo3]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result.\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })\n\n\nNOTE: A broader RFC is in development to improve how we keep data in sync\nwith the server. We likely will want to getAll and getRecords\nto return null if nothing is found. However, this causes several regressions\nin portal we will need to address in a larger PR for mobx-async-store updates.",
             "itemtype": "method",
             "name": "findAll",
@@ -1154,7 +1202,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 449,
+            "line": 516,
             "description": "Clears the store of a given type, or clears all if no type given\n\n  store.reset('todos')\n  // removes all todos from store\n  store.reset()\n  // clears store",
             "itemtype": "method",
             "name": "reset",
@@ -1162,7 +1210,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 472,
+            "line": 539,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "init",
@@ -1177,7 +1225,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 484,
+            "line": 551,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1192,7 +1240,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 495,
+            "line": 562,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1207,7 +1255,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 509,
+            "line": 576,
             "description": "Creates an obserable index with model types\nas the primary key\n\nObservable({ todos: {} })",
             "itemtype": "method",
             "name": "initializeObservableDataProperty",
@@ -1215,7 +1263,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 530,
+            "line": 597,
             "description": "Wrapper around fetch applies user defined fetch options",
             "itemtype": "method",
             "name": "fetch",
@@ -1235,7 +1283,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 547,
+            "line": 614,
             "description": "Gets type of collection from data observable",
             "itemtype": "method",
             "name": "getType",
@@ -1254,7 +1302,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 558,
+            "line": 625,
             "description": "Gets individual record from store",
             "itemtype": "method",
             "name": "getRecord",
@@ -1278,7 +1326,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 578,
+            "line": 645,
             "description": "Gets records for type of collection from observable\n\nNOTE: We only return records by unique id, this handles a scenario\nwhere the store keeps around a reference to a newly persisted record by its temp uuid.\nWe can't simply remove the temp uuid reference because other\nrelated models may be still using the temp uuid in their relationships\ndata object. However, when we are listing out records we want them\nto be unique by the persisted id (which is updated after a Model.save)",
             "itemtype": "method",
             "name": "getRecords",
@@ -1297,7 +1345,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 599,
+            "line": 666,
             "description": "Get multiple records by id",
             "itemtype": "method",
             "name": "getRecordsById",
@@ -1321,7 +1369,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 615,
+            "line": 682,
             "description": "Gets single from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecord",
@@ -1349,7 +1397,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 630,
+            "line": 697,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecords",
@@ -1378,7 +1426,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 648,
+            "line": 715,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedIds",
@@ -1402,7 +1450,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 663,
+            "line": 730,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedId",
@@ -1426,7 +1474,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 675,
+            "line": 742,
             "description": "Helper to look up model class for type.",
             "itemtype": "method",
             "name": "getKlass",
@@ -1445,7 +1493,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 686,
+            "line": 753,
             "description": "Creates or updates a model",
             "itemtype": "method",
             "name": "createOrUpdateModel",
@@ -1460,7 +1508,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 725,
+            "line": 793,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1475,7 +1523,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 744,
+            "line": 812,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1504,7 +1552,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 765,
+            "line": 833,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",
