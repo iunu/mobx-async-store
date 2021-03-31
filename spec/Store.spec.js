@@ -180,6 +180,19 @@ describe('Store', () => {
       expect(example.title).toEqual('Buy Milk')
     })
 
+    it('adds model with toOne relationship to store', () => {
+      const category = store.add('categories', { name: 'Cat5' })
+      const example = store.add('todos', { category })
+      expect(example.category.name).toEqual('Cat5')
+    })
+
+    it('adds model with toMany relationship to store', () => {
+      const notes = store.add('notes', [{ text: 'satisfying' }, { text: 'unsatisfying' }])
+      const example = store.add('todos', { notes })
+      expect(example.notes).toContain(notes[0])
+      expect(example.notes).toContain(notes[1])
+    })
+
     it('adds multiple records to the store', () => {
       const exampleData = [{ title: 'Buy Milk' }, { title: 'Do laundry' }]
 
