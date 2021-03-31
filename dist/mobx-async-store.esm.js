@@ -22,7 +22,6 @@ import cloneDeep from 'lodash/cloneDeep';
 import _isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
 import findLast from 'lodash/findLast';
-import pick from 'lodash/pick';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 
 var QueryString = {
@@ -102,8 +101,8 @@ function requestUrl(baseUrl, endpoint) {
 function newId() {
   return "tmp-".concat(uuidv1());
 }
-function idOrNewId(id) {
-  return id || newId();
+function dbOrNewId(properties) {
+  return properties.id || newId();
 }
 /**
  * Avoids making racing requests by blocking a request if an identical one is
@@ -1352,43 +1351,8 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       }
     };
 
-    this.pickAttributes = function (properties, type) {
-      var attributeNames = Object.keys(_this.schema.structure[type]);
-      return pick(properties, attributeNames);
-    };
-
-    this.pickRelationships = function (properties, type) {
-      var relationshipNames = Object.keys(_this.schema.relations[type]);
-      var allRelationships = pick(properties, relationshipNames);
-      return Object.keys(allRelationships).reduce(function (references, key) {
-        var relatedModel = allRelationships[key];
-        var data;
-
-        if (Array.isArray(relatedModel)) {
-          data = relatedModel.map(function (model) {
-            return {
-              id: model.id,
-              type: model.type
-            };
-          });
-        } else {
-          data = {
-            id: relatedModel.id,
-            type: relatedModel.type
-          };
-        }
-
-        references[key] = {
-          data: data
-        };
-        return references;
-      }, {});
-    };
-
-    this.build = function (type, properties) {
-      var id = idOrNewId(properties.id);
-
-      var attributes = _this.pickAttributes(properties, type);
+    this.build = function (type, attributes) {
+      var id = dbOrNewId(attributes);
 
       var model = _this.createModel(type, id, {
         attributes: attributes
@@ -2377,20 +2341,15 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   initializer: function initializer() {
     var _this7 = this;
 
-    return function (type, properties) {
-      var id = idOrNewId(properties.id);
-
-      var attributes = _this7.pickAttributes(properties, type);
-
-      var relationships = _this7.pickRelationships(properties, type);
+    return function (type, attributes) {
+      var id = dbOrNewId(attributes);
 
       var model = _this7.createModel(type, id, {
-        attributes: attributes,
-        relationships: relationships
+        attributes: attributes
       }); // Add the model to the type records index
 
 
-      _this7.data[type].records.set(String(model.id), model);
+      _this7.data[type].records.set(String(id), model);
 
       return model;
     };

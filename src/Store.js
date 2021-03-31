@@ -1,10 +1,8 @@
 /* global fetch */
 import { action, observable, set, toJS, transaction } from 'mobx'
-import pick from 'lodash/pick'
-
 import {
   combineRacedRequests,
-  idOrNewId,
+  dbOrNewId,
   deriveIdQueryStrings,
   parseErrorPointer,
   requestUrl,
@@ -63,66 +61,7 @@ class Store {
   }
 
   /**
-   * Given a set of properties and type, returns an object with only the properties
-   * that are defined as attributes in the schema for that type.
-   * ```
-   * properties = { title: 'Do laundry', unrelatedProperty: 'Do nothing' }
-   * pickAttributes(properties, 'todos')
-   * => { title: 'Do laundry' }
-   * ```
-   * @method pickAttributes
-   * @param {Object} properties
-   * @param {String} type
-   * @return {Object}
-   */
-  pickAttributes = (properties, type) => {
-    const attributeNames = Object.keys(this.schema.structure[type])
-    return pick(properties, attributeNames)
-  }
-
-  /**
-   * Given a set of properties and type, returns an object with only the properties
-   * that are defined as relationships in the schema for that type.
-   * ```
-   * properties = { notes: [note1, note2], category: cat1, title: 'Fold Laundry' }
-   * pickRelationships(properties, 'todos')
-   * => {
-   *       notes: {
-   *         data: [{ id: '1', type: 'notes' }, { id: '2', type: 'notes' }]
-   *       },
-   *       category: {
-   *         data: { id: '1', type: 'categories' }
-   *       }
-   *    }
-   * ```
-   * @method pickRelationships
-   * @param {Object} properties
-   * @param {String} type
-   * @return {Object}
-   */
-  pickRelationships = (properties, type) => {
-    const relationshipNames = Object.keys(this.schema.relations[type] || {})
-    const allRelationships = pick(properties, relationshipNames)
-
-    return Object.keys(allRelationships).reduce((references, key) => {
-      const relatedModel = allRelationships[key]
-      let data
-      if (Array.isArray(relatedModel)) {
-        data = relatedModel.map((model) => ({
-          id: model.id,
-          type: model.type
-        }))
-      } else {
-        data = { id: relatedModel.id, type: relatedModel.type }
-      }
-      references[key] = { data }
-      return references
-    }, {})
-  }
-
-  /**
    * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.
-   * Does not support relationships, since they require references to objects in the store.
    * ```
    * kpiHash = { name: "A good thing to measure" }
    * kpi = store.build('kpis', kpiHash)
@@ -134,10 +73,8 @@ class Store {
    * @param {Object} properties the properties to use
    * @return {Object} the new record
    */
-  build = (type, properties) => {
-    const id = idOrNewId(properties.id)
-
-    const attributes = this.pickAttributes(properties, type)
+  build = (type, attributes) => {
+    const id = dbOrNewId(attributes)
     const model = this.createModel(type, id, { attributes })
 
     return model
@@ -150,16 +87,12 @@ class Store {
    * @return {Object} Artemis Data record
    */
   @action
-  addModel = (type, properties) => {
-    const id = idOrNewId(properties.id)
-
-    const attributes = this.pickAttributes(properties, type)
-    const relationships = this.pickRelationships(properties, type)
-
-    const model = this.createModel(type, id, { attributes, relationships })
+  addModel = (type, attributes) => {
+    const id = dbOrNewId(attributes)
+    const model = this.createModel(type, id, { attributes })
 
     // Add the model to the type records index
-    this.data[type].records.set(String(model.id), model)
+    this.data[type].records.set(String(id), model)
 
     return model
   }
@@ -768,7 +701,6 @@ class Store {
       })
 
       // If relationships are present, update relationships
-      // TODO: relationships will always be truthy since we've defined a default above.
       if (relationships) {
         Object.keys(relationships).forEach((key) => {
           // Don't try to create relationship if meta included false

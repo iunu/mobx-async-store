@@ -12,7 +12,6 @@ class Todo extends Model {
   static endpoint = 'todos'
 
   @attribute(String) title = ''
-  @attribute(Object) options = {}
 }
 
 class AppStore extends Store {
