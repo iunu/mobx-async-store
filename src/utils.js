@@ -60,8 +60,8 @@ export function newId () {
   return `tmp-${uuidv1()}`
 }
 
-export function dbOrNewId (properties) {
-  return properties.id || newId()
+export function idOrNewId (id) {
+  return id || newId()
 }
 
 /**
