@@ -1358,7 +1358,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     };
 
     this.pickRelationships = function (properties, type) {
-      var relationshipNames = Object.keys(_this.schema.relations[type]);
+      var relationshipNames = Object.keys(_this.schema.relations[type] || {});
       var allRelationships = pick(properties, relationshipNames);
       return Object.keys(allRelationships).reduce(function (references, key) {
         var relatedModel = allRelationships[key];
@@ -2158,6 +2158,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
         Object.keys(attributes).forEach(function (key) {
           set(record, key, attributes[key]);
         }); // If relationships are present, update relationships
+        // TODO: relationships will always be truthy since we've defined a default above.
 
         if (relationships) {
           Object.keys(relationships).forEach(function (key) {
