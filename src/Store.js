@@ -1,14 +1,13 @@
 /* global fetch */
 import { action, observable, set, toJS, transaction } from 'mobx'
 import pick from 'lodash/pick'
-
+import uniqBy from 'lodash/uniqBy'
 import {
   combineRacedRequests,
   idOrNewId,
   deriveIdQueryStrings,
   parseErrorPointer,
-  requestUrl,
-  uniqueBy
+  requestUrl
 } from './utils'
 import schema from './schema'
 
@@ -660,7 +659,7 @@ class Store {
     const records = Array.from(this.getType(type).records.values()).filter(
       (value) => value && value !== 'undefined'
     )
-    return uniqueBy(records, 'id')
+    return uniqBy(records, 'id')
   }
 
   /**
