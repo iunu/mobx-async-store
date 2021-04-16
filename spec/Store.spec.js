@@ -652,6 +652,14 @@ describe('Store', () => {
       expect(foundRecords[1].title).toEqual('Make milkshake')
     })
 
+    it('returns records with a unique id', () => {
+      store.add('todos', [{ id: 1, title: 'Buy Milk' }, { id: 1, title: 'Make milkshake' }, { id: 2, title: 'Guzzle milkshake' }])
+      const foundRecords = store.getAll('todos')
+      expect(foundRecords).toHaveLength(2)
+      expect(foundRecords[0].title).toEqual('Make milkshake')
+      expect(foundRecords[1].title).toEqual('Guzzle milkshake')
+    })
+
     it('returns an empty array if there are no records in the store', () => {
       store.reset()
       expect(store.getAll('todos')).toHaveLength(0)
