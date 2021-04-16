@@ -23,6 +23,7 @@ import _isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
 import findLast from 'lodash/findLast';
 import pick from 'lodash/pick';
+import uniqBy from 'lodash/uniqBy';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 
 var QueryString = {
@@ -141,35 +142,6 @@ function combineRacedRequests(key, fn) {
 
   pending[key] = fn.call();
   return pending[key].then(handleResponse);
-}
-/**
- * Reducer function for filtering out duplicate records
- * by a key provided. Returns a function that has a accumulator and
- * current record per Array.reduce.
- *
- * @method uniqueByReducer
- * @param {Array} key
- * @return {Function}
- */
-
-function uniqueByReducer(key) {
-  return function (accumulator, current) {
-    return accumulator.some(function (item) {
-      return item[key] === current[key];
-    }) ? accumulator : [].concat(_toConsumableArray(accumulator), [current]);
-  };
-}
-/**
- * Returns objects unique by key provided
- *
- * @method uniqueBy
- * @param {Array} array
- * @param {String} key
- * @return {Array}
- */
-
-function uniqueBy(array, key) {
-  return array.reduce(uniqueByReducer(key), []);
 }
 /**
  * convert a value into a date, pass Date or Moment instances thru
@@ -2029,7 +2001,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       var records = Array.from(this.getType(type).records.values()).filter(function (value) {
         return value && value !== 'undefined';
       });
-      return uniqueBy(records, 'id');
+      return uniqBy(records, 'id');
     }
     /**
      * Get multiple records by id

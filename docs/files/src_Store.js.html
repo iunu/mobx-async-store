@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.8.0</em>
+            <em>API Docs for: 3.8.2</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -86,14 +86,13 @@
 /* global fetch */
 import { action, observable, set, toJS, transaction } from &#x27;mobx&#x27;
 import pick from &#x27;lodash/pick&#x27;
-
+import uniqBy from &#x27;lodash/uniqBy&#x27;
 import {
   combineRacedRequests,
   idOrNewId,
   deriveIdQueryStrings,
   parseErrorPointer,
-  requestUrl,
-  uniqueBy
+  requestUrl
 } from &#x27;./utils&#x27;
 import schema from &#x27;./schema&#x27;
 
@@ -745,7 +744,7 @@ class Store {
     const records = Array.from(this.getType(type).records.values()).filter(
       (value) =&gt; value &amp;&amp; value !== &#x27;undefined&#x27;
     )
-    return uniqueBy(records, &#x27;id&#x27;)
+    return uniqBy(records, &#x27;id&#x27;)
   }
 
   /**
