@@ -564,6 +564,13 @@ describe('Store', () => {
   })
 
   describe('getOne', () => {
+    it('returns and console warns if not given an id', () => {
+      console.error = jest.fn()
+      const foundRecord = store.getOne('todos', undefined)
+      expect(console.error).toHaveBeenCalledWith("No id given while calling 'getOne' on todos")
+      expect(foundRecord).toBeUndefined()
+    })
+
     it('returns the record with the given type and id from the store', () => {
       const todo = store.add('todos', { title: 'Buy Milk' })
       const foundRecord = store.getOne('todos', todo.id)
@@ -577,6 +584,13 @@ describe('Store', () => {
   })
 
   describe('fetchOne', () => {
+    it('returns and console warns if not given an id', async () => {
+      console.error = jest.fn()
+      const foundRecord = await store.fetchOne('todos', undefined)
+      expect(console.error).toHaveBeenCalledWith("No id given while calling 'fetchOne' on todos")
+      expect(foundRecord).toBeUndefined()
+    })
+
     it('always fetches the record with the given id from the server', async () => {
       expect.assertions(2)
       fetch.mockResponse(mockTodoResponse)
@@ -609,6 +623,13 @@ describe('Store', () => {
   })
 
   describe('findOne', () => {
+    it('returns and console warns if not given an id', async () => {
+      console.error = jest.fn()
+      const foundRecord = await store.findOne('todos', undefined)
+      expect(console.error).toHaveBeenCalledWith("No id given while calling 'findOne' on todos")
+      expect(foundRecord).toBeUndefined()
+    })
+
     it('finds model if it is in store', async () => {
       expect.assertions(2)
       const addedModel = store.add('todos', { title: 'Buy Milk' })

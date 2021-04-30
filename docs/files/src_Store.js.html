@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.8.2</em>
+            <em>API Docs for: 3.8.3</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -323,6 +323,10 @@ class Store {
    * @return {Object} record
    */
   getOne = (type, id, options = {}) =&gt; {
+    if (!id) {
+      console.error(&#x60;No id given while calling &#x27;getOne&#x27; on ${type}&#x60;)
+      return
+    }
     const { queryParams } = options
     if (queryParams) {
       return this.getCachedRecord(type, id, queryParams)
@@ -342,6 +346,10 @@ class Store {
    * @return {Object} record
    */
   async fetchOne (type, id, options = {}) {
+    if (!id) {
+      console.error(&#x60;No id given while calling &#x27;fetchOne&#x27; on ${type}&#x60;)
+      return
+    }
     const { queryParams } = options
     const url = this.fetchUrl(type, queryParams, id)
     const response = await this.fetch(url, { method: &#x27;GET&#x27; })
@@ -382,6 +390,10 @@ class Store {
    * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findOne = (type, id, options = {}) =&gt; {
+    if (!id) {
+      console.error(&#x60;No id given while calling &#x27;findOne&#x27; on ${type}&#x60;)
+      return
+    }
     const record = this.getOne(type, id, options)
     if (record?.id) {
       return record

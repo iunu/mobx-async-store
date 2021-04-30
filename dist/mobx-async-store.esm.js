@@ -1436,6 +1436,12 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     this.getOne = function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (!id) {
+        console.error("No id given while calling 'getOne' on ".concat(type));
+        return;
+      }
+
       var queryParams = options.queryParams;
 
       if (queryParams) {
@@ -1447,6 +1453,11 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     this.findOne = function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (!id) {
+        console.error("No id given while calling 'findOne' on ".concat(type));
+        return;
+      }
 
       var record = _this.getOne(type, id, options);
 
@@ -1598,25 +1609,35 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
             switch (_context2.prev = _context2.next) {
               case 0:
                 options = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : {};
+
+                if (id) {
+                  _context2.next = 4;
+                  break;
+                }
+
+                console.error("No id given while calling 'fetchOne' on ".concat(type));
+                return _context2.abrupt("return");
+
+              case 4:
                 queryParams = options.queryParams;
                 url = this.fetchUrl(type, queryParams, id);
-                _context2.next = 5;
+                _context2.next = 8;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
-              case 5:
+              case 8:
                 response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 17;
+                  _context2.next = 20;
                   break;
                 }
 
-                _context2.next = 9;
+                _context2.next = 12;
                 return response.json();
 
-              case 9:
+              case 12:
                 json = _context2.sent;
                 data = json.data, included = json.included;
 
@@ -1628,10 +1649,10 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                 this.data[type].cache.set(url, [record.id]);
                 return _context2.abrupt("return", record);
 
-              case 17:
+              case 20:
                 return _context2.abrupt("return", null);
 
-              case 18:
+              case 21:
               case "end":
                 return _context2.stop();
             }

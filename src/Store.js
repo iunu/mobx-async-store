@@ -238,6 +238,10 @@ class Store {
    * @return {Object} record
    */
   getOne = (type, id, options = {}) => {
+    if (!id) {
+      console.error(`No id given while calling 'getOne' on ${type}`)
+      return
+    }
     const { queryParams } = options
     if (queryParams) {
       return this.getCachedRecord(type, id, queryParams)
@@ -257,6 +261,10 @@ class Store {
    * @return {Object} record
    */
   async fetchOne (type, id, options = {}) {
+    if (!id) {
+      console.error(`No id given while calling 'fetchOne' on ${type}`)
+      return
+    }
     const { queryParams } = options
     const url = this.fetchUrl(type, queryParams, id)
     const response = await this.fetch(url, { method: 'GET' })
@@ -297,6 +305,10 @@ class Store {
    * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findOne = (type, id, options = {}) => {
+    if (!id) {
+      console.error(`No id given while calling 'findOne' on ${type}`)
+      return
+    }
     const record = this.getOne(type, id, options)
     if (record?.id) {
       return record
