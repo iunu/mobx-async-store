@@ -62,7 +62,8 @@ const mockFetchOptions = {
 
 const store = new AppStore({
   baseUrl: mockBaseUrl,
-  defaultFetchOptions: mockFetchOptions
+  defaultFetchOptions: mockFetchOptions,
+  headersOfInterest: ['X-Mobx-Example']
 })
 
 const mockTodoData = {
@@ -144,18 +145,20 @@ describe('Store', () => {
   })
 
   it('has observable data property', () => {
-    expect.assertions(1)
     expect(isObservable(store.data)).toBe(true)
   })
 
   it('sets network configuration properties', () => {
-    expect.assertions(2)
     expect(store.baseUrl).toEqual(mockBaseUrl)
     expect(store.defaultFetchOptions).toEqual(mockFetchOptions)
+    expect(store.headersOfInterest).toEqual(['X-Mobx-Example'])
+  })
+
+  it('has observable lastResponseHeaders', () => {
+    expect(isObservable(store.lastResponseHeaders)).toBe(true)
   })
 
   it('sets model type index', () => {
-    expect.assertions(1)
     expect(store.modelTypeIndex).toEqual({
       todos: Todo,
       notes: Note,
@@ -165,7 +168,6 @@ describe('Store', () => {
   })
 
   it('initializes data observable', () => {
-    expect.assertions(1)
     expect(toJS(store.data)).toEqual({
       todos: { cache: {}, records: {} },
       notes: { cache: {}, records: {} },
@@ -173,6 +175,21 @@ describe('Store', () => {
       tags: { cache: {}, records: {} }
     })
   })
+
+  // // Could not get `fetch.mockResponse` to mock headers, so had to comment out these tests
+  // describe('lastResponseHeaders', () => {
+  //   it('captures interesting headers from http responses', async () => {
+  //     fetch.mockResponse({ body: 'data: {}', headers: { 'X-Ignore-Me': 'Ignore', 'X-Mobx-Example': '123' } })
+  //     store.fetchOne('todos', 1)
+
+  //     expect(store.lastResponseHeaders).toEqual({'X-Mobx-Example': '123'})
+
+  //     fetch.mockResponse({ body: 'data: {}', headers: { 'X-Ignore-Me': 'Ignore', 'X-Mobx-Example': 'ABC' } })
+  //     store.fetchOne('todos', 2)
+
+  //     expect(store.lastResponseHeaders).toEqual({'X-Mobx-Example': 'ABC'})
+  //   })
+  // })
 
   describe('add', () => {
     it('adds basic model to store', () => {

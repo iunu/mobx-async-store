@@ -1286,7 +1286,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
   }
 })), _class);
 
-var _class$1, _descriptor$1, _descriptor2, _descriptor3, _temp$1;
+var _class$1, _descriptor$1, _descriptor2, _descriptor3, _descriptor4, _temp$1;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
@@ -1309,6 +1309,15 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
    */
 
   /**
+   * Observable property used to store values for most recent response headers
+   * according to settings specified as `headersOfInterest`
+   *
+   * @property lastResponseHeaders
+   * @type {Object}
+   * @default {}
+   */
+
+  /**
    * Initializer for Store class
    *
    * @method constructor
@@ -1319,6 +1328,8 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     _classCallCheck(this, Store);
 
     _initializerDefineProperty(this, "data", _descriptor$1, this);
+
+    _initializerDefineProperty(this, "lastResponseHeaders", _descriptor2, this);
 
     this.genericErrorMessage = 'Something went wrong.';
 
@@ -1375,7 +1386,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       return model;
     };
 
-    _initializerDefineProperty(this, "addModel", _descriptor2, this);
+    _initializerDefineProperty(this, "addModel", _descriptor3, this);
 
     this.addModels = function (type, data) {
       return mobx.transaction(function () {
@@ -1438,7 +1449,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       };
     }();
 
-    _initializerDefineProperty(this, "remove", _descriptor3, this);
+    _initializerDefineProperty(this, "remove", _descriptor4, this);
 
     this.getOne = function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
@@ -1899,6 +1910,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       this.baseUrl = options.baseUrl || '';
       this.defaultFetchOptions = options.defaultFetchOptions || {};
+      this.headersOfInterest = options.headersOfInterest || [];
     }
     /**
      * Entry point for configuring the store
@@ -1961,8 +1973,11 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
       return fetch;
     }(function (url) {
+      var _this4 = this;
+
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var defaultFetchOptions = this.defaultFetchOptions;
+      var defaultFetchOptions = this.defaultFetchOptions,
+          headersOfInterest = this.headersOfInterest;
 
       var fetchOptions = _objectSpread$1(_objectSpread$1({}, defaultFetchOptions), options);
 
@@ -1972,6 +1987,17 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       });
       return combineRacedRequests(key, function () {
         return fetch(url, _objectSpread$1(_objectSpread$1({}, defaultFetchOptions), options));
+      }).then(function (response) {
+        // Capture headers of interest
+        if (headersOfInterest) {
+          headersOfInterest.forEach(function (header) {
+            var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
+
+            if (_this4.lastResponseHeaders[header] !== value) _this4.lastResponseHeaders[header] = value;
+          });
+        }
+
+        return response;
       });
     })
     /**
@@ -2042,12 +2068,12 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }, {
     key: "getRecordsById",
     value: function getRecordsById(type) {
-      var _this4 = this;
+      var _this5 = this;
 
       var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
       // NOTE: Is there a better way to do this?
       return ids.map(function (id) {
-        return _this4.getRecord(type, id);
+        return _this5.getRecord(type, id);
       }).filter(function (record) {
         return record;
       }).filter(function (record) {
@@ -2192,15 +2218,15 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }, {
     key: "createModelsFromData",
     value: function createModelsFromData(data) {
-      var _this5 = this;
+      var _this6 = this;
 
       return mobx.transaction(function () {
         return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
-          if (_this5.getType(dataObject.type)) {
-            return _this5.createOrUpdateModel(dataObject);
+          if (_this6.getType(dataObject.type)) {
+            return _this6.createOrUpdateModel(dataObject);
           }
         });
       });
@@ -2249,7 +2275,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }, {
     key: "updateRecords",
     value: function updateRecords(promise, records) {
-      var _this6 = this;
+      var _this7 = this;
 
       // records may be a single record, if so wrap it in an array to make
       // iteration simpler
@@ -2296,7 +2322,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   });
 
                   if (json.included) {
-                    _this6.createModelsFromData(json.included);
+                    _this7.createModelsFromData(json.included);
                   } // on success, return the original record(s).
                   // again - this may be a single record so preserve the structure
 
@@ -2317,7 +2343,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                 case 22:
                   _context4.prev = 22;
                   _context4.t0 = _context4["catch"](16);
-                  return _context4.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
+                  return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
 
                 case 25:
                   // Add all errors from the API response to the record(s).
@@ -2370,40 +2396,47 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
+}), _descriptor2 = _applyDecoratedDescriptor(_class$1.prototype, "lastResponseHeaders", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this7 = this;
-
-    return function (type, properties) {
-      var id = idOrNewId(properties.id);
-
-      var attributes = _this7.pickAttributes(properties, type);
-
-      var relationships = _this7.pickRelationships(properties, type);
-
-      var model = _this7.createModel(type, id, {
-        attributes: attributes,
-        relationships: relationships
-      }); // Add the model to the type records index
-
-
-      _this7.data[type].records.set(String(model.id), model);
-
-      return model;
-    };
+    return {};
   }
-}), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [mobx.action], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     var _this8 = this;
 
+    return function (type, properties) {
+      var id = idOrNewId(properties.id);
+
+      var attributes = _this8.pickAttributes(properties, type);
+
+      var relationships = _this8.pickRelationships(properties, type);
+
+      var model = _this8.createModel(type, id, {
+        attributes: attributes,
+        relationships: relationships
+      }); // Add the model to the type records index
+
+
+      _this8.data[type].records.set(String(model.id), model);
+
+      return model;
+    };
+  }
+}), _descriptor4 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [mobx.action], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    var _this9 = this;
+
     return function (type, id) {
-      _this8.data[type].records.delete(String(id));
+      _this9.data[type].records.delete(String(id));
     };
   }
 })), _class$1);
