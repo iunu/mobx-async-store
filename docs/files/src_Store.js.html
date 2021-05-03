@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.8.3</em>
+            <em>API Docs for: 3.9.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -112,6 +112,16 @@ class Store {
    * @default {}
    */
   @observable data = {}
+
+  /**
+   * Observable property used to store values for most recent response headers
+   * according to settings specified as &#x60;headersOfInterest&#x60;
+   *
+   * @property lastResponseHeaders
+   * @type {Object}
+   * @default {}
+   */
+  @observable lastResponseHeaders = {}
 
   genericErrorMessage = &#x27;Something went wrong.&#x27;
 
@@ -653,6 +663,7 @@ class Store {
   initializeNetworkConfiguration (options = {}) {
     this.baseUrl = options.baseUrl || &#x27;&#x27;
     this.defaultFetchOptions = options.defaultFetchOptions || {}
+    this.headersOfInterest = options.headersOfInterest || []
   }
 
   /**
@@ -698,13 +709,24 @@ class Store {
    * @param {Object} options
    */
   fetch (url, options = {}) {
-    const { defaultFetchOptions } = this
+    const { defaultFetchOptions, headersOfInterest } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const key = JSON.stringify({ url, fetchOptions })
 
     return combineRacedRequests(key, () =&gt;
       fetch(url, { ...defaultFetchOptions, ...options })
-    )
+    ).then(response =&gt; {
+      // Capture headers of interest
+      if (headersOfInterest) {
+        headersOfInterest.forEach(header =&gt; {
+          const value = response.headers.get(header)
+          // Only set if it has changed, to minimize observable changes
+          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+        })
+      }
+
+      return response
+    })
   }
 
   /**

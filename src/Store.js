@@ -28,6 +28,16 @@ class Store {
    */
   @observable data = {}
 
+  /**
+   * Observable property used to store values for most recent response headers
+   * according to settings specified as `headersOfInterest`
+   *
+   * @property lastResponseHeaders
+   * @type {Object}
+   * @default {}
+   */
+  @observable lastResponseHeaders = {}
+
   genericErrorMessage = 'Something went wrong.'
 
   /**
@@ -568,6 +578,7 @@ class Store {
   initializeNetworkConfiguration (options = {}) {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
+    this.headersOfInterest = options.headersOfInterest || []
   }
 
   /**
@@ -613,13 +624,24 @@ class Store {
    * @param {Object} options
    */
   fetch (url, options = {}) {
-    const { defaultFetchOptions } = this
+    const { defaultFetchOptions, headersOfInterest } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const key = JSON.stringify({ url, fetchOptions })
 
     return combineRacedRequests(key, () =>
       fetch(url, { ...defaultFetchOptions, ...options })
-    )
+    ).then(response => {
+      // Capture headers of interest
+      if (headersOfInterest) {
+        headersOfInterest.forEach(header => {
+          const value = response.headers.get(header)
+          // Only set if it has changed, to minimize observable changes
+          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+        })
+      }
+
+      return response
+    })
   }
 
   /**
