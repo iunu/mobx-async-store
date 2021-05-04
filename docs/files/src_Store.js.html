@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.9.0</em>
+            <em>API Docs for: 3.9.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -1009,14 +1009,16 @@ class Store {
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
-          json.errors.forEach((error) =&gt; {
-            const { index, key } = parseErrorPointer(error)
-            if (key != null) {
-              const errors = recordsArray[index].errors[key] || []
-              errors.push(error)
-              recordsArray[index].errors[key] = errors
-            }
-          })
+          if (Array.isArray(json.errors)) {
+            json.errors.forEach((error) =&gt; {
+              const { index, key } = parseErrorPointer(error)
+              if (key != null) {
+                let errors = recordsArray[index].errors[key] || []
+                errors.push(error)
+                recordsArray[index].errors[key] = errors
+              }
+            })
+          }
 
           const errorString = recordsArray
             .map((record) =&gt; JSON.stringify(record.errors))

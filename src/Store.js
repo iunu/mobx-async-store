@@ -924,14 +924,16 @@ class Store {
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
-          json.errors.forEach((error) => {
-            const { index, key } = parseErrorPointer(error)
-            if (key != null) {
-              const errors = recordsArray[index].errors[key] || []
-              errors.push(error)
-              recordsArray[index].errors[key] = errors
-            }
-          })
+          if (Array.isArray(json.errors)) {
+            json.errors.forEach((error) => {
+              const { index, key } = parseErrorPointer(error)
+              if (key != null) {
+                let errors = recordsArray[index].errors[key] || []
+                errors.push(error)
+                recordsArray[index].errors[key] = errors
+              }
+            })
+          }
 
           const errorString = recordsArray
             .map((record) => JSON.stringify(record.errors))
