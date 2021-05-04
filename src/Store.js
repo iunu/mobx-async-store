@@ -921,21 +921,29 @@ class Store {
             return Promise.reject(new Error(this.genericErrorMessage))
           }
 
+          if (!json.errors) {
+            return Promise.reject(new Error(this.genericErrorMessage))
+          }
+
+          if (!Array.isArray(json.errors)) {
+            return Promise.reject(new TypeError('Top level errors in response are not an array.'))
+          }
+
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
           json.errors.forEach((error) => {
             const { index, key } = parseErrorPointer(error)
             if (key != null) {
-              const errors = recordsArray[index].errors[key] || []
+              let errors = recordsArray[index].errors[key] || []
               errors.push(error)
               recordsArray[index].errors[key] = errors
             }
           })
-
           const errorString = recordsArray
             .map((record) => JSON.stringify(record.errors))
             .join(';')
+
           return Promise.reject(new Error(errorString))
         }
       },

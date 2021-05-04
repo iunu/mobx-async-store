@@ -2346,6 +2346,22 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
 
                 case 25:
+                  if (_json.errors) {
+                    _context4.next = 27;
+                    break;
+                  }
+
+                  return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
+
+                case 27:
+                  if (Array.isArray(_json.errors)) {
+                    _context4.next = 29;
+                    break;
+                  }
+
+                  return _context4.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
+
+                case 29:
                   // Add all errors from the API response to the record(s).
                   // This is done by comparing the pointer in the error to
                   // the request.
@@ -2366,7 +2382,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   }).join(';');
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
-                case 28:
+                case 32:
                 case "end":
                   return _context4.stop();
               }
