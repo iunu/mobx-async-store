@@ -544,9 +544,40 @@ describe('Store', () => {
         ]
 
         try {
+         await store.updateRecords(mockRequest(errors), [todo1, todo2])
+        } catch (error) {
+         expect(todo2.errors.title).toEqual(errors)
+        }
+      })
+
+      it('warns of improperly formed jsonapi error response ', async () => {
+        const todo1 = store.add('todos', {})
+        const todo2 = store.add('todos', {})
+        const errors =
+        {
+          detail: "Title can't be blank",
+          source: { pointer: '/data/1/attributes/title' },
+          title: 'Invalid title'
+        }
+
+        try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch (error) {
-          expect(todo2.errors.title).toEqual(errors)
+          expect(error.message).toBe('Top level errors in response are not an array.')
+          expect(error.name).toBe('TypeError')
+        }
+      })
+
+      it('renders generic error for undefined json error response ', async () => {
+        const todo1 = store.add('todos', {})
+        const todo2 = store.add('todos', {})
+        const errors = undefined
+
+        try {
+          await store.updateRecords(mockRequest(errors), [todo1, todo2])
+        } catch (error) {
+          expect(error.message).toMatch('Something went wrong.')
+          expect(error.name).toBe('Error')
         }
       })
     })
