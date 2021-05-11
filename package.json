@@ -6,7 +6,7 @@
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
     "jsonapi-serializer": "^3.6.4",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "mobx": "^5.15.7",
     "pluralize": "^8.0.0",
     "qs": "^6.9.4",
