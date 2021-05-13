@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.9.1"
+        "version": "3.9.2"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -467,6 +467,25 @@
         {
             "file": "src/Model.js",
             "line": 355,
+            "description": "Replaces the record with the canonical version from the server.",
+            "itemtype": "method",
+            "name": "reload",
+            "return": {
+                "description": "",
+                "type": "Promise"
+            },
+            "params": [
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 375,
             "description": "Checks all validations, adding errors where necessary and returning `false` if any are not valid\nDefault is to check all validations, but they can be selectively run via options:\n - attributes - an array of names of attributes to validate\n - relationships - an array of names of relationships to validate",
             "itemtype": "method",
             "name": "validate",
@@ -485,7 +504,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 379,
+            "line": 399,
             "description": "deletes a record from the store and server",
             "itemtype": "method",
             "name": "destroy",
@@ -497,7 +516,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 446,
+            "line": 466,
             "description": "Magic method that makes changes to records\nobservable",
             "itemtype": "method",
             "name": "_makeObservable",
@@ -505,7 +524,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 461,
+            "line": 481,
             "description": "The current state of defined attributes and relationships of the instance\nReally just an alias for attributes\n```\ntodo = store.find('todos', 5)\ntodo.title\n=> \"Buy the eggs\"\nsnapshot = todo.snapshot\ntodo.title = \"Buy the eggs and bacon\"\nsnapshot.title\n=> \"Buy the eggs and bacon\"\n```",
             "itemtype": "method",
             "name": "snapshot",
@@ -517,7 +536,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 483,
+            "line": 503,
             "description": "Sets previous snapshot to current snapshot",
             "itemtype": "method",
             "name": "setPreviousSnapshot",
@@ -525,7 +544,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 492,
+            "line": 512,
             "description": "the latest snapshot",
             "itemtype": "method",
             "name": "previousSnapshot",
@@ -533,7 +552,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 503,
+            "line": 523,
             "description": "the latest persisted snapshot or the first snapshot if the model was never persisted",
             "itemtype": "method",
             "name": "previousSnapshot",
@@ -541,7 +560,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 512,
+            "line": 532,
             "description": "take a snapshot of the current model state.\nif persisted, clear the stack and push this snapshot to the top\nif not persisted, push this snapshot to the top of the stack",
             "itemtype": "method",
             "name": "_takeSnapshot",
@@ -556,7 +575,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 533,
+            "line": 553,
             "description": "set the current attributes and relationships to the attributes\nand relationships of the snapshot to be applied. also reset errors",
             "itemtype": "method",
             "name": "_applySnapshot",
@@ -571,7 +590,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 550,
+            "line": 570,
             "description": "shortcut to get the static",
             "itemtype": "method",
             "name": "type",
@@ -583,7 +602,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 560,
+            "line": 580,
             "description": "current attributes of record",
             "itemtype": "method",
             "name": "attributes",
@@ -595,7 +614,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 578,
+            "line": 598,
             "description": "Getter find the attribute definition for the model type.",
             "itemtype": "method",
             "name": "attributeDefinitions",
@@ -607,7 +626,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 589,
+            "line": 609,
             "description": "Getter find the relationship definitions for the model type.",
             "itemtype": "method",
             "name": "relationshipDefinitions",
@@ -619,31 +638,31 @@
         },
         {
             "file": "src/Model.js",
-            "line": 600,
-            "description": "Getter to check if the record has errors.",
-            "itemtype": "method",
-            "name": "hasErrors",
-            "return": {
-                "description": "",
-                "type": "Boolean"
-            },
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 610,
-            "description": "Getter to check if the record has errors.",
-            "itemtype": "method",
-            "name": "hasErrors",
-            "return": {
-                "description": "",
-                "type": "Boolean"
-            },
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
             "line": 620,
+            "description": "Getter to check if the record has errors.",
+            "itemtype": "method",
+            "name": "hasErrors",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 630,
+            "description": "Getter to check if the record has errors.",
+            "itemtype": "method",
+            "name": "hasErrors",
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "Model"
+        },
+        {
+            "file": "src/Model.js",
+            "line": 640,
             "description": "Getter to just get the names of a records attributes.",
             "itemtype": "method",
             "name": "attributeNames",
@@ -655,7 +674,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 630,
+            "line": 650,
             "description": "Getter to just get the names of a records relationships.",
             "itemtype": "method",
             "name": "relationshipNames",
@@ -667,7 +686,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 640,
+            "line": 660,
             "description": "getter method to get the default attributes",
             "itemtype": "method",
             "name": "defaultAttributes",
@@ -679,7 +698,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 657,
+            "line": 677,
             "description": "getter method to get data in api compliance format\nTODO: Figure out how to handle unpersisted ids",
             "itemtype": "method",
             "name": "jsonapi",
@@ -691,7 +710,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 785,
+            "line": 805,
             "description": "Comparison by value\nreturns `true` if this object has the same attrs and relationships\nas the \"other\" object, ignores differences in internal state like\nattribute \"dirtyness\" or errors",
             "itemtype": "method",
             "name": "isEqual",
@@ -710,7 +729,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 800,
+            "line": 820,
             "description": "Comparison by identity\nreturns `true` if this object has the same type and id as the\n\"other\" object, ignores differences in attrs and relationships",
             "itemtype": "method",
             "name": "isSame",

@@ -353,6 +353,26 @@ class Model {
   }
 
   /**
+   * Replaces the record with the canonical version from the server.
+   * @method reload
+   * @return {Promise}
+   * @param {Object} options
+   */
+  reload (options = {}) {
+    const {
+      queryParams
+    } = options
+
+    const { constructor, id, isNew } = this
+
+    if (isNew) {
+      return this.rollback()
+    } else {
+      return this.store.fetchOne(constructor.type, id, queryParams)
+    }
+  }
+
+  /**
    * Checks all validations, adding errors where necessary and returning `false` if any are not valid
    * Default is to check all validations, but they can be selectively run via options:
    *  - attributes - an array of names of attributes to validate
