@@ -167,7 +167,7 @@ const store = new AppStore({
 const mockTodoData = {
   data: {
     id: '1',
-    type: 'organizations',
+    type: 'todos',
     attributes: {
       title: 'Do taxes',
       // YYYY-MM-DD
@@ -1367,6 +1367,33 @@ describe('Model', () => {
       expect(todo.hasUnpersistedChanges).toBe(true)
       await todo.save({ relationships: ['user'] })
       expect(todo.hasUnpersistedChanges).toBe(false)
+    })
+  })
+
+  describe('.reload', () => {
+    describe('with a persisted model', () => {
+      it('reloads data from server', async (done) => {
+        fetch.mockResponseOnce(mockTodoResponse)
+        const todo = store.add('todos', { id: '1', title: 'do nothing' })
+        const response = await todo.reload()
+        expect(response.title).toEqual('Do taxes')
+        expect(todo.title).toEqual('Do taxes')
+        done()
+      })
+    })
+    describe('with a new model', () => {
+      beforeEach(() => fetch.resetMocks())
+      it('reverts data from server', async (done) => {
+        const todo = store.add('todos', { title: 'do nothing' })
+        await todo.reload()
+        expect(todo.title).toEqual('do nothing')
+        todo.title = 'do something'
+        await todo.reload()
+        expect(todo.title).toEqual('do nothing')
+        expect(fetch.mock.calls).toHaveLength(0)
+
+        done()
+      })
     })
   })
 
