@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.9.1</em>
+            <em>API Docs for: 3.9.2</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -435,6 +435,26 @@ class Model {
     const result = this.store.updateRecords(response, this)
 
     return result
+  }
+
+  /**
+   * Replaces the record with the canonical version from the server.
+   * @method reload
+   * @return {Promise}
+   * @param {Object} options
+   */
+  reload (options = {}) {
+    const {
+      queryParams
+    } = options
+
+    const { constructor, id, isNew } = this
+
+    if (isNew) {
+      return this.rollback()
+    } else {
+      return this.store.fetchOne(constructor.type, id, queryParams)
+    }
   }
 
   /**

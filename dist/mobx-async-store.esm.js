@@ -573,6 +573,28 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
       return result;
     }
     /**
+     * Replaces the record with the canonical version from the server.
+     * @method reload
+     * @return {Promise}
+     * @param {Object} options
+     */
+
+  }, {
+    key: "reload",
+    value: function reload() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var queryParams = options.queryParams;
+      var constructor = this.constructor,
+          id = this.id,
+          isNew = this.isNew;
+
+      if (isNew) {
+        return this.rollback();
+      } else {
+        return this.store.fetchOne(constructor.type, id, queryParams);
+      }
+    }
+    /**
      * Checks all validations, adding errors where necessary and returning `false` if any are not valid
      * Default is to check all validations, but they can be selectively run via options:
      *  - attributes - an array of names of attributes to validate
