@@ -34,7 +34,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "jest": "^24.7.1",
     "jest-coverage-badges": "^1.1.2",
-    "jest-fetch-mock": "^2.1.2",
+    "jest-fetch-mock": "^3.0.3",
     "mobx": "5.15.7",
     "mobx-react": "^5.4.3",
     "react": "^16.8.6",
