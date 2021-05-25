@@ -30,7 +30,7 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-react": "^7.12.4",
+    "eslint-plugin-react": "^7.23.2",
     "eslint-plugin-standard": "^3.0.1",
     "jest": "^24.7.1",
     "jest-coverage-badges": "^1.1.2",
