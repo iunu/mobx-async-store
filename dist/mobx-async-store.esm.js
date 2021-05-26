@@ -1348,6 +1348,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
     _initializerDefineProperty(this, "lastResponseHeaders", _descriptor2, this);
 
     this.genericErrorMessage = 'Something went wrong.';
+    this.forbiddenErrorMessage = 'That action is not allowed.';
 
     this.add = function (type, data) {
       if (data.constructor.name === 'Array') {
@@ -2346,38 +2347,46 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   return _context4.abrupt("return", records);
 
                 case 15:
-                  _json = {};
-                  _context4.prev = 16;
-                  _context4.next = 19;
-                  return response.json();
+                  if (!(status === 403)) {
+                    _context4.next = 19;
+                    break;
+                  }
+
+                  return _context4.abrupt("return", Promise.reject(new Error(_this7.forbiddenErrorMessage)));
 
                 case 19:
+                  _json = {};
+                  _context4.prev = 20;
+                  _context4.next = 23;
+                  return response.json();
+
+                case 23:
                   _json = _context4.sent;
-                  _context4.next = 25;
+                  _context4.next = 29;
                   break;
 
-                case 22:
-                  _context4.prev = 22;
-                  _context4.t0 = _context4["catch"](16);
+                case 26:
+                  _context4.prev = 26;
+                  _context4.t0 = _context4["catch"](20);
                   return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
 
-                case 25:
+                case 29:
                   if (_json.errors) {
-                    _context4.next = 27;
+                    _context4.next = 31;
                     break;
                   }
 
                   return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
 
-                case 27:
+                case 31:
                   if (Array.isArray(_json.errors)) {
-                    _context4.next = 29;
+                    _context4.next = 33;
                     break;
                   }
 
                   return _context4.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
 
-                case 29:
+                case 33:
                   // Add all errors from the API response to the record(s).
                   // This is done by comparing the pointer in the error to
                   // the request.
@@ -2398,12 +2407,12 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
                   }).join(';');
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
-                case 32:
+                case 36:
                 case "end":
                   return _context4.stop();
               }
             }
-          }, _callee4, null, [[16, 22]]);
+          }, _callee4, null, [[20, 26]]);
         }));
 
         return function (_x7) {

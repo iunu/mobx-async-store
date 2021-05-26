@@ -39,6 +39,7 @@ class Store {
   @observable lastResponseHeaders = {}
 
   genericErrorMessage = 'Something went wrong.'
+  forbiddenErrorMessage = 'That action is not allowed.'
 
   /**
    * Initializer for Store class
@@ -912,6 +913,8 @@ class Store {
           // on success, return the original record(s).
           // again - this may be a single record so preserve the structure
           return records
+        } else if (status === 403) {
+          return Promise.reject(new Error(this.forbiddenErrorMessage))
         } else {
           let json = {}
           try {
