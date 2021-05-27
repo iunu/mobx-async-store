@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.9.2"
+        "version": "3.9.3"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -711,25 +711,6 @@
         {
             "file": "src/Model.js",
             "line": 805,
-            "description": "Comparison by value\nreturns `true` if this object has the same attrs and relationships\nas the \"other\" object, ignores differences in internal state like\nattribute \"dirtyness\" or errors",
-            "itemtype": "method",
-            "name": "isEqual",
-            "params": [
-                {
-                    "name": "other",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "",
-                "type": "Object"
-            },
-            "class": "Model"
-        },
-        {
-            "file": "src/Model.js",
-            "line": 820,
             "description": "Comparison by identity\nreturns `true` if this object has the same type and id as the\n\"other\" object, ignores differences in attrs and relationships",
             "itemtype": "method",
             "name": "isSame",
