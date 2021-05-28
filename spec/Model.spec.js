@@ -1333,18 +1333,17 @@ describe('Model', () => {
 
   describe('.reload', () => {
     describe('with a persisted model', () => {
-      it('reloads data from server', async (done) => {
+      it('reloads data from server', async () => {
         fetch.mockResponseOnce(mockTodoResponse)
         const todo = store.add('todos', { id: '1', title: 'do nothing' })
         const response = await todo.reload()
         expect(response.title).toEqual('Do taxes')
         expect(todo.title).toEqual('Do taxes')
-        done()
       })
     })
     describe('with a new model', () => {
       beforeEach(() => fetch.resetMocks())
-      it('reverts data from server', async (done) => {
+      it('reverts data from server', async () => {
         const todo = store.add('todos', { title: 'do nothing' })
         await todo.reload()
         expect(todo.title).toEqual('do nothing')
@@ -1352,8 +1351,6 @@ describe('Model', () => {
         await todo.reload()
         expect(todo.title).toEqual('do nothing')
         expect(fetch.mock.calls).toHaveLength(0)
-
-        done()
       })
     })
   })
