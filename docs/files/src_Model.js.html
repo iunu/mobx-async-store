@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.9.3</em>
+            <em>API Docs for: 3.10.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -822,7 +822,7 @@ class Model {
     }
 
     if (meta) {
-      data[&#x27;meta&#x27;] = meta
+      data.meta = meta
     }
 
     if (String(id).match(/tmp/)) {
@@ -854,7 +854,7 @@ class Model {
       })
       if (relationships) {
         Object.keys(relationships).forEach(key =&gt; {
-          if (!relationships[key].hasOwnProperty(&#x27;meta&#x27;)) {
+          if (!Object.prototype.hasOwnProperty.call(relationships[key], &#x27;meta&#x27;)) {
             // todo: throw error if relationship is not defined in model
             set(this.relationships, key, relationships[key])
           }

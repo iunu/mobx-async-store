@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.9.3</em>
+            <em>API Docs for: 3.10.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -438,7 +438,7 @@ class Store {
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   fetchMany = (type, ids, options = {}) =&gt; {
-    let idsToQuery = ids.slice().map(String)
+    const idsToQuery = ids.slice().map(String)
     const queryParams = options.queryParams || {}
     queryParams.filter = queryParams.filter || {}
 
@@ -922,6 +922,9 @@ class Store {
         // TODO: Put some console message in development mode
         if (this.getType(dataObject.type)) {
           return this.createOrUpdateModel(dataObject)
+        } else {
+          console.warn(&#x60;no type defined for ${dataObject.type}&#x60;)
+          return null
         }
       })
     )
@@ -1020,7 +1023,7 @@ class Store {
           json.errors.forEach((error) =&gt; {
             const { index, key } = parseErrorPointer(error)
             if (key != null) {
-              let errors = recordsArray[index].errors[key] || []
+              const errors = recordsArray[index].errors[key] || []
               errors.push(error)
               recordsArray[index].errors[key] = errors
             }

@@ -68,7 +68,7 @@ describe('Example React App', () => {
   it('can edit an existing model', async () => {
     const todoStore = new AppStore()
 
-    let todo = todoStore.add('todos', { title: 'Pay bills', options: { trackable_id: 1 } })
+    const todo = todoStore.add('todos', { title: 'Pay bills', options: { trackable_id: 1 } })
 
     const wrapper = mount(
       <Provider store={todoStore}>

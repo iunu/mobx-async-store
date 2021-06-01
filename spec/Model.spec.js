@@ -26,6 +26,7 @@ class Note extends Model {
 
   @validates
   @relatedToOne organization
+
   @relatedToOne todo
 }
 
@@ -100,6 +101,7 @@ class Organization extends Model {
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
+
   @relatedToMany awesome_notes
   @relatedToMany categories
 
@@ -123,6 +125,7 @@ class Todo extends Model {
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
+
   @relatedToMany awesome_notes
   @relatedToMany categories
 
@@ -291,7 +294,7 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      let todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
 
       note.organization = todo
       expect(todo.notes).toContain(note)

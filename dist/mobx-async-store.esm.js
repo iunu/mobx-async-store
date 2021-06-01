@@ -1,5 +1,4 @@
 import _defineProperty from '@babel/runtime/helpers/defineProperty';
-import _regeneratorRuntime from '@babel/runtime/regenerator';
 import _asyncToGenerator from '@babel/runtime/helpers/asyncToGenerator';
 import _initializerDefineProperty from '@babel/runtime/helpers/initializerDefineProperty';
 import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
@@ -7,13 +6,12 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import _typeof from '@babel/runtime/helpers/typeof';
-import { computed, observable, set, extendObservable, transaction, toJS, action } from 'mobx';
+import _regeneratorRuntime from '@babel/runtime/regenerator';
+import { computed, observable, set, extendObservable, toJS, transaction, action } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
-import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
-import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
-import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
+import _setPrototypeOf from '@babel/runtime/helpers/setPrototypeOf';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
-import uuidv1 from 'uuid/v1';
+import { v1 } from 'uuid';
 import qs from 'qs';
 import pluralize from 'pluralize';
 import dig from 'lodash/get';
@@ -25,6 +23,9 @@ import findLast from 'lodash/findLast';
 import pick from 'lodash/pick';
 import uniqBy from 'lodash/uniqBy';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
+import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
+import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
+import _wrapNativeSuper from '@babel/runtime/helpers/wrapNativeSuper';
 
 var QueryString = {
   parse: function parse(str) {
@@ -39,7 +40,7 @@ var QueryString = {
   }
 };
 
-function _wrapRegExp(re, groups) { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, undefined, groups); }; var _RegExp = _wrapNativeSuper(RegExp); var _super = RegExp.prototype; var _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = _RegExp.call(this, re, flags); _groups.set(_this, groups || _groups.get(re)); return _this; } _inherits(BabelRegExp, _RegExp); BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) result.groups = buildGroups(result, this); return result; }; BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if (typeof substitution === "string") { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } else if (typeof substitution === "function") { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = []; args.push.apply(args, arguments); if (_typeof(args[args.length - 1]) !== "object") { args.push(buildGroups(args, _this)); } return substitution.apply(this, args); }); } else { return _super[Symbol.replace].call(this, str, substitution); } }; function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { groups[name] = result[g[name]]; return groups; }, Object.create(null)); } return _wrapRegExp.apply(this, arguments); }
+function _wrapRegExp() { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, undefined, groups); }; var _super = RegExp.prototype; var _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = new RegExp(re, flags); _groups.set(_this, groups || _groups.get(re)); return _setPrototypeOf(_this, BabelRegExp.prototype); } _inherits(BabelRegExp, RegExp); BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) result.groups = buildGroups(result, this); return result; }; BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if (typeof substitution === "string") { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } else if (typeof substitution === "function") { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = arguments; if (_typeof(args[args.length - 1]) !== "object") { args = [].slice.call(args); args.push(buildGroups(args, _this)); } return substitution.apply(this, args); }); } else { return _super[Symbol.replace].call(this, str, substitution); } }; function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { groups[name] = result[g[name]]; return groups; }, Object.create(null)); } return _wrapRegExp.apply(this, arguments); }
 var pending = {};
 var counter = {};
 var URL_MAX_LENGTH = 1024;
@@ -101,7 +102,7 @@ function requestUrl(baseUrl, endpoint) {
   return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
 }
 function newId() {
-  return "tmp-".concat(uuidv1());
+  return "tmp-".concat(v1());
 }
 function idOrNewId(id) {
   return id || newId();
@@ -335,11 +336,11 @@ var Schema = /*#__PURE__*/function () {
 }();
 var schema = new Schema();
 
-var _class, _descriptor, _temp;
+var _class$1, _descriptor$1;
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Maps the passed-in property names through and runs validations against those properties
  * @method validateProperties
@@ -405,7 +406,7 @@ function stringifyIds(object) {
  */
 
 
-var Model = (_class = (_temp = /*#__PURE__*/function () {
+var Model = (_class$1 = /*#__PURE__*/function () {
   /**
    * Initializer for model
    *
@@ -418,7 +419,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
 
     this.isInFlight = false;
 
-    _initializerDefineProperty(this, "errors", _descriptor, this);
+    _initializerDefineProperty(this, "errors", _descriptor$1, this);
 
     this._snapshots = [];
 
@@ -477,8 +478,137 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
 
 
   _createClass(Model, [{
-    key: "rollback",
+    key: "isDirty",
+    get: function get() {
+      return this.dirtyAttributes.length > 0 || this.dirtyRelationships.length > 0;
+    }
+    /**
+     * A list of any attribute paths which have been changed since the previous snapshot
+     *
+     * const todo = new Todo({ title: 'Buy Milk' })
+     * todo.dirtyAttributes
+     * => []
+     * todo.title = 'Buy Cheese'
+     * todo.dirtyAttributes
+     * => ['title']
+     * todo.options = { variety: 'Cheddar' }
+     * todo.dirtyAttributes
+     * => ['title', 'options.variety']
+     *
+     * @method dirtyAttributes
+     * @return {Array} dirty attribute paths
+     */
 
+  }, {
+    key: "dirtyAttributes",
+    get: function get() {
+      var _this2 = this;
+
+      return Array.from(Object.keys(this.attributes).reduce(function (dirtyAccumulator, attr) {
+        var currentValue = _this2.attributes[attr];
+        var previousValue = _this2.previousSnapshot.attributes[attr];
+
+        if (isObject(currentValue)) {
+          diff(currentValue, previousValue).forEach(function (property) {
+            dirtyAccumulator.add("".concat(attr, ".").concat(property));
+          });
+        } else if (!isEqual(previousValue, currentValue)) {
+          dirtyAccumulator.add(attr);
+        }
+
+        return dirtyAccumulator;
+      }, new Set()));
+    }
+    /**
+     * A list of any relationship paths which have been changed since the previous snapshot
+     * We check changes to both ids and types in case there are polymorphic relationships
+     *
+     * const todo = new Todo({ title: 'Buy Milk' })
+     * todo.dirtyRelationships
+     * => []
+     * todo.note = note1
+     * todo.dirtyRelationships
+     * => ['relationships.note']
+     *
+     * @method dirtyRelationships
+     * @return {Array} dirty relationship paths
+     */
+
+  }, {
+    key: "dirtyRelationships",
+    get: function get() {
+      // TODO: make what returns from this.relationships to be more consistent
+      var previousRelationships = this.previousSnapshot.relationships || {};
+      var currentRelationships = this.relationships || {};
+      var schemaRelationships = this.relationshipNames;
+
+      if (Object.keys(currentRelationships).length === 0) {
+        return Object.keys(previousRelationships);
+      }
+
+      return Array.from(schemaRelationships.reduce(function (dirtyAccumulator, name) {
+        var _currentRelationships, _previousRelationship;
+
+        var currentValues = ((_currentRelationships = currentRelationships[name]) === null || _currentRelationships === void 0 ? void 0 : _currentRelationships.data) || [];
+        var previousValues = ((_previousRelationship = previousRelationships[name]) === null || _previousRelationship === void 0 ? void 0 : _previousRelationship.data) || [];
+        var currentIds = Array.isArray(currentValues) ? currentValues.map(function (value) {
+          return [value.id, value.type];
+        }).sort() : [currentValues.id, currentValues.type];
+        var previousIds = Array.isArray(previousValues) ? previousValues.map(function (value) {
+          return [value.id, value.type];
+        }).sort() : [previousValues.id, previousValues.type];
+
+        if (!isEqual(currentIds, previousIds)) {
+          dirtyAccumulator.add(name);
+        }
+
+        return dirtyAccumulator;
+      }, new Set()));
+    }
+    /**
+     * Have any changes been made since this record was last persisted?
+     * @property hasUnpersistedChanges
+     * @type {Boolean}
+     */
+
+  }, {
+    key: "hasUnpersistedChanges",
+    get: function get() {
+      return this.isDirty || !this.previousSnapshot.persisted;
+    }
+    /**
+     * True if the model has not been sent to the store
+     * @property isNew
+     * @type {Boolean}
+     */
+
+  }, {
+    key: "isNew",
+    get: function get() {
+      var id = this.id;
+      if (!id) return true;
+      if (String(id).indexOf('tmp') === -1) return false;
+      return true;
+    }
+    /**
+     * True if the instance is coming from / going to the server
+     * ```
+     * kpi = store.find('kpis', 5)
+     * // fetch started
+     * kpi.isInFlight
+     * => true
+     * // fetch finished
+     * kpi.isInFlight
+     * => false
+     * ```
+     * @property isInFlight
+     * @type {Boolean}
+     * @default false
+     */
+
+  }, {
+    key: "rollback",
+    value:
     /**
      * restores data to its last snapshot state
      * ```
@@ -492,7 +622,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      * ```
      * @method rollback
      */
-    value: function rollback() {
+    function rollback() {
       this._applySnapshot(this.previousSnapshot);
     }
     /**
@@ -520,7 +650,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
   }, {
     key: "save",
     value: function save() {
-      var _this2 = this;
+      var _this3 = this;
 
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -553,13 +683,13 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
 
       if (relationships) {
         relationships.forEach(function (rel) {
-          if (Array.isArray(_this2[rel])) {
-            _this2[rel].forEach(function (item, i) {
+          if (Array.isArray(_this3[rel])) {
+            _this3[rel].forEach(function (item, i) {
               if (item && item.isNew) {
                 throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "[").concat(i, "]\""));
               }
             });
-          } else if (_this2[rel] && _this2[rel].isNew) {
+          } else if (_this3[rel] && _this3[rel].isNew) {
             throw new Error("Invariant violated: tried to save a relationship to an unpersisted record: \"".concat(rel, "\""));
           }
         });
@@ -738,7 +868,7 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
     key: "_makeObservable",
     value: function _makeObservable(initialAttributes) {
       var defaultAttributes = this.defaultAttributes;
-      extendObservable(this, _objectSpread(_objectSpread({}, defaultAttributes), initialAttributes));
+      extendObservable(this, _objectSpread$2(_objectSpread$2({}, defaultAttributes), initialAttributes));
     }
     /**
      * The current state of defined attributes and relationships of the instance
@@ -757,13 +887,21 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      */
 
   }, {
-    key: "setPreviousSnapshot",
-
+    key: "snapshot",
+    get: function get() {
+      return {
+        attributes: this.attributes,
+        relationships: toJS(this.relationships)
+      };
+    }
     /**
      * Sets previous snapshot to current snapshot
      *
      * @method setPreviousSnapshot
      */
+
+  }, {
+    key: "setPreviousSnapshot",
     value: function setPreviousSnapshot() {
       this._takeSnapshot();
     }
@@ -774,8 +912,25 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      */
 
   }, {
-    key: "_takeSnapshot",
+    key: "previousSnapshot",
+    get: function get() {
+      var length = this._snapshots.length;
+      if (length === 0) throw new Error('Invariant violated: model has no snapshots');
+      return this._snapshots[length - 1];
+    }
+    /**
+     * the latest persisted snapshot or the first snapshot if the model was never persisted
+     *
+     * @method previousSnapshot
+     */
 
+  }, {
+    key: "persistedSnapshot",
+    get: function get() {
+      return findLast(this._snapshots, function (ss) {
+        return ss.persisted;
+      }) || this._snapshots[0];
+    }
     /**
      * take a snapshot of the current model state.
      * if persisted, clear the stack and push this snapshot to the top
@@ -783,6 +938,9 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      * @method _takeSnapshot
      * @param {Object} options
      */
+
+  }, {
+    key: "_takeSnapshot",
     value: function _takeSnapshot() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var persisted = options.persisted || false;
@@ -811,16 +969,16 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
   }, {
     key: "_applySnapshot",
     value: function _applySnapshot(snapshot) {
-      var _this3 = this;
+      var _this4 = this;
 
       if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
       transaction(function () {
-        _this3.attributeNames.forEach(function (key) {
-          _this3[key] = snapshot.attributes[key];
+        _this4.attributeNames.forEach(function (key) {
+          _this4[key] = snapshot.attributes[key];
         });
 
-        _this3.relationships = snapshot.relationships;
-        _this3.errors = {};
+        _this4.relationships = snapshot.relationships;
+        _this4.errors = {};
       });
     }
     /**
@@ -830,346 +988,6 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
      * @return {String} current attributes
     */
 
-  }, {
-    key: "errorForKey",
-
-    /**
-     * Getter to check if the record has errors.
-     *
-     * @method hasErrors
-     * @return {Boolean}
-     */
-    value: function errorForKey(key) {
-      return this.errors[key];
-    }
-    /**
-     * Getter to just get the names of a records attributes.
-     *
-     * @method attributeNames
-     * @return {Array}
-     */
-
-  }, {
-    key: "jsonapi",
-
-    /**
-     * getter method to get data in api compliance format
-     * TODO: Figure out how to handle unpersisted ids
-     *
-     * @method jsonapi
-     * @return {Object} data in JSON::API format
-     */
-    value: function jsonapi() {
-      var _this4 = this;
-
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var attributeDefinitions = this.attributeDefinitions,
-          attributeNames = this.attributeNames,
-          meta = this.meta,
-          id = this.id,
-          type = this.constructor.type;
-      var filteredAttributeNames = attributeNames;
-      var filteredRelationshipNames = [];
-
-      if (options.attributes) {
-        filteredAttributeNames = attributeNames.filter(function (name) {
-          return options.attributes.includes(name);
-        });
-      }
-
-      var attributes = filteredAttributeNames.reduce(function (attrs, key) {
-        var value = _this4[key];
-
-        if (value) {
-          var DataType = attributeDefinitions[key].dataType;
-          var attr;
-
-          if (DataType.name === 'Array' || DataType.name === 'Object') {
-            attr = toJS(value);
-          } else if (DataType.name === 'Date') {
-            attr = makeDate(value).toISOString();
-          } else {
-            attr = DataType(value);
-          }
-
-          attrs[key] = attr;
-        } else {
-          attrs[key] = value;
-        }
-
-        return attrs;
-      }, {});
-      var data = {
-        type: type,
-        attributes: attributes,
-        id: String(id)
-      };
-
-      if (options.relationships) {
-        filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
-          return options.relationships.includes(name);
-        });
-        var relationships = filteredRelationshipNames.reduce(function (rels, key) {
-          rels[key] = toJS(_this4.relationships[key]);
-          stringifyIds(rels[key]);
-          return rels;
-        }, {});
-        data.relationships = relationships;
-      }
-
-      if (meta) {
-        data['meta'] = meta;
-      }
-
-      if (String(id).match(/tmp/)) {
-        delete data.id;
-      }
-
-      return data;
-    }
-  }, {
-    key: "updateAttributes",
-    value: function updateAttributes(attributes) {
-      var _this5 = this;
-
-      transaction(function () {
-        Object.keys(attributes).forEach(function (key) {
-          _this5[key] = attributes[key];
-        });
-      });
-    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
-    // Perhaps that shared code
-
-  }, {
-    key: "updateAttributesFromResponse",
-    value: function updateAttributesFromResponse(data, included) {
-      var _this6 = this;
-
-      var tmpId = this.id;
-      var id = data.id,
-          attributes = data.attributes,
-          relationships = data.relationships;
-      transaction(function () {
-        set(_this6, 'id', id);
-        Object.keys(attributes).forEach(function (key) {
-          set(_this6, key, attributes[key]);
-        });
-
-        if (relationships) {
-          Object.keys(relationships).forEach(function (key) {
-            if (!relationships[key].hasOwnProperty('meta')) {
-              // todo: throw error if relationship is not defined in model
-              set(_this6.relationships, key, relationships[key]);
-            }
-          });
-        }
-
-        if (included) {
-          _this6.store.createModelsFromData(included);
-        }
-      }); // Update target isInFlight
-
-      this.isInFlight = false;
-
-      this._takeSnapshot({
-        persisted: true
-      });
-
-      transaction(function () {
-        // NOTE: This resolves an issue where a record is persisted but the
-        // index key is still a temp uuid. We can't simply remove the temp
-        // key because there may be associated records that have the temp
-        // uuid id as its only reference to the newly persisted record.
-        // TODO: Figure out a way to update associated records to use the
-        // newly persisted id.
-        _this6.store.data[_this6.type].records.set(String(tmpId), _this6);
-
-        _this6.store.data[_this6.type].records.set(String(_this6.id), _this6);
-      });
-    }
-  }, {
-    key: "clone",
-    value: function clone() {
-      var attributes = cloneDeep(this.snapshot.attributes);
-      var relationships = cloneDeep(this.snapshot.relationships);
-      return this.store.createModel(this.type, this.id, {
-        attributes: attributes,
-        relationships: relationships
-      });
-    }
-    /**
-     * Comparison by identity
-     * returns `true` if this object has the same type and id as the
-     * "other" object, ignores differences in attrs and relationships
-     *
-     * @method isSame
-     * @param {Object} other
-     * @return {Object}
-     */
-
-  }, {
-    key: "isSame",
-    value: function isSame(other) {
-      if (!other) return false;
-      return this.type === other.type && this.id === other.id;
-    }
-  }, {
-    key: "isDirty",
-    get: function get() {
-      return this.dirtyAttributes.length > 0 || this.dirtyRelationships.length > 0;
-    }
-    /**
-     * A list of any attribute paths which have been changed since the previous snapshot
-     *
-     * const todo = new Todo({ title: 'Buy Milk' })
-     * todo.dirtyAttributes
-     * => []
-     * todo.title = 'Buy Cheese'
-     * todo.dirtyAttributes
-     * => ['title']
-     * todo.options = { variety: 'Cheddar' }
-     * todo.dirtyAttributes
-     * => ['title', 'options.variety']
-     *
-     * @method dirtyAttributes
-     * @return {Array} dirty attribute paths
-     */
-
-  }, {
-    key: "dirtyAttributes",
-    get: function get() {
-      var _this7 = this;
-
-      return Array.from(Object.keys(this.attributes).reduce(function (dirtyAccumulator, attr) {
-        var currentValue = _this7.attributes[attr];
-        var previousValue = _this7.previousSnapshot.attributes[attr];
-
-        if (isObject(currentValue)) {
-          diff(currentValue, previousValue).forEach(function (property) {
-            dirtyAccumulator.add("".concat(attr, ".").concat(property));
-          });
-        } else if (!isEqual(previousValue, currentValue)) {
-          dirtyAccumulator.add(attr);
-        }
-
-        return dirtyAccumulator;
-      }, new Set()));
-    }
-    /**
-     * A list of any relationship paths which have been changed since the previous snapshot
-     * We check changes to both ids and types in case there are polymorphic relationships
-     *
-     * const todo = new Todo({ title: 'Buy Milk' })
-     * todo.dirtyRelationships
-     * => []
-     * todo.note = note1
-     * todo.dirtyRelationships
-     * => ['relationships.note']
-     *
-     * @method dirtyRelationships
-     * @return {Array} dirty relationship paths
-     */
-
-  }, {
-    key: "dirtyRelationships",
-    get: function get() {
-      // TODO: make what returns from this.relationships to be more consistent
-      var previousRelationships = this.previousSnapshot.relationships || {};
-      var currentRelationships = this.relationships || {};
-      var schemaRelationships = this.relationshipNames;
-
-      if (Object.keys(currentRelationships).length === 0) {
-        return Object.keys(previousRelationships);
-      }
-
-      return Array.from(schemaRelationships.reduce(function (dirtyAccumulator, name) {
-        var _currentRelationships, _previousRelationship;
-
-        var currentValues = ((_currentRelationships = currentRelationships[name]) === null || _currentRelationships === void 0 ? void 0 : _currentRelationships.data) || [];
-        var previousValues = ((_previousRelationship = previousRelationships[name]) === null || _previousRelationship === void 0 ? void 0 : _previousRelationship.data) || [];
-        var currentIds = Array.isArray(currentValues) ? currentValues.map(function (value) {
-          return [value.id, value.type];
-        }).sort() : [currentValues.id, currentValues.type];
-        var previousIds = Array.isArray(previousValues) ? previousValues.map(function (value) {
-          return [value.id, value.type];
-        }).sort() : [previousValues.id, previousValues.type];
-
-        if (!isEqual(currentIds, previousIds)) {
-          dirtyAccumulator.add(name);
-        }
-
-        return dirtyAccumulator;
-      }, new Set()));
-    }
-    /**
-     * Have any changes been made since this record was last persisted?
-     * @property hasUnpersistedChanges
-     * @type {Boolean}
-     */
-
-  }, {
-    key: "hasUnpersistedChanges",
-    get: function get() {
-      return this.isDirty || !this.previousSnapshot.persisted;
-    }
-    /**
-     * True if the model has not been sent to the store
-     * @property isNew
-     * @type {Boolean}
-     */
-
-  }, {
-    key: "isNew",
-    get: function get() {
-      var id = this.id;
-      if (!id) return true;
-      if (String(id).indexOf('tmp') === -1) return false;
-      return true;
-    }
-    /**
-     * True if the instance is coming from / going to the server
-     * ```
-     * kpi = store.find('kpis', 5)
-     * // fetch started
-     * kpi.isInFlight
-     * => true
-     * // fetch finished
-     * kpi.isInFlight
-     * => false
-     * ```
-     * @property isInFlight
-     * @type {Boolean}
-     * @default false
-     */
-
-  }, {
-    key: "snapshot",
-    get: function get() {
-      return {
-        attributes: this.attributes,
-        relationships: toJS(this.relationships)
-      };
-    }
-  }, {
-    key: "previousSnapshot",
-    get: function get() {
-      var length = this._snapshots.length;
-      if (length === 0) throw new Error('Invariant violated: model has no snapshots');
-      return this._snapshots[length - 1];
-    }
-    /**
-     * the latest persisted snapshot or the first snapshot if the model was never persisted
-     *
-     * @method previousSnapshot
-     */
-
-  }, {
-    key: "persistedSnapshot",
-    get: function get() {
-      return findLast(this._snapshots, function (ss) {
-        return ss.persisted;
-      }) || this._snapshots[0];
-    }
   }, {
     key: "type",
     get: function get() {
@@ -1185,10 +1003,10 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
   }, {
     key: "attributes",
     get: function get() {
-      var _this8 = this;
+      var _this5 = this;
 
       return this.attributeNames.reduce(function (attributes, key) {
-        var value = toJS(_this8[key]);
+        var value = toJS(_this5[key]);
 
         if (value == null) {
           delete attributes[key];
@@ -1237,6 +1055,25 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
     get: function get() {
       return Object.keys(this.errors).length > 0;
     }
+    /**
+     * Getter to check if the record has errors.
+     *
+     * @method hasErrors
+     * @return {Boolean}
+     */
+
+  }, {
+    key: "errorForKey",
+    value: function errorForKey(key) {
+      return this.errors[key];
+    }
+    /**
+     * Getter to just get the names of a records attributes.
+     *
+     * @method attributeNames
+     * @return {Array}
+     */
+
   }, {
     key: "attributeNames",
     get: function get() {
@@ -1273,21 +1110,185 @@ var Model = (_class = (_temp = /*#__PURE__*/function () {
         relationships: {}
       });
     }
+    /**
+     * getter method to get data in api compliance format
+     * TODO: Figure out how to handle unpersisted ids
+     *
+     * @method jsonapi
+     * @return {Object} data in JSON::API format
+     */
+
+  }, {
+    key: "jsonapi",
+    value: function jsonapi() {
+      var _this6 = this;
+
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var attributeDefinitions = this.attributeDefinitions,
+          attributeNames = this.attributeNames,
+          meta = this.meta,
+          id = this.id,
+          type = this.constructor.type;
+      var filteredAttributeNames = attributeNames;
+      var filteredRelationshipNames = [];
+
+      if (options.attributes) {
+        filteredAttributeNames = attributeNames.filter(function (name) {
+          return options.attributes.includes(name);
+        });
+      }
+
+      var attributes = filteredAttributeNames.reduce(function (attrs, key) {
+        var value = _this6[key];
+
+        if (value) {
+          var DataType = attributeDefinitions[key].dataType;
+          var attr;
+
+          if (DataType.name === 'Array' || DataType.name === 'Object') {
+            attr = toJS(value);
+          } else if (DataType.name === 'Date') {
+            attr = makeDate(value).toISOString();
+          } else {
+            attr = DataType(value);
+          }
+
+          attrs[key] = attr;
+        } else {
+          attrs[key] = value;
+        }
+
+        return attrs;
+      }, {});
+      var data = {
+        type: type,
+        attributes: attributes,
+        id: String(id)
+      };
+
+      if (options.relationships) {
+        filteredRelationshipNames = Object.keys(this.relationships).filter(function (name) {
+          return options.relationships.includes(name);
+        });
+        var relationships = filteredRelationshipNames.reduce(function (rels, key) {
+          rels[key] = toJS(_this6.relationships[key]);
+          stringifyIds(rels[key]);
+          return rels;
+        }, {});
+        data.relationships = relationships;
+      }
+
+      if (meta) {
+        data.meta = meta;
+      }
+
+      if (String(id).match(/tmp/)) {
+        delete data.id;
+      }
+
+      return data;
+    }
+  }, {
+    key: "updateAttributes",
+    value: function updateAttributes(attributes) {
+      var _this7 = this;
+
+      transaction(function () {
+        Object.keys(attributes).forEach(function (key) {
+          _this7[key] = attributes[key];
+        });
+      });
+    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
+    // Perhaps that shared code
+
+  }, {
+    key: "updateAttributesFromResponse",
+    value: function updateAttributesFromResponse(data, included) {
+      var _this8 = this;
+
+      var tmpId = this.id;
+      var id = data.id,
+          attributes = data.attributes,
+          relationships = data.relationships;
+      transaction(function () {
+        set(_this8, 'id', id);
+        Object.keys(attributes).forEach(function (key) {
+          set(_this8, key, attributes[key]);
+        });
+
+        if (relationships) {
+          Object.keys(relationships).forEach(function (key) {
+            if (!Object.prototype.hasOwnProperty.call(relationships[key], 'meta')) {
+              // todo: throw error if relationship is not defined in model
+              set(_this8.relationships, key, relationships[key]);
+            }
+          });
+        }
+
+        if (included) {
+          _this8.store.createModelsFromData(included);
+        }
+      }); // Update target isInFlight
+
+      this.isInFlight = false;
+
+      this._takeSnapshot({
+        persisted: true
+      });
+
+      transaction(function () {
+        // NOTE: This resolves an issue where a record is persisted but the
+        // index key is still a temp uuid. We can't simply remove the temp
+        // key because there may be associated records that have the temp
+        // uuid id as its only reference to the newly persisted record.
+        // TODO: Figure out a way to update associated records to use the
+        // newly persisted id.
+        _this8.store.data[_this8.type].records.set(String(tmpId), _this8);
+
+        _this8.store.data[_this8.type].records.set(String(_this8.id), _this8);
+      });
+    }
+  }, {
+    key: "clone",
+    value: function clone() {
+      var attributes = cloneDeep(this.snapshot.attributes);
+      var relationships = cloneDeep(this.snapshot.relationships);
+      return this.store.createModel(this.type, this.id, {
+        attributes: attributes,
+        relationships: relationships
+      });
+    }
+    /**
+     * Comparison by identity
+     * returns `true` if this object has the same type and id as the
+     * "other" object, ignores differences in attrs and relationships
+     *
+     * @method isSame
+     * @param {Object} other
+     * @return {Object}
+     */
+
+  }, {
+    key: "isSame",
+    value: function isSame(other) {
+      if (!other) return false;
+      return this.type === other.type && this.id === other.id;
+    }
   }]);
 
   return Model;
-}(), _temp), (_applyDecoratedDescriptor(_class.prototype, "isNew", [computed], Object.getOwnPropertyDescriptor(_class.prototype, "isNew"), _class.prototype), _descriptor = _applyDecoratedDescriptor(_class.prototype, "errors", [observable], {
+}(), (_applyDecoratedDescriptor(_class$1.prototype, "isNew", [computed], Object.getOwnPropertyDescriptor(_class$1.prototype, "isNew"), _class$1.prototype), _descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "errors", [observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-})), _class);
+})), _class$1);
 
-var _class$1, _descriptor$1, _descriptor2, _descriptor3, _descriptor4, _temp$1;
+var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4;
 
-function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
@@ -1297,7 +1298,7 @@ function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { 
  * @constructor
  */
 
-var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
+var Store = (_class = /*#__PURE__*/function () {
   /**
    * Observable property used to store data and
    * handle changes to state
@@ -1326,7 +1327,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
     _classCallCheck(this, Store);
 
-    _initializerDefineProperty(this, "data", _descriptor$1, this);
+    _initializerDefineProperty(this, "data", _descriptor, this);
 
     _initializerDefineProperty(this, "lastResponseHeaders", _descriptor2, this);
 
@@ -1598,7 +1599,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
   _createClass(Store, [{
     key: "fetchOne",
-
+    value:
     /**
      * Fetches record by `id` from the server and returns a Promise.
      *
@@ -1609,7 +1610,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * @param {Object} options { queryParams }
      * @return {Object} record
      */
-    value: function () {
+    function () {
       var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, id) {
         var options,
             queryParams,
@@ -1702,7 +1703,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
   }, {
     key: "fetchUrl",
-
+    value:
     /**
      * Builds fetch url based
      *
@@ -1710,7 +1711,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * @param {String} type the type to find
      * @param {Object} options
      */
-    value: function fetchUrl(type, queryParams, id, options) {
+    function fetchUrl(type, queryParams, id, options) {
       var baseUrl = this.baseUrl,
           modelTypeIndex = this.modelTypeIndex;
       var endpoint = modelTypeIndex[type].endpoint;
@@ -1727,7 +1728,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
   }, {
     key: "fetchAll",
-
+    value:
     /**
      * Finds all records with the given `type`. Always fetches from the server.
      *
@@ -1737,7 +1738,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * @param {Object} options
      * @return {Promise} Promise.resolve(records) or Promise.reject(status)
      */
-    value: function () {
+    function () {
       var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type) {
         var _this2 = this;
 
@@ -1859,7 +1860,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
   }, {
     key: "reset",
-
+    value:
     /**
      * Clears the store of a given type, or clears all if no type given
      *
@@ -1870,7 +1871,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      *
      * @method reset
      */
-    value: function reset(type) {
+    function reset(type) {
       if (type) {
         this.data[type] = {
           records: observable.map({}),
@@ -1998,7 +1999,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
 
         return response;
       });
-    })
+    }
     /**
      * Gets type of collection from data observable
      *
@@ -2006,7 +2007,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
      * @param {String} type
      * @return {Object} observable type object structure
      */
-
+    )
   }, {
     key: "getType",
     value: function getType(type) {
@@ -2226,6 +2227,9 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
           // TODO: Put some console message in development mode
           if (_this6.getType(dataObject.type)) {
             return _this6.createOrUpdateModel(dataObject);
+          } else {
+            console.warn("no type defined for ".concat(dataObject.type));
+            return null;
           }
         });
       });
@@ -2404,21 +2408,21 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
   }]);
 
   return Store;
-}(), _temp$1), (_descriptor$1 = _applyDecoratedDescriptor(_class$1.prototype, "data", [observable], {
+}(), (_descriptor = _applyDecoratedDescriptor(_class.prototype, "data", [observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2 = _applyDecoratedDescriptor(_class$1.prototype, "lastResponseHeaders", [observable], {
+}), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, "lastResponseHeaders", [observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-}), _descriptor3 = _applyDecoratedDescriptor(_class$1.prototype, "addModel", [action], {
+}), _descriptor3 = _applyDecoratedDescriptor(_class.prototype, "addModel", [action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2443,7 +2447,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       return model;
     };
   }
-}), _descriptor4 = _applyDecoratedDescriptor(_class$1.prototype, "remove", [action], {
+}), _descriptor4 = _applyDecoratedDescriptor(_class.prototype, "remove", [action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2454,7 +2458,7 @@ var Store = (_class$1 = (_temp$1 = /*#__PURE__*/function () {
       _this9.data[type].records.delete(String(id));
     };
   }
-})), _class$1);
+})), _class);
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
@@ -2582,11 +2586,11 @@ var _Symbol$species;
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
-function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -2691,7 +2695,7 @@ function getRelatedRecords(record, property) {
       }
     }
 
-    record.cachedRelationships = _objectSpread$2(_objectSpread$2({}, cachedRelationships), {}, _defineProperty({}, relationType, {
+    record.cachedRelationships = _objectSpread(_objectSpread({}, cachedRelationships), {}, _defineProperty({}, relationType, {
       data: relatedRecords.map(function (r) {
         return {
           type: r.type,

@@ -1325,7 +1325,7 @@ describe('Store', () => {
       const todos = store.createModelsFromData(dataObjs)
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
-      expect(typeof todos[1]).toBe('undefined')
+      expect(todos[1]).toBe(null)
     })
   })
 })

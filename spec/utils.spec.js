@@ -3,7 +3,7 @@ import { deriveIdQueryStrings, URL_MAX_LENGTH } from '../src/utils'
 
 describe('deriveIdQueryStrings', () => {
   const shortIds = [1, 2, 3]
-  const longIds = Array.from({length: 1000}, (_, index) => 1000 + index)
+  const longIds = Array.from({ length: 1000 }, (_, index) => 1000 + index)
   const baseUrl = 'https://example.com/todos'
 
   it('splits ids into an expected length', () => {

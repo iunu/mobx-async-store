@@ -2,7 +2,7 @@ import QueryString from '../src/QueryString'
 
 describe('QueryString', () => {
   const queryString = 'fields[articles][]=title&fields[articles][]=body&fields[people]=name'
-  const params = { fields: { articles: [ 'title', 'body' ], people: 'name' } }
+  const params = { fields: { articles: ['title', 'body'], people: 'name' } }
 
   describe('stringify', () => {
     it('stringifies a deeply nested param object', () => {
