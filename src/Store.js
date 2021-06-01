@@ -353,7 +353,7 @@ class Store {
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
   fetchMany = (type, ids, options = {}) => {
-    let idsToQuery = ids.slice().map(String)
+    const idsToQuery = ids.slice().map(String)
     const queryParams = options.queryParams || {}
     queryParams.filter = queryParams.filter || {}
 
@@ -837,6 +837,9 @@ class Store {
         // TODO: Put some console message in development mode
         if (this.getType(dataObject.type)) {
           return this.createOrUpdateModel(dataObject)
+        } else {
+          console.warn(`no type defined for ${dataObject.type}`)
+          return null
         }
       })
     )
@@ -935,7 +938,7 @@ class Store {
           json.errors.forEach((error) => {
             const { index, key } = parseErrorPointer(error)
             if (key != null) {
-              let errors = recordsArray[index].errors[key] || []
+              const errors = recordsArray[index].errors[key] || []
               errors.push(error)
               recordsArray[index].errors[key] = errors
             }

@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.9.3"
+        "version": "3.10.1"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -1533,7 +1533,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 845,
+            "line": 848,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1562,7 +1562,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 866,
+            "line": 869,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",

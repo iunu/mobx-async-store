@@ -63,7 +63,7 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  * @param {String} modelType an override of the modelType
  */
 export function getRelatedRecords (record, property, modelType = null) {
-  let { relationships, cachedRelationships } = record
+  const { relationships, cachedRelationships } = record
 
   const relationType = modelType || property
 

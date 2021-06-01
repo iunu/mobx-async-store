@@ -737,7 +737,7 @@ class Model {
     }
 
     if (meta) {
-      data['meta'] = meta
+      data.meta = meta
     }
 
     if (String(id).match(/tmp/)) {
@@ -769,7 +769,7 @@ class Model {
       })
       if (relationships) {
         Object.keys(relationships).forEach(key => {
-          if (!relationships[key].hasOwnProperty('meta')) {
+          if (!Object.prototype.hasOwnProperty.call(relationships[key], 'meta')) {
             // todo: throw error if relationship is not defined in model
             set(this.relationships, key, relationships[key])
           }
