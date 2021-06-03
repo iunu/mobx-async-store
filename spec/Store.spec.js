@@ -1242,6 +1242,24 @@ describe('Store', () => {
       expect(todo.category.name).toEqual(category.name)
     })
 
+    it('creates a shallow related model with a relatedToOne property not already in the store', () => {
+      const todoData = {
+        attributes: { title: 'hello!' },
+        relationships: {
+          category: { data: { id: '1', type: 'categories' } }
+        }
+      }
+      const todo = store.createModel('todos', 1, todoData)
+      expect(todo.id).toEqual(1)
+      expect(todo.category.id).toEqual('1')
+      expect(todo.category.type).toEqual('categories')
+      expect(todo.category.name).toBe('')
+
+      store.createOrUpdateModel({ id: '1', type: 'categories', attributes: { name: 'Cat5' } })
+
+      expect(todo.category.name).toEqual('Cat5')
+    })
+
     it('creates a model with relatedToMany property', () => {
       const tag = store.add('tags', { id: 3, label: 'Tag #3' })
       const todoData = {

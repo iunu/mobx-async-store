@@ -2708,27 +2708,27 @@ function getRelatedRecords(record, property) {
   return new RelatedRecordsArray(relatedRecords, record, relationType);
 }
 /**
- * Handles getting polymorphic has_one/belong_to.
+ * Gets a single related record from the store for relatedToOne relationships.
+ * 1. Gets the relationships hash of a record.
+ * 2. Identifies the correct relationship within the hash
+ * 3. Uses the id and type to either get a record from the store, or create a model using the type and id
  *
  * @method getRelatedRecord
  */
 
 function getRelatedRecord(record, property) {
+  var _relationships$relati;
+
   var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-  // Get relationships
-  var relationships = record.relationships; // Short circuit if no relationships are present
-
-  if (!relationships) return; // Use property name unless model type is provided
-
+  var relationships = record.relationships;
+  if (!relationships) return;
   var relationType = modelType ? singularizeType(modelType) : property;
-  var reference = relationships[relationType]; // Short circuit if matching reference is not found
-
-  if (!reference || !reference.data) return;
-  var _reference$data = reference.data,
-      id = _reference$data.id,
-      type = _reference$data.type;
+  var relatedData = (_relationships$relati = relationships[relationType]) === null || _relationships$relati === void 0 ? void 0 : _relationships$relati.data;
+  if (!relatedData) return;
+  var id = relatedData.id,
+      type = relatedData.type;
   var recordType = modelType || type;
-  return record.store.getRecord(recordType, id);
+  return record.store.getOne(recordType, id) || record.store.createModel(type, id, {});
 }
 /**
  * Handles setting polymorphic has_one/belong_to.

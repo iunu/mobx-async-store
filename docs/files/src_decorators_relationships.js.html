@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.10.1</em>
+            <em>API Docs for: 3.11.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -204,28 +204,26 @@ export function getRelatedRecords (record, property, modelType = null) {
 }
 
 /**
- * Handles getting polymorphic has_one/belong_to.
+ * Gets a single related record from the store for relatedToOne relationships.
+ * 1. Gets the relationships hash of a record.
+ * 2. Identifies the correct relationship within the hash
+ * 3. Uses the id and type to either get a record from the store, or create a model using the type and id
  *
  * @method getRelatedRecord
  */
 export function getRelatedRecord (record, property, modelType = null) {
-  // Get relationships
   const { relationships } = record
-
-  // Short circuit if no relationships are present
   if (!relationships) return
 
-  // Use property name unless model type is provided
   const relationType = modelType ? singularizeType(modelType) : property
-  const reference = relationships[relationType]
+  const relatedData = relationships[relationType]?.data
 
-  // Short circuit if matching reference is not found
-  if (!reference || !reference.data) return
+  if (!relatedData) return
 
-  const { id, type } = reference.data
+  const { id, type } = relatedData
   const recordType = modelType || type
 
-  return record.store.getRecord(recordType, id)
+  return record.store.getOne(recordType, id) || record.store.createModel(type, id, {})
 }
 
 /**
