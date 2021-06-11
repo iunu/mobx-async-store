@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.10.3</em>
+            <em>API Docs for: 3.10.4-rcjess2</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -267,7 +267,7 @@ class Model {
    * =&gt; []
    * todo.note = note1
    * todo.dirtyRelationships
-   * =&gt; [&#x27;relationships.note&#x27;]
+   * =&gt; [&#x27;note&#x27;]
    *
    * @method dirtyRelationships
    * @return {Array} dirty relationship paths
@@ -764,6 +764,7 @@ class Model {
    * TODO: Figure out how to handle unpersisted ids
    *
    * @method jsonapi
+   * @param {Object} options {attributes: [list of attribute names], relationships: [list of relationship names]}
    * @return {Object} data in JSON::API format
    */
   jsonapi (options = {}) {
@@ -776,7 +777,6 @@ class Model {
     } = this
 
     let filteredAttributeNames = attributeNames
-    let filteredRelationshipNames = []
 
     if (options.attributes) {
       filteredAttributeNames = attributeNames
@@ -809,16 +809,22 @@ class Model {
     }
 
     if (options.relationships) {
-      filteredRelationshipNames = Object.keys(this.relationships)
-        .filter(name =&gt; options.relationships.includes(name))
+      const currentRelationshipNames = this.relationships ? Object.keys(this.relationships) : []
+      const relationshipNames = [...currentRelationshipNames, ...this.dirtyRelationships]
+      const filteredRelationshipNames = relationshipNames.filter(name =&gt; options.relationships.includes(name))
 
-      const relationships = filteredRelationshipNames.reduce((rels, key) =&gt; {
-        rels[key] = toJS(this.relationships[key])
-        stringifyIds(rels[key])
+      data.relationships = filteredRelationshipNames.reduce((rels, key) =&gt; {
+        if (this.relationships &amp;&amp; this.relationships[key]) {
+          // If a relationship currently exists on the model, stringify and set it here.
+          rels[key] = toJS(this.relationships[key])
+          stringifyIds(rels[key])
+        } else {
+          // Otherwise if there is no current relationship with the name, it must be a dirty relationship that we are deleting.
+          // We set the id to null here so that we can update that relationship in the API layer.
+          rels[key] = { id: null }
+        }
         return rels
       }, {})
-
-      data.relationships = relationships
     }
 
     if (meta) {

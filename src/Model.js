@@ -182,7 +182,7 @@ class Model {
    * => []
    * todo.note = note1
    * todo.dirtyRelationships
-   * => ['relationships.note']
+   * => ['note']
    *
    * @method dirtyRelationships
    * @return {Array} dirty relationship paths
@@ -679,6 +679,7 @@ class Model {
    * TODO: Figure out how to handle unpersisted ids
    *
    * @method jsonapi
+   * @param {Object} options {attributes: [list of attribute names], relationships: [list of relationship names]}
    * @return {Object} data in JSON::API format
    */
   jsonapi (options = {}) {
@@ -691,7 +692,6 @@ class Model {
     } = this
 
     let filteredAttributeNames = attributeNames
-    let filteredRelationshipNames = []
 
     if (options.attributes) {
       filteredAttributeNames = attributeNames
@@ -724,16 +724,22 @@ class Model {
     }
 
     if (options.relationships) {
-      filteredRelationshipNames = Object.keys(this.relationships)
-        .filter(name => options.relationships.includes(name))
+      const currentRelationshipNames = this.relationships ? Object.keys(this.relationships) : []
+      const relationshipNames = [...currentRelationshipNames, ...this.dirtyRelationships]
+      const filteredRelationshipNames = relationshipNames.filter(name => options.relationships.includes(name))
 
-      const relationships = filteredRelationshipNames.reduce((rels, key) => {
-        rels[key] = toJS(this.relationships[key])
-        stringifyIds(rels[key])
+      data.relationships = filteredRelationshipNames.reduce((rels, key) => {
+        if (this.relationships && this.relationships[key]) {
+          // If a relationship currently exists on the model, stringify and set it here.
+          rels[key] = toJS(this.relationships[key])
+          stringifyIds(rels[key])
+        } else {
+          // Otherwise if there is no current relationship with the name, it must be a dirty relationship that we are deleting.
+          // We set the id to null here so that we can update that relationship in the API layer.
+          rels[key] = { id: null }
+        }
         return rels
       }, {})
-
-      data.relationships = relationships
     }
 
     if (meta) {

@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "3.10.3"
+        "version": "3.10.4-rcjess2"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -372,7 +372,7 @@
         {
             "file": "src/Model.js",
             "line": 176,
-            "description": "A list of any relationship paths which have been changed since the previous snapshot\nWe check changes to both ids and types in case there are polymorphic relationships\n\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyRelationships\n=> []\ntodo.note = note1\ntodo.dirtyRelationships\n=> ['relationships.note']",
+            "description": "A list of any relationship paths which have been changed since the previous snapshot\nWe check changes to both ids and types in case there are polymorphic relationships\n\nconst todo = new Todo({ title: 'Buy Milk' })\ntodo.dirtyRelationships\n=> []\ntodo.note = note1\ntodo.dirtyRelationships\n=> ['note']",
             "itemtype": "method",
             "name": "dirtyRelationships",
             "return": {
@@ -702,6 +702,13 @@
             "description": "getter method to get data in api compliance format\nTODO: Figure out how to handle unpersisted ids",
             "itemtype": "method",
             "name": "jsonapi",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "{attributes: [list of attribute names], relationships: [list of relationship names]}",
+                    "type": "Object"
+                }
+            ],
             "return": {
                 "description": "data in JSON::API format",
                 "type": "Object"
@@ -710,7 +717,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 805,
+            "line": 811,
             "description": "Comparison by identity\nreturns `true` if this object has the same type and id as the\n\"other\" object, ignores differences in attrs and relationships",
             "itemtype": "method",
             "name": "isSame",

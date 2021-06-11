@@ -966,6 +966,31 @@ describe('Model', () => {
         }
       })
     })
+
+    it('returns null ids in relationships when deleting one', () => {
+      const note = store.add('notes', {
+        id: 11,
+        description: 'Example description'
+      })
+
+      const todo = store.add('todos', { id: 11, title: 'Buy Milk', notes: [note] })
+      todo.notes.remove(note)
+
+      expect(todo.dirtyRelationships).toEqual(['notes'])
+      expect(todo.jsonapi({ relationships: ['notes'] })).toEqual({
+        id: '11',
+        type: 'todos',
+        attributes: {
+          due_at: timestamp.toISOString(),
+          tags: [],
+          title: 'Buy Milk',
+          options: {}
+        },
+        relationships: {
+          notes: { id: null }
+        }
+      })
+    })
   })
 
   describe('.isDirty', () => {
