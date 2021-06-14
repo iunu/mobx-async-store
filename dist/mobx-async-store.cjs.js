@@ -2907,7 +2907,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
         }
 
         var recordIndexToRemove = _this.findIndex(function (model) {
-          return model.id.toString() === id.toString() && model.type === type;
+          return (model === null || model === void 0 ? void 0 : model.id.toString()) === id.toString() && model.type === type;
         });
 
         if (recordIndexToRemove >= 0) _this.splice(recordIndexToRemove, 1);
