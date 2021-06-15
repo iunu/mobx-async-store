@@ -430,15 +430,21 @@ describe('Model', () => {
     const note2 = store.add('notes', {
       description: 'Another note'
     })
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('organizations', {
+      title: 'Buy Milk',
+      notes: [
+        {
+          id: '1001',
+          type: 'notes'
+        },
+        note1,
+        note2
+      ]
+    })
 
-    const notes = todo.notes
-    notes.add(note1)
-    notes.add(note2)
-
-    notes.remove(note1)
-    expect(notes).not.toContain(note1)
-    expect(notes).toContain(note2)
+    todo.notes.remove(note1)
+    expect(todo.notes).not.toContain(note1)
+    expect(todo.notes).toContain(note2)
   })
 
   it('relatedToMany models remove reference to record', () => {

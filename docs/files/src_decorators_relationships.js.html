@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.10.2</em>
+            <em>API Docs for: 3.10.3</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -396,7 +396,7 @@ export class RelatedRecordsArray extends Array {
       if (referenceIndexToRemove &gt;= 0) { relationships[property].data.splice(referenceIndexToRemove, 1) }
 
       const recordIndexToRemove = this.findIndex(
-        model =&gt; model.id.toString() === id.toString() &amp;&amp; model.type === type
+        model =&gt; model?.id.toString() === id.toString() &amp;&amp; model.type === type
       )
       if (recordIndexToRemove &gt;= 0) this.splice(recordIndexToRemove, 1)
 
