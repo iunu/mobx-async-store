@@ -428,8 +428,6 @@ var Model = (_class$1 = /*#__PURE__*/function () {
     var defaultAttributes = this.defaultAttributes;
     extendObservable(this, _objectSpread$2(_objectSpread$2({}, defaultAttributes), initialAttributes));
 
-    this._observeAttributes(initialAttributes);
-
     this._takeSnapshot({
       persisted: !this.isNew
     });
