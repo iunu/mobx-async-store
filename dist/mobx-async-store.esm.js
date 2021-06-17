@@ -1,13 +1,13 @@
-import _defineProperty from '@babel/runtime/helpers/defineProperty';
 import _asyncToGenerator from '@babel/runtime/helpers/asyncToGenerator';
 import _initializerDefineProperty from '@babel/runtime/helpers/initializerDefineProperty';
 import _classCallCheck from '@babel/runtime/helpers/classCallCheck';
 import _createClass from '@babel/runtime/helpers/createClass';
+import _defineProperty from '@babel/runtime/helpers/defineProperty';
 import '@babel/runtime/helpers/initializerWarningHelper';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import _typeof from '@babel/runtime/helpers/typeof';
 import _regeneratorRuntime from '@babel/runtime/regenerator';
-import { computed, observable, set, extendObservable, toJS, transaction, action } from 'mobx';
+import { computed, observable, set, toJS, transaction, makeObservable, extendObservable, action } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _setPrototypeOf from '@babel/runtime/helpers/setPrototypeOf';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
@@ -283,8 +283,9 @@ var Schema = /*#__PURE__*/function () {
   function Schema() {
     _classCallCheck(this, Schema);
 
-    this.structure = {};
-    this.relations = {};
+    _defineProperty(this, "structure", {});
+
+    _defineProperty(this, "relations", {});
   }
 
   _createClass(Schema, [{
@@ -417,13 +418,17 @@ var Model = (_class$1 = /*#__PURE__*/function () {
 
     _classCallCheck(this, Model);
 
-    this.isInFlight = false;
+    _defineProperty(this, "isInFlight", false);
 
     _initializerDefineProperty(this, "errors", _descriptor$1, this);
 
-    this._snapshots = [];
+    _defineProperty(this, "_snapshots", []);
 
-    this._makeObservable(initialAttributes);
+    makeObservable(this);
+    var defaultAttributes = this.defaultAttributes;
+    extendObservable(this, _objectSpread$2(_objectSpread$2({}, defaultAttributes), initialAttributes));
+
+    this._observeAttributes(initialAttributes);
 
     this._takeSnapshot({
       persisted: !this.isNew
@@ -857,19 +862,6 @@ var Model = (_class$1 = /*#__PURE__*/function () {
     }
     /* Private Methods */
 
-    /**
-     * Magic method that makes changes to records
-     * observable
-     *
-     * @method _makeObservable
-     */
-
-  }, {
-    key: "_makeObservable",
-    value: function _makeObservable(initialAttributes) {
-      var defaultAttributes = this.defaultAttributes;
-      extendObservable(this, _objectSpread$2(_objectSpread$2({}, defaultAttributes), initialAttributes));
-    }
     /**
      * The current state of defined attributes and relationships of the instance
      * Really just an alias for attributes
@@ -1331,22 +1323,22 @@ var Store = (_class = /*#__PURE__*/function () {
 
     _initializerDefineProperty(this, "lastResponseHeaders", _descriptor2, this);
 
-    this.genericErrorMessage = 'Something went wrong.';
+    _defineProperty(this, "genericErrorMessage", 'Something went wrong.');
 
-    this.add = function (type, data) {
+    _defineProperty(this, "add", function (type, data) {
       if (data.constructor.name === 'Array') {
         return _this.addModels(type, data);
       } else {
         return _this.addModel(type, toJS(data));
       }
-    };
+    });
 
-    this.pickAttributes = function (properties, type) {
+    _defineProperty(this, "pickAttributes", function (properties, type) {
       var attributeNames = Object.keys(_this.schema.structure[type]);
       return pick(properties, attributeNames);
-    };
+    });
 
-    this.pickRelationships = function (properties, type) {
+    _defineProperty(this, "pickRelationships", function (properties, type) {
       var relationshipNames = Object.keys(_this.schema.relations[type] || {});
       var allRelationships = pick(properties, relationshipNames);
       return Object.keys(allRelationships).reduce(function (references, key) {
@@ -1372,9 +1364,9 @@ var Store = (_class = /*#__PURE__*/function () {
         };
         return references;
       }, {});
-    };
+    });
 
-    this.build = function (type, properties) {
+    _defineProperty(this, "build", function (type, properties) {
       var id = idOrNewId(properties.id);
 
       var attributes = _this.pickAttributes(properties, type);
@@ -1384,19 +1376,19 @@ var Store = (_class = /*#__PURE__*/function () {
       });
 
       return model;
-    };
+    });
 
     _initializerDefineProperty(this, "addModel", _descriptor3, this);
 
-    this.addModels = function (type, data) {
+    _defineProperty(this, "addModels", function (type, data) {
       return transaction(function () {
         return data.map(function (obj) {
           return _this.addModel(type, obj);
         });
       });
-    };
+    });
 
-    this.bulkSave = /*#__PURE__*/function () {
+    _defineProperty(this, "bulkSave", /*#__PURE__*/function () {
       var _ref = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(type, records) {
         var options,
             queryParams,
@@ -1447,11 +1439,11 @@ var Store = (_class = /*#__PURE__*/function () {
       return function (_x2, _x3) {
         return _ref.apply(this, arguments);
       };
-    }();
+    }());
 
     _initializerDefineProperty(this, "remove", _descriptor4, this);
 
-    this.getOne = function (type, id) {
+    _defineProperty(this, "getOne", function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       if (!id) {
@@ -1466,9 +1458,9 @@ var Store = (_class = /*#__PURE__*/function () {
       } else {
         return _this.getRecord(type, id);
       }
-    };
+    });
 
-    this.findOne = function (type, id) {
+    _defineProperty(this, "findOne", function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       if (!id) {
@@ -1483,9 +1475,9 @@ var Store = (_class = /*#__PURE__*/function () {
       } else {
         return _this.fetchOne(type, id, options);
       }
-    };
+    });
 
-    this.getMany = function (type, ids) {
+    _defineProperty(this, "getMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
 
@@ -1494,9 +1486,9 @@ var Store = (_class = /*#__PURE__*/function () {
       return records.filter(function (record) {
         return idsToQuery.includes(record.id);
       });
-    };
+    });
 
-    this.fetchMany = function (type, ids) {
+    _defineProperty(this, "fetchMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
       var queryParams = options.queryParams || {};
@@ -1518,9 +1510,9 @@ var Store = (_class = /*#__PURE__*/function () {
       }).catch(function (err) {
         return Promise.reject(err);
       });
-    };
+    });
 
-    this.findMany = function (type, ids) {
+    _defineProperty(this, "findMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
 
@@ -1554,9 +1546,9 @@ var Store = (_class = /*#__PURE__*/function () {
       return query.then(function (recordsFromServer) {
         return recordsInStore.concat.apply(recordsInStore, _toConsumableArray(recordsFromServer));
       });
-    };
+    });
 
-    this.getAll = function (type) {
+    _defineProperty(this, "getAll", function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var queryParams = options.queryParams;
 
@@ -1565,9 +1557,9 @@ var Store = (_class = /*#__PURE__*/function () {
       } else {
         return _this.getRecords(type);
       }
-    };
+    });
 
-    this.findAll = function (type) {
+    _defineProperty(this, "findAll", function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       var records = _this.getAll(type, options);
@@ -1577,8 +1569,9 @@ var Store = (_class = /*#__PURE__*/function () {
       } else {
         return _this.fetchAll(type, options);
       }
-    };
+    });
 
+    makeObservable(this);
     this.init(_options);
     this.schema = schema;
   }
@@ -2458,7 +2451,7 @@ var Store = (_class = /*#__PURE__*/function () {
       _this9.data[type].records.delete(String(id));
     };
   }
-})), _class);
+}), _applyDecoratedDescriptor(_class.prototype, "initializeObservableDataProperty", [action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype)), _class);
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
@@ -2808,7 +2801,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
 
     _this = _super.call.apply(_super, [this].concat(_toConsumableArray(_array)));
 
-    _this.add = function (relatedRecord) {
+    _defineProperty(_assertThisInitialized(_this), "add", function (relatedRecord) {
       var _assertThisInitialize = _assertThisInitialized(_this),
           record = _assertThisInitialize.record,
           property = _assertThisInitialize.property;
@@ -2853,9 +2846,9 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
       }
 
       return relatedRecord;
-    };
+    });
 
-    _this.remove = function (relatedRecord) {
+    _defineProperty(_assertThisInitialized(_this), "remove", function (relatedRecord) {
       var _assertThisInitialize2 = _assertThisInitialized(_this),
           record = _assertThisInitialize2.record,
           property = _assertThisInitialize2.property;
@@ -2882,10 +2875,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
 
         if (!relationships[property].data.length) {
           delete relationships[property];
-        }
-
-        if (!Object.keys(record.relationships).length) {
-          delete record.relationships;
         } // hack this will only work with singularized relationships.
 
 
@@ -2893,9 +2882,9 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
       }
 
       return relatedRecord;
-    };
+    });
 
-    _this.replace = function (array) {
+    _defineProperty(_assertThisInitialized(_this), "replace", function (array) {
       var _assertThisInitialize3 = _assertThisInitialized(_this),
           record = _assertThisInitialize3.record,
           property = _assertThisInitialize3.property;
@@ -2909,7 +2898,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
           return _this.add(object);
         });
       });
-    };
+    });
 
     _this.property = _property;
     _this.record = _record;

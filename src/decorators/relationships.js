@@ -319,10 +319,6 @@ export class RelatedRecordsArray extends Array {
         delete relationships[property]
       }
 
-      if (!Object.keys(record.relationships).length) {
-        delete record.relationships
-      }
-
       // hack this will only work with singularized relationships.
       setRelatedRecord(
         relatedRecord,

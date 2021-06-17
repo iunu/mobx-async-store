@@ -1,5 +1,5 @@
 /* global fetch */
-import { action, observable, set, toJS, transaction } from 'mobx'
+import { action, makeObservable, observable, set, toJS, transaction } from 'mobx'
 import pick from 'lodash/pick'
 import uniqBy from 'lodash/uniqBy'
 import {
@@ -46,6 +46,7 @@ class Store {
    * @method constructor
    */
   constructor (options) {
+    makeObservable(this)
     this.init(options)
     this.schema = schema
   }
@@ -603,6 +604,7 @@ class Store {
    *
    * @method initializeObservableDataProperty
    */
+  @action
   initializeObservableDataProperty () {
     const { types } = this.constructor
 
