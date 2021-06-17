@@ -18,15 +18,32 @@ import { transaction } from 'mobx'
  * @method relatedToMany
  */
 export function relatedToMany (targetOrModelKlass, property, descriptor) {
-  schema.addRelationship({
-    type: targetOrModelKlass.constructor.type,
-    property,
-    dataType: Array
-  })
+  if (typeof targetOrModelKlass === 'function') {
+    return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Array
+      })
 
-  return {
-    get () {
-      return getRelatedRecords(this, property)
+      return {
+        get () {
+          const { type } = targetOrModelKlass
+          return getRelatedRecords(this, property2, type)
+        }
+      }
+    }
+  } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property,
+      dataType: Array
+    })
+
+    return {
+      get () {
+        return getRelatedRecords(this, property)
+      }
     }
   }
 }
@@ -37,22 +54,42 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
  *
  * @method relatedToOne
  */
-export function relatedToOne (targetOrModelKlass, property, descriptor) {
-  schema.addRelationship({
-    type: targetOrModelKlass.constructor.type,
-    property,
-    dataType: Object
-  })
-  return {
-    get () {
-      return getRelatedRecord(this, property)
-    },
-    set (record) {
-      return setRelatedRecord(this, record, property)
+ export function relatedToOne (targetOrModelKlass, property, descriptor) {
+  if (typeof targetOrModelKlass === 'function') {
+    return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Object
+      })
+
+      return {
+        get () {
+          const { type } = targetOrModelKlass
+          return getRelatedRecord(this, property2, type)
+        },
+        set (record) {
+          const { type } = targetOrModelKlass
+          return setRelatedRecord(this, record, property2, type)
+        }
+      }
+    }
+  } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property,
+      dataType: Object
+    })
+    return {
+      get () {
+        return getRelatedRecord(this, property)
+      },
+      set (record) {
+        return setRelatedRecord(this, record, property)
+      }
     }
   }
 }
-
 /**
  * Handles getting polymorphic records or only a specific
  * type if specified.

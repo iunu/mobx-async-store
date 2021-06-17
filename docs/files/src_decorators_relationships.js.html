@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.10.3</em>
+            <em>API Docs for: 3.10.4-jessrc1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -103,15 +103,32 @@ import { transaction } from &#x27;mobx&#x27;
  * @method relatedToMany
  */
 export function relatedToMany (targetOrModelKlass, property, descriptor) {
-  schema.addRelationship({
-    type: targetOrModelKlass.constructor.type,
-    property,
-    dataType: Array
-  })
+  if (typeof targetOrModelKlass === &#x27;function&#x27;) {
+    return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Array
+      })
 
-  return {
-    get () {
-      return getRelatedRecords(this, property)
+      return {
+        get () {
+          const { type } = targetOrModelKlass
+          return getRelatedRecords(this, property2, type)
+        }
+      }
+    }
+  } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property,
+      dataType: Array
+    })
+
+    return {
+      get () {
+        return getRelatedRecords(this, property)
+      }
     }
   }
 }
@@ -122,22 +139,42 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
  *
  * @method relatedToOne
  */
-export function relatedToOne (targetOrModelKlass, property, descriptor) {
-  schema.addRelationship({
-    type: targetOrModelKlass.constructor.type,
-    property,
-    dataType: Object
-  })
-  return {
-    get () {
-      return getRelatedRecord(this, property)
-    },
-    set (record) {
-      return setRelatedRecord(this, record, property)
+ export function relatedToOne (targetOrModelKlass, property, descriptor) {
+  if (typeof targetOrModelKlass === &#x27;function&#x27;) {
+    return function (target2, property2, descriptor2) {
+      schema.addRelationship({
+        type: target2.constructor.type,
+        property: property2,
+        dataType: Object
+      })
+
+      return {
+        get () {
+          const { type } = targetOrModelKlass
+          return getRelatedRecord(this, property2, type)
+        },
+        set (record) {
+          const { type } = targetOrModelKlass
+          return setRelatedRecord(this, record, property2, type)
+        }
+      }
+    }
+  } else {
+    schema.addRelationship({
+      type: targetOrModelKlass.constructor.type,
+      property,
+      dataType: Object
+    })
+    return {
+      get () {
+        return getRelatedRecord(this, property)
+      },
+      set (record) {
+        return setRelatedRecord(this, record, property)
+      }
     }
   }
-}
-
+ }
 /**
  * Handles getting polymorphic records or only a specific
  * type if specified.
