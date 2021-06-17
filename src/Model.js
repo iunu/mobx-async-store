@@ -95,7 +95,6 @@ class Model {
       ...initialAttributes
     })
 
-    this._observeAttributes(initialAttributes)
     this._takeSnapshot({ persisted: !this.isNew })
   }
 
