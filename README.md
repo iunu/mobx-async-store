@@ -5,15 +5,6 @@
 # mobx-async-store
 
 Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/
-
-# Caution
-
-This library is experimental and not advised for use in production use.
-
-# TODO
-
-- [ ] Improve documentation
-
 ## Table of Contents
 
 - Introduction
