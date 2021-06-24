@@ -38,6 +38,13 @@ class Store {
    */
   @observable lastResponseHeaders = {}
 
+  /**
+   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
+   * @property loadingStates
+   * @type {Map}
+   */
+  loadingStates = observable.map()
+
   genericErrorMessage = 'Something went wrong.'
 
   /**
@@ -278,6 +285,9 @@ class Store {
     }
     const { queryParams } = options
     const url = this.fetchUrl(type, queryParams, id)
+
+    const state = this.setLoadingState({ ...options, type, id, url })
+
     const response = await this.fetch(url, { method: 'GET' })
 
     if (response.status === 200) {
@@ -291,9 +301,11 @@ class Store {
       const record = this.createOrUpdateModel(data)
 
       this.data[type].cache.set(url, [record.id])
+      this.deleteLoadingState(state)
       return record
     } else {
       // TODO: return Promise.reject(response.status)
+      this.deleteLoadingState(state)
       return null
     }
   }
@@ -355,14 +367,14 @@ class Store {
    */
   fetchMany = (type, ids, options = {}) => {
     const idsToQuery = ids.slice().map(String)
-    const queryParams = options.queryParams || {}
+    const { queryParams = {}, queryTag } = options
     queryParams.filter = queryParams.filter || {}
 
     const baseUrl = this.fetchUrl(type, queryParams)
     const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
     const queries = idQueries.map((queryIds) => {
       queryParams.filter.ids = queryIds
-      return this.fetchAll(type, { queryParams })
+      return this.fetchAll(type, { queryParams, queryTag })
     })
 
     return Promise.all(queries)
@@ -403,7 +415,7 @@ class Store {
     const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
     idsToQuery = idsToQuery.filter((id) => !recordIdsInStore.includes(id))
 
-    const queryParams = options.queryParams || {}
+    const { queryParams = {}, queryTag } = options
     queryParams.filter = queryParams.filter || {}
     const baseUrl = this.fetchUrl(type, queryParams)
     const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
@@ -411,7 +423,7 @@ class Store {
     const query = Promise.all(
       idQueries.map((queryIds) => {
         queryParams.filter.ids = queryIds
-        return this.fetchAll(type, { queryParams })
+        return this.fetchAll(type, { queryParams, queryTag })
       })
     )
 
@@ -452,6 +464,48 @@ class Store {
   }
 
   /**
+   * Sets a loading state when a fetch / deserialization is in flight. Loading states
+   * are Sets inside of the `loadingStates` Map, so multiple loading states can be in flight
+   * at the same time. An optional query tag can be passed to identify the particular query.
+   *
+   * const todos = store.fetchAll('todos', { queryTag: 'myTodos' })
+   * store.loadingStates.get('myTodos')
+   * => Set([{ url, type, queryParams, queryTag }])
+   *
+   * @method setLoadingState
+   * @param {Object} options options that can be used to build the loading state info
+   * @return {Object} the loading state that was added
+   */
+  setLoadingState = ({ url, type, queryParams, queryTag }) => {
+    queryTag = queryTag || type
+
+    const loadingStateInfo = { url, type, queryParams, queryTag }
+
+    let querySet = this.loadingStates.get(queryTag)
+    if (!querySet) {
+      querySet = observable.set([], { deep: false })
+      this.loadingStates.set(queryTag, querySet)
+    }
+    querySet.add(loadingStateInfo)
+    return loadingStateInfo
+  }
+
+  /**
+   * Removes a loading state. If that leaves an empty array for the map key in `loadingStates`,
+   * will also delete the set.
+   * @method deleteLoadingState
+   * @param {Object} state the state to remove
+   */
+  deleteLoadingState = (state) => {
+    const querySet = this.loadingStates.get(state.queryTag)
+
+    querySet.delete(state)
+    if (querySet.size === 0) {
+      this.loadingStates.delete(state.queryTag)
+    }
+  }
+
+  /**
    * Finds all records with the given `type`. Always fetches from the server.
    *
    * @async
@@ -460,9 +514,13 @@ class Store {
    * @param {Object} options
    * @return {Promise} Promise.resolve(records) or Promise.reject(status)
    */
-  async fetchAll (type, options = {}) {
+  fetchAll = async (type, options = {}) => {
     const { queryParams } = options
+
     const url = this.fetchUrl(type, queryParams)
+
+    const state = this.setLoadingState({ ...options, type, url })
+
     const response = await this.fetch(url, { method: 'GET' })
 
     if (response.status === 200) {
@@ -473,7 +531,7 @@ class Store {
         this.createModelsFromData(json.included)
       }
 
-      return transaction(() =>
+      const records = transaction(() =>
         json.data.map((dataObject) => {
           const { id, attributes = {}, relationships = {} } = dataObject
           const record = this.createModel(type, id, { attributes, relationships })
@@ -483,7 +541,10 @@ class Store {
           return record
         })
       )
+      this.deleteLoadingState(state)
+      return records
     } else {
+      this.deleteLoadingState(state)
       return Promise.reject(response.status)
     }
   }

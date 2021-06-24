@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "4.0.0-rc.1"
+        "version": "4.1.0-rc.1"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -485,7 +485,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 383,
+            "line": 379,
             "description": "Checks all validations, adding errors where necessary and returning `false` if any are not valid\nDefault is to check all validations, but they can be selectively run via options:\n - attributes - an array of names of attributes to validate\n - relationships - an array of names of relationships to validate",
             "itemtype": "method",
             "name": "validate",
@@ -504,7 +504,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 407,
+            "line": 403,
             "description": "deletes a record from the store and server",
             "itemtype": "method",
             "name": "destroy",
@@ -516,7 +516,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 474,
+            "line": 470,
             "description": "The current state of defined attributes and relationships of the instance\nReally just an alias for attributes\n```\ntodo = store.find('todos', 5)\ntodo.title\n=> \"Buy the eggs\"\nsnapshot = todo.snapshot\ntodo.title = \"Buy the eggs and bacon\"\nsnapshot.title\n=> \"Buy the eggs and bacon\"\n```",
             "itemtype": "method",
             "name": "snapshot",
@@ -528,7 +528,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 496,
+            "line": 492,
             "description": "Sets previous snapshot to current snapshot",
             "itemtype": "method",
             "name": "setPreviousSnapshot",
@@ -536,7 +536,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 505,
+            "line": 501,
             "description": "the latest snapshot",
             "itemtype": "method",
             "name": "previousSnapshot",
@@ -544,7 +544,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 516,
+            "line": 512,
             "description": "the latest persisted snapshot or the first snapshot if the model was never persisted",
             "itemtype": "method",
             "name": "previousSnapshot",
@@ -552,7 +552,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 525,
+            "line": 521,
             "description": "take a snapshot of the current model state.\nif persisted, clear the stack and push this snapshot to the top\nif not persisted, push this snapshot to the top of the stack",
             "itemtype": "method",
             "name": "_takeSnapshot",
@@ -567,7 +567,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 546,
+            "line": 542,
             "description": "set the current attributes and relationships to the attributes\nand relationships of the snapshot to be applied. also reset errors",
             "itemtype": "method",
             "name": "_applySnapshot",
@@ -582,7 +582,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 563,
+            "line": 559,
             "description": "shortcut to get the static",
             "itemtype": "method",
             "name": "type",
@@ -594,7 +594,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 573,
+            "line": 569,
             "description": "current attributes of record",
             "itemtype": "method",
             "name": "attributes",
@@ -606,7 +606,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 591,
+            "line": 587,
             "description": "Getter find the attribute definition for the model type.",
             "itemtype": "method",
             "name": "attributeDefinitions",
@@ -618,7 +618,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 602,
+            "line": 598,
             "description": "Getter find the relationship definitions for the model type.",
             "itemtype": "method",
             "name": "relationshipDefinitions",
@@ -630,7 +630,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 613,
+            "line": 609,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -642,7 +642,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 623,
+            "line": 619,
             "description": "Getter to check if the record has errors.",
             "itemtype": "method",
             "name": "hasErrors",
@@ -654,7 +654,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 633,
+            "line": 629,
             "description": "Getter to just get the names of a records attributes.",
             "itemtype": "method",
             "name": "attributeNames",
@@ -666,7 +666,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 643,
+            "line": 639,
             "description": "Getter to just get the names of a records relationships.",
             "itemtype": "method",
             "name": "relationshipNames",
@@ -678,7 +678,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 653,
+            "line": 649,
             "description": "getter method to get the default attributes",
             "itemtype": "method",
             "name": "defaultAttributes",
@@ -690,7 +690,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 670,
+            "line": 666,
             "description": "getter method to get data in api compliance format\nTODO: Figure out how to handle unpersisted ids",
             "itemtype": "method",
             "name": "jsonapi",
@@ -702,7 +702,7 @@
         },
         {
             "file": "src/Model.js",
-            "line": 798,
+            "line": 794,
             "description": "Comparison by identity\nreturns `true` if this object has the same type and id as the\n\"other\" object, ignores differences in attrs and relationships",
             "itemtype": "method",
             "name": "isSame",
@@ -741,7 +741,16 @@
         },
         {
             "file": "src/Store.js",
-            "line": 43,
+            "line": 41,
+            "description": "Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))",
+            "itemtype": "property",
+            "name": "loadingStates",
+            "type": "{Map}",
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 50,
             "description": "Initializer for Store class",
             "itemtype": "method",
             "name": "constructor",
@@ -749,7 +758,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 54,
+            "line": 61,
             "description": "Adds an instance or an array of instances to the store.\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.add('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "add",
@@ -773,7 +782,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 75,
+            "line": 82,
             "description": "Given a set of properties and type, returns an object with only the properties\nthat are defined as attributes in the schema for that type.\n```\nproperties = { title: 'Do laundry', unrelatedProperty: 'Do nothing' }\npickAttributes(properties, 'todos')\n=> { title: 'Do laundry' }\n```",
             "itemtype": "method",
             "name": "pickAttributes",
@@ -797,7 +806,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 93,
+            "line": 100,
             "description": "Given a set of properties and type, returns an object with only the properties\nthat are defined as relationships in the schema for that type.\n```\nproperties = { notes: [note1, note2], category: cat1, title: 'Fold Laundry' }\npickRelationships(properties, 'todos')\n=> {\n      notes: {\n        data: [{ id: '1', type: 'notes' }, { id: '2', type: 'notes' }]\n      },\n      category: {\n        data: { id: '1', type: 'categories' }\n      }\n   }\n```",
             "itemtype": "method",
             "name": "pickRelationships",
@@ -821,7 +830,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 133,
+            "line": 140,
             "description": "Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.\nDoes not support relationships, since they require references to objects in the store.\n```\nkpiHash = { name: \"A good thing to measure\" }\nkpi = store.build('kpis', kpiHash)\nkpi.name\n=> \"A good thing to measure\"\n```",
             "itemtype": "method",
             "name": "build",
@@ -845,7 +854,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 156,
+            "line": 163,
             "itemtype": "method",
             "name": "addModel",
             "params": [
@@ -868,7 +877,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 177,
+            "line": 184,
             "itemtype": "method",
             "name": "addModels",
             "params": [
@@ -891,7 +900,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 187,
+            "line": 194,
             "description": "Saves a collection of records via a bulk-supported JSONApi\nendpoint. All records need to be of the same type.",
             "itemtype": "method",
             "name": "bulkSave",
@@ -916,7 +925,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 227,
+            "line": 234,
             "description": "Adds a record from the store. We can't simply remove the record\nby deleting the records property/key via delete due to a bug\nin mobx.",
             "itemtype": "method",
             "name": "remove",
@@ -936,7 +945,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 241,
+            "line": 248,
             "description": "Gets a record from the store, will not fetch from the server if it doesn't exist in store.\nIf given queryParams, it will check the cache for the record.",
             "itemtype": "method",
             "name": "getOne",
@@ -965,7 +974,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 264,
+            "line": 271,
             "description": "Fetches record by `id` from the server and returns a Promise.",
             "async": 1,
             "itemtype": "method",
@@ -995,7 +1004,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 301,
+            "line": 313,
             "description": "Finds a record by `id`.\nIf available in the store, it returns that record. Otherwise, it fetches the record from the server.\n\n  store.findOne('todos', 5)\n  // fetch triggered\n  => event1\n  store.findOne('todos', 5)\n  // no fetch triggered\n  => event1",
             "itemtype": "method",
             "name": "findOne",
@@ -1024,7 +1033,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 331,
+            "line": 343,
             "description": "Get all records with the given `type` and `ids` from the store. This will never fetch from the server.",
             "itemtype": "method",
             "name": "getMany",
@@ -1053,7 +1062,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 347,
+            "line": 359,
             "description": "Fetch all records with the given `type` and `ids` from the server.",
             "itemtype": "method",
             "name": "fetchMany",
@@ -1082,7 +1091,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 373,
+            "line": 385,
             "description": "Finds multiple records of the given `type` with the given `ids` and returns them wrapped in a Promise.\nIf all records are in the store, it returns those.\nIf some records are in the store, it returns those plus fetches all other records.\nOtherwise, it fetches all records from the server.\n\n  store.findMany('todos', [1, 2, 3])\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findMany('todos', [3, 2, 1])\n  // no fetch triggered\n  => [todo1, todo2, todo3]",
             "itemtype": "method",
             "name": "findMany",
@@ -1111,7 +1120,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 423,
+            "line": 435,
             "description": "Builds fetch url based",
             "itemtype": "method",
             "name": "fetchUrl",
@@ -1131,7 +1140,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 437,
+            "line": 449,
             "description": "Gets all records with the given `type` from the store. This will never fetch from the server.",
             "itemtype": "method",
             "name": "getAll",
@@ -1155,7 +1164,41 @@
         },
         {
             "file": "src/Store.js",
-            "line": 454,
+            "line": 466,
+            "description": "Sets a loading state when a fetch / deserialization is in flight. Loading states\nare Sets inside of the `loadingStates` Map, so multiple loading states can be in flight\nat the same time. An optional query tag can be passed to identify the particular query.\n\nconst todos = store.fetchAll('todos', { queryTag: 'myTodos' })\nstore.loadingStates.get('myTodos')\n=> Set([{ url, type, queryParams, queryTag }])",
+            "itemtype": "method",
+            "name": "setLoadingState",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "options that can be used to build the loading state info",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the loading state that was added",
+                "type": "Object"
+            },
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 493,
+            "description": "Removes a loading state. If that leaves an empty array for the map key in `loadingStates`,\nwill also delete the set.",
+            "itemtype": "method",
+            "name": "deleteLoadingState",
+            "params": [
+                {
+                    "name": "state",
+                    "description": "the state to remove",
+                    "type": "Object"
+                }
+            ],
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 508,
             "description": "Finds all records with the given `type`. Always fetches from the server.",
             "async": 1,
             "itemtype": "method",
@@ -1180,7 +1223,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 491,
+            "line": 552,
             "description": "Finds all records of the given `type`.\nIf all records are in the store, it returns those.\nOtherwise, it fetches all records from the server.\n\n  store.findAll('todos')\n  // fetch triggered\n  => [todo1, todo2, todo3]\n\n  store.findAll('todos')\n  // no fetch triggered\n  => [todo1, todo2, todo3]\n\nQuery params can be passed as part of the options hash.\nThe response will be cached, so the next time `findAll`\nis called with identical params and values, the store will\nfirst look for the local result.\n\n  store.findAll('todos', {\n    queryParams: {\n      filter: {\n        start_time: '2020-06-01T00:00:00.000Z',\n        end_time: '2020-06-02T00:00:00.000Z'\n      }\n    }\n  })\n\n\nNOTE: A broader RFC is in development to improve how we keep data in sync\nwith the server. We likely will want to getAll and getRecords\nto return null if nothing is found. However, this causes several regressions\nin portal we will need to address in a larger PR for mobx-async-store updates.",
             "itemtype": "method",
             "name": "findAll",
@@ -1204,7 +1247,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 538,
+            "line": 599,
             "description": "Clears the store of a given type, or clears all if no type given\n\n  store.reset('todos')\n  // removes all todos from store\n  store.reset()\n  // clears store",
             "itemtype": "method",
             "name": "reset",
@@ -1212,7 +1255,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 561,
+            "line": 622,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "init",
@@ -1227,7 +1270,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 573,
+            "line": 634,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1242,7 +1285,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 585,
+            "line": 646,
             "description": "Entry point for configuring the store",
             "itemtype": "method",
             "name": "initializeNetworkConfiguration",
@@ -1257,7 +1300,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 599,
+            "line": 660,
             "description": "Creates an obserable index with model types\nas the primary key\n\nObservable({ todos: {} })",
             "itemtype": "method",
             "name": "initializeObservableDataProperty",
@@ -1265,7 +1308,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 621,
+            "line": 682,
             "description": "Wrapper around fetch applies user defined fetch options",
             "itemtype": "method",
             "name": "fetch",
@@ -1285,7 +1328,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 649,
+            "line": 710,
             "description": "Gets type of collection from data observable",
             "itemtype": "method",
             "name": "getType",
@@ -1304,7 +1347,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 660,
+            "line": 721,
             "description": "Gets individual record from store",
             "itemtype": "method",
             "name": "getRecord",
@@ -1328,7 +1371,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 680,
+            "line": 741,
             "description": "Gets records for type of collection from observable\n\nNOTE: We only return records by unique id, this handles a scenario\nwhere the store keeps around a reference to a newly persisted record by its temp uuid.\nWe can't simply remove the temp uuid reference because other\nrelated models may be still using the temp uuid in their relationships\ndata object. However, when we are listing out records we want them\nto be unique by the persisted id (which is updated after a Model.save)",
             "itemtype": "method",
             "name": "getRecords",
@@ -1347,7 +1390,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 701,
+            "line": 762,
             "description": "Get multiple records by id",
             "itemtype": "method",
             "name": "getRecordsById",
@@ -1371,7 +1414,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 717,
+            "line": 778,
             "description": "Gets single from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecord",
@@ -1399,7 +1442,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 732,
+            "line": 793,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecords",
@@ -1428,7 +1471,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 750,
+            "line": 811,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedIds",
@@ -1452,7 +1495,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 765,
+            "line": 826,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedId",
@@ -1476,7 +1519,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 777,
+            "line": 838,
             "description": "Helper to look up model class for type.",
             "itemtype": "method",
             "name": "getKlass",
@@ -1495,7 +1538,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 788,
+            "line": 849,
             "description": "Creates or updates a model",
             "itemtype": "method",
             "name": "createOrUpdateModel",
@@ -1510,7 +1553,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 828,
+            "line": 889,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1525,7 +1568,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 850,
+            "line": 911,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1554,7 +1597,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 871,
+            "line": 932,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",
