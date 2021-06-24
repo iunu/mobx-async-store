@@ -5,7 +5,7 @@ import {
   relatedToMany,
   relatedToOne
 } from '../src/main'
-import { isObservable, toJS } from 'mobx'
+import { computed, isObservable, toJS } from 'mobx'
 import { Schema } from '../src/schema'
 
 import { URL_MAX_LENGTH } from '../src/utils'
@@ -47,6 +47,10 @@ class Todo extends Model {
 }
 
 class AppStore extends Store {
+  @computed get loadingTodos () {
+    return this.loadingStates.get('todos')?.size > 0
+  }
+
   static types = [Note, Todo, Tag, Category]
 }
 
@@ -931,15 +935,55 @@ describe('Store', () => {
     })
 
     it('allows setting a tag for a query', async () => {
-      expect.assertions(2)
+      expect.assertions(4)
 
       fetch.mockResponseOnce(() => {
         expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' }]))
+        expect(store.loadingTodos).toBe(false)
         return Promise.resolve(JSON.stringify({ data: [] }))
       })
 
       await store.fetchAll('todos', { queryTag: 'loadingSpecialTodos', queryParams: { a: 'b' } })
       expect(store.loadingStates.get('loadingSpecialTodos')).toBeUndefined()
+      expect(store.loadingTodos).toBe(false)
+    })
+
+    it('sets a default tag for a query', async () => {
+      expect.assertions(4)
+
+      fetch.mockResponseOnce(() => {
+        expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([{ queryTag: 'todos', type: 'todos', queryParams: undefined, url: '/example_api/todos' }]))
+        expect(store.loadingTodos).toBe(true)
+        return Promise.resolve(JSON.stringify({ data: [] }))
+      })
+
+      await store.fetchAll('todos')
+      expect(store.loadingStates.get('todos')).toBeUndefined()
+      expect(store.loadingTodos).toBe(false)
+    })
+
+    it('supports multiple loading states from the same tag', async () => {
+      expect.assertions(3)
+
+    fetch.mockResponseOnce(() => {
+      expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([{ queryTag: 'todos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' }]))
+      return new Promise((resolve) => setTimeout(() => resolve(JSON.stringify({ data: [] })), 100))
+    })
+
+    fetch.mockResponseOnce(() => {
+      expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([
+        { queryTag: 'todos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' },
+        { queryTag: 'todos', type: 'todos', queryParams: { c: 'd' }, url: '/example_api/todos?c=d' }
+      ]))
+      return Promise.resolve(JSON.stringify({ data: [] }))
+    })
+
+      await Promise.all([
+        store.fetchAll('todos', { queryParams: { a: 'b' } }),
+        store.fetchAll('todos', { queryParams: { c: 'd' } })
+      ])
+
+      expect(store.loadingStates.get('todos')).toBeUndefined()
     })
 
     it('supports queryParams', async () => {
