@@ -65,7 +65,7 @@ describe('Example React App', () => {
     expect(wrapper.text()).toMatch('Buy Milk')
   })
 
-  it('can edit an existing model', async () => {
+  it('can edit an existing model', () => {
     const todoStore = new AppStore()
 
     const todo = todoStore.add('todos', { title: 'Pay bills', options: { trackable_id: 1 } })
@@ -78,7 +78,7 @@ describe('Example React App', () => {
 
     expect(wrapper.text()).toMatch('Pay bills')
 
-    await wrapper
+    wrapper
       .find('input')
       .last()
       .simulate('change', { target: { value: 'Make payments' } })

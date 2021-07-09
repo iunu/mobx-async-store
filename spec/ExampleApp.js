@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import {
   action,
   computed,
+  makeObservable,
   observable
 } from 'mobx'
 import { inject, observer } from 'mobx-react'
@@ -9,27 +10,27 @@ import { inject, observer } from 'mobx-react'
 import PropTypes from 'prop-types'
 
 const todoCardPropTypes = {
-  store: PropTypes.object.isRequired,
   todo: PropTypes.object.isRequired
 }
-
-@inject('store') @observer
+@observer
 class TodoCard extends Component {
-  @computed get todo () {
-    return this.props.todo
+  constructor () {
+    super()
+    makeObservable(this)
   }
 
   @action onChange = ({ target }) => {
-    this.todo.title = target.value
+    this.props.todo.title = target.value
   }
 
   render () {
-    const { onChange, todo } = this
+    const { onChange } = this
+    const { title } = this.props.todo
     return (
       <li>
-        <label>{ todo.title }</label>
+        <label>{ title }</label>
         <input
-          value={todo.title}
+          value={title}
           onChange={onChange}
         />
       </li>
@@ -37,7 +38,7 @@ class TodoCard extends Component {
   }
 }
 
-TodoCard.wrappedComponent.propTypes = todoCardPropTypes
+TodoCard.propTypes = todoCardPropTypes
 
 function TodoList ({ todos }) {
   return (
@@ -59,6 +60,11 @@ const exampleAppPropTypes = {
 
 @inject('store') @observer
 class ExampleApp extends Component {
+  constructor () {
+    super()
+    makeObservable(this)
+  }
+
   @observable title = ''
 
   @action onChange = ({ target }) => {

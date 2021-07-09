@@ -7,7 +7,7 @@ import {
   validates
 } from '../src/main'
 /* global fetch */
-import { autorun, isObservable } from 'mobx'
+import { autorun, isObservable, runInAction } from 'mobx'
 import {
   exampleRelatedToManyIncludedResponse,
   exampleRelatedToManyIncludedWithNoiseResponse,
@@ -224,8 +224,13 @@ describe('Model', () => {
         }
       })
 
-      todo.title = 'two'
-      todo.title = 'three'
+      runInAction(() => {
+        todo.title = 'two'
+      })
+
+      runInAction(() => {
+        todo.title = 'three'
+      })
     })
 
     it('attributes are overridable in constructor', () => {
@@ -255,8 +260,13 @@ describe('Model', () => {
         }
       })
 
-      todo.options.test = 'one'
-      todo.options.test = 'two'
+      runInAction(() => {
+        todo.options.test = 'one'
+      })
+
+      runInAction(() => {
+        todo.options.test = 'two'
+      })
     })
 
     it('attributes are observable', () => {

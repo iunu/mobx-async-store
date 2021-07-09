@@ -4,7 +4,8 @@ import {
   set,
   toJS,
   transaction,
-  observable
+  observable,
+  makeObservable
 } from 'mobx'
 
 import { diff, makeDate } from './utils'
@@ -86,7 +87,14 @@ class Model {
    * @method constructor
    */
   constructor (initialAttributes = {}) {
-    this._makeObservable(initialAttributes)
+    makeObservable(this)
+    const { defaultAttributes } = this
+
+    extendObservable(this, {
+      ...defaultAttributes,
+      ...initialAttributes
+    })
+
     this._takeSnapshot({ persisted: !this.isNew })
   }
 
@@ -462,21 +470,6 @@ class Model {
   }
 
    /* Private Methods */
-
-  /**
-   * Magic method that makes changes to records
-   * observable
-   *
-   * @method _makeObservable
-   */
-  _makeObservable (initialAttributes) {
-    const { defaultAttributes } = this
-
-    extendObservable(this, {
-      ...defaultAttributes,
-      ...initialAttributes
-    })
-  }
 
   /**
    * The current state of defined attributes and relationships of the instance

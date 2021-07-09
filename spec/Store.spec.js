@@ -168,11 +168,12 @@ describe('Store', () => {
   })
 
   it('initializes data observable', () => {
+    const map = new Map()
     expect(toJS(store.data)).toEqual({
-      todos: { cache: {}, records: {} },
-      notes: { cache: {}, records: {} },
-      categories: { cache: {}, records: {} },
-      tags: { cache: {}, records: {} }
+      todos: { cache: map, records: map },
+      notes: { cache: map, records: map },
+      categories: { cache: map, records: map },
+      tags: { cache: map, records: map }
     })
   })
 
@@ -850,7 +851,7 @@ describe('Store', () => {
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos')
       const cache = toJS(store.data.todos.cache)
-      expect(cache['/example_api/todos']).toEqual(['1'])
+      expect(cache.get('/example_api/todos')).toEqual(['1'])
     })
 
     it('fetched data snapshots are marked as persisted', async () => {
@@ -1057,7 +1058,7 @@ describe('Store', () => {
 
       await store.fetchMany('todos', ['1'])
       const cache = toJS(store.data.todos.cache)
-      expect(cache['/example_api/todos?filter%5Bids%5D=1']).toEqual(['1'])
+      expect(cache.get('/example_api/todos?filter%5Bids%5D=1')).toEqual(['1'])
     })
   })
 
@@ -1214,7 +1215,7 @@ describe('Store', () => {
 
       await store.findMany('todos', ['1'])
       const cache = toJS(store.data.todos.cache)
-      expect(cache['/example_api/todos?filter%5Bids%5D=1']).toEqual(['1'])
+      expect(cache.get('/example_api/todos?filter%5Bids%5D=1')).toEqual(['1'])
     })
   })
 

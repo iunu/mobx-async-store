@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 3.10.3</em>
+            <em>API Docs for: 4.0.0-rc.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -89,7 +89,8 @@ import {
   set,
   toJS,
   transaction,
-  observable
+  observable,
+  makeObservable
 } from &#x27;mobx&#x27;
 
 import { diff, makeDate } from &#x27;./utils&#x27;
@@ -171,7 +172,14 @@ class Model {
    * @method constructor
    */
   constructor (initialAttributes = {}) {
-    this._makeObservable(initialAttributes)
+    makeObservable(this)
+    const { defaultAttributes } = this
+
+    extendObservable(this, {
+      ...defaultAttributes,
+      ...initialAttributes
+    })
+
     this._takeSnapshot({ persisted: !this.isNew })
   }
 
@@ -547,21 +555,6 @@ class Model {
   }
 
    /* Private Methods */
-
-  /**
-   * Magic method that makes changes to records
-   * observable
-   *
-   * @method _makeObservable
-   */
-  _makeObservable (initialAttributes) {
-    const { defaultAttributes } = this
-
-    extendObservable(this, {
-      ...defaultAttributes,
-      ...initialAttributes
-    })
-  }
 
   /**
    * The current state of defined attributes and relationships of the instance
