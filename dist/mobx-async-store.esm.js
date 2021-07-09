@@ -716,7 +716,6 @@ var Model = (_class$1 = /*#__PURE__*/function () {
     key: "reload",
     value: function reload() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      var queryParams = options.queryParams;
       var constructor = this.constructor,
           id = this.id,
           isNew = this.isNew;
@@ -724,7 +723,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       if (isNew) {
         return this.rollback();
       } else {
-        return this.store.fetchOne(constructor.type, id, queryParams);
+        return this.store.fetchOne(constructor.type, id, options);
       }
     }
     /**
@@ -1308,6 +1307,12 @@ var Store = (_class = /*#__PURE__*/function () {
    */
 
   /**
+   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
+   * @property loadingStates
+   * @type {Map}
+   */
+
+  /**
    * Initializer for Store class
    *
    * @method constructor
@@ -1320,6 +1325,8 @@ var Store = (_class = /*#__PURE__*/function () {
     _initializerDefineProperty(this, "data", _descriptor, this);
 
     _initializerDefineProperty(this, "lastResponseHeaders", _descriptor2, this);
+
+    _defineProperty(this, "loadingStates", observable.map());
 
     _defineProperty(this, "genericErrorMessage", 'Something went wrong.');
 
@@ -1489,7 +1496,9 @@ var Store = (_class = /*#__PURE__*/function () {
     _defineProperty(this, "fetchMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
-      var queryParams = options.queryParams || {};
+      var _options$queryParams = options.queryParams,
+          queryParams = _options$queryParams === void 0 ? {} : _options$queryParams,
+          queryTag = options.queryTag;
       queryParams.filter = queryParams.filter || {};
 
       var baseUrl = _this.fetchUrl(type, queryParams);
@@ -1498,7 +1507,8 @@ var Store = (_class = /*#__PURE__*/function () {
       var queries = idQueries.map(function (queryIds) {
         queryParams.filter.ids = queryIds;
         return _this.fetchAll(type, {
-          queryParams: queryParams
+          queryParams: queryParams,
+          queryTag: queryTag
         });
       });
       return Promise.all(queries).then(function (records) {
@@ -1529,7 +1539,9 @@ var Store = (_class = /*#__PURE__*/function () {
       idsToQuery = idsToQuery.filter(function (id) {
         return !recordIdsInStore.includes(id);
       });
-      var queryParams = options.queryParams || {};
+      var _options$queryParams2 = options.queryParams,
+          queryParams = _options$queryParams2 === void 0 ? {} : _options$queryParams2,
+          queryTag = options.queryTag;
       queryParams.filter = queryParams.filter || {};
 
       var baseUrl = _this.fetchUrl(type, queryParams);
@@ -1538,7 +1550,8 @@ var Store = (_class = /*#__PURE__*/function () {
       var query = Promise.all(idQueries.map(function (queryIds) {
         queryParams.filter.ids = queryIds;
         return _this.fetchAll(type, {
-          queryParams: queryParams
+          queryParams: queryParams,
+          queryTag: queryTag
         });
       }));
       return query.then(function (recordsFromServer) {
@@ -1556,6 +1569,134 @@ var Store = (_class = /*#__PURE__*/function () {
         return _this.getRecords(type);
       }
     });
+
+    _defineProperty(this, "setLoadingState", function (_ref4) {
+      var url = _ref4.url,
+          type = _ref4.type,
+          queryParams = _ref4.queryParams,
+          queryTag = _ref4.queryTag;
+      queryTag = queryTag || type;
+      var loadingStateInfo = {
+        url: url,
+        type: type,
+        queryParams: queryParams,
+        queryTag: queryTag
+      };
+
+      var querySet = _this.loadingStates.get(queryTag);
+
+      if (!querySet) {
+        querySet = observable.set([], {
+          deep: false
+        });
+
+        _this.loadingStates.set(queryTag, querySet);
+      }
+
+      querySet.add(loadingStateInfo);
+      return loadingStateInfo;
+    });
+
+    _defineProperty(this, "deleteLoadingState", function (state) {
+      var querySet = _this.loadingStates.get(state.queryTag);
+
+      querySet.delete(state);
+
+      if (querySet.size === 0) {
+        _this.loadingStates.delete(state.queryTag);
+      }
+    });
+
+    _defineProperty(this, "fetchAll", /*#__PURE__*/function () {
+      var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type) {
+        var options,
+            queryParams,
+            url,
+            state,
+            response,
+            json,
+            records,
+            _args2 = arguments;
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                options = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : {};
+                queryParams = options.queryParams;
+                url = _this.fetchUrl(type, queryParams);
+                state = _this.setLoadingState(_objectSpread$1(_objectSpread$1({}, options), {}, {
+                  type: type,
+                  url: url
+                }));
+                _context2.next = 6;
+                return _this.fetch(url, {
+                  method: 'GET'
+                });
+
+              case 6:
+                response = _context2.sent;
+
+                if (!(response.status === 200)) {
+                  _context2.next = 18;
+                  break;
+                }
+
+                _this.data[type].cache.set(url, []);
+
+                _context2.next = 11;
+                return response.json();
+
+              case 11:
+                json = _context2.sent;
+
+                if (json.included) {
+                  _this.createModelsFromData(json.included);
+                }
+
+                records = transaction(function () {
+                  return json.data.map(function (dataObject) {
+                    var id = dataObject.id,
+                        _dataObject$attribute = dataObject.attributes,
+                        attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
+                        _dataObject$relations = dataObject.relationships,
+                        relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
+
+                    var record = _this.createModel(type, id, {
+                      attributes: attributes,
+                      relationships: relationships
+                    });
+
+                    var cachedIds = _this.data[type].cache.get(url);
+
+                    _this.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
+
+                    _this.data[type].records.set(String(id), record);
+
+                    return record;
+                  });
+                });
+
+                _this.deleteLoadingState(state);
+
+                return _context2.abrupt("return", records);
+
+              case 18:
+                _this.deleteLoadingState(state);
+
+                return _context2.abrupt("return", Promise.reject(response.status));
+
+              case 20:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2);
+      }));
+
+      return function (_x4) {
+        return _ref5.apply(this, arguments);
+      };
+    }());
 
     _defineProperty(this, "findAll", function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -1602,51 +1743,57 @@ var Store = (_class = /*#__PURE__*/function () {
      * @return {Object} record
      */
     function () {
-      var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, id) {
+      var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type, id) {
         var options,
             queryParams,
             url,
+            state,
             response,
             json,
             data,
             included,
             record,
-            _args2 = arguments;
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+            _args3 = arguments;
+        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                options = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : {};
+                options = _args3.length > 2 && _args3[2] !== undefined ? _args3[2] : {};
 
                 if (id) {
-                  _context2.next = 4;
+                  _context3.next = 4;
                   break;
                 }
 
                 console.error("No id given while calling 'fetchOne' on ".concat(type));
-                return _context2.abrupt("return");
+                return _context3.abrupt("return");
 
               case 4:
                 queryParams = options.queryParams;
                 url = this.fetchUrl(type, queryParams, id);
-                _context2.next = 8;
+                state = this.setLoadingState(_objectSpread$1(_objectSpread$1({}, options), {}, {
+                  type: type,
+                  id: id,
+                  url: url
+                }));
+                _context3.next = 9;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
-              case 8:
-                response = _context2.sent;
+              case 9:
+                response = _context3.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 20;
+                  _context3.next = 22;
                   break;
                 }
 
-                _context2.next = 12;
+                _context3.next = 13;
                 return response.json();
 
-              case 12:
-                json = _context2.sent;
+              case 13:
+                json = _context3.sent;
                 data = json.data, included = json.included;
 
                 if (included) {
@@ -1655,20 +1802,23 @@ var Store = (_class = /*#__PURE__*/function () {
 
                 record = this.createOrUpdateModel(data);
                 this.data[type].cache.set(url, [record.id]);
-                return _context2.abrupt("return", record);
+                this.deleteLoadingState(state);
+                return _context3.abrupt("return", record);
 
-              case 20:
-                return _context2.abrupt("return", null);
+              case 22:
+                // TODO: return Promise.reject(response.status)
+                this.deleteLoadingState(state);
+                return _context3.abrupt("return", null);
 
-              case 21:
+              case 24:
               case "end":
-                return _context2.stop();
+                return _context3.stop();
             }
           }
-        }, _callee2, this);
+        }, _callee3, this);
       }));
 
-      function fetchOne(_x4, _x5) {
+      function fetchOne(_x5, _x6) {
         return _fetchOne.apply(this, arguments);
       }
 
@@ -1715,138 +1865,6 @@ var Store = (_class = /*#__PURE__*/function () {
      * @param {String} type the type to find
      * @param {Object} options
      * @return {Array} array of records
-     */
-
-  }, {
-    key: "fetchAll",
-    value:
-    /**
-     * Finds all records with the given `type`. Always fetches from the server.
-     *
-     * @async
-     * @method fetchAll
-     * @param {String} type the type to find
-     * @param {Object} options
-     * @return {Promise} Promise.resolve(records) or Promise.reject(status)
-     */
-    function () {
-      var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type) {
-        var _this2 = this;
-
-        var options,
-            queryParams,
-            url,
-            response,
-            json,
-            _args3 = arguments;
-        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                options = _args3.length > 1 && _args3[1] !== undefined ? _args3[1] : {};
-                queryParams = options.queryParams;
-                url = this.fetchUrl(type, queryParams);
-                _context3.next = 5;
-                return this.fetch(url, {
-                  method: 'GET'
-                });
-
-              case 5:
-                response = _context3.sent;
-
-                if (!(response.status === 200)) {
-                  _context3.next = 15;
-                  break;
-                }
-
-                this.data[type].cache.set(url, []);
-                _context3.next = 10;
-                return response.json();
-
-              case 10:
-                json = _context3.sent;
-
-                if (json.included) {
-                  this.createModelsFromData(json.included);
-                }
-
-                return _context3.abrupt("return", transaction(function () {
-                  return json.data.map(function (dataObject) {
-                    var id = dataObject.id,
-                        _dataObject$attribute = dataObject.attributes,
-                        attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
-                        _dataObject$relations = dataObject.relationships,
-                        relationships = _dataObject$relations === void 0 ? {} : _dataObject$relations;
-
-                    var record = _this2.createModel(type, id, {
-                      attributes: attributes,
-                      relationships: relationships
-                    });
-
-                    var cachedIds = _this2.data[type].cache.get(url);
-
-                    _this2.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [id]));
-
-                    _this2.data[type].records.set(String(id), record);
-
-                    return record;
-                  });
-                }));
-
-              case 15:
-                return _context3.abrupt("return", Promise.reject(response.status));
-
-              case 16:
-              case "end":
-                return _context3.stop();
-            }
-          }
-        }, _callee3, this);
-      }));
-
-      function fetchAll(_x6) {
-        return _fetchAll.apply(this, arguments);
-      }
-
-      return fetchAll;
-    }()
-    /**
-     * Finds all records of the given `type`.
-     * If all records are in the store, it returns those.
-     * Otherwise, it fetches all records from the server.
-     *
-     *   store.findAll('todos')
-     *   // fetch triggered
-     *   => [todo1, todo2, todo3]
-     *
-     *   store.findAll('todos')
-     *   // no fetch triggered
-     *   => [todo1, todo2, todo3]
-     *
-     * Query params can be passed as part of the options hash.
-     * The response will be cached, so the next time `findAll`
-     * is called with identical params and values, the store will
-     * first look for the local result.
-     *
-     *   store.findAll('todos', {
-     *     queryParams: {
-     *       filter: {
-     *         start_time: '2020-06-01T00:00:00.000Z',
-     *         end_time: '2020-06-02T00:00:00.000Z'
-     *       }
-     *     }
-     *   })
-     *
-     *
-     * NOTE: A broader RFC is in development to improve how we keep data in sync
-     * with the server. We likely will want to getAll and getRecords
-     * to return null if nothing is found. However, this causes several regressions
-     * in portal we will need to address in a larger PR for mobx-async-store updates.
-     *
-     * @method findAll
-     * @param {String} type the type to find
-     * @param {Object} options { queryParams }
-     * @return {Promise} Promise.resolve(records) or Promise.reject(status)
      */
 
   }, {
@@ -1931,13 +1949,13 @@ var Store = (_class = /*#__PURE__*/function () {
   }, {
     key: "initializeObservableDataProperty",
     value: function initializeObservableDataProperty() {
-      var _this3 = this;
+      var _this2 = this;
 
       var types = this.constructor.types; // NOTE: Is there a performance cost to setting
       // each property individually?
 
       types.forEach(function (modelKlass) {
-        _this3.data[modelKlass.type] = {
+        _this2.data[modelKlass.type] = {
           records: observable.map({}),
           cache: observable.map({})
         };
@@ -1964,7 +1982,7 @@ var Store = (_class = /*#__PURE__*/function () {
 
       return fetch;
     }(function (url) {
-      var _this4 = this;
+      var _this3 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions,
@@ -1984,7 +2002,7 @@ var Store = (_class = /*#__PURE__*/function () {
           headersOfInterest.forEach(function (header) {
             var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
 
-            if (_this4.lastResponseHeaders[header] !== value) _this4.lastResponseHeaders[header] = value;
+            if (_this3.lastResponseHeaders[header] !== value) _this3.lastResponseHeaders[header] = value;
           });
         }
 
@@ -2059,12 +2077,12 @@ var Store = (_class = /*#__PURE__*/function () {
   }, {
     key: "getRecordsById",
     value: function getRecordsById(type) {
-      var _this5 = this;
+      var _this4 = this;
 
       var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
       // NOTE: Is there a better way to do this?
       return ids.map(function (id) {
-        return _this5.getRecord(type, id);
+        return _this4.getRecord(type, id);
       }).filter(function (record) {
         return record;
       }).filter(function (record) {
@@ -2209,15 +2227,15 @@ var Store = (_class = /*#__PURE__*/function () {
   }, {
     key: "createModelsFromData",
     value: function createModelsFromData(data) {
-      var _this6 = this;
+      var _this5 = this;
 
       return transaction(function () {
         return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
           // TODO: Put some console message in development mode
-          if (_this6.getType(dataObject.type)) {
-            return _this6.createOrUpdateModel(dataObject);
+          if (_this5.getType(dataObject.type)) {
+            return _this5.createOrUpdateModel(dataObject);
           } else {
             console.warn("no type defined for ".concat(dataObject.type));
             return null;
@@ -2269,7 +2287,7 @@ var Store = (_class = /*#__PURE__*/function () {
   }, {
     key: "updateRecords",
     value: function updateRecords(promise, records) {
-      var _this7 = this;
+      var _this6 = this;
 
       // records may be a single record, if so wrap it in an array to make
       // iteration simpler
@@ -2278,7 +2296,7 @@ var Store = (_class = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
+        var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, _json, errorString;
 
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -2316,7 +2334,7 @@ var Store = (_class = /*#__PURE__*/function () {
                   });
 
                   if (json.included) {
-                    _this7.createModelsFromData(json.included);
+                    _this6.createModelsFromData(json.included);
                   } // on success, return the original record(s).
                   // again - this may be a single record so preserve the structure
 
@@ -2337,7 +2355,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 case 22:
                   _context4.prev = 22;
                   _context4.t0 = _context4["catch"](16);
-                  return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
+                  return _context4.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
 
                 case 25:
                   if (_json.errors) {
@@ -2345,7 +2363,7 @@ var Store = (_class = /*#__PURE__*/function () {
                     break;
                   }
 
-                  return _context4.abrupt("return", Promise.reject(new Error(_this7.genericErrorMessage)));
+                  return _context4.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
 
                 case 27:
                   if (Array.isArray(_json.errors)) {
@@ -2385,7 +2403,7 @@ var Store = (_class = /*#__PURE__*/function () {
         }));
 
         return function (_x7) {
-          return _ref4.apply(this, arguments);
+          return _ref6.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -2418,22 +2436,22 @@ var Store = (_class = /*#__PURE__*/function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this8 = this;
+    var _this7 = this;
 
     return function (type, properties) {
       var id = idOrNewId(properties.id);
 
-      var attributes = _this8.pickAttributes(properties, type);
+      var attributes = _this7.pickAttributes(properties, type);
 
-      var relationships = _this8.pickRelationships(properties, type);
+      var relationships = _this7.pickRelationships(properties, type);
 
-      var model = _this8.createModel(type, id, {
+      var model = _this7.createModel(type, id, {
         attributes: attributes,
         relationships: relationships
       }); // Add the model to the type records index
 
 
-      _this8.data[type].records.set(String(model.id), model);
+      _this7.data[type].records.set(String(model.id), model);
 
       return model;
     };
@@ -2443,10 +2461,10 @@ var Store = (_class = /*#__PURE__*/function () {
   enumerable: true,
   writable: true,
   initializer: function initializer() {
-    var _this9 = this;
+    var _this8 = this;
 
     return function (type, id) {
-      _this9.data[type].records.delete(String(id));
+      _this8.data[type].records.delete(String(id));
     };
   }
 }), _applyDecoratedDescriptor(_class.prototype, "initializeObservableDataProperty", [action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype)), _class);

@@ -367,16 +367,12 @@ class Model {
    * @param {Object} options
    */
   reload (options = {}) {
-    const {
-      queryParams
-    } = options
-
     const { constructor, id, isNew } = this
 
     if (isNew) {
       return this.rollback()
     } else {
-      return this.store.fetchOne(constructor.type, id, queryParams)
+      return this.store.fetchOne(constructor.type, id, options)
     }
   }
 

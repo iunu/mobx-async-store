@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 4.0.0-rc.1</em>
+            <em>API Docs for: 4.1.0</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -183,6 +183,10 @@
 
                             </li>
                             <li class="index-item method">
+                                <a href="#method_deleteLoadingState">deleteLoadingState</a>
+
+                            </li>
+                            <li class="index-item method">
                                 <a href="#method_fetch">fetch</a>
 
                             </li>
@@ -295,6 +299,10 @@
 
                             </li>
                             <li class="index-item method">
+                                <a href="#method_setLoadingState">setLoadingState</a>
+
+                            </li>
+                            <li class="index-item method">
                                 <a href="#method_updateRecords">updateRecords</a>
 
                             </li>
@@ -311,6 +319,10 @@
                             </li>
                             <li class="index-item property">
                                 <a href="#property_lastResponseHeaders">lastResponseHeaders</a>
+
+                            </li>
+                            <li class="index-item property">
+                                <a href="#property_loadingStates">loadingStates</a>
 
                             </li>
                     </ul>
@@ -349,7 +361,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l54"><code>src&#x2F;Store.js:54</code></a>
+        <a href="../files/src_Store.js.html#l61"><code>src&#x2F;Store.js:61</code></a>
         </p>
 
 
@@ -433,7 +445,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l156"><code>src&#x2F;Store.js:156</code></a>
+        <a href="../files/src_Store.js.html#l163"><code>src&#x2F;Store.js:163</code></a>
         </p>
 
 
@@ -511,7 +523,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l177"><code>src&#x2F;Store.js:177</code></a>
+        <a href="../files/src_Store.js.html#l184"><code>src&#x2F;Store.js:184</code></a>
         </p>
 
 
@@ -589,7 +601,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l133"><code>src&#x2F;Store.js:133</code></a>
+        <a href="../files/src_Store.js.html#l140"><code>src&#x2F;Store.js:140</code></a>
         </p>
 
 
@@ -674,7 +686,7 @@ kpi.name
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l187"><code>src&#x2F;Store.js:187</code></a>
+        <a href="../files/src_Store.js.html#l194"><code>src&#x2F;Store.js:194</code></a>
         </p>
 
 
@@ -743,7 +755,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l43"><code>src&#x2F;Store.js:43</code></a>
+        <a href="../files/src_Store.js.html#l50"><code>src&#x2F;Store.js:50</code></a>
         </p>
 
 
@@ -789,7 +801,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l850"><code>src&#x2F;Store.js:850</code></a>
+        <a href="../files/src_Store.js.html#l911"><code>src&#x2F;Store.js:911</code></a>
         </p>
 
 
@@ -871,7 +883,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l828"><code>src&#x2F;Store.js:828</code></a>
+        <a href="../files/src_Store.js.html#l889"><code>src&#x2F;Store.js:889</code></a>
         </p>
 
 
@@ -924,7 +936,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l788"><code>src&#x2F;Store.js:788</code></a>
+        <a href="../files/src_Store.js.html#l849"><code>src&#x2F;Store.js:849</code></a>
         </p>
 
 
@@ -947,6 +959,61 @@ endpoint. All records need to be of the same type.</p>
 
                     <div class="param-description">
                          
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_deleteLoadingState" class="method item">
+    <h3 class="name"><code>deleteLoadingState</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>state</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Store.js.html#l493"><code>src&#x2F;Store.js:493</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Removes a loading state. If that leaves an empty array for the map key in <code>loadingStates</code>,
+will also delete the set.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">state</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>the state to remove</p>
+
                     </div>
 
                 </li>
@@ -980,7 +1047,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l621"><code>src&#x2F;Store.js:621</code></a>
+        <a href="../files/src_Store.js.html#l682"><code>src&#x2F;Store.js:682</code></a>
         </p>
 
 
@@ -1050,7 +1117,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l454"><code>src&#x2F;Store.js:454</code></a>
+        <a href="../files/src_Store.js.html#l508"><code>src&#x2F;Store.js:508</code></a>
         </p>
 
 
@@ -1132,7 +1199,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l347"><code>src&#x2F;Store.js:347</code></a>
+        <a href="../files/src_Store.js.html#l359"><code>src&#x2F;Store.js:359</code></a>
         </p>
 
 
@@ -1227,7 +1294,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l264"><code>src&#x2F;Store.js:264</code></a>
+        <a href="../files/src_Store.js.html#l271"><code>src&#x2F;Store.js:271</code></a>
         </p>
 
 
@@ -1315,7 +1382,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l423"><code>src&#x2F;Store.js:423</code></a>
+        <a href="../files/src_Store.js.html#l435"><code>src&#x2F;Store.js:435</code></a>
         </p>
 
 
@@ -1385,7 +1452,7 @@ endpoint. All records need to be of the same type.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l491"><code>src&#x2F;Store.js:491</code></a>
+        <a href="../files/src_Store.js.html#l552"><code>src&#x2F;Store.js:552</code></a>
         </p>
 
 
@@ -1492,7 +1559,7 @@ in portal we will need to address in a larger PR for mobx-async-store updates.</
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l373"><code>src&#x2F;Store.js:373</code></a>
+        <a href="../files/src_Store.js.html#l385"><code>src&#x2F;Store.js:385</code></a>
         </p>
 
 
@@ -1595,7 +1662,7 @@ Otherwise, it fetches all records from the server.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l301"><code>src&#x2F;Store.js:301</code></a>
+        <a href="../files/src_Store.js.html#l313"><code>src&#x2F;Store.js:313</code></a>
         </p>
 
 
@@ -1693,7 +1760,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l437"><code>src&#x2F;Store.js:437</code></a>
+        <a href="../files/src_Store.js.html#l449"><code>src&#x2F;Store.js:449</code></a>
         </p>
 
 
@@ -1772,7 +1839,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l765"><code>src&#x2F;Store.js:765</code></a>
+        <a href="../files/src_Store.js.html#l826"><code>src&#x2F;Store.js:826</code></a>
         </p>
 
 
@@ -1850,7 +1917,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l750"><code>src&#x2F;Store.js:750</code></a>
+        <a href="../files/src_Store.js.html#l811"><code>src&#x2F;Store.js:811</code></a>
         </p>
 
 
@@ -1931,7 +1998,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l717"><code>src&#x2F;Store.js:717</code></a>
+        <a href="../files/src_Store.js.html#l778"><code>src&#x2F;Store.js:778</code></a>
         </p>
 
 
@@ -2022,7 +2089,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l732"><code>src&#x2F;Store.js:732</code></a>
+        <a href="../files/src_Store.js.html#l793"><code>src&#x2F;Store.js:793</code></a>
         </p>
 
 
@@ -2109,7 +2176,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l777"><code>src&#x2F;Store.js:777</code></a>
+        <a href="../files/src_Store.js.html#l838"><code>src&#x2F;Store.js:838</code></a>
         </p>
 
 
@@ -2180,7 +2247,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l331"><code>src&#x2F;Store.js:331</code></a>
+        <a href="../files/src_Store.js.html#l343"><code>src&#x2F;Store.js:343</code></a>
         </p>
 
 
@@ -2274,7 +2341,7 @@ store.findOne('todos', 5)
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l241"><code>src&#x2F;Store.js:241</code></a>
+        <a href="../files/src_Store.js.html#l248"><code>src&#x2F;Store.js:248</code></a>
         </p>
 
 
@@ -2366,7 +2433,7 @@ If given queryParams, it will check the cache for the record.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l660"><code>src&#x2F;Store.js:660</code></a>
+        <a href="../files/src_Store.js.html#l721"><code>src&#x2F;Store.js:721</code></a>
         </p>
 
 
@@ -2441,7 +2508,7 @@ If given queryParams, it will check the cache for the record.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l680"><code>src&#x2F;Store.js:680</code></a>
+        <a href="../files/src_Store.js.html#l741"><code>src&#x2F;Store.js:741</code></a>
         </p>
 
 
@@ -2515,7 +2582,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l701"><code>src&#x2F;Store.js:701</code></a>
+        <a href="../files/src_Store.js.html#l762"><code>src&#x2F;Store.js:762</code></a>
         </p>
 
 
@@ -2590,7 +2657,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l649"><code>src&#x2F;Store.js:649</code></a>
+        <a href="../files/src_Store.js.html#l710"><code>src&#x2F;Store.js:710</code></a>
         </p>
 
 
@@ -2652,7 +2719,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l561"><code>src&#x2F;Store.js:561</code></a>
+        <a href="../files/src_Store.js.html#l622"><code>src&#x2F;Store.js:622</code></a>
         </p>
 
 
@@ -2706,7 +2773,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l573"><code>src&#x2F;Store.js:573</code></a>
+        <a href="../files/src_Store.js.html#l634"><code>src&#x2F;Store.js:634</code></a>
         </p>
 
 
@@ -2760,7 +2827,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l585"><code>src&#x2F;Store.js:585</code></a>
+        <a href="../files/src_Store.js.html#l646"><code>src&#x2F;Store.js:646</code></a>
         </p>
 
 
@@ -2808,7 +2875,7 @@ to be unique by the persisted id (which is updated after a Model.save)</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l599"><code>src&#x2F;Store.js:599</code></a>
+        <a href="../files/src_Store.js.html#l660"><code>src&#x2F;Store.js:660</code></a>
         </p>
 
 
@@ -2853,7 +2920,7 @@ as the primary key</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l75"><code>src&#x2F;Store.js:75</code></a>
+        <a href="../files/src_Store.js.html#l82"><code>src&#x2F;Store.js:82</code></a>
         </p>
 
 
@@ -2934,7 +3001,7 @@ pickAttributes(properties, 'todos')
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l93"><code>src&#x2F;Store.js:93</code></a>
+        <a href="../files/src_Store.js.html#l100"><code>src&#x2F;Store.js:100</code></a>
         </p>
 
 
@@ -3019,7 +3086,7 @@ pickRelationships(properties, 'todos')
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l227"><code>src&#x2F;Store.js:227</code></a>
+        <a href="../files/src_Store.js.html#l234"><code>src&#x2F;Store.js:234</code></a>
         </p>
 
 
@@ -3079,7 +3146,7 @@ in mobx.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l538"><code>src&#x2F;Store.js:538</code></a>
+        <a href="../files/src_Store.js.html#l599"><code>src&#x2F;Store.js:599</code></a>
         </p>
 
 
@@ -3096,6 +3163,77 @@ store.reset()
     </div>
 
 
+
+
+</div>
+<div id="method_setLoadingState" class="method item">
+    <h3 class="name"><code>setLoadingState</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>options</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Store.js.html#l466"><code>src&#x2F;Store.js:466</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Sets a loading state when a fetch / deserialization is in flight. Loading states
+are Sets inside of the <code>loadingStates</code> Map, so multiple loading states can be in flight
+at the same time. An optional query tag can be passed to identify the particular query.</p>
+<p>const todos = store.fetchAll('todos', { queryTag: 'myTodos' })
+store.loadingStates.get('myTodos')
+=&gt; Set([{ url, type, queryParams, queryTag }])</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>options that can be used to build the loading state info</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Object</span>:
+                    <p>the loading state that was added</p>
+
+            </div>
+        </div>
 
 
 </div>
@@ -3123,7 +3261,7 @@ store.reset()
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/src_Store.js.html#l871"><code>src&#x2F;Store.js:871</code></a>
+        <a href="../files/src_Store.js.html#l932"><code>src&#x2F;Store.js:932</code></a>
         </p>
 
 
@@ -3224,6 +3362,31 @@ according to settings specified as <code>headersOfInterest</code></p>
     </div>
 
         <p><strong>Default:</strong> {}</p>
+
+
+</div>
+<div id="property_loadingStates" class="property item">
+    <h3 class="name"><code>loadingStates</code></h3>
+    <span class="type">Map</span>
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Store.js.html#l41"><code>src&#x2F;Store.js:41</code></a>
+        </p>
+
+
+    </div>
+
+    <div class="description">
+        <p>Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))</p>
+
+    </div>
+
 
 
 </div>

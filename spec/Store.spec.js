@@ -5,7 +5,7 @@ import {
   relatedToMany,
   relatedToOne
 } from '../src/main'
-import { isObservable, toJS } from 'mobx'
+import { computed, isObservable, toJS } from 'mobx'
 import { Schema } from '../src/schema'
 
 import { URL_MAX_LENGTH } from '../src/utils'
@@ -47,6 +47,10 @@ class Todo extends Model {
 }
 
 class AppStore extends Store {
+  @computed get loadingTodos () {
+    return this.loadingStates.get('todos')?.size > 0
+  }
+
   static types = [Note, Todo, Tag, Category]
 }
 
@@ -641,7 +645,6 @@ describe('Store', () => {
     })
 
     it('always fetches the record with the given id from the server', async () => {
-      expect.assertions(2)
       fetch.mockResponse(mockTodoResponse)
       store.add('todos', { ...mockTodoData.data.attributes }) // Add todo to store
       const foundRecord = await store.fetchOne('todos', 1)
@@ -649,11 +652,7 @@ describe('Store', () => {
       expect(fetch.mock.calls).toHaveLength(1)
     })
 
-    // TODO: make this change
-    xit('always returns a promise', () => {})
-
     it('supports queryParams', async () => {
-      expect.assertions(1)
       fetch.mockResponse(mockTodoResponse)
       await store.fetchOne('todos', '1', {
         queryParams: {
@@ -669,6 +668,18 @@ describe('Store', () => {
         '/example_api/todos/1?user_id=1&filter[due_at]=2019-01-01&include=todo.notes&fields[todos]=title'
       )
     })
+
+    it('allows setting a tag for a query', async () => {
+      expect.assertions(2)
+
+      fetch.mockResponseOnce(() => {
+        expect(toJS(store.loadingStates.get('loadingSpecialTodo'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodo', type: 'todos', queryParams: undefined, url: '/example_api/todos/3' }]))
+        return Promise.resolve(mockTodoResponse)
+      })
+
+      await store.fetchOne('todos', '3', { queryTag: 'loadingSpecialTodo' })
+      expect(store.loadingStates.get('loadingSpecialTodos')).toBeUndefined()
+    })
   })
 
   describe('findOne', () => {
@@ -680,7 +691,6 @@ describe('Store', () => {
     })
 
     it('finds model if it is in store', async () => {
-      expect.assertions(2)
       const addedModel = store.add('todos', { title: 'Buy Milk' })
       const foundModel = await store.findOne('todos', addedModel.id)
       expect(foundModel.title).toEqual(addedModel.title)
@@ -688,7 +698,6 @@ describe('Store', () => {
     })
 
     it('fetches model if it is not in the store', async () => {
-      expect.assertions(2)
       fetch.mockResponse(mockTodoResponse)
       const todo = await store.findOne('todos', '1')
       expect(todo.title).toEqual('Do taxes')
@@ -696,7 +705,6 @@ describe('Store', () => {
     })
 
     it('supports queryParams', async () => {
-      expect.assertions(1)
       fetch.mockResponse(mockTodoResponse)
       await store.findOne('todos', '1', {
         queryParams: {
@@ -739,7 +747,6 @@ describe('Store', () => {
   describe('findAll', () => {
     describe('no records of the specified type exist in the store', () => {
       it('fetches data from the server', async () => {
-        expect.assertions(5)
         fetch.mockResponse(mockTodosResponse)
         const query = store.findAll('todos')
         expect(query).toBeInstanceOf(Promise)
@@ -753,7 +760,6 @@ describe('Store', () => {
 
     describe('records of the specified type exist in the store', () => {
       it('does not fetch and returns records from the store', () => {
-        expect.assertions(3)
         store.add('todos', { title: 'Buy Milk' })
         const todos = store.findAll('todos')
         expect(fetch.mock.calls).toHaveLength(0)
@@ -764,7 +770,6 @@ describe('Store', () => {
 
     describe('if a query is made with identical params', () => {
       it('skips fetch and returns local data from the store', async () => {
-        expect.assertions(6)
         // Query params for both requests
         const queryParams = { filter: { overdue: true } }
         // Only need to mock response once :)
@@ -786,7 +791,6 @@ describe('Store', () => {
     })
 
     it('fetches data with filter params', async () => {
-      expect.assertions(2)
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos', {
         queryParams: {
@@ -803,7 +807,6 @@ describe('Store', () => {
     })
 
     it('fetches data with include params', async () => {
-      expect.assertions(2)
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos', {
         queryParams: {
@@ -817,7 +820,6 @@ describe('Store', () => {
     })
 
     it('fetches data with named query params', async () => {
-      expect.assertions(2)
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos', {
         queryParams: {
@@ -831,7 +833,6 @@ describe('Store', () => {
     })
 
     it('fetches data with named array filters', async () => {
-      expect.assertions(2)
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos', {
         queryParams: {
@@ -847,7 +848,6 @@ describe('Store', () => {
     })
 
     it('caches list ids by request url', async () => {
-      expect.assertions(1)
       fetch.mockResponse(mockTodosResponse)
       await store.findAll('todos')
       const cache = toJS(store.data.todos.cache)
@@ -855,7 +855,6 @@ describe('Store', () => {
     })
 
     it('fetched data snapshots are marked as persisted', async () => {
-      expect.assertions(1)
       fetch.mockResponse(mockTodosResponse)
 
       // Create an existing todo
@@ -915,7 +914,6 @@ describe('Store', () => {
 
   describe('fetchAll', () => {
     it('always fetches the records with the given type from the server', async () => {
-      expect.assertions(7)
       fetch.mockResponse(mockAllTodosResponse)
       const todos = await store.fetchAll('todos')
 
@@ -930,11 +928,62 @@ describe('Store', () => {
     })
 
     it('returns a rejected Promise with the status if fetching fails', async () => {
-      expect.assertions(2)
       fetch.mockResponse('', { status: 401 })
       const query = store.fetchAll('todos')
       expect(query).toBeInstanceOf(Promise)
       await expect(query).rejects.toEqual(401)
+    })
+
+    it('allows setting a tag for a query', async () => {
+      expect.assertions(4)
+
+      fetch.mockResponseOnce(() => {
+        expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' }]))
+        expect(store.loadingTodos).toBe(false)
+        return Promise.resolve(JSON.stringify({ data: [] }))
+      })
+
+      await store.fetchAll('todos', { queryTag: 'loadingSpecialTodos', queryParams: { a: 'b' } })
+      expect(store.loadingStates.get('loadingSpecialTodos')).toBeUndefined()
+      expect(store.loadingTodos).toBe(false)
+    })
+
+    it('sets a default tag for a query', async () => {
+      expect.assertions(4)
+
+      fetch.mockResponseOnce(() => {
+        expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([{ queryTag: 'todos', type: 'todos', queryParams: undefined, url: '/example_api/todos' }]))
+        expect(store.loadingTodos).toBe(true)
+        return Promise.resolve(JSON.stringify({ data: [] }))
+      })
+
+      await store.fetchAll('todos')
+      expect(store.loadingStates.get('todos')).toBeUndefined()
+      expect(store.loadingTodos).toBe(false)
+    })
+
+    it('supports multiple loading states from the same tag', async () => {
+      expect.assertions(3)
+
+    fetch.mockResponseOnce(() => {
+      expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([{ queryTag: 'todos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' }]))
+      return new Promise((resolve) => setTimeout(() => resolve(JSON.stringify({ data: [] })), 100))
+    })
+
+    fetch.mockResponseOnce(() => {
+      expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([
+        { queryTag: 'todos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' },
+        { queryTag: 'todos', type: 'todos', queryParams: { c: 'd' }, url: '/example_api/todos?c=d' }
+      ]))
+      return Promise.resolve(JSON.stringify({ data: [] }))
+    })
+
+      await Promise.all([
+        store.fetchAll('todos', { queryParams: { a: 'b' } }),
+        store.fetchAll('todos', { queryParams: { c: 'd' } })
+      ])
+
+      expect(store.loadingStates.get('todos')).toBeUndefined()
     })
 
     it('supports queryParams', async () => {
@@ -999,6 +1048,18 @@ describe('Store', () => {
       const todos = await store.fetchMany('todos', ['1'])
       expect(todos).toHaveLength(0)
       expect(fetch.mock.calls).toHaveLength(1)
+    })
+
+    it('allows setting a tag for a query', async () => {
+      expect.assertions(2)
+
+      fetch.mockResponseOnce(() => {
+        expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodos', type: 'todos', queryParams: { filter: { ids: '1' } }, url: '/example_api/todos?filter%5Bids%5D=1' }]))
+        return Promise.resolve(JSON.stringify({ data: [] }))
+      })
+
+      await store.fetchMany('todos', ['1'], { queryTag: 'loadingSpecialTodos' })
+      expect(store.loadingStates.get('loadingSpecialTodos')).toBeUndefined()
     })
 
     it('returns a rejected Promise with the status if fetching fails', async () => {
