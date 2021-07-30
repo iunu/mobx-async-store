@@ -696,10 +696,12 @@ class Store {
     ).then(response => {
       // Capture headers of interest
       if (headersOfInterest) {
-        headersOfInterest.forEach(header => {
-          const value = response.headers.get(header)
-          // Only set if it has changed, to minimize observable changes
-          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+        transaction(() => {
+          headersOfInterest.forEach(header => {
+            const value = response.headers.get(header)
+            // Only set if it has changed, to minimize observable changes
+            if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+          })
         })
       }
 
