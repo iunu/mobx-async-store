@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 4.1.0</em>
+            <em>API Docs for: 4.1.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -84,7 +84,7 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 /* global fetch */
-import { action, makeObservable, observable, set, toJS, transaction } from &#x27;mobx&#x27;
+import { action, makeObservable, observable, runInAction, set, toJS } from &#x27;mobx&#x27;
 import pick from &#x27;lodash/pick&#x27;
 import uniqBy from &#x27;lodash/uniqBy&#x27;
 import {
@@ -273,7 +273,7 @@ class Store {
    * @return {Array} array of ArtemisData records
    */
   addModels = (type, data) =&gt; {
-    return transaction(() =&gt; data.map((obj) =&gt; this.addModel(type, obj)))
+    return runInAction(() =&gt; data.map((obj) =&gt; this.addModel(type, obj)))
   }
 
   /**
@@ -616,7 +616,7 @@ class Store {
         this.createModelsFromData(json.included)
       }
 
-      const records = transaction(() =&gt;
+      const records = runInAction(() =&gt;
         json.data.map((dataObject) =&gt; {
           const { id, attributes = {}, relationships = {} } = dataObject
           const record = this.createModel(type, id, { attributes, relationships })
@@ -781,10 +781,12 @@ class Store {
     ).then(response =&gt; {
       // Capture headers of interest
       if (headersOfInterest) {
-        headersOfInterest.forEach(header =&gt; {
-          const value = response.headers.get(header)
-          // Only set if it has changed, to minimize observable changes
-          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+        runInAction(() =&gt; {
+          headersOfInterest.forEach(header =&gt; {
+            const value = response.headers.get(header)
+            // Only set if it has changed, to minimize observable changes
+            if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+          })
         })
       }
 
@@ -978,7 +980,7 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
-    return transaction(() =&gt;
+    return runInAction(() =&gt;
       data.map((dataObject) =&gt; {
         // Only build objects for which we have a type defined.
         // And ignore silently anything else included in the JSON response.
@@ -1083,17 +1085,20 @@ class Store {
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
-          json.errors.forEach((error) =&gt; {
-            const { index, key } = parseErrorPointer(error)
-            if (key != null) {
-              const errors = recordsArray[index].errors[key] || []
-              errors.push(error)
-              recordsArray[index].errors[key] = errors
-            }
+          let errorString
+          runInAction(() =&gt; {
+            json.errors.forEach((error) =&gt; {
+              const { index, key } = parseErrorPointer(error)
+              if (key != null) {
+                const errors = recordsArray[index].errors[key] || []
+                errors.push(error)
+                recordsArray[index].errors[key] = errors
+              }
+            })
+            errorString = recordsArray
+              .map((record) =&gt; JSON.stringify(record.errors))
+              .join(&#x27;;&#x27;)
           })
-          const errorString = recordsArray
-            .map((record) =&gt; JSON.stringify(record.errors))
-            .join(&#x27;;&#x27;)
 
           return Promise.reject(new Error(errorString))
         }

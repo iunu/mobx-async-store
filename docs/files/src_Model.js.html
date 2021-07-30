@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 4.1.0</em>
+            <em>API Docs for: 4.1.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -88,9 +88,9 @@ import {
   extendObservable,
   set,
   toJS,
-  transaction,
   observable,
-  makeObservable
+  makeObservable,
+  runInAction
 } from &#x27;mobx&#x27;
 
 import { diff, makeDate } from &#x27;./utils&#x27;
@@ -520,8 +520,10 @@ class Model {
           try {
             json = await response.json()
             if (json.data &amp;&amp; json.data.attributes) {
-              Object.keys(json.data.attributes).forEach(key =&gt; {
-                set(_this, key, json.data.attributes[key])
+              runInAction(() =&gt; {
+                Object.keys(json.data.attributes).forEach(key =&gt; {
+                  set(_this, key, json.data.attributes[key])
+                })
               })
             }
           } catch (err) {
@@ -537,7 +539,9 @@ class Model {
 
           return _this
         } else {
-          _this.errors = { status: response.status }
+          runInAction(() =&gt; {
+            _this.errors = { status: response.status }
+          })
           return _this
         }
       },
@@ -632,7 +636,7 @@ class Model {
    */
   _applySnapshot (snapshot) {
     if (!snapshot) throw new Error(&#x27;Invariant violated: tried to apply undefined snapshot&#x27;)
-    transaction(() =&gt; {
+    runInAction(() =&gt; {
       this.attributeNames.forEach((key) =&gt; {
         this[key] = snapshot.attributes[key]
       })
@@ -822,7 +826,7 @@ class Model {
   }
 
   updateAttributes (attributes) {
-    transaction(() =&gt; {
+    runInAction(() =&gt; {
       Object.keys(attributes).forEach(key =&gt; {
         this[key] = attributes[key]
       })
@@ -835,7 +839,7 @@ class Model {
     const tmpId = this.id
     const { id, attributes, relationships } = data
 
-    transaction(() =&gt; {
+    runInAction(() =&gt; {
       set(this, &#x27;id&#x27;, id)
 
       Object.keys(attributes).forEach(key =&gt; {
@@ -858,7 +862,7 @@ class Model {
     this.isInFlight = false
     this._takeSnapshot({ persisted: true })
 
-    transaction(() =&gt; {
+    runInAction(() =&gt; {
       // NOTE: This resolves an issue where a record is persisted but the
       // index key is still a temp uuid. We can&#x27;t simply remove the temp
       // key because there may be associated records that have the temp

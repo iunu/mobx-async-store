@@ -1,5 +1,5 @@
 /* global fetch */
-import { action, makeObservable, observable, set, toJS, transaction } from 'mobx'
+import { action, makeObservable, observable, runInAction, set, toJS } from 'mobx'
 import pick from 'lodash/pick'
 import uniqBy from 'lodash/uniqBy'
 import {
@@ -188,7 +188,7 @@ class Store {
    * @return {Array} array of ArtemisData records
    */
   addModels = (type, data) => {
-    return transaction(() => data.map((obj) => this.addModel(type, obj)))
+    return runInAction(() => data.map((obj) => this.addModel(type, obj)))
   }
 
   /**
@@ -531,7 +531,7 @@ class Store {
         this.createModelsFromData(json.included)
       }
 
-      const records = transaction(() =>
+      const records = runInAction(() =>
         json.data.map((dataObject) => {
           const { id, attributes = {}, relationships = {} } = dataObject
           const record = this.createModel(type, id, { attributes, relationships })
@@ -696,10 +696,12 @@ class Store {
     ).then(response => {
       // Capture headers of interest
       if (headersOfInterest) {
-        headersOfInterest.forEach(header => {
-          const value = response.headers.get(header)
-          // Only set if it has changed, to minimize observable changes
-          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+        runInAction(() => {
+          headersOfInterest.forEach(header => {
+            const value = response.headers.get(header)
+            // Only set if it has changed, to minimize observable changes
+            if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+          })
         })
       }
 
@@ -893,7 +895,7 @@ class Store {
    * @param {Array} data
    */
   createModelsFromData (data) {
-    return transaction(() =>
+    return runInAction(() =>
       data.map((dataObject) => {
         // Only build objects for which we have a type defined.
         // And ignore silently anything else included in the JSON response.
@@ -998,17 +1000,20 @@ class Store {
           // Add all errors from the API response to the record(s).
           // This is done by comparing the pointer in the error to
           // the request.
-          json.errors.forEach((error) => {
-            const { index, key } = parseErrorPointer(error)
-            if (key != null) {
-              const errors = recordsArray[index].errors[key] || []
-              errors.push(error)
-              recordsArray[index].errors[key] = errors
-            }
+          let errorString
+          runInAction(() => {
+            json.errors.forEach((error) => {
+              const { index, key } = parseErrorPointer(error)
+              if (key != null) {
+                const errors = recordsArray[index].errors[key] || []
+                errors.push(error)
+                recordsArray[index].errors[key] = errors
+              }
+            })
+            errorString = recordsArray
+              .map((record) => JSON.stringify(record.errors))
+              .join(';')
           })
-          const errorString = recordsArray
-            .map((record) => JSON.stringify(record.errors))
-            .join(';')
 
           return Promise.reject(new Error(errorString))
         }

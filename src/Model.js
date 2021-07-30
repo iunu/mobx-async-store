@@ -3,9 +3,9 @@ import {
   extendObservable,
   set,
   toJS,
-  transaction,
   observable,
-  makeObservable
+  makeObservable,
+  runInAction
 } from 'mobx'
 
 import { diff, makeDate } from './utils'
@@ -435,8 +435,10 @@ class Model {
           try {
             json = await response.json()
             if (json.data && json.data.attributes) {
-              Object.keys(json.data.attributes).forEach(key => {
-                set(_this, key, json.data.attributes[key])
+              runInAction(() => {
+                Object.keys(json.data.attributes).forEach(key => {
+                  set(_this, key, json.data.attributes[key])
+                })
               })
             }
           } catch (err) {
@@ -452,7 +454,9 @@ class Model {
 
           return _this
         } else {
-          _this.errors = { status: response.status }
+          runInAction(() => {
+            _this.errors = { status: response.status }
+          })
           return _this
         }
       },
@@ -547,7 +551,7 @@ class Model {
    */
   _applySnapshot (snapshot) {
     if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
-    transaction(() => {
+    runInAction(() => {
       this.attributeNames.forEach((key) => {
         this[key] = snapshot.attributes[key]
       })
@@ -737,7 +741,7 @@ class Model {
   }
 
   updateAttributes (attributes) {
-    transaction(() => {
+    runInAction(() => {
       Object.keys(attributes).forEach(key => {
         this[key] = attributes[key]
       })
@@ -750,7 +754,7 @@ class Model {
     const tmpId = this.id
     const { id, attributes, relationships } = data
 
-    transaction(() => {
+    runInAction(() => {
       set(this, 'id', id)
 
       Object.keys(attributes).forEach(key => {
@@ -773,7 +777,7 @@ class Model {
     this.isInFlight = false
     this._takeSnapshot({ persisted: true })
 
-    transaction(() => {
+    runInAction(() => {
       // NOTE: This resolves an issue where a record is persisted but the
       // index key is still a temp uuid. We can't simply remove the temp
       // key because there may be associated records that have the temp
