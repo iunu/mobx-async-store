@@ -843,8 +843,10 @@ var Model = (_class$1 = /*#__PURE__*/function () {
                   json = _context.sent;
 
                   if (json.data && json.data.attributes) {
-                    Object.keys(json.data.attributes).forEach(function (key) {
-                      mobx.set(_this, key, json.data.attributes[key]);
+                    mobx.runInAction(function () {
+                      Object.keys(json.data.attributes).forEach(function (key) {
+                        mobx.set(_this, key, json.data.attributes[key]);
+                      });
                     });
                   }
 
@@ -866,9 +868,11 @@ var Model = (_class$1 = /*#__PURE__*/function () {
                   return _context.abrupt("return", _this);
 
                 case 17:
-                  _this.errors = {
-                    status: response.status
-                  };
+                  mobx.runInAction(function () {
+                    _this.errors = {
+                      status: response.status
+                    };
+                  });
                   return _context.abrupt("return", _this);
 
                 case 19:
@@ -993,7 +997,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       var _this4 = this;
 
       if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
-      mobx.transaction(function () {
+      mobx.runInAction(function () {
         _this4.attributeNames.forEach(function (key) {
           _this4[key] = snapshot.attributes[key];
         });
@@ -1214,7 +1218,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
     value: function updateAttributes(attributes) {
       var _this7 = this;
 
-      mobx.transaction(function () {
+      mobx.runInAction(function () {
         Object.keys(attributes).forEach(function (key) {
           _this7[key] = attributes[key];
         });
@@ -1231,7 +1235,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       var id = data.id,
           attributes = data.attributes,
           relationships = data.relationships;
-      mobx.transaction(function () {
+      mobx.runInAction(function () {
         mobx.set(_this8, 'id', id);
         Object.keys(attributes).forEach(function (key) {
           mobx.set(_this8, key, attributes[key]);
@@ -1257,7 +1261,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
         persisted: true
       });
 
-      mobx.transaction(function () {
+      mobx.runInAction(function () {
         // NOTE: This resolves an issue where a record is persisted but the
         // index key is still a temp uuid. We can't simply remove the temp
         // key because there may be associated records that have the temp
@@ -1418,7 +1422,7 @@ var Store = (_class = /*#__PURE__*/function () {
     _initializerDefineProperty__default['default'](this, "addModel", _descriptor3, this);
 
     _defineProperty__default['default'](this, "addModels", function (type, data) {
-      return mobx.transaction(function () {
+      return mobx.runInAction(function () {
         return data.map(function (obj) {
           return _this.addModel(type, obj);
         });
@@ -1685,7 +1689,7 @@ var Store = (_class = /*#__PURE__*/function () {
                   _this.createModelsFromData(json.included);
                 }
 
-                records = mobx.transaction(function () {
+                records = mobx.runInAction(function () {
                   return json.data.map(function (dataObject) {
                     var id = dataObject.id,
                         _dataObject$attribute = dataObject.attributes,
@@ -2031,10 +2035,12 @@ var Store = (_class = /*#__PURE__*/function () {
       }).then(function (response) {
         // Capture headers of interest
         if (headersOfInterest) {
-          headersOfInterest.forEach(function (header) {
-            var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
+          mobx.runInAction(function () {
+            headersOfInterest.forEach(function (header) {
+              var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
 
-            if (_this3.lastResponseHeaders[header] !== value) _this3.lastResponseHeaders[header] = value;
+              if (_this3.lastResponseHeaders[header] !== value) _this3.lastResponseHeaders[header] = value;
+            });
           });
         }
 
@@ -2261,7 +2267,7 @@ var Store = (_class = /*#__PURE__*/function () {
     value: function createModelsFromData(data) {
       var _this5 = this;
 
-      return mobx.transaction(function () {
+      return mobx.runInAction(function () {
         return data.map(function (dataObject) {
           // Only build objects for which we have a type defined.
           // And ignore silently anything else included in the JSON response.
@@ -2406,27 +2412,26 @@ var Store = (_class = /*#__PURE__*/function () {
                   return _context4.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
 
                 case 29:
-                  // Add all errors from the API response to the record(s).
-                  // This is done by comparing the pointer in the error to
-                  // the request.
-                  _json.errors.forEach(function (error) {
-                    var _parseErrorPointer = parseErrorPointer(error),
-                        index = _parseErrorPointer.index,
-                        key = _parseErrorPointer.key;
+                  mobx.runInAction(function () {
+                    _json.errors.forEach(function (error) {
+                      var _parseErrorPointer = parseErrorPointer(error),
+                          index = _parseErrorPointer.index,
+                          key = _parseErrorPointer.key;
 
-                    if (key != null) {
-                      var errors = recordsArray[index].errors[key] || [];
-                      errors.push(error);
-                      recordsArray[index].errors[key] = errors;
-                    }
+                      if (key != null) {
+                        var errors = recordsArray[index].errors[key] || [];
+                        errors.push(error);
+                        recordsArray[index].errors[key] = errors;
+                      }
+                    });
+
+                    errorString = recordsArray.map(function (record) {
+                      return JSON.stringify(record.errors);
+                    }).join(';');
                   });
-
-                  errorString = recordsArray.map(function (record) {
-                    return JSON.stringify(record.errors);
-                  }).join(';');
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
-                case 32:
+                case 31:
                 case "end":
                   return _context4.stop();
               }
