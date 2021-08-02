@@ -1311,7 +1311,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
   }
 })), _class$1);
 
-var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4;
+var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
@@ -1606,45 +1606,12 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     });
 
-    _defineProperty__default['default'](this, "setLoadingState", function (_ref4) {
-      var url = _ref4.url,
-          type = _ref4.type,
-          queryParams = _ref4.queryParams,
-          queryTag = _ref4.queryTag;
-      queryTag = queryTag || type;
-      var loadingStateInfo = {
-        url: url,
-        type: type,
-        queryParams: queryParams,
-        queryTag: queryTag
-      };
+    _initializerDefineProperty__default['default'](this, "setLoadingState", _descriptor5, this);
 
-      var querySet = _this.loadingStates.get(queryTag);
-
-      if (!querySet) {
-        querySet = mobx.observable.set([], {
-          deep: false
-        });
-
-        _this.loadingStates.set(queryTag, querySet);
-      }
-
-      querySet.add(loadingStateInfo);
-      return loadingStateInfo;
-    });
-
-    _defineProperty__default['default'](this, "deleteLoadingState", function (state) {
-      var querySet = _this.loadingStates.get(state.queryTag);
-
-      querySet.delete(state);
-
-      if (querySet.size === 0) {
-        _this.loadingStates.delete(state.queryTag);
-      }
-    });
+    _initializerDefineProperty__default['default'](this, "deleteLoadingState", _descriptor6, this);
 
     _defineProperty__default['default'](this, "fetchAll", /*#__PURE__*/function () {
-      var _ref5 = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee2(type) {
+      var _ref4 = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee2(type) {
         var options,
             queryParams,
             url,
@@ -1673,7 +1640,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 18;
+                  _context2.next = 16;
                   break;
                 }
 
@@ -1684,13 +1651,12 @@ var Store = (_class = /*#__PURE__*/function () {
 
               case 11:
                 json = _context2.sent;
+                mobx.runInAction(function () {
+                  if (json.included) {
+                    _this.createModelsFromData(json.included);
+                  }
 
-                if (json.included) {
-                  _this.createModelsFromData(json.included);
-                }
-
-                records = mobx.runInAction(function () {
-                  return json.data.map(function (dataObject) {
+                  records = json.data.map(function (dataObject) {
                     var id = dataObject.id,
                         _dataObject$attribute = dataObject.attributes,
                         attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
@@ -1710,18 +1676,18 @@ var Store = (_class = /*#__PURE__*/function () {
 
                     return record;
                   });
+
+                  _this.deleteLoadingState(state);
                 });
-
-                _this.deleteLoadingState(state);
-
                 return _context2.abrupt("return", records);
 
-              case 18:
-                _this.deleteLoadingState(state);
-
+              case 16:
+                mobx.runInAction(function () {
+                  _this.deleteLoadingState(state);
+                });
                 return _context2.abrupt("return", Promise.reject(response.status));
 
-              case 20:
+              case 18:
               case "end":
                 return _context2.stop();
             }
@@ -1730,7 +1696,7 @@ var Store = (_class = /*#__PURE__*/function () {
       }));
 
       return function (_x4) {
-        return _ref5.apply(this, arguments);
+        return _ref4.apply(this, arguments);
       };
     }());
 
@@ -2267,18 +2233,16 @@ var Store = (_class = /*#__PURE__*/function () {
     value: function createModelsFromData(data) {
       var _this5 = this;
 
-      return mobx.runInAction(function () {
-        return data.map(function (dataObject) {
-          // Only build objects for which we have a type defined.
-          // And ignore silently anything else included in the JSON response.
-          // TODO: Put some console message in development mode
-          if (_this5.getType(dataObject.type)) {
-            return _this5.createOrUpdateModel(dataObject);
-          } else {
-            console.warn("no type defined for ".concat(dataObject.type));
-            return null;
-          }
-        });
+      return data.map(function (dataObject) {
+        // Only build objects for which we have a type defined.
+        // And ignore silently anything else included in the JSON response.
+        // TODO: Put some console message in development mode
+        if (_this5.getType(dataObject.type)) {
+          return _this5.createOrUpdateModel(dataObject);
+        } else {
+          console.warn("no type defined for ".concat(dataObject.type));
+          return null;
+        }
       });
     }
     /**
@@ -2334,7 +2298,7 @@ var Store = (_class = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref6 = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee4(response) {
+        var _ref5 = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee4(response) {
           var status, json, data, included, _json, errorString;
 
           return _regeneratorRuntime__default['default'].wrap(function _callee4$(_context4) {
@@ -2440,7 +2404,7 @@ var Store = (_class = /*#__PURE__*/function () {
         }));
 
         return function (_x7) {
-          return _ref6.apply(this, arguments);
+          return _ref5.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -2504,7 +2468,58 @@ var Store = (_class = /*#__PURE__*/function () {
       _this8.data[type].records.delete(String(id));
     };
   }
-}), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype)), _class);
+}), _descriptor5 = _applyDecoratedDescriptor__default['default'](_class.prototype, "setLoadingState", [mobx.action], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    var _this9 = this;
+
+    return function (_ref6) {
+      var url = _ref6.url,
+          type = _ref6.type,
+          queryParams = _ref6.queryParams,
+          queryTag = _ref6.queryTag;
+      queryTag = queryTag || type;
+      var loadingStateInfo = {
+        url: url,
+        type: type,
+        queryParams: queryParams,
+        queryTag: queryTag
+      };
+
+      var querySet = _this9.loadingStates.get(queryTag);
+
+      if (!querySet) {
+        querySet = mobx.observable.set([], {
+          deep: false
+        });
+
+        _this9.loadingStates.set(queryTag, querySet);
+      }
+
+      querySet.add(loadingStateInfo);
+      return loadingStateInfo;
+    };
+  }
+}), _descriptor6 = _applyDecoratedDescriptor__default['default'](_class.prototype, "deleteLoadingState", [mobx.action], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    var _this10 = this;
+
+    return function (state) {
+      var querySet = _this10.loadingStates.get(state.queryTag);
+
+      querySet.delete(state);
+
+      if (querySet.size === 0) {
+        _this10.loadingStates.delete(state.queryTag);
+      }
+    };
+  }
+}), _applyDecoratedDescriptor__default['default'](_class.prototype, "reset", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "init", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeNetworkConfiguration", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeModelTypeIndex", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createOrUpdateModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createModelsFromData", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "updateRecords", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
