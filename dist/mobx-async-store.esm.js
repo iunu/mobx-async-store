@@ -7,7 +7,7 @@ import '@babel/runtime/helpers/initializerWarningHelper';
 import _applyDecoratedDescriptor from '@babel/runtime/helpers/applyDecoratedDescriptor';
 import _typeof from '@babel/runtime/helpers/typeof';
 import _regeneratorRuntime from '@babel/runtime/regenerator';
-import { computed, observable, set, toJS, transaction, makeObservable, extendObservable, action } from 'mobx';
+import { computed, observable, runInAction, set, toJS, makeObservable, extendObservable, action, transaction } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _setPrototypeOf from '@babel/runtime/helpers/setPrototypeOf';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
@@ -811,8 +811,10 @@ var Model = (_class$1 = /*#__PURE__*/function () {
                   json = _context.sent;
 
                   if (json.data && json.data.attributes) {
-                    Object.keys(json.data.attributes).forEach(function (key) {
-                      set(_this, key, json.data.attributes[key]);
+                    runInAction(function () {
+                      Object.keys(json.data.attributes).forEach(function (key) {
+                        set(_this, key, json.data.attributes[key]);
+                      });
                     });
                   }
 
@@ -834,9 +836,11 @@ var Model = (_class$1 = /*#__PURE__*/function () {
                   return _context.abrupt("return", _this);
 
                 case 17:
-                  _this.errors = {
-                    status: response.status
-                  };
+                  runInAction(function () {
+                    _this.errors = {
+                      status: response.status
+                    };
+                  });
                   return _context.abrupt("return", _this);
 
                 case 19:
@@ -961,7 +965,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       var _this4 = this;
 
       if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
-      transaction(function () {
+      runInAction(function () {
         _this4.attributeNames.forEach(function (key) {
           _this4[key] = snapshot.attributes[key];
         });
@@ -1182,7 +1186,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
     value: function updateAttributes(attributes) {
       var _this7 = this;
 
-      transaction(function () {
+      runInAction(function () {
         Object.keys(attributes).forEach(function (key) {
           _this7[key] = attributes[key];
         });
@@ -1199,7 +1203,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       var id = data.id,
           attributes = data.attributes,
           relationships = data.relationships;
-      transaction(function () {
+      runInAction(function () {
         set(_this8, 'id', id);
         Object.keys(attributes).forEach(function (key) {
           set(_this8, key, attributes[key]);
@@ -1225,7 +1229,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
         persisted: true
       });
 
-      transaction(function () {
+      runInAction(function () {
         // NOTE: This resolves an issue where a record is persisted but the
         // index key is still a temp uuid. We can't simply remove the temp
         // key because there may be associated records that have the temp
@@ -1275,7 +1279,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
   }
 })), _class$1);
 
-var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4;
+var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6;
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
@@ -1386,7 +1390,7 @@ var Store = (_class = /*#__PURE__*/function () {
     _initializerDefineProperty(this, "addModel", _descriptor3, this);
 
     _defineProperty(this, "addModels", function (type, data) {
-      return transaction(function () {
+      return runInAction(function () {
         return data.map(function (obj) {
           return _this.addModel(type, obj);
         });
@@ -1570,45 +1574,12 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     });
 
-    _defineProperty(this, "setLoadingState", function (_ref4) {
-      var url = _ref4.url,
-          type = _ref4.type,
-          queryParams = _ref4.queryParams,
-          queryTag = _ref4.queryTag;
-      queryTag = queryTag || type;
-      var loadingStateInfo = {
-        url: url,
-        type: type,
-        queryParams: queryParams,
-        queryTag: queryTag
-      };
+    _initializerDefineProperty(this, "setLoadingState", _descriptor5, this);
 
-      var querySet = _this.loadingStates.get(queryTag);
-
-      if (!querySet) {
-        querySet = observable.set([], {
-          deep: false
-        });
-
-        _this.loadingStates.set(queryTag, querySet);
-      }
-
-      querySet.add(loadingStateInfo);
-      return loadingStateInfo;
-    });
-
-    _defineProperty(this, "deleteLoadingState", function (state) {
-      var querySet = _this.loadingStates.get(state.queryTag);
-
-      querySet.delete(state);
-
-      if (querySet.size === 0) {
-        _this.loadingStates.delete(state.queryTag);
-      }
-    });
+    _initializerDefineProperty(this, "deleteLoadingState", _descriptor6, this);
 
     _defineProperty(this, "fetchAll", /*#__PURE__*/function () {
-      var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type) {
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type) {
         var options,
             queryParams,
             url,
@@ -1637,7 +1608,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 18;
+                  _context2.next = 16;
                   break;
                 }
 
@@ -1648,13 +1619,12 @@ var Store = (_class = /*#__PURE__*/function () {
 
               case 11:
                 json = _context2.sent;
+                runInAction(function () {
+                  if (json.included) {
+                    _this.createModelsFromData(json.included);
+                  }
 
-                if (json.included) {
-                  _this.createModelsFromData(json.included);
-                }
-
-                records = transaction(function () {
-                  return json.data.map(function (dataObject) {
+                  records = json.data.map(function (dataObject) {
                     var id = dataObject.id,
                         _dataObject$attribute = dataObject.attributes,
                         attributes = _dataObject$attribute === void 0 ? {} : _dataObject$attribute,
@@ -1674,18 +1644,18 @@ var Store = (_class = /*#__PURE__*/function () {
 
                     return record;
                   });
+
+                  _this.deleteLoadingState(state);
                 });
-
-                _this.deleteLoadingState(state);
-
                 return _context2.abrupt("return", records);
 
-              case 18:
-                _this.deleteLoadingState(state);
-
+              case 16:
+                runInAction(function () {
+                  _this.deleteLoadingState(state);
+                });
                 return _context2.abrupt("return", Promise.reject(response.status));
 
-              case 20:
+              case 18:
               case "end":
                 return _context2.stop();
             }
@@ -1694,7 +1664,7 @@ var Store = (_class = /*#__PURE__*/function () {
       }));
 
       return function (_x4) {
-        return _ref5.apply(this, arguments);
+        return _ref4.apply(this, arguments);
       };
     }());
 
@@ -1999,10 +1969,12 @@ var Store = (_class = /*#__PURE__*/function () {
       }).then(function (response) {
         // Capture headers of interest
         if (headersOfInterest) {
-          headersOfInterest.forEach(function (header) {
-            var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
+          runInAction(function () {
+            headersOfInterest.forEach(function (header) {
+              var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
 
-            if (_this3.lastResponseHeaders[header] !== value) _this3.lastResponseHeaders[header] = value;
+              if (_this3.lastResponseHeaders[header] !== value) _this3.lastResponseHeaders[header] = value;
+            });
           });
         }
 
@@ -2229,18 +2201,16 @@ var Store = (_class = /*#__PURE__*/function () {
     value: function createModelsFromData(data) {
       var _this5 = this;
 
-      return transaction(function () {
-        return data.map(function (dataObject) {
-          // Only build objects for which we have a type defined.
-          // And ignore silently anything else included in the JSON response.
-          // TODO: Put some console message in development mode
-          if (_this5.getType(dataObject.type)) {
-            return _this5.createOrUpdateModel(dataObject);
-          } else {
-            console.warn("no type defined for ".concat(dataObject.type));
-            return null;
-          }
-        });
+      return data.map(function (dataObject) {
+        // Only build objects for which we have a type defined.
+        // And ignore silently anything else included in the JSON response.
+        // TODO: Put some console message in development mode
+        if (_this5.getType(dataObject.type)) {
+          return _this5.createOrUpdateModel(dataObject);
+        } else {
+          console.warn("no type defined for ".concat(dataObject.type));
+          return null;
+        }
       });
     }
     /**
@@ -2296,7 +2266,7 @@ var Store = (_class = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref6 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
+        var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, _json, errorString;
 
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -2374,27 +2344,26 @@ var Store = (_class = /*#__PURE__*/function () {
                   return _context4.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
 
                 case 29:
-                  // Add all errors from the API response to the record(s).
-                  // This is done by comparing the pointer in the error to
-                  // the request.
-                  _json.errors.forEach(function (error) {
-                    var _parseErrorPointer = parseErrorPointer(error),
-                        index = _parseErrorPointer.index,
-                        key = _parseErrorPointer.key;
+                  runInAction(function () {
+                    _json.errors.forEach(function (error) {
+                      var _parseErrorPointer = parseErrorPointer(error),
+                          index = _parseErrorPointer.index,
+                          key = _parseErrorPointer.key;
 
-                    if (key != null) {
-                      var errors = recordsArray[index].errors[key] || [];
-                      errors.push(error);
-                      recordsArray[index].errors[key] = errors;
-                    }
+                      if (key != null) {
+                        var errors = recordsArray[index].errors[key] || [];
+                        errors.push(error);
+                        recordsArray[index].errors[key] = errors;
+                      }
+                    });
+
+                    errorString = recordsArray.map(function (record) {
+                      return JSON.stringify(record.errors);
+                    }).join(';');
                   });
-
-                  errorString = recordsArray.map(function (record) {
-                    return JSON.stringify(record.errors);
-                  }).join(';');
                   return _context4.abrupt("return", Promise.reject(new Error(errorString)));
 
-                case 32:
+                case 31:
                 case "end":
                   return _context4.stop();
               }
@@ -2403,7 +2372,7 @@ var Store = (_class = /*#__PURE__*/function () {
         }));
 
         return function (_x7) {
-          return _ref6.apply(this, arguments);
+          return _ref5.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -2467,7 +2436,58 @@ var Store = (_class = /*#__PURE__*/function () {
       _this8.data[type].records.delete(String(id));
     };
   }
-}), _applyDecoratedDescriptor(_class.prototype, "initializeObservableDataProperty", [action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype)), _class);
+}), _descriptor5 = _applyDecoratedDescriptor(_class.prototype, "setLoadingState", [action], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    var _this9 = this;
+
+    return function (_ref6) {
+      var url = _ref6.url,
+          type = _ref6.type,
+          queryParams = _ref6.queryParams,
+          queryTag = _ref6.queryTag;
+      queryTag = queryTag || type;
+      var loadingStateInfo = {
+        url: url,
+        type: type,
+        queryParams: queryParams,
+        queryTag: queryTag
+      };
+
+      var querySet = _this9.loadingStates.get(queryTag);
+
+      if (!querySet) {
+        querySet = observable.set([], {
+          deep: false
+        });
+
+        _this9.loadingStates.set(queryTag, querySet);
+      }
+
+      querySet.add(loadingStateInfo);
+      return loadingStateInfo;
+    };
+  }
+}), _descriptor6 = _applyDecoratedDescriptor(_class.prototype, "deleteLoadingState", [action], {
+  configurable: true,
+  enumerable: true,
+  writable: true,
+  initializer: function initializer() {
+    var _this10 = this;
+
+    return function (state) {
+      var querySet = _this10.loadingStates.get(state.queryTag);
+
+      querySet.delete(state);
+
+      if (querySet.size === 0) {
+        _this10.loadingStates.delete(state.queryTag);
+      }
+    };
+  }
+}), _applyDecoratedDescriptor(_class.prototype, "reset", [action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "init", [action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "initializeNetworkConfiguration", [action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "initializeModelTypeIndex", [action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "initializeObservableDataProperty", [action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "createOrUpdateModel", [action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "createModelsFromData", [action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "createModel", [action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "updateRecords", [action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`

@@ -476,6 +476,7 @@ class Store {
    * @param {Object} options options that can be used to build the loading state info
    * @return {Object} the loading state that was added
    */
+  @action
   setLoadingState = ({ url, type, queryParams, queryTag }) => {
     queryTag = queryTag || type
 
@@ -496,6 +497,7 @@ class Store {
    * @method deleteLoadingState
    * @param {Object} state the state to remove
    */
+  @action
   deleteLoadingState = (state) => {
     const querySet = this.loadingStates.get(state.queryTag)
 
@@ -527,12 +529,13 @@ class Store {
       this.data[type].cache.set(url, [])
       const json = await response.json()
 
-      if (json.included) {
-        this.createModelsFromData(json.included)
-      }
+      let records
+      runInAction(() => {
+        if (json.included) {
+          this.createModelsFromData(json.included)
+        }
 
-      const records = runInAction(() =>
-        json.data.map((dataObject) => {
+        records = json.data.map((dataObject) => {
           const { id, attributes = {}, relationships = {} } = dataObject
           const record = this.createModel(type, id, { attributes, relationships })
           const cachedIds = this.data[type].cache.get(url)
@@ -540,11 +543,13 @@ class Store {
           this.data[type].records.set(String(id), record)
           return record
         })
-      )
-      this.deleteLoadingState(state)
+        this.deleteLoadingState(state)
+      })
       return records
     } else {
-      this.deleteLoadingState(state)
+      runInAction(() => {
+        this.deleteLoadingState(state)
+      })
       return Promise.reject(response.status)
     }
   }
@@ -606,6 +611,7 @@ class Store {
    *
    * @method reset
    */
+  @action
   reset (type) {
     if (type) {
       this.data[type] = {
@@ -625,6 +631,7 @@ class Store {
    * @method init
    * @param {Object} options passed to constructor
    */
+  @action
   init (options) {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
@@ -637,6 +644,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
+  @action
   initializeNetworkConfiguration (options = {}) {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
@@ -649,6 +657,7 @@ class Store {
    * @method initializeNetworkConfiguration
    * @param {Object} options for nextwork config
    */
+  @action
   initializeModelTypeIndex () {
     const { types } = this.constructor
     this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
@@ -854,6 +863,7 @@ class Store {
    * @method createOrUpdateModel
    * @param {Object} dataObject
    */
+  @action
   createOrUpdateModel (dataObject) {
     const { attributes = {}, id, relationships = {}, type } = dataObject
 
@@ -894,20 +904,19 @@ class Store {
    * @method createModelsFromData
    * @param {Array} data
    */
+  @action
   createModelsFromData (data) {
-    return runInAction(() =>
-      data.map((dataObject) => {
-        // Only build objects for which we have a type defined.
-        // And ignore silently anything else included in the JSON response.
-        // TODO: Put some console message in development mode
-        if (this.getType(dataObject.type)) {
-          return this.createOrUpdateModel(dataObject)
-        } else {
-          console.warn(`no type defined for ${dataObject.type}`)
-          return null
-        }
-      })
-    )
+    return data.map((dataObject) => {
+      // Only build objects for which we have a type defined.
+      // And ignore silently anything else included in the JSON response.
+      // TODO: Put some console message in development mode
+      if (this.getType(dataObject.type)) {
+        return this.createOrUpdateModel(dataObject)
+      } else {
+        console.warn(`no type defined for ${dataObject.type}`)
+        return null
+      }
+    })
   }
 
   /**
@@ -919,6 +928,7 @@ class Store {
    * @param {Object} attributes
    * @return {Object} model instance
    */
+  @action
   createModel (type, id, data) {
     const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
@@ -939,6 +949,7 @@ class Store {
    * @param {Promise} a request to the API
    * @param {Model|Array} records to be updated
    */
+  @action
   updateRecords (promise, records) {
     // records may be a single record, if so wrap it in an array to make
     // iteration simpler
