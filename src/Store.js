@@ -787,6 +787,16 @@ class Store {
   }
 
   /**
+   * Clears the cache for provided record type
+   *
+   * @method clearCache
+   * @param {String} type
+   */
+  clearCache (type) {
+    return this.getType(type).cache.clear()
+  }
+
+  /**
    * Gets single from store based on cached query
    *
    * @method getCachedRecord

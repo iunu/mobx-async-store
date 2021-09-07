@@ -908,6 +908,29 @@ describe('Store', () => {
           const cachedTodo = cachedTodos[0]
           expect(cachedTodo.title).toEqual('New title')
         })
+
+        it('will populate and clear the cache', async () => {
+          fetch.mockResponse(mockTodosResponse)
+          const queryUrl = '/example_api/todos?title=Do%20taxes'
+
+          // Populate the cache
+          await store.findAll('todos', {
+            queryParams: {
+              title: 'Do taxes'
+            }
+          })
+
+          // Get the current cache of IDs
+          let cachedIds = store.getCachedIds('todos', queryUrl)
+          expect(cachedIds.length).toBe(1)
+
+          // Clear the cache
+          await store.clearCache('todos')
+
+          // Get the cache of IDs after clearing
+          cachedIds = store.getCachedIds('todos', queryUrl)
+          expect(cachedIds.length).toBe(0)
+        })
       })
     })
   })

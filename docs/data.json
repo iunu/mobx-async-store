@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "4.1.5"
+        "version": "4.2.0"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -1415,6 +1415,21 @@
         {
             "file": "src/Store.js",
             "line": 789,
+            "description": "Clears the cache for provided record type",
+            "itemtype": "method",
+            "name": "clearCache",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "Store"
+        },
+        {
+            "file": "src/Store.js",
+            "line": 799,
             "description": "Gets single from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecord",
@@ -1442,7 +1457,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 804,
+            "line": 814,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedRecords",
@@ -1471,7 +1486,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 822,
+            "line": 832,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedIds",
@@ -1495,7 +1510,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 837,
+            "line": 847,
             "description": "Gets records from store based on cached query",
             "itemtype": "method",
             "name": "getCachedId",
@@ -1519,7 +1534,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 849,
+            "line": 859,
             "description": "Helper to look up model class for type.",
             "itemtype": "method",
             "name": "getKlass",
@@ -1538,7 +1553,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 860,
+            "line": 870,
             "description": "Creates or updates a model",
             "itemtype": "method",
             "name": "createOrUpdateModel",
@@ -1553,7 +1568,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 901,
+            "line": 911,
             "description": "Create multiple models from an array of data",
             "itemtype": "method",
             "name": "createModelsFromData",
@@ -1568,7 +1583,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 922,
+            "line": 932,
             "description": "Helper to create a new model",
             "itemtype": "method",
             "name": "createModel",
@@ -1597,7 +1612,7 @@
         },
         {
             "file": "src/Store.js",
-            "line": 944,
+            "line": 954,
             "description": "Defines a resolution for an API call that will update a record or\nset of records with the data returned from the API",
             "itemtype": "method",
             "name": "updateRecords",
