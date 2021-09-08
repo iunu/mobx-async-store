@@ -2062,6 +2062,18 @@ var Store = (_class = /*#__PURE__*/function () {
       });
     }
     /**
+     * Clears the cache for provided record type
+     *
+     * @method clearCache
+     * @param {String} type
+     */
+
+  }, {
+    key: "clearCache",
+    value: function clearCache(type) {
+      return this.getType(type).cache.clear();
+    }
+    /**
      * Gets single from store based on cached query
      *
      * @method getCachedRecord
@@ -2825,7 +2837,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   _inherits(RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
@@ -2954,7 +2966,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
 
 
   _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species,
+    key: _Symbol$species2,
     get: function get() {
       return Array;
     }
@@ -2968,6 +2980,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array));
+}( /*#__PURE__*/_wrapNativeSuper(Array), _Symbol$species);
 
 export { Model, QueryString, Store, attribute, relatedToMany, relatedToOne, validates };
