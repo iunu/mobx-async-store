@@ -20,6 +20,7 @@ Mobx-based store for async data fetching and state management. https://artemis-a
   - Finding records by id with `Store#getMany`, `Store#fetchMany`, `Store#findMany`
   - Fetching all records with `Store#getAll`, `Store#fetchAll`, `Store#findAll`
   - Find/fetch options
+  - [Clear the query cache] (#clear-the-query-cache)
   - Adding records with `Store#add`
   - Persisting records with `Model#save`
   - Handling errors with `Model#errors`
@@ -307,6 +308,18 @@ store.findOne('todos', todo.id)
 store.reset('todos')
 store.findOne('todos', todo.id)
 ```
+
+### Clear the query cache
+
+Sometimes the query cache from `findAll` can cause weird frontend bugs, to fix this use the `clearCache` method.
+This will clear the query cache for the type you pass as a parameter.
+
+```Javascript
+store.clearCache('todos')
+```
+
+The next time you use `findAll` after clearing the cache, it will pull a query directly from the server and repopulate
+the cache.
 
 ### Adding records with `Store#add`
 
