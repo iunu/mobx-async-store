@@ -5,24 +5,25 @@
 # mobx-async-store
 
 Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/
-## Table of Contents
 
-- Introduction
-- Development Setup
-- Testing
-- Distribution
-- Installation
-- Usage
-  - Creating models by extending `Model`
-  - Creating stores by extending `Store`
-  - Initializing stores
-  - Finding single records with `Store#getOne`, `Store#fetchOne`, `Store#findOne`
-  - Finding records by id with `Store#getMany`, `Store#fetchMany`, `Store#findMany`
-  - Fetching all records with `Store#getAll`, `Store#fetchAll`, `Store#findAll`
-  - Find/fetch options
-  - Adding records with `Store#add`
-  - Persisting records with `Model#save`
-  - Handling errors with `Model#errors`
+## Table of Contents
+- [Introduction](#introduction)
+- [Development Setup](#development-setup)
+- [Testing](#testing)
+- [Distribution](#distribution)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Creating models by extending `Model`](#create-models)
+  - [Creating stores by extending `Store`](#create-stores)
+  - [Initializing stores](#initializing-stores)
+  - [Fetching all records with `Store#getAll`, `Store#fetchAll`, `Store#findAll`](#getting-all-records-with-storegetall)
+  - [Finding records by id with `Store#getMany`, `Store#fetchMany`, `Store#findMany`](#getting-records-by-id-with-storegetmany)
+  - [Find/fetch options](#findfetch-options)
+  - [Finding single records with `Store#getOne`, `Store#fetchOne`, `Store#findOne`](#getting-single-records-with-storegetone)
+  - [Clear the query cache](#clear-the-query-cache)
+  - [Adding records with `Store#add`](#adding-records-with-storeadd)
+  - [Persisting records with `Model#save`](#persisting-records-with-modelsave)
+  - [Handling errors with `Model#errors`](#handling-errors-with-modelerrors)
 
 ## Introduction
 
@@ -307,6 +308,18 @@ store.findOne('todos', todo.id)
 store.reset('todos')
 store.findOne('todos', todo.id)
 ```
+
+### Clear the query cache
+
+Sometimes the query cache from `findAll` can cause weird frontend bugs, to fix this use the `clearCache` method.
+This will clear the query cache for the type you pass as a parameter.
+
+```Javascript
+store.clearCache('todos')
+```
+
+The next time you use `findAll` after clearing the cache, it will pull a query directly from the server and repopulate
+the cache.
 
 ### Adding records with `Store#add`
 
