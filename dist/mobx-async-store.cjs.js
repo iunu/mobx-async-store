@@ -24,6 +24,7 @@ var cloneDeep = require('lodash/cloneDeep');
 var isEqual = require('lodash/isEqual');
 var isObject = require('lodash/isObject');
 var findLast = require('lodash/findLast');
+var lodash = require('lodash');
 var pick = require('lodash/pick');
 var uniqBy = require('lodash/uniqBy');
 var _objectWithoutProperties = require('@babel/runtime/helpers/objectWithoutProperties');
@@ -536,8 +537,8 @@ var Model = (_class$1 = /*#__PURE__*/function () {
      * todo.dirtyAttributes
      * => ['title', 'options.variety']
      *
-     * @method dirtyAttributes
-     * @return {Array} dirty attribute paths
+     * @property dirtyAttributes
+     * @type {Array}
      */
 
   }, {
@@ -550,7 +551,9 @@ var Model = (_class$1 = /*#__PURE__*/function () {
         var previousValue = _this2.previousSnapshot.attributes[attr];
 
         if (isObject__default['default'](currentValue)) {
-          diff(currentValue, previousValue).forEach(function (property) {
+          var currentToPreviousDiff = diff(currentValue, previousValue);
+          var previousToCurrentDiff = diff(previousValue, currentValue);
+          lodash.union(currentToPreviousDiff, previousToCurrentDiff).forEach(function (property) {
             dirtyAccumulator.add("".concat(attr, ".").concat(property));
           });
         } else if (!isEqual__default['default'](previousValue, currentValue)) {

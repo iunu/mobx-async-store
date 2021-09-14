@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 4.3.0</em>
+            <em>API Docs for: 4.3.1</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -102,6 +102,7 @@ import cloneDeep from &#x27;lodash/cloneDeep&#x27;
 import isEqual from &#x27;lodash/isEqual&#x27;
 import isObject from &#x27;lodash/isObject&#x27;
 import findLast from &#x27;lodash/findLast&#x27;
+import union from &#x27;lodash/union&#x27;
 
 /**
  * Maps the passed-in property names through and runs validations against those properties
@@ -248,8 +249,8 @@ class Model {
    * todo.dirtyAttributes
    * =&gt; [&#x27;title&#x27;, &#x27;options.variety&#x27;]
    *
-   * @method dirtyAttributes
-   * @return {Array} dirty attribute paths
+   * @property dirtyAttributes
+   * @type {Array}
    */
   get dirtyAttributes () {
     return Array.from(Object.keys(this.attributes).reduce((dirtyAccumulator, attr) =&gt; {
@@ -257,7 +258,10 @@ class Model {
       const previousValue = this.previousSnapshot.attributes[attr]
 
       if (isObject(currentValue)) {
-        diff(currentValue, previousValue).forEach((property) =&gt; {
+        const currentToPreviousDiff = diff(currentValue, previousValue)
+        const previousToCurrentDiff = diff(previousValue, currentValue)
+
+        union(currentToPreviousDiff, previousToCurrentDiff).forEach((property) =&gt; {
           dirtyAccumulator.add(&#x60;${attr}.${property}&#x60;)
         })
       } else if (!isEqual(previousValue, currentValue)) {
