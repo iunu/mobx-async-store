@@ -247,4 +247,25 @@ describe('MockServer', () => {
       )
     })
   })
+
+  describe('Store tagging', () => {
+    it('Tags the builtin store so that other test utilities can tell if a store is used for a Factory Farm', () => {
+      const backendStore = new AppStore()
+      const factoryFarm = new FactoryFarm(backendStore)
+
+      expect(backendStore.__usedForFactoryFarm__).toBe(true)
+      expect(factoryFarm.store.__usedForFactoryFarm__).toBe(true)
+
+      expect(backendStore.__usedForMockServer__).toBe(undefined)
+      expect(factoryFarm.store.__usedForMockServer__).toBe(undefined)
+      expect(factoryFarm.__usedForMockServer__).toBe(undefined)
+
+      const mockServer = new MockServer({ factoryFarm })
+      expect(backendStore.__usedForMockServer__).toBe(true)
+      expect(factoryFarm.__usedForMockServer__).toBe(true)
+      expect(factoryFarm.store.__usedForMockServer__).toBe(true)
+      expect(mockServer._backendFactoryFarm.__usedForMockServer__).toBe(true)
+      expect(mockServer._backendFactoryFarm.store.__usedForMockServer__).toBe(true)
+    })
+  })
 })

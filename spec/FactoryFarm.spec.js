@@ -79,7 +79,7 @@ describe('FactoryFarm', () => {
       })
     })
 
-    it('builds a defined facotry', () => {
+    it('builds a defined factory', () => {
       const todo = factoryFarm.build('planting')
       expect(todo.title).toEqual('Plant Seeds')
       expect(todo.subtitle).toEqual('Lettuce')
@@ -437,6 +437,17 @@ describe('FactoryFarm', () => {
       expect(todo2.category.id).toBe(currentOrg.id)
       expect(todo3.category.id).toBe(otherOrg.id)
       expect(todo4.category.id).toBe(currentOrg.id)
+    })
+  })
+
+  describe('Store tagging', () => {
+    it('Tags the builtin store so that other test utilities can tell if a store is used for a Factory Farm', () => {
+      const store = new AppStore()
+      expect(store.__usedForFactoryFarm__).toBe(undefined)
+
+      const factoryFarm = new FactoryFarm(store)
+      expect(store.__usedForFactoryFarm__).toBe(true)
+      expect(factoryFarm.store.__usedForFactoryFarm__).toBe(true)
     })
   })
 })
