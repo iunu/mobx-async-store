@@ -26,6 +26,9 @@ var isObject = require('lodash/isObject');
 var findLast = require('lodash/findLast');
 var pick = require('lodash/pick');
 var uniqBy = require('lodash/uniqBy');
+var _objectWithoutProperties = require('@babel/runtime/helpers/objectWithoutProperties');
+var clone = require('lodash/clone');
+var times = require('lodash/times');
 var _assertThisInitialized = require('@babel/runtime/helpers/assertThisInitialized');
 var _possibleConstructorReturn = require('@babel/runtime/helpers/possibleConstructorReturn');
 var _getPrototypeOf = require('@babel/runtime/helpers/getPrototypeOf');
@@ -54,6 +57,9 @@ var isObject__default = /*#__PURE__*/_interopDefaultLegacy(isObject);
 var findLast__default = /*#__PURE__*/_interopDefaultLegacy(findLast);
 var pick__default = /*#__PURE__*/_interopDefaultLegacy(pick);
 var uniqBy__default = /*#__PURE__*/_interopDefaultLegacy(uniqBy);
+var _objectWithoutProperties__default = /*#__PURE__*/_interopDefaultLegacy(_objectWithoutProperties);
+var clone__default = /*#__PURE__*/_interopDefaultLegacy(clone);
+var times__default = /*#__PURE__*/_interopDefaultLegacy(times);
 var _assertThisInitialized__default = /*#__PURE__*/_interopDefaultLegacy(_assertThisInitialized);
 var _possibleConstructorReturn__default = /*#__PURE__*/_interopDefaultLegacy(_possibleConstructorReturn);
 var _getPrototypeOf__default = /*#__PURE__*/_interopDefaultLegacy(_getPrototypeOf);
@@ -371,9 +377,9 @@ var schema = new Schema();
 
 var _class$1, _descriptor$1;
 
-function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$4(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$4(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$4(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$4(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Maps the passed-in property names through and runs validations against those properties
  * @method validateProperties
@@ -458,7 +464,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
 
     mobx.makeObservable(this);
     var defaultAttributes = this.defaultAttributes;
-    mobx.extendObservable(this, _objectSpread$2(_objectSpread$2({}, defaultAttributes), initialAttributes));
+    mobx.extendObservable(this, _objectSpread$4(_objectSpread$4({}, defaultAttributes), initialAttributes));
 
     this._takeSnapshot({
       persisted: !this.isNew
@@ -1313,9 +1319,9 @@ var Model = (_class$1 = /*#__PURE__*/function () {
 
 var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5, _descriptor6;
 
-function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Defines the Artemis Data Store class.
  *
@@ -1460,7 +1466,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 extensionStr = extensions !== null && extensions !== void 0 && extensions.length ? "ext=\"bulk,".concat(extensions.join(), "\"") : 'ext="bulk"'; // send request
 
                 response = _this.fetch(url, {
-                  headers: _objectSpread$1(_objectSpread$1({}, _this.defaultFetchOptions.headers), {}, {
+                  headers: _objectSpread$3(_objectSpread$3({}, _this.defaultFetchOptions.headers), {}, {
                     'Content-Type': "application/vnd.api+json; ".concat(extensionStr)
                   }),
                   method: 'POST',
@@ -1627,7 +1633,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 options = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : {};
                 queryParams = options.queryParams;
                 url = _this.fetchUrl(type, queryParams);
-                state = _this.setLoadingState(_objectSpread$1(_objectSpread$1({}, options), {}, {
+                state = _this.setLoadingState(_objectSpread$3(_objectSpread$3({}, options), {}, {
                   type: type,
                   url: url
                 }));
@@ -1773,7 +1779,7 @@ var Store = (_class = /*#__PURE__*/function () {
               case 4:
                 queryParams = options.queryParams;
                 url = this.fetchUrl(type, queryParams, id);
-                state = this.setLoadingState(_objectSpread$1(_objectSpread$1({}, options), {}, {
+                state = this.setLoadingState(_objectSpread$3(_objectSpread$3({}, options), {}, {
                   type: type,
                   id: id,
                   url: url
@@ -1990,14 +1996,14 @@ var Store = (_class = /*#__PURE__*/function () {
       var defaultFetchOptions = this.defaultFetchOptions,
           headersOfInterest = this.headersOfInterest;
 
-      var fetchOptions = _objectSpread$1(_objectSpread$1({}, defaultFetchOptions), options);
+      var fetchOptions = _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options);
 
       var key = JSON.stringify({
         url: url,
         fetchOptions: fetchOptions
       });
       return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$1(_objectSpread$1({}, defaultFetchOptions), options));
+        return fetch(url, _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options));
       }).then(function (response) {
         // Capture headers of interest
         if (headersOfInterest) {
@@ -2215,7 +2221,7 @@ var Store = (_class = /*#__PURE__*/function () {
             // Don't try to create relationship if meta included false
             if (!relationships[key].meta) {
               // defensive against existingRecord.relationships being undefined
-              mobx.set(record, 'relationships', _objectSpread$1(_objectSpread$1({}, record.relationships), {}, _defineProperty__default['default']({}, key, relationships[key])));
+              mobx.set(record, 'relationships', _objectSpread$3(_objectSpread$3({}, record.relationships), {}, _defineProperty__default['default']({}, key, relationships[key])));
             }
           });
         }
@@ -2283,7 +2289,7 @@ var Store = (_class = /*#__PURE__*/function () {
         throw new Error("Could not find a model for '".concat(type, "'"));
       }
 
-      return new ModelKlass(_objectSpread$1({
+      return new ModelKlass(_objectSpread$3({
         id: id,
         store: store,
         relationships: relationships
@@ -2532,6 +2538,505 @@ var Store = (_class = /*#__PURE__*/function () {
     };
   }
 }), _applyDecoratedDescriptor__default['default'](_class.prototype, "reset", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "init", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeNetworkConfiguration", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeModelTypeIndex", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createOrUpdateModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createModelsFromData", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "updateRecords", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
+
+var _excluded = ["type"],
+    _excluded2 = ["type", "parent"];
+
+function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+/**
+ * A class to create and use factories
+ * @class FactoryFarm
+ */
+
+var FactoryFarm = /*#__PURE__*/function () {
+  function FactoryFarm(store) {
+    var _this = this;
+
+    _classCallCheck__default['default'](this, FactoryFarm);
+
+    _defineProperty__default['default'](this, "factories", {});
+
+    _defineProperty__default['default'](this, "singletons", {});
+
+    _defineProperty__default['default'](this, "add", function () {
+      var _this$store;
+
+      return (_this$store = _this.store).add.apply(_this$store, arguments);
+    });
+
+    _defineProperty__default['default'](this, "_verifyFactory", function (factoryName) {
+      var factory = _this.factories[factoryName];
+
+      if (!factory) {
+        throw new Error("Factory ".concat(factoryName, " does not exist"));
+      }
+    });
+
+    _defineProperty__default['default'](this, "_buildModel", function (factoryName, properties) {
+      var index = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+      properties = clone__default['default'](properties);
+      Object.keys(properties).forEach(function (key) {
+        if (Array.isArray(properties[key])) {
+          properties[key] = properties[key].map(function (propDefinition) {
+            return _this._callPropertyDefinition(propDefinition, index, factoryName, properties);
+          });
+        } else {
+          properties[key] = _this._callPropertyDefinition(properties[key], index, factoryName, properties);
+        }
+      });
+      return properties;
+    });
+
+    _defineProperty__default['default'](this, "_callPropertyDefinition", function (definition, index, factoryName, properties) {
+      return typeof definition === 'function' ? definition.call(_this, index, factoryName, properties) : definition;
+    });
+
+    this.store = store || new Store();
+  }
+  /**
+   * A hash of available factories. A factory is an object with a structure like:
+   * { name, type, attributes, relationships }.
+   * @property factories
+   * @type {Object}
+   */
+
+
+  _createClass__default['default'](FactoryFarm, [{
+    key: "build",
+    value:
+    /**
+     * Allows easy building of ArtemisStore objects, including relationships.
+     * Takes parameters `attributes` and `relationships` to use for building.
+     *
+     *   const batchAction = store.build('cropBatchAction')
+     *   store.build('basilBatch', {
+     *     arbitrary_id: 'new_id'
+     *     zone: 'bay1',
+     *     crop_batch_actions: [
+     *       batchAction,
+     *       store.build('batchAction')
+     *     ]
+     *   })
+     *
+     * @method build
+     * @param {String} factoryName the name of the factory to use
+     * @param {Object} overrideOptions overrides for the factory
+     * @param {Number} numberOfRecords optional number of models to build
+     * @return {Object} instance of an ArtemisStore model
+     */
+    function build(factoryName) {
+      var overrideOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var numberOfRecords = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+      var store = this.store,
+          factories = this.factories,
+          singletons = this.singletons,
+          _verifyFactory = this._verifyFactory,
+          _buildModel = this._buildModel;
+
+      _verifyFactory(factoryName);
+
+      var _factories$factoryNam = factories[factoryName],
+          type = _factories$factoryNam.type,
+          properties = _objectWithoutProperties__default['default'](_factories$factoryNam, _excluded);
+
+      var newModelProperties = _objectSpread$2(_objectSpread$2({
+        id: function id(i) {
+          return String(store.getAll(type).length + i + 1);
+        }
+      }, properties), overrideOptions);
+
+      var identity = false;
+
+      if (newModelProperties.identity) {
+        if (typeof newModelProperties.identity === 'string') {
+          identity = newModelProperties.identity;
+        } else {
+          identity = factoryName;
+        }
+
+        delete newModelProperties.identity;
+
+        if (numberOfRecords === 1) {
+          if (singletons[identity]) return singletons[identity];
+        }
+      }
+
+      var addProperties;
+
+      if (numberOfRecords > 1) {
+        addProperties = times__default['default'](numberOfRecords, function (i) {
+          return _buildModel(factoryName, newModelProperties, i);
+        });
+      } else {
+        addProperties = _buildModel(factoryName, newModelProperties);
+      }
+
+      var results = store.add(type, addProperties);
+
+      if (identity) {
+        singletons[identity] = results;
+      }
+
+      return results;
+    }
+    /**
+     * Creates a factory with { name, type, parent, ...attributesAndRelationships }, which can be used for
+     * building test data.
+     * The factory is named, with a set of options to use to configure it.
+     *   * parent - use another factory as a basis for this one
+     *   * type - the type of model to use (for use if no parent)
+     *   * identity - whether this factory should be a singleton
+     * attributesAndRelationships - attributes and relationships. If properties are a function or an array of functions, they
+     *   will be executed at runtime.
+     *
+     * @method define
+     * @param {String} name the name to use for the factory
+     * @param {Object} options
+     */
+
+  }, {
+    key: "define",
+    value: function define(name) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      var type = options.type,
+          parent = options.parent,
+          properties = _objectWithoutProperties__default['default'](options, _excluded2);
+
+      var factory;
+
+      if (parent) {
+        var fromFactory = this.factories[parent];
+
+        if (!fromFactory) {
+          throw new Error("Factory ".concat(parent, " does not exist"));
+        }
+
+        factory = _objectSpread$2(_objectSpread$2({}, fromFactory), properties);
+      } else {
+        factory = _objectSpread$2({
+          type: type
+        }, properties);
+      }
+
+      this.factories[name] = factory;
+    }
+    /**
+     * Alias for `this.store.add`
+     * @method add
+     * @param  {...any} params
+     * @return {*} object or array
+     */
+
+  }]);
+
+  return FactoryFarm;
+}();
+
+/**
+ * JSONAPI uses `included` only at the top level. To recursively add models to this array,
+ * we preserve the top-level object and pass it in to the next round
+ * Because objects can have multiple relationships, we do a check of the array to make sure
+ * it's not already there.
+ * @method addIncluded
+ * @param {Object} store
+ * @param {Object} encodedData the jsonapi document
+ * @param {Object} topLevel the object with `inlcluded` array
+ */
+var addIncluded = function addIncluded(store, encodedModel, included) {
+  var allEncoded = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [encodedModel];
+  var relationships = encodedModel.relationships;
+  Object.keys(relationships).forEach(function (key) {
+    var data = relationships[key].data;
+
+    if (!Array.isArray(data)) {
+      data = [data];
+    }
+
+    var notAlreadyIncluded = data.filter(function (_ref) {
+      var id = _ref.id,
+          type = _ref.type;
+      return !allEncoded.some(function (encodedModel) {
+        return encodedModel.type === type && encodedModel.id === id;
+      });
+    });
+    notAlreadyIncluded.forEach(function (relationship) {
+      var relatedModel = store.getOne(relationship.type, relationship.id);
+      var encodedRelatedModel = toFullJsonapi(relatedModel);
+      included.push(encodedRelatedModel);
+      addIncluded(store, encodedRelatedModel, included, [].concat(_toConsumableArray__default['default'](allEncoded), _toConsumableArray__default['default'](included), [encodedModel]));
+    });
+  });
+};
+/**
+ * Encodes models into full compliant JSONAPI payload, as if it were being sent with all
+ * relevant relationships and inclusions. The resulting payload will look like
+ * {
+ *   data: {
+ *     id: '1',
+ *     type: 'zones',
+ *     attributes: {},
+ *     relationships: {},
+ *   },
+ *   included: []
+ * }
+ * @method serverResponse
+ * @param {*} modelOrArray the data being encoded
+ * @return {String} JSON encoded data
+ */
+
+
+var serverResponse = function serverResponse(modelOrArray) {
+  var model;
+  var array;
+  var encodedData;
+
+  if (modelOrArray == null) {
+    throw new Error('Cannot encode a null reference');
+  } else if (Array.isArray(modelOrArray)) {
+    array = modelOrArray;
+  } else {
+    model = modelOrArray;
+  }
+
+  if (model) {
+    encodedData = {
+      data: toFullJsonapi(model),
+      included: []
+    };
+    addIncluded(model.store, encodedData.data, encodedData.included);
+  } else if (array.length > 0) {
+    encodedData = {
+      data: array.map(toFullJsonapi),
+      included: []
+    };
+    encodedData.data.forEach(function (encodedModel) {
+      addIncluded(array[0].store, encodedModel, encodedData.included, [].concat(_toConsumableArray__default['default'](encodedData.data), _toConsumableArray__default['default'](encodedData.included)));
+    });
+  } else {
+    encodedData = {
+      data: []
+    };
+  }
+
+  return JSON.stringify(encodedData);
+};
+
+var toFullJsonapi = function toFullJsonapi(model) {
+  return model.jsonapi({
+    relationships: Object.keys(model.relationships)
+  });
+};
+
+function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+var simulatePost = function simulatePost(store, type, body) {
+  var attributes = JSON.parse(body.toString()).data.attributes;
+  var id = String(store.getAll(type).length + 1);
+
+  var attributesWithId = _objectSpread$1(_objectSpread$1({}, attributes), {}, {
+    id: id
+  });
+
+  return store.add(type, attributesWithId);
+};
+
+var simulatePatch = function simulatePatch(store, type, body) {
+  var _JSON$parse = JSON.parse(body.toString()),
+      data = _JSON$parse.data;
+
+  var record = store.getOne(type, String(data.id));
+  record.updateAttributesFromResponse(data);
+  return record;
+};
+
+var getOneFromFactory = function getOneFromFactory(_backendFactoryFarm, factory, type, id) {
+  factory = factory || Object.keys(_backendFactoryFarm.factories).find(function (factoryName) {
+    return _backendFactoryFarm.factories[factoryName].type === type;
+  });
+
+  if (!factory) {
+    throw new Error("No default factory for ".concat(type, " exists"));
+  }
+
+  return _backendFactoryFarm.build(factory, {
+    id: id
+  });
+};
+/**
+ * Will throw an error if `fetch` is called from the mockServer, usually due to a `POST` or `PATCH` called by a `save`
+ * @method circularFetchError
+ * @param {String} url
+ */
+
+
+var circularFetchError = function circularFetchError(url, options) {
+  throw new Error("You tried to call fetch from MockServer with ".concat(options.method, " ").concat(url, ", which is circular and would call itself. This was caused by calling a method such as 'save' on a model that was created from MockServer. To fix the problem, use FactoryFarm without MockServer"));
+};
+/**
+ * Throws an error if MockServer tries to `findOne` or `findAll` from itself.
+ * @method circularFindError
+ * @param {String} type
+ * @param {String} id
+ */
+
+
+var circularFindError = function circularFindError(type, id) {
+  var idText = id ? " with id ".concat(id) : '';
+  throw new Error("You tried to find ".concat(type).concat(idText, " from MockServer which is circular and would call itself. To fix the problem, use FactoryFarm without MockServer"));
+};
+/**
+ * Overrides store methods that could trigger a `fetch` to throw errors. MockServer should only provide data for fetches, never call a fetch itself.
+ * @method disallowFetches
+ * @param {Object} store
+ */
+
+
+var disallowFetches = function disallowFetches(store) {
+  store.fetch = circularFetchError;
+  store.findOne = circularFindError;
+  store.findAll = circularFindError;
+  store.findMany = circularFindError;
+  store.fetchOne = circularFindError;
+  store.fetchAll = circularFindError;
+  store.fetchMany = circularFindError;
+};
+
+var serverFailureStatuses = [500];
+/**
+ * Wraps response JSON or object as needed. For a server failure (500), returns Promise.reject
+ * For any other request, returns Promise.resolve wrapped around a Response object.
+ * @method wrapResponse
+ * @param {*} response JSON string unless a 500 error, in which case it's an object
+ * @param {String} method
+ * @param {Number} status
+ * @return {Promise}
+ */
+
+var wrapResponse = function wrapResponse(response, method, status) {
+  if (!status) {
+    status = method === 'POST' ? 201 : 200;
+  } // Simulate the server itself fails
+
+
+  if (serverFailureStatuses.includes(status)) {
+    return Promise.reject(response);
+  }
+
+  return Promise.resolve(new Response(response, {
+    status: status
+  }));
+};
+/**
+ * A backend "server" to be used for creating jsonapi-compliant responses.
+ * @class MockServer
+ */
+
+
+var MockServer =
+/**
+ * Sets properties needed internally
+ * factoryFarm can be passed into the constructor
+ * @method constructor
+ * @param {*} param
+ */
+function MockServer() {
+  var _this = this;
+
+  var _options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  _classCallCheck__default['default'](this, MockServer);
+
+  _defineProperty__default['default'](this, "start", function () {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var _options$responseOver = options.responseOverrides,
+        responseOverrides = _options$responseOver === void 0 ? [] : _options$responseOver,
+        factoriesForTypes = options.factoriesForTypes;
+    fetch.resetMocks();
+    fetch.mockResponse(function (req) {
+      var foundQuery = responseOverrides.find(function (definition) {
+        if (!(definition !== null && definition !== void 0 && definition.path)) {
+          throw new Error('No path defined for mock server override. Did you define a path?');
+        }
+
+        var method = definition.method || 'GET';
+        return req.url.match(definition.path) && req.method.match(method);
+      });
+      var response = foundQuery ? foundQuery.response(_this) : serverResponse(_this._findFromStore(req, factoriesForTypes));
+      return wrapResponse(response, req.method, foundQuery === null || foundQuery === void 0 ? void 0 : foundQuery.status);
+    });
+  });
+
+  _defineProperty__default['default'](this, "stop", function () {
+    fetch.resetMocks();
+
+    _this._backendFactoryFarm.store.reset();
+  });
+
+  _defineProperty__default['default'](this, "build", function () {
+    var _this$_backendFactory;
+
+    return (_this$_backendFactory = _this._backendFactoryFarm).build.apply(_this$_backendFactory, arguments);
+  });
+
+  _defineProperty__default['default'](this, "define", function () {
+    var _this$_backendFactory2;
+
+    return (_this$_backendFactory2 = _this._backendFactoryFarm).define.apply(_this$_backendFactory2, arguments);
+  });
+
+  _defineProperty__default['default'](this, "add", function () {
+    var _this$_backendFactory3;
+
+    return (_this$_backendFactory3 = _this._backendFactoryFarm).add.apply(_this$_backendFactory3, arguments);
+  });
+
+  _defineProperty__default['default'](this, "_findFromStore", function (req) {
+    var factoriesForTypes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var _backendFactoryFarm = _this._backendFactoryFarm;
+    var method = req.method,
+        url = req.url,
+        body = req.body;
+    var store = _backendFactoryFarm.store;
+
+    var _URL = new URL(url, 'http://example.com'),
+        pathname = _URL.pathname;
+
+    var type = Object.keys(store.schema.structure).find(function (model_type) {
+      return pathname.match(model_type);
+    });
+    var id = pathname.match(/\d+$/);
+    id = id && String(id);
+
+    if (method === 'POST') {
+      return simulatePost(store, type, body);
+    } else if (method === 'PATCH') {
+      return simulatePatch(store, type, body);
+    } else if (id) {
+      return store.getOne(type, id) || getOneFromFactory(_backendFactoryFarm, factoriesForTypes[type], type, id);
+    } else {
+      var records = store.getAll(type);
+      return records.length > 0 ? records : factoriesForTypes[type] && [getOneFromFactory(_backendFactoryFarm, factoriesForTypes[type], type, '1')] || [];
+    }
+  });
+
+  this._backendFactoryFarm = _options.factoryFarm || new FactoryFarm();
+  disallowFetches(this._backendFactoryFarm.store);
+}
+/**
+ * Sets up fetch mocking to intercept requests. It will then either use overrides, or use its own
+ * internal store to simulate serving JSON responses of new data.
+ *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
+ *     from the internal store.
+ *   - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist
+ * @method start
+ * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
+ */
+;
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
@@ -3014,10 +3519,13 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   return RelatedRecordsArray;
 }( /*#__PURE__*/_wrapNativeSuper__default['default'](Array), _Symbol$species);
 
+exports.FactoryFarm = FactoryFarm;
+exports.MockServer = MockServer;
 exports.Model = Model;
 exports.QueryString = QueryString;
 exports.Store = Store;
 exports.attribute = attribute;
 exports.relatedToMany = relatedToMany;
 exports.relatedToOne = relatedToOne;
+exports.serverResponse = serverResponse;
 exports.validates = validates;

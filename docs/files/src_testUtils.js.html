@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Schema - mobx-async-store</title>
+    <title>src/testUtils.js - mobx-async-store</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -81,113 +81,99 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1>Schema Class</h1>
-<div class="box meta">
+<h1 class="file-heading">File: src/testUtils.js</h1>
 
+<div class="file">
+    <pre class="code prettyprint linenums">
+/**
+ * JSONAPI uses &#x60;included&#x60; only at the top level. To recursively add models to this array,
+ * we preserve the top-level object and pass it in to the next round
+ * Because objects can have multiple relationships, we do a check of the array to make sure
+ * it&#x27;s not already there.
+ * @method addIncluded
+ * @param {Object} store
+ * @param {Object} encodedData the jsonapi document
+ * @param {Object} topLevel the object with &#x60;inlcluded&#x60; array
+ */
+const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel]) =&gt; {
+  const { relationships } = encodedModel
 
-        <div class="foundat">
-            Defined in: <a href="../files/src_schema.js.html#l1"><code>src&#x2F;schema.js:1</code></a>
-        </div>
+  Object.keys(relationships).forEach((key) =&gt; {
+    let { data } = relationships[key]
+    if (!Array.isArray(data)) {
+      data = [data]
+    }
 
+    const notAlreadyIncluded = data.filter(
+      ({ id, type }) =&gt; !allEncoded.some((encodedModel) =&gt; encodedModel.type === type &amp;&amp; encodedModel.id === id)
+    )
 
-</div>
+    notAlreadyIncluded.forEach((relationship) =&gt; {
+      const relatedModel = store.getOne(relationship.type, relationship.id)
+      const encodedRelatedModel = toFullJsonapi(relatedModel)
+      included.push(encodedRelatedModel)
+      addIncluded(store, encodedRelatedModel, included, [...allEncoded, ...included, encodedModel])
+    })
+  })
+}
 
+/**
+ * Encodes models into full compliant JSONAPI payload, as if it were being sent with all
+ * relevant relationships and inclusions. The resulting payload will look like
+ * {
+ *   data: {
+ *     id: &#x27;1&#x27;,
+ *     type: &#x27;zones&#x27;,
+ *     attributes: {},
+ *     relationships: {},
+ *   },
+ *   included: []
+ * }
+ * @method serverResponse
+ * @param {*} modelOrArray the data being encoded
+ * @return {String} JSON encoded data
+ */
 
-<div class="box intro">
-    <p>Utility class used to store the schema
-of model attribute definitions</p>
+export const serverResponse = function (modelOrArray) {
+  let model
+  let array
+  let encodedData
 
-</div>
+  if (modelOrArray == null) {
+    throw new Error(&#x27;Cannot encode a null reference&#x27;)
+  } else if (Array.isArray(modelOrArray)) {
+    array = modelOrArray
+  } else {
+    model = modelOrArray
+  }
 
+  if (model) {
+    encodedData = {
+      data: toFullJsonapi(model),
+      included: []
+    }
 
-<div id="classdocs" class="tabview">
-    <ul class="api-class-tabs">
-        <li class="api-class-tab index"><a href="#index">Index</a></li>
+    addIncluded(model.store, encodedData.data, encodedData.included)
+  } else if (array.length &gt; 0) {
+    encodedData = {
+      data: array.map(toFullJsonapi),
+      included: []
+    }
+    encodedData.data.forEach((encodedModel) =&gt; {
+      addIncluded(array[0].store, encodedModel, encodedData.included, [...encodedData.data, ...encodedData.included])
+    })
+  } else {
+    encodedData = { data: [] }
+  }
 
-            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
-    </ul>
+  return JSON.stringify(encodedData)
+}
 
-    <div>
-        <div id="index" class="api-class-tabpanel index">
-            <h2 class="off-left">Item Index</h2>
+const toFullJsonapi = (model) =&gt; {
+  return model.jsonapi({ relationships: Object.keys(model.relationships) })
+}
 
-                <div class="index-section methods">
-                    <h3>Methods</h3>
-
-                    <ul class="index-list methods">
-                            <li class="index-item method">
-                                <a href="#method_addValidation">addValidation</a>
-
-                            </li>
-                    </ul>
-                </div>
-
-
-
-        </div>
-
-            <div id="methods" class="api-class-tabpanel">
-                <h2 class="off-left">Methods</h2>
-
-<div id="method_addValidation" class="method item">
-    <h3 class="name"><code>addValidation</code></h3>
-
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-                <li class="arg">
-                        <code>options</code>
-                </li>
-            </ul><span class="paren">)</span>
-        </div>
-
-
-
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/src_schema.js.html#l25"><code>src&#x2F;schema.js:25</code></a>
-        </p>
-
-
-
-    </div>
-
-    <div class="description">
-        <p>Adds a validation to either the schema <code>structure</code> (for attributes) or <code>relations</code> (for relationships)</p>
-
-    </div>
-
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-                <li class="param">
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-
-
-                    <div class="param-description">
-                        <p>includes <code>type</code>, <code>property</code>, and <code>validator</code></p>
-
-                    </div>
-
-                </li>
-            </ul>
-        </div>
-
-
-
-</div>
-            </div>
-
-
-
-    </div>
+    </pre>
 </div>
                     </div>
                 </div>
