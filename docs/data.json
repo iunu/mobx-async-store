@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "4.3.1"
+        "version": "4.3.2"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -344,7 +344,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 14,
+            "line": 15,
             "description": "A hash of available factories. A factory is an object with a structure like:\n{ name, type, attributes, relationships }.",
             "itemtype": "property",
             "name": "factories",
@@ -353,7 +353,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 22,
+            "line": 23,
             "description": "A hash of singleton objects.",
             "itemtype": "property",
             "name": "factories",
@@ -362,7 +362,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 29,
+            "line": 30,
             "description": "Allows easy building of ArtemisStore objects, including relationships.\nTakes parameters `attributes` and `relationships` to use for building.\n\n  const batchAction = store.build('cropBatchAction')\n  store.build('basilBatch', {\n    arbitrary_id: 'new_id'\n    zone: 'bay1',\n    crop_batch_actions: [\n      batchAction,\n      store.build('batchAction')\n    ]\n  })",
             "itemtype": "method",
             "name": "build",
@@ -391,7 +391,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 90,
+            "line": 91,
             "description": "Creates a factory with { name, type, parent, ...attributesAndRelationships }, which can be used for\nbuilding test data.\nThe factory is named, with a set of options to use to configure it.\n  * parent - use another factory as a basis for this one\n  * type - the type of model to use (for use if no parent)\n  * identity - whether this factory should be a singleton\nattributesAndRelationships - attributes and relationships. If properties are a function or an array of functions, they\n  will be executed at runtime.",
             "itemtype": "method",
             "name": "define",
@@ -411,7 +411,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 130,
+            "line": 131,
             "description": "Alias for `this.store.add`",
             "itemtype": "method",
             "name": "add",
@@ -430,7 +430,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 138,
+            "line": 139,
             "description": "Verifies that the requested factory exists",
             "itemtype": "method",
             "name": "_verifyFactory",
@@ -447,7 +447,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 152,
+            "line": 153,
             "description": "Builds model properties that will be used for creating models. Since factories can use\nfunctions to define relationships, it loops through properties and attempts to execute any functions.",
             "itemtype": "method",
             "name": "_buildModel",
@@ -478,7 +478,7 @@
         },
         {
             "file": "src/FactoryFarm.js",
-            "line": 177,
+            "line": 178,
             "description": "If `definition` is a function, calls the function. Otherwise, returns the definition.",
             "itemtype": "method",
             "name": "_callPropertyDefinition",
@@ -606,7 +606,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 113,
+            "line": 116,
             "description": "Sets up fetch mocking to intercept requests. It will then either use overrides, or use its own\ninternal store to simulate serving JSON responses of new data.\n  - responseOverrides: An array of alternative responses that can be used to override the ones that would be served\n    from the internal store.\n  - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist",
             "itemtype": "method",
             "name": "start",
@@ -621,7 +621,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 144,
+            "line": 147,
             "description": "Clears mocks and the store",
             "itemtype": "method",
             "name": "stop",
@@ -629,7 +629,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 153,
+            "line": 156,
             "description": "Alias for `this._backendFactoryFarm.build`",
             "itemtype": "method",
             "name": "build",
@@ -658,7 +658,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 163,
+            "line": 166,
             "description": "Alias for `this._backendFactoryFarm.define`",
             "itemtype": "method",
             "name": "define",
@@ -682,7 +682,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 172,
+            "line": 175,
             "description": "Alias for `this._backendFactoryFarm.add`",
             "itemtype": "method",
             "name": "add",
@@ -706,7 +706,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 181,
+            "line": 184,
             "description": "Based on a request, simulates building a response, either using found data\nor a factory.",
             "itemtype": "method",
             "name": "_findFromStore",

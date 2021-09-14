@@ -107,6 +107,9 @@ class MockServer {
    */
   constructor (options = {}) {
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm()
+    this._backendFactoryFarm.__usedForMockServer__ = true
+    this._backendFactoryFarm.store.__usedForMockServer__ = true
+
     disallowFetches(this._backendFactoryFarm.store)
   }
 

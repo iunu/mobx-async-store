@@ -9,6 +9,7 @@ import times from 'lodash/times'
 class FactoryFarm {
   constructor (store) {
     this.store = store || new Store()
+    this.store.__usedForFactoryFarm__ = true
   }
 
   /**
