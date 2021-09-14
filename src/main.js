@@ -1,8 +1,11 @@
 import Model from './Model'
 import Store from './Store'
 import QueryString from './QueryString'
+import FactoryFarm from './FactoryFarm'
+import MockServer from './MockServer'
 import { attribute, validates } from './decorators/attributes'
 import { relatedToMany, relatedToOne } from './decorators/relationships'
+import { serverResponse } from './testUtils'
 
 export {
   Model,
@@ -11,5 +14,8 @@ export {
   relatedToMany,
   relatedToOne,
   validates,
-  QueryString
+  QueryString,
+  serverResponse,
+  FactoryFarm,
+  MockServer
 }

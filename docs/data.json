@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "4.2.1"
+        "version": "4.3.0"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -18,6 +18,24 @@
             "modules": {},
             "classes": {
                 "RelatedRecordsArray": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/FactoryFarm.js": {
+            "name": "src/FactoryFarm.js",
+            "modules": {},
+            "classes": {
+                "FactoryFarm": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/MockServer.js": {
+            "name": "src/MockServer.js",
+            "modules": {},
+            "classes": {
+                "MockServer": 1
             },
             "fors": {},
             "namespaces": {}
@@ -46,6 +64,13 @@
             "classes": {
                 "Schema": 1
             },
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/testUtils.js": {
+            "name": "src/testUtils.js",
+            "modules": {},
+            "classes": {},
             "fors": {},
             "namespaces": {}
         },
@@ -88,6 +113,30 @@
                     "type": "String"
                 }
             ]
+        },
+        "FactoryFarm": {
+            "name": "FactoryFarm",
+            "shortname": "FactoryFarm",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/FactoryFarm.js",
+            "line": 5,
+            "description": "A class to create and use factories"
+        },
+        "MockServer": {
+            "name": "MockServer",
+            "shortname": "MockServer",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "src/MockServer.js",
+            "line": 97,
+            "description": "A backend \"server\" to be used for creating jsonapi-compliant responses."
         },
         "Model": {
             "name": "Model",
@@ -292,6 +341,389 @@
                 "type": "Object"
             },
             "class": "RelatedRecordsArray"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 14,
+            "description": "A hash of available factories. A factory is an object with a structure like:\n{ name, type, attributes, relationships }.",
+            "itemtype": "property",
+            "name": "factories",
+            "type": "{Object}",
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 22,
+            "description": "A hash of singleton objects.",
+            "itemtype": "property",
+            "name": "factories",
+            "type": "{Object}",
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 29,
+            "description": "Allows easy building of ArtemisStore objects, including relationships.\nTakes parameters `attributes` and `relationships` to use for building.\n\n  const batchAction = store.build('cropBatchAction')\n  store.build('basilBatch', {\n    arbitrary_id: 'new_id'\n    zone: 'bay1',\n    crop_batch_actions: [\n      batchAction,\n      store.build('batchAction')\n    ]\n  })",
+            "itemtype": "method",
+            "name": "build",
+            "params": [
+                {
+                    "name": "factoryName",
+                    "description": "the name of the factory to use",
+                    "type": "String"
+                },
+                {
+                    "name": "overrideOptions",
+                    "description": "overrides for the factory",
+                    "type": "Object"
+                },
+                {
+                    "name": "numberOfRecords",
+                    "description": "optional number of models to build",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "instance of an ArtemisStore model",
+                "type": "Object"
+            },
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 90,
+            "description": "Creates a factory with { name, type, parent, ...attributesAndRelationships }, which can be used for\nbuilding test data.\nThe factory is named, with a set of options to use to configure it.\n  * parent - use another factory as a basis for this one\n  * type - the type of model to use (for use if no parent)\n  * identity - whether this factory should be a singleton\nattributesAndRelationships - attributes and relationships. If properties are a function or an array of functions, they\n  will be executed at runtime.",
+            "itemtype": "method",
+            "name": "define",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "the name to use for the factory",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 130,
+            "description": "Alias for `this.store.add`",
+            "itemtype": "method",
+            "name": "add",
+            "params": [
+                {
+                    "name": "params",
+                    "description": "",
+                    "type": "...any"
+                }
+            ],
+            "return": {
+                "description": "object or array",
+                "type": "*"
+            },
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 138,
+            "description": "Verifies that the requested factory exists",
+            "itemtype": "method",
+            "name": "_verifyFactory",
+            "params": [
+                {
+                    "name": "factoryName",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "access": "private",
+            "tagname": "",
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 152,
+            "description": "Builds model properties that will be used for creating models. Since factories can use\nfunctions to define relationships, it loops through properties and attempts to execute any functions.",
+            "itemtype": "method",
+            "name": "_buildModel",
+            "params": [
+                {
+                    "name": "factoryName",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "properties",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "index",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "an object of properties to be used.",
+                "type": "Object"
+            },
+            "access": "private",
+            "tagname": "",
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/FactoryFarm.js",
+            "line": 177,
+            "description": "If `definition` is a function, calls the function. Otherwise, returns the definition.",
+            "itemtype": "method",
+            "name": "_callPropertyDefinition",
+            "params": [
+                {
+                    "name": "definition",
+                    "description": "",
+                    "type": "*"
+                },
+                {
+                    "name": "index",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "factoryName",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "properties",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "*"
+            },
+            "class": "FactoryFarm"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 33,
+            "description": "Will throw an error if `fetch` is called from the mockServer, usually due to a `POST` or `PATCH` called by a `save`",
+            "itemtype": "method",
+            "name": "circularFetchError",
+            "params": [
+                {
+                    "name": "url",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 44,
+            "description": "Throws an error if MockServer tries to `findOne` or `findAll` from itself.",
+            "itemtype": "method",
+            "name": "circularFindError",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "id",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 57,
+            "description": "Overrides store methods that could trigger a `fetch` to throw errors. MockServer should only provide data for fetches, never call a fetch itself.",
+            "itemtype": "method",
+            "name": "disallowFetches",
+            "params": [
+                {
+                    "name": "store",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 74,
+            "description": "Wraps response JSON or object as needed. For a server failure (500), returns Promise.reject\nFor any other request, returns Promise.resolve wrapped around a Response object.",
+            "itemtype": "method",
+            "name": "wrapResponse",
+            "params": [
+                {
+                    "name": "response",
+                    "description": "JSON string unless a 500 error, in which case it's an object",
+                    "type": "*"
+                },
+                {
+                    "name": "method",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "status",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Promise"
+            },
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 102,
+            "description": "Sets properties needed internally\nfactoryFarm can be passed into the constructor",
+            "itemtype": "method",
+            "name": "constructor",
+            "params": [
+                {
+                    "name": "param",
+                    "description": "",
+                    "type": "*"
+                }
+            ],
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 113,
+            "description": "Sets up fetch mocking to intercept requests. It will then either use overrides, or use its own\ninternal store to simulate serving JSON responses of new data.\n  - responseOverrides: An array of alternative responses that can be used to override the ones that would be served\n    from the internal store.\n  - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist",
+            "itemtype": "method",
+            "name": "start",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "currently `responseOverrides` and `factoriesForTypes`",
+                    "type": "Object"
+                }
+            ],
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 144,
+            "description": "Clears mocks and the store",
+            "itemtype": "method",
+            "name": "stop",
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 153,
+            "description": "Alias for `this._backendFactoryFarm.build`",
+            "itemtype": "method",
+            "name": "build",
+            "params": [
+                {
+                    "name": "factoryName",
+                    "description": "the name of the factory to use",
+                    "type": "String"
+                },
+                {
+                    "name": "overrideOptions",
+                    "description": "overrides for the factory",
+                    "type": "Object"
+                },
+                {
+                    "name": "numberOfRecords",
+                    "description": "optional number of models to build",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "Object or Array",
+                "type": "*"
+            },
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 163,
+            "description": "Alias for `this._backendFactoryFarm.define`",
+            "itemtype": "method",
+            "name": "define",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "the name to use for the factory",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "Object or Array",
+                "type": "*"
+            },
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 172,
+            "description": "Alias for `this._backendFactoryFarm.add`",
+            "itemtype": "method",
+            "name": "add",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "the name to use for the factory",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "Object or Array",
+                "type": "*"
+            },
+            "class": "MockServer"
+        },
+        {
+            "file": "src/MockServer.js",
+            "line": 181,
+            "description": "Based on a request, simulates building a response, either using found data\nor a factory.",
+            "itemtype": "method",
+            "name": "_findFromStore",
+            "params": [
+                {
+                    "name": "req",
+                    "description": "",
+                    "type": "*"
+                }
+            ],
+            "return": {
+                "description": "the found or built store record(s)",
+                "type": "Object"
+            },
+            "access": "private",
+            "tagname": "",
+            "class": "MockServer"
         },
         {
             "file": "src/Model.js",
@@ -1644,6 +2076,50 @@
                 }
             ],
             "class": "Schema"
+        },
+        {
+            "file": "src/testUtils.js",
+            "line": 1,
+            "description": "JSONAPI uses `included` only at the top level. To recursively add models to this array,\nwe preserve the top-level object and pass it in to the next round\nBecause objects can have multiple relationships, we do a check of the array to make sure\nit's not already there.",
+            "itemtype": "method",
+            "name": "addIncluded",
+            "params": [
+                {
+                    "name": "store",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "encodedData",
+                    "description": "the jsonapi document",
+                    "type": "Object"
+                },
+                {
+                    "name": "topLevel",
+                    "description": "the object with `inlcluded` array",
+                    "type": "Object"
+                }
+            ],
+            "class": ""
+        },
+        {
+            "file": "src/testUtils.js",
+            "line": 33,
+            "description": "Encodes models into full compliant JSONAPI payload, as if it were being sent with all\nrelevant relationships and inclusions. The resulting payload will look like\n{\n  data: {\n    id: '1',\n    type: 'zones',\n    attributes: {},\n    relationships: {},\n  },\n  included: []\n}",
+            "itemtype": "method",
+            "name": "serverResponse",
+            "params": [
+                {
+                    "name": "modelOrArray",
+                    "description": "the data being encoded",
+                    "type": "*"
+                }
+            ],
+            "return": {
+                "description": "JSON encoded data",
+                "type": "String"
+            },
+            "class": ""
         },
         {
             "file": "src/utils.js",
