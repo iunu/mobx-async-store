@@ -20,7 +20,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
 import findLast from 'lodash/findLast';
-import { union } from 'lodash';
+import union from 'lodash/union';
 import pick from 'lodash/pick';
 import uniqBy from 'lodash/uniqBy';
 import _objectWithoutProperties from '@babel/runtime/helpers/objectWithoutProperties';
@@ -2562,6 +2562,7 @@ var FactoryFarm = /*#__PURE__*/function () {
     });
 
     this.store = store || new Store();
+    this.store.__usedForFactoryFarm__ = true;
   }
   /**
    * A hash of available factories. A factory is an object with a structure like:
@@ -2993,6 +2994,8 @@ function MockServer() {
   });
 
   this._backendFactoryFarm = _options.factoryFarm || new FactoryFarm();
+  this._backendFactoryFarm.__usedForMockServer__ = true;
+  this._backendFactoryFarm.store.__usedForMockServer__ = true;
   disallowFetches(this._backendFactoryFarm.store);
 }
 /**
@@ -3342,7 +3345,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   _inherits(RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
@@ -3471,7 +3474,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
 
 
   _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species2,
+    key: _Symbol$species,
     get: function get() {
       return Array;
     }
@@ -3485,6 +3488,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array), _Symbol$species);
+}( /*#__PURE__*/_wrapNativeSuper(Array));
 
 export { FactoryFarm, MockServer, Model, QueryString, Store, attribute, relatedToMany, relatedToOne, serverResponse, validates };
