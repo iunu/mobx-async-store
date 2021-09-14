@@ -763,6 +763,15 @@ describe('Model', () => {
       expect(todo.dirtyAttributes[0]).toEqual('options.variety')
     })
 
+    it('tracks attributes that dont exist in the current snapshot', () => {
+      const todo = store.add('todos', { title: 'Buy Milk', options: { variety: 'Coconut' } })
+      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.previousSnapshot.attributes.options).toEqual({ variety: 'Coconut' })
+      todo.options = {}
+      expect(todo.dirtyAttributes).toHaveLength(1)
+      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+    })
+
     it('reverts to empty after changing and then reverting an attribute', async () => {
       const todo = store.add('todos', { id: 11, title: 'Buy Milk' })
 

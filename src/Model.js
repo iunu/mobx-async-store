@@ -15,6 +15,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
+import union from 'lodash/union'
 
 /**
  * Maps the passed-in property names through and runs validations against those properties
@@ -161,8 +162,8 @@ class Model {
    * todo.dirtyAttributes
    * => ['title', 'options.variety']
    *
-   * @method dirtyAttributes
-   * @return {Array} dirty attribute paths
+   * @property dirtyAttributes
+   * @type {Array}
    */
   get dirtyAttributes () {
     return Array.from(Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
@@ -170,7 +171,10 @@ class Model {
       const previousValue = this.previousSnapshot.attributes[attr]
 
       if (isObject(currentValue)) {
-        diff(currentValue, previousValue).forEach((property) => {
+        const currentToPreviousDiff = diff(currentValue, previousValue)
+        const previousToCurrentDiff = diff(previousValue, currentValue)
+
+        union(currentToPreviousDiff, previousToCurrentDiff).forEach((property) => {
           dirtyAccumulator.add(`${attr}.${property}`)
         })
       } else if (!isEqual(previousValue, currentValue)) {
