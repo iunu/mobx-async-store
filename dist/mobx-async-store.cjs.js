@@ -24,7 +24,7 @@ var cloneDeep = require('lodash/cloneDeep');
 var isEqual = require('lodash/isEqual');
 var isObject = require('lodash/isObject');
 var findLast = require('lodash/findLast');
-var lodash = require('lodash');
+var union = require('lodash/union');
 var pick = require('lodash/pick');
 var uniqBy = require('lodash/uniqBy');
 var _objectWithoutProperties = require('@babel/runtime/helpers/objectWithoutProperties');
@@ -56,6 +56,7 @@ var cloneDeep__default = /*#__PURE__*/_interopDefaultLegacy(cloneDeep);
 var isEqual__default = /*#__PURE__*/_interopDefaultLegacy(isEqual);
 var isObject__default = /*#__PURE__*/_interopDefaultLegacy(isObject);
 var findLast__default = /*#__PURE__*/_interopDefaultLegacy(findLast);
+var union__default = /*#__PURE__*/_interopDefaultLegacy(union);
 var pick__default = /*#__PURE__*/_interopDefaultLegacy(pick);
 var uniqBy__default = /*#__PURE__*/_interopDefaultLegacy(uniqBy);
 var _objectWithoutProperties__default = /*#__PURE__*/_interopDefaultLegacy(_objectWithoutProperties);
@@ -553,7 +554,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
         if (isObject__default['default'](currentValue)) {
           var currentToPreviousDiff = diff(currentValue, previousValue);
           var previousToCurrentDiff = diff(previousValue, currentValue);
-          lodash.union(currentToPreviousDiff, previousToCurrentDiff).forEach(function (property) {
+          union__default['default'](currentToPreviousDiff, previousToCurrentDiff).forEach(function (property) {
             dirtyAccumulator.add("".concat(attr, ".").concat(property));
           });
         } else if (!isEqual__default['default'](previousValue, currentValue)) {
@@ -2597,6 +2598,7 @@ var FactoryFarm = /*#__PURE__*/function () {
     });
 
     this.store = store || new Store();
+    this.store.__usedForFactoryFarm__ = true;
   }
   /**
    * A hash of available factories. A factory is an object with a structure like:
@@ -3028,6 +3030,8 @@ function MockServer() {
   });
 
   this._backendFactoryFarm = _options.factoryFarm || new FactoryFarm();
+  this._backendFactoryFarm.__usedForMockServer__ = true;
+  this._backendFactoryFarm.store.__usedForMockServer__ = true;
   disallowFetches(this._backendFactoryFarm.store);
 }
 /**
@@ -3377,7 +3381,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   _inherits__default['default'](RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
@@ -3506,7 +3510,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
 
 
   _createClass__default['default'](RelatedRecordsArray, null, [{
-    key: _Symbol$species2,
+    key: _Symbol$species,
     get: function get() {
       return Array;
     }
@@ -3520,7 +3524,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper__default['default'](Array), _Symbol$species);
+}( /*#__PURE__*/_wrapNativeSuper__default['default'](Array));
 
 exports.FactoryFarm = FactoryFarm;
 exports.MockServer = MockServer;
