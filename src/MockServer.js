@@ -110,6 +110,8 @@ class MockServer {
     this._backendFactoryFarm.__usedForMockServer__ = true
     this._backendFactoryFarm.store.__usedForMockServer__ = true
 
+    this.responseOverrides = options.responseOverrides
+
     disallowFetches(this._backendFactoryFarm.store)
   }
 
@@ -123,11 +125,12 @@ class MockServer {
    * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
    */
   start = (options = {}) => {
-    const { responseOverrides = [], factoriesForTypes } = options
+    const { factoriesForTypes } = options
+    const combinedOverrides = [...options.responseOverrides || [], ...this.responseOverrides || []]
 
     fetch.resetMocks()
     fetch.mockResponse((req) => {
-      const foundQuery = responseOverrides.find((definition) => {
+      const foundQuery = combinedOverrides.find((definition) => {
         if (!definition?.path) {
           throw new Error('No path defined for mock server override. Did you define a path?')
         }
