@@ -139,9 +139,99 @@ describe('MockServer', () => {
 
     mockServer.start({ responseOverrides })
 
-    const otherUser = await store.findOne('todos', '1')
-    expect(otherUser.id).toEqual('2')
-    expect(otherUser.title).toEqual('Harvest Plants')
+    const record = await store.findOne('todos', '1')
+    expect(record.id).toEqual('2')
+    expect(record.title).toEqual('Harvest Plants')
+  })
+
+  it('allows response overrides to be defined in the constructor', async () => {
+    const mockServer = new MockServer({
+      factoryFarm,
+      responseOverrides: [
+        {
+          path: /todos\/1/,
+          response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '1' }))
+        }
+      ]
+    })
+
+    mockServer.define('planting', {
+      type: 'todos',
+      title: 'Plant Seeds',
+      id: '1'
+    })
+
+    mockServer.start()
+
+    const record = await store.findOne('todos', '1')
+    expect(record.id).toEqual('1')
+    expect(record.title).toEqual('Harvest Plants')
+  })
+
+  it('allows response overrides to be defined in the constructor AND the start method', async () => {
+    const mockServer = new MockServer({
+      factoryFarm,
+      responseOverrides: [
+        {
+          path: /todos\/1/,
+          response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '1' }))
+        }
+      ]
+    })
+
+    mockServer.define('planting', {
+      type: 'todos',
+      title: 'Plant Seeds',
+      id: '1'
+    })
+
+    mockServer.start({
+      responseOverrides: [
+        {
+          path: /todos\/2/,
+          response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Other Plants', id: '2' }))
+        }
+      ]
+    })
+
+    const record = await store.findOne('todos', '1')
+    expect(record.id).toEqual('1')
+    expect(record.title).toEqual('Harvest Plants')
+
+    const otherRecord = await store.findOne('todos', '2')
+    expect(otherRecord.id).toEqual('2')
+    expect(otherRecord.title).toEqual('Other Plants')
+  })
+
+  it('allows response overrides defined in the constructor to be overriden in the start method', async () => {
+    const mockServer = new MockServer({
+      factoryFarm,
+      responseOverrides: [
+        {
+          path: /todos\/1/,
+          response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '1' }))
+        }
+      ]
+    })
+
+    mockServer.define('planting', {
+      type: 'todos',
+      title: 'Plant Seeds',
+      id: '1'
+    })
+
+    mockServer.start({
+      responseOverrides: [
+        {
+          path: /todos\/1/,
+          response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants Alt', id: '1' }))
+        }
+      ]
+    })
+
+    const record = await store.findOne('todos', '1')
+    expect(record.id).toEqual('1')
+    expect(record.title).toEqual('Harvest Plants Alt')
   })
 
   describe('failed responses', () => {

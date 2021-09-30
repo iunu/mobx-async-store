@@ -3,7 +3,7 @@
         "name": "mobx-async-store",
         "description": "Asyc Data Store for mobx",
         "url": "https://github.com/artemis-ag/mobx-async-store",
-        "version": "4.3.3"
+        "version": "4.3.4"
     },
     "files": {
         "src/decorators/attributes.js": {
@@ -606,7 +606,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 116,
+            "line": 118,
             "description": "Sets up fetch mocking to intercept requests. It will then either use overrides, or use its own\ninternal store to simulate serving JSON responses of new data.\n  - responseOverrides: An array of alternative responses that can be used to override the ones that would be served\n    from the internal store.\n  - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist",
             "itemtype": "method",
             "name": "start",
@@ -621,7 +621,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 147,
+            "line": 150,
             "description": "Clears mocks and the store",
             "itemtype": "method",
             "name": "stop",
@@ -629,7 +629,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 156,
+            "line": 159,
             "description": "Alias for `this._backendFactoryFarm.build`",
             "itemtype": "method",
             "name": "build",
@@ -658,7 +658,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 166,
+            "line": 169,
             "description": "Alias for `this._backendFactoryFarm.define`",
             "itemtype": "method",
             "name": "define",
@@ -682,7 +682,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 175,
+            "line": 178,
             "description": "Alias for `this._backendFactoryFarm.add`",
             "itemtype": "method",
             "name": "add",
@@ -706,7 +706,7 @@
         },
         {
             "file": "src/MockServer.js",
-            "line": 184,
+            "line": 187,
             "description": "Based on a request, simulates building a response, either using found data\nor a factory.",
             "itemtype": "method",
             "name": "_findFromStore",

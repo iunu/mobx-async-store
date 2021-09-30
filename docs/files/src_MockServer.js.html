@@ -17,7 +17,7 @@
                 <h1><img src="../assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
-            <em>API Docs for: 4.3.3</em>
+            <em>API Docs for: 4.3.4</em>
         </div>
     </div>
     <div id="bd" class="yui3-g">
@@ -197,6 +197,8 @@ class MockServer {
     this._backendFactoryFarm.__usedForMockServer__ = true
     this._backendFactoryFarm.store.__usedForMockServer__ = true
 
+    this.responseOverrides = options.responseOverrides
+
     disallowFetches(this._backendFactoryFarm.store)
   }
 
@@ -210,11 +212,12 @@ class MockServer {
    * @param {Object} options currently &#x60;responseOverrides&#x60; and &#x60;factoriesForTypes&#x60;
    */
   start = (options = {}) =&gt; {
-    const { responseOverrides = [], factoriesForTypes } = options
+    const { factoriesForTypes } = options
+    const combinedOverrides = [...options.responseOverrides || [], ...this.responseOverrides || []]
 
     fetch.resetMocks()
     fetch.mockResponse((req) =&gt; {
-      const foundQuery = responseOverrides.find((definition) =&gt; {
+      const foundQuery = combinedOverrides.find((definition) =&gt; {
         if (!definition?.path) {
           throw new Error(&#x27;No path defined for mock server override. Did you define a path?&#x27;)
         }
