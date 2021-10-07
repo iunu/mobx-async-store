@@ -44,8 +44,7 @@
     "rollup-jest": "^1.1.1",
     "rollup-plugin-babel": "^4.2.0",
     "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "yuidocjs": "^0.10.2"
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "scripts": {
     "build": "rollup -c",
@@ -53,7 +52,6 @@
     "test": "jest --verbose",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
-    "doc": "node_modules/.bin/yuidoc",
     "lint": "node_modules/.bin/eslint src spec"
   },
   "jest": {

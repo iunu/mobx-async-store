@@ -61,7 +61,7 @@ jobs:
           key: yarn-dependencies-v1-{{ checksum "package.json" }}
       - run:
           name: Build docs
-          command: yarn doc
+          command: sudo npm install -g yuidocjs && yuidoc --lint
       - run:
           name: Verify docs up-to-date
           command: git diff --exit-code ./docs
