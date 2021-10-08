@@ -1,6 +1,7 @@
 /* global fetch */
 import React from 'react'
-import { mount } from 'enzyme'
+import '@testing-library/jest-dom/extend-expect'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { Provider } from 'mobx-react'
 import { isObservable } from 'mobx'
 import { Store, Model, attribute } from '../src/main'
@@ -30,39 +31,26 @@ describe('Example React App', () => {
   })
 
   it('has correct default text', () => {
-    expect.assertions(2)
-    // fetch.mockResponse(JSON.stringify([]))
-    // Mount the component and set the wrapper variable
-    const wrapper = mount(
+    render(
       <Provider store={store}>
         <ExampleApp />
       </Provider>
     )
-    expect(wrapper.text()).toMatch('Todos')
-    expect(wrapper.text()).not.toMatch('Buy Milk')
+    expect(screen.getByRole('heading')).toHaveTextContent('Todos')
   })
 
   it('can create a new model', async () => {
-    expect.assertions(2)
-    fetch.mockResponse(JSON.stringify([]))
-
-    const wrapper = mount(
+    render(
       <Provider store={store}>
         <ExampleApp />
       </Provider>
     )
 
-    expect(wrapper.text()).not.toMatch('Buy Milk')
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Buy Milk' } })
 
-    await wrapper
-      .find('input')
-      .simulate('change', { target: { value: 'Buy Milk' } })
+    fireEvent.click(screen.getByRole('button'))
 
-    await wrapper
-      .find('button')
-      .simulate('click')
-
-    expect(wrapper.text()).toMatch('Buy Milk')
+    expect(screen.getByRole('listitem')).toHaveTextContent('Buy Milk')
   })
 
   it('can edit an existing model', () => {
@@ -70,21 +58,17 @@ describe('Example React App', () => {
 
     const todo = todoStore.add('todos', { title: 'Pay bills', options: { trackable_id: 1 } })
 
-    const wrapper = mount(
+    render(
       <Provider store={todoStore}>
         <ExampleApp />
       </Provider>
     )
 
-    expect(wrapper.text()).toMatch('Pay bills')
-
-    wrapper
-      .find('input')
-      .last()
-      .simulate('change', { target: { value: 'Make payments' } })
+    expect(screen.getByRole('listitem')).toHaveTextContent('Pay bills')
+    fireEvent.change(screen.getByTestId(`todo-title-${todo.id}`), { target: { value: 'Make payments' } })
 
     expect(todo.options.trackable_id).toBe(1)
-    expect(wrapper.text()).toMatch('Make payments')
+    expect(screen.getByRole('listitem')).toHaveTextContent('Make payments')
     expect(isObservable(todo)).toBeTruthy()
   })
 })
