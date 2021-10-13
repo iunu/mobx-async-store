@@ -30,6 +30,7 @@ class TodoCard extends Component {
       <li>
         <label>{ title }</label>
         <input
+          data-testid={`todo-title-${this.props.todo.id}`}
           value={title}
           onChange={onChange}
         />
