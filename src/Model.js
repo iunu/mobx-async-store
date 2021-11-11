@@ -752,8 +752,6 @@ class Model {
     })
   }
 
-  // TODO: this shares a lot of functionality with Store.createOrUpdateModel
-  // Perhaps that shared code
   updateAttributesFromResponse (data, included) {
     const tmpId = this.id
     const { id, attributes, relationships } = data
@@ -765,9 +763,9 @@ class Model {
         set(this, key, attributes[key])
       })
       if (relationships) {
-        Object.keys(relationships).forEach(key => {
-          if (!Object.prototype.hasOwnProperty.call(relationships[key], 'meta')) {
-            // todo: throw error if relationship is not defined in model
+        Object.keys(relationships).forEach((key) => {
+          // Don't try to create relationship if meta included false
+          if (relationships[key].meta?.included !== false) {
             set(this.relationships, key, relationships[key])
           }
         })
