@@ -113,12 +113,12 @@ const mockTodoWithTags = {
       title: 'Do taxes'
     },
     relationships: {
-      tags: [{
+      tags: {
         data: [{
           id: '1',
           type: 'tags'
         }]
-      }]
+      }
     }
   },
   included: [{
@@ -746,7 +746,7 @@ describe('Store', () => {
 
       await store.fetchOne('todos', '101')
       expect(fetchedRecord.notes).toHaveLength(1)
-      expect(fetchedRecord.tags).toHaveLength(0)
+      expect(fetchedRecord.tags).toHaveLength(1)
     })
 
     it('supports queryParams', async () => {
