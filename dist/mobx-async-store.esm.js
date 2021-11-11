@@ -1197,9 +1197,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
           _this7[key] = attributes[key];
         });
       });
-    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
-    // Perhaps that shared code
-
+    }
   }, {
     key: "updateAttributesFromResponse",
     value: function updateAttributesFromResponse(data, included) {
@@ -1217,8 +1215,10 @@ var Model = (_class$1 = /*#__PURE__*/function () {
 
         if (relationships) {
           Object.keys(relationships).forEach(function (key) {
-            if (!Object.prototype.hasOwnProperty.call(relationships[key], 'meta')) {
-              // todo: throw error if relationship is not defined in model
+            var _relationships$key$me;
+
+            // Don't try to create relationship if meta included false
+            if (((_relationships$key$me = relationships[key].meta) === null || _relationships$key$me === void 0 ? void 0 : _relationships$key$me.included) !== false) {
               set(_this8.relationships, key, relationships[key]);
             }
           });
@@ -1614,7 +1614,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 16;
+                  _context2.next = 17;
                   break;
                 }
 
@@ -1653,15 +1653,20 @@ var Store = (_class = /*#__PURE__*/function () {
 
                   _this.deleteLoadingState(state);
                 });
+
+                if (json.meta) {
+                  records.meta = json.meta;
+                }
+
                 return _context2.abrupt("return", records);
 
-              case 16:
+              case 17:
                 runInAction(function () {
                   _this.deleteLoadingState(state);
                 });
                 return _context2.abrupt("return", Promise.reject(response.status));
 
-              case 18:
+              case 19:
               case "end":
                 return _context2.stop();
             }
@@ -2178,24 +2183,10 @@ var Store = (_class = /*#__PURE__*/function () {
       var record = this.getRecord(type, id);
 
       if (record) {
-        // Update existing object attributes
-        Object.keys(attributes).forEach(function (key) {
-          set(record, key, attributes[key]);
-        }); // If relationships are present, update relationships
-        // TODO: relationships will always be truthy since we've defined a default above.
-
-        if (relationships) {
-          Object.keys(relationships).forEach(function (key) {
-            // Don't try to create relationship if meta included false
-            if (!relationships[key].meta) {
-              // defensive against existingRecord.relationships being undefined
-              set(record, 'relationships', _objectSpread$3(_objectSpread$3({}, record.relationships), {}, _defineProperty({}, key, relationships[key])));
-            }
-          });
-        }
-
-        record._takeSnapshot({
-          persisted: true
+        record.updateAttributesFromResponse({
+          attributes: attributes,
+          id: id,
+          relationships: relationships
         });
       } else {
         record = this.createModel(type, id, {
@@ -2922,12 +2913,11 @@ function MockServer() {
 
   _defineProperty(this, "start", function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var _options$responseOver = options.responseOverrides,
-        responseOverrides = _options$responseOver === void 0 ? [] : _options$responseOver,
-        factoriesForTypes = options.factoriesForTypes;
+    var factoriesForTypes = options.factoriesForTypes;
+    var combinedOverrides = [].concat(_toConsumableArray(options.responseOverrides || []), _toConsumableArray(_this.responseOverrides || []));
     fetch.resetMocks();
     fetch.mockResponse(function (req) {
-      var foundQuery = responseOverrides.find(function (definition) {
+      var foundQuery = combinedOverrides.find(function (definition) {
         if (!(definition !== null && definition !== void 0 && definition.path)) {
           throw new Error('No path defined for mock server override. Did you define a path?');
         }
@@ -2996,6 +2986,7 @@ function MockServer() {
   this._backendFactoryFarm = _options.factoryFarm || new FactoryFarm();
   this._backendFactoryFarm.__usedForMockServer__ = true;
   this._backendFactoryFarm.store.__usedForMockServer__ = true;
+  this.responseOverrides = _options.responseOverrides;
   disallowFetches(this._backendFactoryFarm.store);
 }
 /**
@@ -3345,7 +3336,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   _inherits(RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
@@ -3474,7 +3465,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
 
 
   _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species,
+    key: _Symbol$species2,
     get: function get() {
       return Array;
     }
@@ -3488,6 +3479,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array));
+}( /*#__PURE__*/_wrapNativeSuper(Array), _Symbol$species);
 
 export { FactoryFarm, MockServer, Model, QueryString, Store, attribute, relatedToMany, relatedToOne, serverResponse, validates };

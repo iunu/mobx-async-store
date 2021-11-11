@@ -69,18 +69,18 @@ var _wrapNativeSuper__default = /*#__PURE__*/_interopDefaultLegacy(_wrapNativeSu
 
 var QueryString = {
   parse: function parse(str) {
-    return qs__default['default'].parse(str, {
+    return qs__default["default"].parse(str, {
       ignoreQueryPrefix: true
     });
   },
   stringify: function stringify(str) {
-    return qs__default['default'].stringify(str, {
+    return qs__default["default"].stringify(str, {
       arrayFormat: 'brackets'
     });
   }
 };
 
-function _wrapRegExp() { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, undefined, groups); }; var _super = RegExp.prototype; var _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = new RegExp(re, flags); _groups.set(_this, groups || _groups.get(re)); return _setPrototypeOf__default['default'](_this, BabelRegExp.prototype); } _inherits__default['default'](BabelRegExp, RegExp); BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) result.groups = buildGroups(result, this); return result; }; BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if (typeof substitution === "string") { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } else if (typeof substitution === "function") { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = arguments; if (_typeof__default['default'](args[args.length - 1]) !== "object") { args = [].slice.call(args); args.push(buildGroups(args, _this)); } return substitution.apply(this, args); }); } else { return _super[Symbol.replace].call(this, str, substitution); } }; function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { groups[name] = result[g[name]]; return groups; }, Object.create(null)); } return _wrapRegExp.apply(this, arguments); }
+function _wrapRegExp() { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, undefined, groups); }; var _super = RegExp.prototype; var _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = new RegExp(re, flags); _groups.set(_this, groups || _groups.get(re)); return _setPrototypeOf__default["default"](_this, BabelRegExp.prototype); } _inherits__default["default"](BabelRegExp, RegExp); BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) result.groups = buildGroups(result, this); return result; }; BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if (typeof substitution === "string") { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } else if (typeof substitution === "function") { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = arguments; if (_typeof__default["default"](args[args.length - 1]) !== "object") { args = [].slice.call(args); args.push(buildGroups(args, _this)); } return substitution.apply(this, args); }); } else { return _super[Symbol.replace].call(this, str, substitution); } }; function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { groups[name] = result[g[name]]; return groups; }, Object.create(null)); } return _wrapRegExp.apply(this, arguments); }
 var pending = {};
 var counter = {};
 var URL_MAX_LENGTH = 1024;
@@ -113,8 +113,8 @@ function singularizeType(recordType) {
   var typeParts = recordType.split('_');
   var endPart = typeParts[typeParts.length - 1];
   typeParts = typeParts.slice(0, -1);
-  endPart = pluralize__default['default'].singular(endPart);
-  return [].concat(_toConsumableArray__default['default'](typeParts), [endPart]).join('_');
+  endPart = pluralize__default["default"].singular(endPart);
+  return [].concat(_toConsumableArray__default["default"](typeParts), [endPart]).join('_');
 }
 /**
  * Build request url from base url, endpoint, query params, and ids.
@@ -207,7 +207,7 @@ function makeDate(value) {
  */
 
 function walk(obj, iteratee, prefix) {
-  if (obj != null && _typeof__default['default'](obj) === 'object') {
+  if (obj != null && _typeof__default["default"](obj) === 'object') {
     return Object.keys(obj).map(function (prop) {
       return walk(obj[prop], iteratee, [prefix, prop].filter(function (x) {
         return x;
@@ -232,8 +232,8 @@ function walk(obj, iteratee, prefix) {
 function diff() {
   var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  return flattenDeep__default['default'](walk(a, function (prevValue, path) {
-    var currValue = dig__default['default'](b, path);
+  return flattenDeep__default["default"](walk(a, function (prevValue, path) {
+    var currValue = dig__default["default"](b, path);
     return prevValue === currValue ? undefined : path;
   })).filter(function (x) {
     return x;
@@ -273,7 +273,7 @@ function parseErrorPointer() {
     key: 2
   });
 
-  var match = dig__default['default'](error, 'source.pointer', '').match(regex);
+  var match = dig__default["default"](error, 'source.pointer', '').match(regex);
 
   var _ref = (match === null || match === void 0 ? void 0 : match.groups) || {},
       _ref$index = _ref.index,
@@ -321,14 +321,14 @@ function deriveIdQueryStrings(ids) {
  */
 var Schema = /*#__PURE__*/function () {
   function Schema() {
-    _classCallCheck__default['default'](this, Schema);
+    _classCallCheck__default["default"](this, Schema);
 
-    _defineProperty__default['default'](this, "structure", {});
+    _defineProperty__default["default"](this, "structure", {});
 
-    _defineProperty__default['default'](this, "relations", {});
+    _defineProperty__default["default"](this, "relations", {});
   }
 
-  _createClass__default['default'](Schema, [{
+  _createClass__default["default"](Schema, [{
     key: "addAttribute",
     value: function addAttribute(_ref) {
       var type = _ref.type,
@@ -381,7 +381,7 @@ var _class$1, _descriptor$1;
 
 function ownKeys$4(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$4(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$4(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$4(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$4(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$4(Object(source), true).forEach(function (key) { _defineProperty__default["default"](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$4(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Maps the passed-in property names through and runs validations against those properties
  * @method validateProperties
@@ -409,7 +409,7 @@ function stringifyIds(object) {
   Object.keys(object).forEach(function (key) {
     var property = object[key];
 
-    if (_typeof__default['default'](property) === 'object') {
+    if (_typeof__default["default"](property) === 'object') {
       if (property.id) {
         property.id = String(property.id);
       }
@@ -456,13 +456,13 @@ var Model = (_class$1 = /*#__PURE__*/function () {
   function Model() {
     var initialAttributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    _classCallCheck__default['default'](this, Model);
+    _classCallCheck__default["default"](this, Model);
 
-    _defineProperty__default['default'](this, "isInFlight", false);
+    _defineProperty__default["default"](this, "isInFlight", false);
 
-    _initializerDefineProperty__default['default'](this, "errors", _descriptor$1, this);
+    _initializerDefineProperty__default["default"](this, "errors", _descriptor$1, this);
 
-    _defineProperty__default['default'](this, "_snapshots", []);
+    _defineProperty__default["default"](this, "_snapshots", []);
 
     mobx.makeObservable(this);
     var defaultAttributes = this.defaultAttributes;
@@ -520,7 +520,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
    */
 
 
-  _createClass__default['default'](Model, [{
+  _createClass__default["default"](Model, [{
     key: "isDirty",
     get: function get() {
       return this.dirtyAttributes.length > 0 || this.dirtyRelationships.length > 0;
@@ -551,13 +551,13 @@ var Model = (_class$1 = /*#__PURE__*/function () {
         var currentValue = _this2.attributes[attr];
         var previousValue = _this2.previousSnapshot.attributes[attr];
 
-        if (isObject__default['default'](currentValue)) {
+        if (isObject__default["default"](currentValue)) {
           var currentToPreviousDiff = diff(currentValue, previousValue);
           var previousToCurrentDiff = diff(previousValue, currentValue);
-          union__default['default'](currentToPreviousDiff, previousToCurrentDiff).forEach(function (property) {
+          union__default["default"](currentToPreviousDiff, previousToCurrentDiff).forEach(function (property) {
             dirtyAccumulator.add("".concat(attr, ".").concat(property));
           });
-        } else if (!isEqual__default['default'](previousValue, currentValue)) {
+        } else if (!isEqual__default["default"](previousValue, currentValue)) {
           dirtyAccumulator.add(attr);
         }
 
@@ -603,7 +603,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
           return [value.id, value.type];
         }).sort() : [previousValues.id, previousValues.type];
 
-        if (!isEqual__default['default'](currentIds, previousIds)) {
+        if (!isEqual__default["default"](currentIds, previousIds)) {
           dirtyAccumulator.add(name);
         }
 
@@ -828,9 +828,9 @@ var Model = (_class$1 = /*#__PURE__*/function () {
 
       _this.errors = {};
       return promise.then( /*#__PURE__*/function () {
-        var _ref = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee(response) {
+        var _ref = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee(response) {
           var json;
-          return _regeneratorRuntime__default['default'].wrap(function _callee$(_context) {
+          return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
             while (1) {
               switch (_context.prev = _context.next) {
                 case 0:
@@ -962,7 +962,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
   }, {
     key: "persistedSnapshot",
     get: function get() {
-      return findLast__default['default'](this._snapshots, function (ss) {
+      return findLast__default["default"](this._snapshots, function (ss) {
         return ss.persisted;
       }) || this._snapshots[0];
     }
@@ -1233,9 +1233,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
           _this7[key] = attributes[key];
         });
       });
-    } // TODO: this shares a lot of functionality with Store.createOrUpdateModel
-    // Perhaps that shared code
-
+    }
   }, {
     key: "updateAttributesFromResponse",
     value: function updateAttributesFromResponse(data, included) {
@@ -1253,8 +1251,10 @@ var Model = (_class$1 = /*#__PURE__*/function () {
 
         if (relationships) {
           Object.keys(relationships).forEach(function (key) {
-            if (!Object.prototype.hasOwnProperty.call(relationships[key], 'meta')) {
-              // todo: throw error if relationship is not defined in model
+            var _relationships$key$me;
+
+            // Don't try to create relationship if meta included false
+            if (((_relationships$key$me = relationships[key].meta) === null || _relationships$key$me === void 0 ? void 0 : _relationships$key$me.included) !== false) {
               mobx.set(_this8.relationships, key, relationships[key]);
             }
           });
@@ -1286,8 +1286,8 @@ var Model = (_class$1 = /*#__PURE__*/function () {
   }, {
     key: "clone",
     value: function clone() {
-      var attributes = cloneDeep__default['default'](this.snapshot.attributes);
-      var relationships = cloneDeep__default['default'](this.snapshot.relationships);
+      var attributes = cloneDeep__default["default"](this.snapshot.attributes);
+      var relationships = cloneDeep__default["default"](this.snapshot.relationships);
       return this.store.createModel(this.type, this.id, {
         attributes: attributes,
         relationships: relationships
@@ -1312,7 +1312,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
   }]);
 
   return Model;
-}(), (_applyDecoratedDescriptor__default['default'](_class$1.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class$1.prototype, "isNew"), _class$1.prototype), _descriptor$1 = _applyDecoratedDescriptor__default['default'](_class$1.prototype, "errors", [mobx.observable], {
+}(), (_applyDecoratedDescriptor__default["default"](_class$1.prototype, "isNew", [mobx.computed], Object.getOwnPropertyDescriptor(_class$1.prototype, "isNew"), _class$1.prototype), _descriptor$1 = _applyDecoratedDescriptor__default["default"](_class$1.prototype, "errors", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -1325,7 +1325,7 @@ var _class, _descriptor, _descriptor2, _descriptor3, _descriptor4, _descriptor5,
 
 function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$3(Object(source), true).forEach(function (key) { _defineProperty__default["default"](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * Defines the Artemis Data Store class.
  *
@@ -1366,17 +1366,17 @@ var Store = (_class = /*#__PURE__*/function () {
   function Store(_options) {
     var _this = this;
 
-    _classCallCheck__default['default'](this, Store);
+    _classCallCheck__default["default"](this, Store);
 
-    _initializerDefineProperty__default['default'](this, "data", _descriptor, this);
+    _initializerDefineProperty__default["default"](this, "data", _descriptor, this);
 
-    _initializerDefineProperty__default['default'](this, "lastResponseHeaders", _descriptor2, this);
+    _initializerDefineProperty__default["default"](this, "lastResponseHeaders", _descriptor2, this);
 
-    _defineProperty__default['default'](this, "loadingStates", mobx.observable.map());
+    _defineProperty__default["default"](this, "loadingStates", mobx.observable.map());
 
-    _defineProperty__default['default'](this, "genericErrorMessage", 'Something went wrong.');
+    _defineProperty__default["default"](this, "genericErrorMessage", 'Something went wrong.');
 
-    _defineProperty__default['default'](this, "add", function (type, data) {
+    _defineProperty__default["default"](this, "add", function (type, data) {
       if (data.constructor.name === 'Array') {
         return _this.addModels(type, data);
       } else {
@@ -1384,14 +1384,14 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     });
 
-    _defineProperty__default['default'](this, "pickAttributes", function (properties, type) {
+    _defineProperty__default["default"](this, "pickAttributes", function (properties, type) {
       var attributeNames = Object.keys(_this.schema.structure[type]);
-      return pick__default['default'](properties, attributeNames);
+      return pick__default["default"](properties, attributeNames);
     });
 
-    _defineProperty__default['default'](this, "pickRelationships", function (properties, type) {
+    _defineProperty__default["default"](this, "pickRelationships", function (properties, type) {
       var relationshipNames = Object.keys(_this.schema.relations[type] || {});
-      var allRelationships = pick__default['default'](properties, relationshipNames);
+      var allRelationships = pick__default["default"](properties, relationshipNames);
       return Object.keys(allRelationships).reduce(function (references, key) {
         var relatedModel = allRelationships[key];
         var data;
@@ -1417,7 +1417,7 @@ var Store = (_class = /*#__PURE__*/function () {
       }, {});
     });
 
-    _defineProperty__default['default'](this, "build", function (type, properties) {
+    _defineProperty__default["default"](this, "build", function (type, properties) {
       var id = idOrNewId(properties.id);
 
       var attributes = _this.pickAttributes(properties, type);
@@ -1429,9 +1429,9 @@ var Store = (_class = /*#__PURE__*/function () {
       return model;
     });
 
-    _initializerDefineProperty__default['default'](this, "addModel", _descriptor3, this);
+    _initializerDefineProperty__default["default"](this, "addModel", _descriptor3, this);
 
-    _defineProperty__default['default'](this, "addModels", function (type, data) {
+    _defineProperty__default["default"](this, "addModels", function (type, data) {
       return mobx.runInAction(function () {
         return data.map(function (obj) {
           return _this.addModel(type, obj);
@@ -1439,8 +1439,8 @@ var Store = (_class = /*#__PURE__*/function () {
       });
     });
 
-    _defineProperty__default['default'](this, "bulkSave", /*#__PURE__*/function () {
-      var _ref = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee(type, records) {
+    _defineProperty__default["default"](this, "bulkSave", /*#__PURE__*/function () {
+      var _ref = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee(type, records) {
         var options,
             queryParams,
             extensions,
@@ -1450,7 +1450,7 @@ var Store = (_class = /*#__PURE__*/function () {
             extensionStr,
             response,
             _args = arguments;
-        return _regeneratorRuntime__default['default'].wrap(function _callee$(_context) {
+        return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
@@ -1492,9 +1492,9 @@ var Store = (_class = /*#__PURE__*/function () {
       };
     }());
 
-    _initializerDefineProperty__default['default'](this, "remove", _descriptor4, this);
+    _initializerDefineProperty__default["default"](this, "remove", _descriptor4, this);
 
-    _defineProperty__default['default'](this, "getOne", function (type, id) {
+    _defineProperty__default["default"](this, "getOne", function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       if (!id) {
@@ -1511,7 +1511,7 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     });
 
-    _defineProperty__default['default'](this, "findOne", function (type, id) {
+    _defineProperty__default["default"](this, "findOne", function (type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
       if (!id) {
@@ -1528,7 +1528,7 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     });
 
-    _defineProperty__default['default'](this, "getMany", function (type, ids) {
+    _defineProperty__default["default"](this, "getMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
 
@@ -1539,7 +1539,7 @@ var Store = (_class = /*#__PURE__*/function () {
       });
     });
 
-    _defineProperty__default['default'](this, "fetchMany", function (type, ids) {
+    _defineProperty__default["default"](this, "fetchMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
       var _options$queryParams = options.queryParams,
@@ -1560,13 +1560,13 @@ var Store = (_class = /*#__PURE__*/function () {
       return Promise.all(queries).then(function (records) {
         var _ref2;
 
-        return (_ref2 = []).concat.apply(_ref2, _toConsumableArray__default['default'](records));
+        return (_ref2 = []).concat.apply(_ref2, _toConsumableArray__default["default"](records));
       }).catch(function (err) {
         return Promise.reject(err);
       });
     });
 
-    _defineProperty__default['default'](this, "findMany", function (type, ids) {
+    _defineProperty__default["default"](this, "findMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
 
@@ -1601,11 +1601,11 @@ var Store = (_class = /*#__PURE__*/function () {
         });
       }));
       return query.then(function (recordsFromServer) {
-        return recordsInStore.concat.apply(recordsInStore, _toConsumableArray__default['default'](recordsFromServer));
+        return recordsInStore.concat.apply(recordsInStore, _toConsumableArray__default["default"](recordsFromServer));
       });
     });
 
-    _defineProperty__default['default'](this, "getAll", function (type) {
+    _defineProperty__default["default"](this, "getAll", function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var queryParams = options.queryParams;
 
@@ -1616,12 +1616,12 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     });
 
-    _initializerDefineProperty__default['default'](this, "setLoadingState", _descriptor5, this);
+    _initializerDefineProperty__default["default"](this, "setLoadingState", _descriptor5, this);
 
-    _initializerDefineProperty__default['default'](this, "deleteLoadingState", _descriptor6, this);
+    _initializerDefineProperty__default["default"](this, "deleteLoadingState", _descriptor6, this);
 
-    _defineProperty__default['default'](this, "fetchAll", /*#__PURE__*/function () {
-      var _ref4 = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee2(type) {
+    _defineProperty__default["default"](this, "fetchAll", /*#__PURE__*/function () {
+      var _ref4 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee2(type) {
         var options,
             queryParams,
             url,
@@ -1630,7 +1630,7 @@ var Store = (_class = /*#__PURE__*/function () {
             json,
             records,
             _args2 = arguments;
-        return _regeneratorRuntime__default['default'].wrap(function _callee2$(_context2) {
+        return _regeneratorRuntime__default["default"].wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
@@ -1650,7 +1650,7 @@ var Store = (_class = /*#__PURE__*/function () {
                 response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 16;
+                  _context2.next = 17;
                   break;
                 }
 
@@ -1680,7 +1680,7 @@ var Store = (_class = /*#__PURE__*/function () {
 
                     var cachedIds = _this.data[type].cache.get(url);
 
-                    _this.data[type].cache.set(url, [].concat(_toConsumableArray__default['default'](cachedIds), [id]));
+                    _this.data[type].cache.set(url, [].concat(_toConsumableArray__default["default"](cachedIds), [id]));
 
                     _this.data[type].records.set(String(id), record);
 
@@ -1689,15 +1689,20 @@ var Store = (_class = /*#__PURE__*/function () {
 
                   _this.deleteLoadingState(state);
                 });
+
+                if (json.meta) {
+                  records.meta = json.meta;
+                }
+
                 return _context2.abrupt("return", records);
 
-              case 16:
+              case 17:
                 mobx.runInAction(function () {
                   _this.deleteLoadingState(state);
                 });
                 return _context2.abrupt("return", Promise.reject(response.status));
 
-              case 18:
+              case 19:
               case "end":
                 return _context2.stop();
             }
@@ -1710,7 +1715,7 @@ var Store = (_class = /*#__PURE__*/function () {
       };
     }());
 
-    _defineProperty__default['default'](this, "findAll", function (type) {
+    _defineProperty__default["default"](this, "findAll", function (type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       var records = _this.getAll(type, options);
@@ -1741,7 +1746,7 @@ var Store = (_class = /*#__PURE__*/function () {
    */
 
 
-  _createClass__default['default'](Store, [{
+  _createClass__default["default"](Store, [{
     key: "fetchOne",
     value:
     /**
@@ -1755,7 +1760,7 @@ var Store = (_class = /*#__PURE__*/function () {
      * @return {Object} record
      */
     function () {
-      var _fetchOne = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee3(type, id) {
+      var _fetchOne = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee3(type, id) {
         var options,
             queryParams,
             url,
@@ -1766,7 +1771,7 @@ var Store = (_class = /*#__PURE__*/function () {
             included,
             record,
             _args3 = arguments;
-        return _regeneratorRuntime__default['default'].wrap(function _callee3$(_context3) {
+        return _regeneratorRuntime__default["default"].wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
@@ -2077,7 +2082,7 @@ var Store = (_class = /*#__PURE__*/function () {
       var records = Array.from(this.getType(type).records.values()).filter(function (value) {
         return value && value !== 'undefined';
       });
-      return uniqBy__default['default'](records, 'id');
+      return uniqBy__default["default"](records, 'id');
     }
     /**
      * Get multiple records by id
@@ -2214,24 +2219,10 @@ var Store = (_class = /*#__PURE__*/function () {
       var record = this.getRecord(type, id);
 
       if (record) {
-        // Update existing object attributes
-        Object.keys(attributes).forEach(function (key) {
-          mobx.set(record, key, attributes[key]);
-        }); // If relationships are present, update relationships
-        // TODO: relationships will always be truthy since we've defined a default above.
-
-        if (relationships) {
-          Object.keys(relationships).forEach(function (key) {
-            // Don't try to create relationship if meta included false
-            if (!relationships[key].meta) {
-              // defensive against existingRecord.relationships being undefined
-              mobx.set(record, 'relationships', _objectSpread$3(_objectSpread$3({}, record.relationships), {}, _defineProperty__default['default']({}, key, relationships[key])));
-            }
-          });
-        }
-
-        record._takeSnapshot({
-          persisted: true
+        record.updateAttributesFromResponse({
+          attributes: attributes,
+          id: id,
+          relationships: relationships
         });
       } else {
         record = this.createModel(type, id, {
@@ -2320,10 +2311,10 @@ var Store = (_class = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref5 = _asyncToGenerator__default['default']( /*#__PURE__*/_regeneratorRuntime__default['default'].mark(function _callee4(response) {
+        var _ref5 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee4(response) {
           var status, json, data, included, _json, errorString;
 
-          return _regeneratorRuntime__default['default'].wrap(function _callee4$(_context4) {
+          return _regeneratorRuntime__default["default"].wrap(function _callee4$(_context4) {
             while (1) {
               switch (_context4.prev = _context4.next) {
                 case 0:
@@ -2440,21 +2431,21 @@ var Store = (_class = /*#__PURE__*/function () {
   }]);
 
   return Store;
-}(), (_descriptor = _applyDecoratedDescriptor__default['default'](_class.prototype, "data", [mobx.observable], {
+}(), (_descriptor = _applyDecoratedDescriptor__default["default"](_class.prototype, "data", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-}), _descriptor2 = _applyDecoratedDescriptor__default['default'](_class.prototype, "lastResponseHeaders", [mobx.observable], {
+}), _descriptor2 = _applyDecoratedDescriptor__default["default"](_class.prototype, "lastResponseHeaders", [mobx.observable], {
   configurable: true,
   enumerable: true,
   writable: true,
   initializer: function initializer() {
     return {};
   }
-}), _descriptor3 = _applyDecoratedDescriptor__default['default'](_class.prototype, "addModel", [mobx.action], {
+}), _descriptor3 = _applyDecoratedDescriptor__default["default"](_class.prototype, "addModel", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2479,7 +2470,7 @@ var Store = (_class = /*#__PURE__*/function () {
       return model;
     };
   }
-}), _descriptor4 = _applyDecoratedDescriptor__default['default'](_class.prototype, "remove", [mobx.action], {
+}), _descriptor4 = _applyDecoratedDescriptor__default["default"](_class.prototype, "remove", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2490,7 +2481,7 @@ var Store = (_class = /*#__PURE__*/function () {
       _this8.data[type].records.delete(String(id));
     };
   }
-}), _descriptor5 = _applyDecoratedDescriptor__default['default'](_class.prototype, "setLoadingState", [mobx.action], {
+}), _descriptor5 = _applyDecoratedDescriptor__default["default"](_class.prototype, "setLoadingState", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2524,7 +2515,7 @@ var Store = (_class = /*#__PURE__*/function () {
       return loadingStateInfo;
     };
   }
-}), _descriptor6 = _applyDecoratedDescriptor__default['default'](_class.prototype, "deleteLoadingState", [mobx.action], {
+}), _descriptor6 = _applyDecoratedDescriptor__default["default"](_class.prototype, "deleteLoadingState", [mobx.action], {
   configurable: true,
   enumerable: true,
   writable: true,
@@ -2541,14 +2532,14 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     };
   }
-}), _applyDecoratedDescriptor__default['default'](_class.prototype, "reset", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "init", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeNetworkConfiguration", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeModelTypeIndex", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createOrUpdateModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createModelsFromData", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "createModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor__default['default'](_class.prototype, "updateRecords", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
+}), _applyDecoratedDescriptor__default["default"](_class.prototype, "reset", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "init", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeNetworkConfiguration", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeModelTypeIndex", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createOrUpdateModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createModelsFromData", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "updateRecords", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
 
 var _excluded = ["type"],
     _excluded2 = ["type", "parent"];
 
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$2(Object(source), true).forEach(function (key) { _defineProperty__default["default"](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /**
  * A class to create and use factories
  * @class FactoryFarm
@@ -2558,19 +2549,19 @@ var FactoryFarm = /*#__PURE__*/function () {
   function FactoryFarm(store) {
     var _this = this;
 
-    _classCallCheck__default['default'](this, FactoryFarm);
+    _classCallCheck__default["default"](this, FactoryFarm);
 
-    _defineProperty__default['default'](this, "factories", {});
+    _defineProperty__default["default"](this, "factories", {});
 
-    _defineProperty__default['default'](this, "singletons", {});
+    _defineProperty__default["default"](this, "singletons", {});
 
-    _defineProperty__default['default'](this, "add", function () {
+    _defineProperty__default["default"](this, "add", function () {
       var _this$store;
 
       return (_this$store = _this.store).add.apply(_this$store, arguments);
     });
 
-    _defineProperty__default['default'](this, "_verifyFactory", function (factoryName) {
+    _defineProperty__default["default"](this, "_verifyFactory", function (factoryName) {
       var factory = _this.factories[factoryName];
 
       if (!factory) {
@@ -2578,9 +2569,9 @@ var FactoryFarm = /*#__PURE__*/function () {
       }
     });
 
-    _defineProperty__default['default'](this, "_buildModel", function (factoryName, properties) {
+    _defineProperty__default["default"](this, "_buildModel", function (factoryName, properties) {
       var index = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-      properties = clone__default['default'](properties);
+      properties = clone__default["default"](properties);
       Object.keys(properties).forEach(function (key) {
         if (Array.isArray(properties[key])) {
           properties[key] = properties[key].map(function (propDefinition) {
@@ -2593,7 +2584,7 @@ var FactoryFarm = /*#__PURE__*/function () {
       return properties;
     });
 
-    _defineProperty__default['default'](this, "_callPropertyDefinition", function (definition, index, factoryName, properties) {
+    _defineProperty__default["default"](this, "_callPropertyDefinition", function (definition, index, factoryName, properties) {
       return typeof definition === 'function' ? definition.call(_this, index, factoryName, properties) : definition;
     });
 
@@ -2608,7 +2599,7 @@ var FactoryFarm = /*#__PURE__*/function () {
    */
 
 
-  _createClass__default['default'](FactoryFarm, [{
+  _createClass__default["default"](FactoryFarm, [{
     key: "build",
     value:
     /**
@@ -2644,7 +2635,7 @@ var FactoryFarm = /*#__PURE__*/function () {
 
       var _factories$factoryNam = factories[factoryName],
           type = _factories$factoryNam.type,
-          properties = _objectWithoutProperties__default['default'](_factories$factoryNam, _excluded);
+          properties = _objectWithoutProperties__default["default"](_factories$factoryNam, _excluded);
 
       var newModelProperties = _objectSpread$2(_objectSpread$2({
         id: function id(i) {
@@ -2671,7 +2662,7 @@ var FactoryFarm = /*#__PURE__*/function () {
       var addProperties;
 
       if (numberOfRecords > 1) {
-        addProperties = times__default['default'](numberOfRecords, function (i) {
+        addProperties = times__default["default"](numberOfRecords, function (i) {
           return _buildModel(factoryName, newModelProperties, i);
         });
       } else {
@@ -2708,7 +2699,7 @@ var FactoryFarm = /*#__PURE__*/function () {
 
       var type = options.type,
           parent = options.parent,
-          properties = _objectWithoutProperties__default['default'](options, _excluded2);
+          properties = _objectWithoutProperties__default["default"](options, _excluded2);
 
       var factory;
 
@@ -2771,7 +2762,7 @@ var addIncluded = function addIncluded(store, encodedModel, included) {
       var relatedModel = store.getOne(relationship.type, relationship.id);
       var encodedRelatedModel = toFullJsonapi(relatedModel);
       included.push(encodedRelatedModel);
-      addIncluded(store, encodedRelatedModel, included, [].concat(_toConsumableArray__default['default'](allEncoded), _toConsumableArray__default['default'](included), [encodedModel]));
+      addIncluded(store, encodedRelatedModel, included, [].concat(_toConsumableArray__default["default"](allEncoded), _toConsumableArray__default["default"](included), [encodedModel]));
     });
   });
 };
@@ -2818,7 +2809,7 @@ var serverResponse = function serverResponse(modelOrArray) {
       included: []
     };
     encodedData.data.forEach(function (encodedModel) {
-      addIncluded(array[0].store, encodedModel, encodedData.included, [].concat(_toConsumableArray__default['default'](encodedData.data), _toConsumableArray__default['default'](encodedData.included)));
+      addIncluded(array[0].store, encodedModel, encodedData.included, [].concat(_toConsumableArray__default["default"](encodedData.data), _toConsumableArray__default["default"](encodedData.included)));
     });
   } else {
     encodedData = {
@@ -2837,7 +2828,7 @@ var toFullJsonapi = function toFullJsonapi(model) {
 
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty__default["default"](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 var simulatePost = function simulatePost(store, type, body) {
   var attributes = JSON.parse(body.toString()).data.attributes;
@@ -2954,16 +2945,15 @@ function MockServer() {
 
   var _options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-  _classCallCheck__default['default'](this, MockServer);
+  _classCallCheck__default["default"](this, MockServer);
 
-  _defineProperty__default['default'](this, "start", function () {
+  _defineProperty__default["default"](this, "start", function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var _options$responseOver = options.responseOverrides,
-        responseOverrides = _options$responseOver === void 0 ? [] : _options$responseOver,
-        factoriesForTypes = options.factoriesForTypes;
+    var factoriesForTypes = options.factoriesForTypes;
+    var combinedOverrides = [].concat(_toConsumableArray__default["default"](options.responseOverrides || []), _toConsumableArray__default["default"](_this.responseOverrides || []));
     fetch.resetMocks();
     fetch.mockResponse(function (req) {
-      var foundQuery = responseOverrides.find(function (definition) {
+      var foundQuery = combinedOverrides.find(function (definition) {
         if (!(definition !== null && definition !== void 0 && definition.path)) {
           throw new Error('No path defined for mock server override. Did you define a path?');
         }
@@ -2976,31 +2966,31 @@ function MockServer() {
     });
   });
 
-  _defineProperty__default['default'](this, "stop", function () {
+  _defineProperty__default["default"](this, "stop", function () {
     fetch.resetMocks();
 
     _this._backendFactoryFarm.store.reset();
   });
 
-  _defineProperty__default['default'](this, "build", function () {
+  _defineProperty__default["default"](this, "build", function () {
     var _this$_backendFactory;
 
     return (_this$_backendFactory = _this._backendFactoryFarm).build.apply(_this$_backendFactory, arguments);
   });
 
-  _defineProperty__default['default'](this, "define", function () {
+  _defineProperty__default["default"](this, "define", function () {
     var _this$_backendFactory2;
 
     return (_this$_backendFactory2 = _this._backendFactoryFarm).define.apply(_this$_backendFactory2, arguments);
   });
 
-  _defineProperty__default['default'](this, "add", function () {
+  _defineProperty__default["default"](this, "add", function () {
     var _this$_backendFactory3;
 
     return (_this$_backendFactory3 = _this._backendFactoryFarm).add.apply(_this$_backendFactory3, arguments);
   });
 
-  _defineProperty__default['default'](this, "_findFromStore", function (req) {
+  _defineProperty__default["default"](this, "_findFromStore", function (req) {
     var factoriesForTypes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var _backendFactoryFarm = _this._backendFactoryFarm;
     var method = req.method,
@@ -3032,6 +3022,7 @@ function MockServer() {
   this._backendFactoryFarm = _options.factoryFarm || new FactoryFarm();
   this._backendFactoryFarm.__usedForMockServer__ = true;
   this._backendFactoryFarm.store.__usedForMockServer__ = true;
+  this.responseOverrides = _options.responseOverrides;
   disallowFetches(this._backendFactoryFarm.store);
 }
 /**
@@ -3169,13 +3160,13 @@ function validates(target, property) {
 
 var _Symbol$species;
 
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf__default['default'](Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf__default['default'](this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn__default['default'](this, result); }; }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf__default["default"](Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf__default["default"](this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn__default["default"](this, result); }; }
 
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty__default['default'](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty__default["default"](target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 /*
  * Defines a one-to-many relationship. Defaults to the class with camelized singular name of the property
  * An optional argument specifies the data model, if different from the property name
@@ -3280,7 +3271,7 @@ function getRelatedRecords(record, property) {
       }
     }
 
-    record.cachedRelationships = _objectSpread(_objectSpread({}, cachedRelationships), {}, _defineProperty__default['default']({}, relationType, {
+    record.cachedRelationships = _objectSpread(_objectSpread({}, cachedRelationships), {}, _defineProperty__default["default"]({}, relationType, {
       data: relatedRecords.map(function (r) {
         return {
           type: r.type,
@@ -3381,20 +3372,20 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
-  _inherits__default['default'](RelatedRecordsArray, _Array);
+var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
+  _inherits__default["default"](RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
 
   function RelatedRecordsArray(_array, _record, _property) {
     var _this;
 
-    _classCallCheck__default['default'](this, RelatedRecordsArray);
+    _classCallCheck__default["default"](this, RelatedRecordsArray);
 
-    _this = _super.call.apply(_super, [this].concat(_toConsumableArray__default['default'](_array)));
+    _this = _super.call.apply(_super, [this].concat(_toConsumableArray__default["default"](_array)));
 
-    _defineProperty__default['default'](_assertThisInitialized__default['default'](_this), "add", function (relatedRecord) {
-      var _assertThisInitialize = _assertThisInitialized__default['default'](_this),
+    _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "add", function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized__default["default"](_this),
           record = _assertThisInitialize.record,
           property = _assertThisInitialize.property;
 
@@ -3440,8 +3431,8 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
       return relatedRecord;
     });
 
-    _defineProperty__default['default'](_assertThisInitialized__default['default'](_this), "remove", function (relatedRecord) {
-      var _assertThisInitialize2 = _assertThisInitialized__default['default'](_this),
+    _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "remove", function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized__default["default"](_this),
           record = _assertThisInitialize2.record,
           property = _assertThisInitialize2.property;
 
@@ -3476,8 +3467,8 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
       return relatedRecord;
     });
 
-    _defineProperty__default['default'](_assertThisInitialized__default['default'](_this), "replace", function (array) {
-      var _assertThisInitialize3 = _assertThisInitialized__default['default'](_this),
+    _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "replace", function (array) {
+      var _assertThisInitialize3 = _assertThisInitialized__default["default"](_this),
           record = _assertThisInitialize3.record,
           property = _assertThisInitialize3.property;
 
@@ -3509,8 +3500,8 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
    */
 
 
-  _createClass__default['default'](RelatedRecordsArray, null, [{
-    key: _Symbol$species,
+  _createClass__default["default"](RelatedRecordsArray, null, [{
+    key: _Symbol$species2,
     get: function get() {
       return Array;
     }
@@ -3524,7 +3515,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper__default['default'](Array));
+}( /*#__PURE__*/_wrapNativeSuper__default["default"](Array), _Symbol$species);
 
 exports.FactoryFarm = FactoryFarm;
 exports.MockServer = MockServer;

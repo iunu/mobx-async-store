@@ -1,5 +1,5 @@
 /* global fetch */
-import { action, makeObservable, observable, runInAction, set, toJS } from 'mobx'
+import { action, makeObservable, observable, runInAction, toJS } from 'mobx'
 import pick from 'lodash/pick'
 import uniqBy from 'lodash/uniqBy'
 import {
@@ -545,6 +545,9 @@ class Store {
         })
         this.deleteLoadingState(state)
       })
+      if (json.meta) {
+        records.meta = json.meta
+      }
       return records
     } else {
       runInAction(() => {
@@ -880,26 +883,7 @@ class Store {
     let record = this.getRecord(type, id)
 
     if (record) {
-      // Update existing object attributes
-      Object.keys(attributes).forEach((key) => {
-        set(record, key, attributes[key])
-      })
-
-      // If relationships are present, update relationships
-      // TODO: relationships will always be truthy since we've defined a default above.
-      if (relationships) {
-        Object.keys(relationships).forEach((key) => {
-          // Don't try to create relationship if meta included false
-          if (!relationships[key].meta) {
-            // defensive against existingRecord.relationships being undefined
-            set(record, 'relationships', {
-              ...record.relationships,
-              [key]: relationships[key]
-            })
-          }
-        })
-      }
-      record._takeSnapshot({ persisted: true })
+      record.updateAttributesFromResponse({ attributes, id, relationships })
     } else {
       record = this.createModel(type, id, { attributes, relationships })
     }

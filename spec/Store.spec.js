@@ -80,6 +80,78 @@ const mockTodoData = {
   }
 }
 
+const mockTodoWithNotes = {
+  data: {
+    id: '101',
+    type: 'todos',
+    attributes: {
+      title: 'Do taxes'
+    },
+    relationships: {
+      notes: {
+        data: [{
+          id: '1',
+          type: 'notes'
+        }]
+      }
+    }
+  },
+  included: [{
+    id: '1',
+    type: 'notes',
+    attributes: {
+      text: 'Do something'
+    }
+  }]
+}
+
+const mockTodoWithTags = {
+  data: {
+    id: '101',
+    type: 'todos',
+    attributes: {
+      title: 'Do taxes'
+    },
+    relationships: {
+      tags: [{
+        data: [{
+          id: '1',
+          type: 'tags'
+        }]
+      }]
+    }
+  },
+  included: [{
+    id: '1',
+    type: 'tags',
+    attributes: {
+      text: 'green'
+    }
+  }]
+}
+
+const mockTodoWithMetaData = {
+  data: {
+    id: '101',
+    type: 'todos',
+    attributes: {
+      title: 'Do taxes'
+    },
+    relationships: {
+      notes: {
+        meta: {
+          data: 'present'
+        }
+      },
+      tags: {
+        meta: {
+          included: false
+        }
+      }
+    }
+  }
+}
+
 const mockTodoData2 = {
   data: {
     id: '2',
@@ -91,9 +163,16 @@ const mockTodoData2 = {
 }
 
 const mockTodoResponse = JSON.stringify(mockTodoData)
+const mockTodoWithNotesResponse = JSON.stringify(mockTodoWithNotes)
+const mockTodoWithTagsResponse = JSON.stringify(mockTodoWithTags)
+const mockTodoWithMetaDataResponse = JSON.stringify(mockTodoWithMetaData)
 const mockTodosResponse = JSON.stringify({ data: [mockTodoData.data] })
 const mockAllTodosResponse = JSON.stringify({
   data: [mockTodoData.data, mockTodoData2.data]
+})
+const mockTodosResponseWithMeta = JSON.stringify({
+  data: [mockTodoWithMetaData.data],
+  meta: { data: 'present' }
 })
 
 const createMockIds = (numberOfIds, idPrefix = '') => {
@@ -652,6 +731,24 @@ describe('Store', () => {
       expect(fetch.mock.calls).toHaveLength(1)
     })
 
+    it('identifies relationships, even when not returned from server', async () => {
+      fetch.mockResponseOnce(mockTodoWithMetaDataResponse)
+      const foundRecord = await store.fetchOne('todos', '101')
+      expect(foundRecord.notes).toHaveLength(0)
+    })
+
+    it('keeps relationships on successive fetches', async () => {
+      fetch.mockResponseOnce(mockTodoWithNotesResponse)
+      fetch.mockResponseOnce(mockTodoWithTagsResponse)
+      const fetchedRecord = await store.fetchOne('todos', '101')
+      expect(fetchedRecord.notes).toHaveLength(1)
+      expect(fetchedRecord.tags).toHaveLength(0)
+
+      await store.fetchOne('todos', '101')
+      expect(fetchedRecord.notes).toHaveLength(1)
+      expect(fetchedRecord.tags).toHaveLength(0)
+    })
+
     it('supports queryParams', async () => {
       fetch.mockResponse(mockTodoResponse)
       await store.fetchOne('todos', '1', {
@@ -1007,6 +1104,15 @@ describe('Store', () => {
       ])
 
       expect(store.loadingStates.get('todos')).toBeUndefined()
+    })
+
+    it('records meta', async () => {
+      expect.assertions(3)
+      fetch.mockResponse(mockTodosResponseWithMeta)
+      const todos = await store.fetchAll('todos')
+      expect(todos.meta.data).toEqual('present')
+      expect(todos[0].tags).toHaveLength(0)
+      expect(todos[0].notes).toHaveLength(0)
     })
 
     it('supports queryParams', async () => {
