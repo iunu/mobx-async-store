@@ -253,10 +253,10 @@ describe('Store', () => {
   it('initializes data observable', () => {
     const map = new Map()
     expect(toJS(store.data)).toEqual({
-      todos: { cache: map, records: map },
-      notes: { cache: map, records: map },
-      categories: { cache: map, records: map },
-      tags: { cache: map, records: map }
+      todos: { cache: map, meta: map, records: map },
+      notes: { cache: map, meta: map, records: map },
+      categories: { cache: map, meta: map, records: map },
+      tags: { cache: map, meta: map, records: map }
     })
   })
 
@@ -1029,6 +1029,23 @@ describe('Store', () => {
           expect(cachedIds.length).toBe(0)
         })
       })
+    })
+
+    it('returns cached meta', async () => {
+      fetch.mockResponse(mockTodosResponseWithMeta)
+      // Populate the cache
+      await store.findAll('todos', {
+        queryParams: {
+          title: 'Do taxes'
+        }
+      })
+
+      const todos = await store.findAll('todos', {
+        queryParams: {
+          title: 'Do taxes'
+        }
+      })
+      expect(todos.meta.data).toEqual('present')
     })
   })
 
