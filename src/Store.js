@@ -547,6 +547,7 @@ class Store {
       })
       if (json.meta) {
         records.meta = json.meta
+        this.getType(type).meta.set(url, json.meta)
       }
       return records
     } else {
@@ -618,8 +619,9 @@ class Store {
   reset (type) {
     if (type) {
       this.data[type] = {
-        records: observable.map({}),
-        cache: observable.map({})
+        records: observable.map(),
+        cache: observable.map(),
+        meta: observable.map()
       }
     } else {
       this.initializeObservableDataProperty()
@@ -683,10 +685,12 @@ class Store {
 
     // NOTE: Is there a performance cost to setting
     // each property individually?
+    // Is Map the most efficient structure?
     types.forEach((modelKlass) => {
       this.data[modelKlass.type] = {
-        records: observable.map({}),
-        cache: observable.map({})
+        records: observable.map(),
+        cache: observable.map(),
+        meta: observable.map()
       }
     })
   }
@@ -828,8 +832,14 @@ class Store {
     const url = this.fetchUrl(type, queryParams, id)
     // Get the matching ids from the response
     const ids = this.getCachedIds(type, url)
+    // get the meta for the request
+    const meta = this.getType(type).meta.get(url)
     // Get the records matching the ids
-    return this.getRecordsById(type, ids)
+    const cachedRecords = this.getRecordsById(type, ids)
+
+    if (meta) cachedRecords.meta = meta
+
+    return cachedRecords
   }
 
   /**
