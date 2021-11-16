@@ -1,3 +1,4 @@
+/* global fetch */
 import { v1 as uuidv1 } from 'uuid'
 import QueryString from './QueryString'
 import pluralize from 'pluralize'
@@ -93,14 +94,38 @@ export function combineRacedRequests (key, fn) {
     delete pending[key]
     return response
   }
+  function handleError (error) {
+    const count = decrementBlocked()
+    // if there are no more callers waiting for this promise to resolve (i.e. if
+    // this is the last one), we can remove the reference to the pending promise
+    // allowing subsequent requests to proceed unblocked.
+    if (count === 0) delete pending[key]
+
+    // we do not need to clone the error, as it isn't single-use like response
+    // TODO: bubble this up as a rejected promise for the consuming application to handle
+    console.log(error.message)
+  }
 
   // Return pending promise if one already exists
-  if (pending[key]) return pending[key].then(handleResponse)
+  if (pending[key]) return pending[key].then(handleResponse, handleError)
+
   // Otherwise call the method and on resolution
   // clear out the pending promise for the key
   pending[key] = fn.call()
+  return pending[key].then(handleResponse, handleError)
+}
 
-  return pending[key].then(handleResponse)
+export function fetchWithRetry (url, fetchOptions, retryAttempts, delay, handleResponse) {
+  const key = JSON.stringify({ url, fetchOptions })
+
+  return combineRacedRequests(key, () => fetch(url, fetchOptions))
+  .then(handleResponse)
+  .catch(error => {
+    const attemptsRemaining = retryAttempts - 1
+    if (!attemptsRemaining) { throw error }
+    return new Promise((resolve) => setTimeout(resolve, delay))
+               .then(() => fetchWithRetry(url, fetchOptions, attemptsRemaining, delay, handleResponse))
+  })
 }
 
 /**
