@@ -710,10 +710,10 @@ class Store {
   fetch (url, options = {}) {
     const { defaultFetchOptions, headersOfInterest } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
-    const key = JSON.stringify({ url, fetchOptions })
 
     // TODO: extract these from options?
     const retryAttempts = 3
+    // TODO: exponentially increase the delay on successive retry attempts?
     const delay = 1000
 
     const handleResponse = (response) => {
