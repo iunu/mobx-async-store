@@ -98,7 +98,7 @@ export function combineRacedRequests (key, fn) {
     .then(
       // if there are other callers waiting for this request to resolve, clone the
       // response before returning so that we can re-use it for the remaining callers
-      response => pending[key] ? response.clone() : response,
+      response => response.clone(),
       // Bubble the error up to be handled by the consuming code
       error => Promise.reject(error)
     )
