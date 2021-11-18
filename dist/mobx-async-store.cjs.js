@@ -1692,6 +1692,8 @@ var Store = (_class = /*#__PURE__*/function () {
 
                 if (json.meta) {
                   records.meta = json.meta;
+
+                  _this.getType(type).meta.set(url, json.meta);
                 }
 
                 return _context2.abrupt("return", records);
@@ -1900,8 +1902,9 @@ var Store = (_class = /*#__PURE__*/function () {
     function reset(type) {
       if (type) {
         this.data[type] = {
-          records: mobx.observable.map({}),
-          cache: mobx.observable.map({})
+          records: mobx.observable.map(),
+          cache: mobx.observable.map(),
+          meta: mobx.observable.map()
         };
       } else {
         this.initializeObservableDataProperty();
@@ -1970,11 +1973,13 @@ var Store = (_class = /*#__PURE__*/function () {
 
       var types = this.constructor.types; // NOTE: Is there a performance cost to setting
       // each property individually?
+      // Is Map the most efficient structure?
 
       types.forEach(function (modelKlass) {
         _this2.data[modelKlass.type] = {
-          records: mobx.observable.map({}),
-          cache: mobx.observable.map({})
+          records: mobx.observable.map(),
+          cache: mobx.observable.map(),
+          meta: mobx.observable.map()
         };
       });
     }
@@ -2152,9 +2157,13 @@ var Store = (_class = /*#__PURE__*/function () {
       // Get the url the request would use
       var url = this.fetchUrl(type, queryParams, id); // Get the matching ids from the response
 
-      var ids = this.getCachedIds(type, url); // Get the records matching the ids
+      var ids = this.getCachedIds(type, url); // get the meta for the request
 
-      return this.getRecordsById(type, ids);
+      var meta = this.getType(type).meta.get(url); // Get the records matching the ids
+
+      var cachedRecords = this.getRecordsById(type, ids);
+      if (meta) cachedRecords.meta = meta;
+      return cachedRecords;
     }
     /**
      * Gets records from store based on cached query
@@ -2501,17 +2510,12 @@ var Store = (_class = /*#__PURE__*/function () {
         queryTag: queryTag
       };
 
-      var querySet = _this9.loadingStates.get(queryTag);
-
-      if (!querySet) {
-        querySet = mobx.observable.set([], {
-          deep: false
-        });
-
-        _this9.loadingStates.set(queryTag, querySet);
+      if (!_this9.loadingStates.get(queryTag)) {
+        _this9.loadingStates.set(queryTag, new Set());
       }
 
-      querySet.add(loadingStateInfo);
+      _this9.loadingStates.get(queryTag).add(JSON.stringify(loadingStateInfo));
+
       return loadingStateInfo;
     };
   }
@@ -2523,12 +2527,12 @@ var Store = (_class = /*#__PURE__*/function () {
     var _this10 = this;
 
     return function (state) {
-      var querySet = _this10.loadingStates.get(state.queryTag);
+      var loadingStates = _this10.loadingStates;
+      loadingStates.get(state.queryTag);
+      loadingStates.get(state.queryTag).delete(JSON.stringify(state));
 
-      querySet.delete(state);
-
-      if (querySet.size === 0) {
-        _this10.loadingStates.delete(state.queryTag);
+      if (loadingStates.get(state.queryTag).size === 0) {
+        loadingStates.delete(state.queryTag);
       }
     };
   }

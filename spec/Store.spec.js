@@ -770,7 +770,7 @@ describe('Store', () => {
       expect.assertions(2)
 
       fetch.mockResponseOnce(() => {
-        expect(toJS(store.loadingStates.get('loadingSpecialTodo'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodo', type: 'todos', queryParams: undefined, url: '/example_api/todos/3' }]))
+        expect(toJS(store.loadingStates.get('loadingSpecialTodo'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos/3', type: 'todos', queryParams: undefined, queryTag: 'loadingSpecialTodo' })]))
         return Promise.resolve(mockTodoResponse)
       })
 
@@ -1075,7 +1075,7 @@ describe('Store', () => {
       expect.assertions(4)
 
       fetch.mockResponseOnce(() => {
-        expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' }]))
+        expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos?a=b', type: 'todos', queryParams: { a: 'b' }, queryTag: 'loadingSpecialTodos' })]))
         expect(store.loadingTodos).toBe(false)
         return Promise.resolve(JSON.stringify({ data: [] }))
       })
@@ -1089,7 +1089,7 @@ describe('Store', () => {
       expect.assertions(4)
 
       fetch.mockResponseOnce(() => {
-        expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([{ queryTag: 'todos', type: 'todos', queryParams: undefined, url: '/example_api/todos' }]))
+        expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos', type: 'todos', queryParams: undefined, queryTag: 'todos' })]))
         expect(store.loadingTodos).toBe(true)
         return Promise.resolve(JSON.stringify({ data: [] }))
       })
@@ -1103,14 +1103,14 @@ describe('Store', () => {
       expect.assertions(3)
 
     fetch.mockResponseOnce(() => {
-      expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([{ queryTag: 'todos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' }]))
+      expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos?a=b', type: 'todos', queryParams: { a: 'b' }, queryTag: 'todos' })]))
       return new Promise((resolve) => setTimeout(() => resolve(JSON.stringify({ data: [] })), 100))
     })
 
     fetch.mockResponseOnce(() => {
       expect(toJS(store.loadingStates.get('todos'))).toMatchObject(new Set([
-        { queryTag: 'todos', type: 'todos', queryParams: { a: 'b' }, url: '/example_api/todos?a=b' },
-        { queryTag: 'todos', type: 'todos', queryParams: { c: 'd' }, url: '/example_api/todos?c=d' }
+        JSON.stringify({ url: '/example_api/todos?a=b', type: 'todos', queryParams: { a: 'b' }, queryTag: 'todos' }),
+        JSON.stringify({ url: '/example_api/todos?c=d', type: 'todos', queryParams: { c: 'd' }, queryTag: 'todos' })
       ]))
       return Promise.resolve(JSON.stringify({ data: [] }))
     })
@@ -1200,7 +1200,7 @@ describe('Store', () => {
       expect.assertions(2)
 
       fetch.mockResponseOnce(() => {
-        expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([{ queryTag: 'loadingSpecialTodos', type: 'todos', queryParams: { filter: { ids: '1' } }, url: '/example_api/todos?filter%5Bids%5D=1' }]))
+        expect(toJS(store.loadingStates.get('loadingSpecialTodos'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos?filter%5Bids%5D=1', type: 'todos', queryParams: { filter: { ids: '1' } }, queryTag: 'loadingSpecialTodos' })]))
         return Promise.resolve(JSON.stringify({ data: [] }))
       })
 
