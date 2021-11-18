@@ -34,15 +34,12 @@ describe('fetchWithRetry', () => {
   })
 
   it('will retry the request if there is a fetch failure', async () => {
-    expect.assertions(1)
-
-    fetch.mockReject('network error')
-    await fetchWithRetry(url, fetchOptions, 2, 0).catch((_error) => {
-      expect(fetch.mock.calls.length).toEqual(2)
-    })
+    fetch.mockRejectOnce('network error')
+    await fetchWithRetry(url, fetchOptions, 2, 0)
+    expect(fetch.mock.calls.length).toEqual(2)
   })
 
-  it('retries as many times as it is told', async () => {
+  it('makes as many requests as the attempts arguement calls for', async () => {
     expect.assertions(1)
 
     fetch.mockReject('network error')
@@ -56,9 +53,8 @@ describe('fetchWithRetry', () => {
 
     fetch.mockRejectOnce('network error')
     fetch.mockResponseOnce('success')
-    await fetchWithRetry(url, fetchOptions, 5, 0).then((result) => {
-      expect(result.body.toString()).toEqual('success')
-      expect(fetch.mock.calls.length).toEqual(2)
-    })
+    const result = await fetchWithRetry(url, fetchOptions, 5, 0)
+    expect(result.body.toString()).toEqual('success')
+    expect(fetch.mock.calls.length).toEqual(2)
   })
 })
