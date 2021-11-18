@@ -69,13 +69,12 @@ const disallowFetches = (store) => {
   store.fetchMany = circularFindError
 }
 
-const serverFailureStatuses = [500]
-
 /**
- * Wraps response JSON or object as needed. For a server failure (500), returns Promise.reject
- * For any other request, returns Promise.resolve wrapped around a Response object.
+ * Wraps response JSON or object in a Response object that is itself wrapped in a
+ * resolved Promise. If no status is given then it will fill in a default based on
+ * the method.
  * @method wrapResponse
- * @param {*} response JSON string unless a 500 error, in which case it's an object
+ * @param {*} response JSON string
  * @param {String} method
  * @param {Number} status
  * @return {Promise}
@@ -84,11 +83,6 @@ const serverFailureStatuses = [500]
 const wrapResponse = (response, method, status) => {
   if (!status) {
     status = method === 'POST' ? 201 : 200
-  }
-
-  // Simulate the server itself fails
-  if (serverFailureStatuses.includes(status)) {
-    return Promise.reject(response)
   }
 
   return Promise.resolve(new Response(response, { status }))
