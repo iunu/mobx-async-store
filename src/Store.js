@@ -731,7 +731,7 @@ class Store {
       return response
     }
 
-    return fetchWithRetry(url, fetchOptions, retryAttempts, delay, handleResponse)
+    return fetchWithRetry(url, fetchOptions, retryAttempts, delay).then(handleResponse)
   }
 
   /**

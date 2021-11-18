@@ -25,12 +25,11 @@ describe('deriveIdQueryStrings', () => {
 
 // function fetchWithRetry (url, fetchOptions, retryAttempts, delay, handleResponse) {
 describe('fetchWithRetry', () => {
-  let url, fetchOptions, handleResponse
+  let url, fetchOptions
 
   beforeEach(() => {
     url = 'https://example.com'
     fetchOptions = {}
-    handleResponse = (result) => result
     fetch.resetMocks()
   })
 
@@ -38,7 +37,7 @@ describe('fetchWithRetry', () => {
     expect.assertions(1)
 
     fetch.mockReject('network error')
-    await fetchWithRetry(url, fetchOptions, 2, 0, handleResponse).catch((_error) => {
+    await fetchWithRetry(url, fetchOptions, 2, 0).catch((_error) => {
       expect(fetch.mock.calls.length).toEqual(2)
     })
   })
@@ -47,7 +46,7 @@ describe('fetchWithRetry', () => {
     expect.assertions(1)
 
     fetch.mockReject('network error')
-    await fetchWithRetry(url, fetchOptions, 5, 0, handleResponse).catch((_error) => {
+    await fetchWithRetry(url, fetchOptions, 5, 0).catch((_error) => {
       expect(fetch.mock.calls.length).toEqual(5)
     })
   })
@@ -57,7 +56,7 @@ describe('fetchWithRetry', () => {
 
     fetch.mockRejectOnce('network error')
     fetch.mockResponseOnce('success')
-    await fetchWithRetry(url, fetchOptions, 5, 0, handleResponse).then((result) => {
+    await fetchWithRetry(url, fetchOptions, 5, 0).then((result) => {
       expect(result.body.toString()).toEqual('success')
       expect(fetch.mock.calls.length).toEqual(2)
     })
