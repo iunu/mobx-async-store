@@ -104,12 +104,12 @@ export function combineRacedRequests (key, fn) {
     )
 }
 
-export function fetchWithRetry (url, fetchOptions, retryAttempts, delay) {
+export function fetchWithRetry (url, fetchOptions, attempts, delay) {
   const key = JSON.stringify({ url, fetchOptions })
 
   return combineRacedRequests(key, () => fetch(url, fetchOptions))
     .catch(error => {
-      const attemptsRemaining = retryAttempts - 1
+      const attemptsRemaining = attempts - 1
       if (!attemptsRemaining) { throw error }
       return new Promise((resolve) => setTimeout(resolve, delay))
         .then(() => fetchWithRetry(url, fetchOptions, attemptsRemaining, delay))

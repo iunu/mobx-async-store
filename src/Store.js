@@ -659,6 +659,7 @@ class Store {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
     this.headersOfInterest = options.headersOfInterest || []
+    this.retryOptions = options.retryOptions || { attempts: 1, delay: 0 } // do not retry by default
   }
 
   /**
@@ -708,13 +709,9 @@ class Store {
    * @param {Object} options
    */
   fetch (url, options = {}) {
-    const { defaultFetchOptions, headersOfInterest } = this
+    const { defaultFetchOptions, headersOfInterest, retryOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
-
-    // TODO: extract these from options?
-    const retryAttempts = 3
-    // TODO: exponentially increase the delay on successive retry attempts?
-    const delay = 1000
+    const { attempts, delay } = retryOptions
 
     const handleResponse = (response) => {
       // Capture headers of interest
@@ -731,7 +728,7 @@ class Store {
       return response
     }
 
-    return fetchWithRetry(url, fetchOptions, retryAttempts, delay).then(handleResponse)
+    return fetchWithRetry(url, fetchOptions, attempts, delay).then(handleResponse)
   }
 
   /**
