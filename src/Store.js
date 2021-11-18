@@ -470,7 +470,7 @@ class Store {
    *
    * const todos = store.fetchAll('todos', { queryTag: 'myTodos' })
    * store.loadingStates.get('myTodos')
-   * => Set([{ url, type, queryParams, queryTag }])
+   * => Set([JSON.stringify({ url, type, queryParams, queryTag })])
    *
    * @method setLoadingState
    * @param {Object} options options that can be used to build the loading state info
@@ -482,12 +482,11 @@ class Store {
 
     const loadingStateInfo = { url, type, queryParams, queryTag }
 
-    let querySet = this.loadingStates.get(queryTag)
-    if (!querySet) {
-      querySet = observable.set([], { deep: false })
-      this.loadingStates.set(queryTag, querySet)
+    if (!this.loadingStates.get(queryTag)) {
+      this.loadingStates.set(queryTag, new Set())
     }
-    querySet.add(loadingStateInfo)
+    this.loadingStates.get(queryTag).add(JSON.stringify(loadingStateInfo))
+
     return loadingStateInfo
   }
 
@@ -499,11 +498,12 @@ class Store {
    */
   @action
   deleteLoadingState = (state) => {
-    const querySet = this.loadingStates.get(state.queryTag)
+    const { loadingStates } = this
+    const { queryTag } = state
 
-    querySet.delete(state)
-    if (querySet.size === 0) {
-      this.loadingStates.delete(state.queryTag)
+    loadingStates.get(queryTag).delete(JSON.stringify(state))
+    if (loadingStates.get(queryTag).size === 0) {
+      loadingStates.delete(queryTag)
     }
   }
 
