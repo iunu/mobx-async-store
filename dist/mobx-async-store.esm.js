@@ -2492,11 +2492,17 @@ var Store = (_class = /*#__PURE__*/function () {
 
     return function (state) {
       var loadingStates = _this10.loadingStates;
-      loadingStates.get(state.queryTag);
-      loadingStates.get(state.queryTag).delete(JSON.stringify(state));
+      var queryTag = state.queryTag;
+      var encodedState = JSON.stringify(state);
 
-      if (loadingStates.get(state.queryTag).size === 0) {
-        loadingStates.delete(state.queryTag);
+      if (loadingStates.get(queryTag)) {
+        loadingStates.get(queryTag).delete(encodedState);
+
+        if (loadingStates.get(queryTag).size === 0) {
+          loadingStates.delete(queryTag);
+        }
+      } else {
+        console.warn("no loadingState found for ".concat(encodedState));
       }
     };
   }
