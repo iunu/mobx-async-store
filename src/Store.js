@@ -501,9 +501,15 @@ class Store {
     const { loadingStates } = this
     const { queryTag } = state
 
-    loadingStates.get(queryTag).delete(JSON.stringify(state))
-    if (loadingStates.get(queryTag).size === 0) {
-      loadingStates.delete(queryTag)
+    const encodedState = JSON.stringify(state)
+
+    if (loadingStates.get(queryTag)) {
+      loadingStates.get(queryTag).delete(encodedState)
+      if (loadingStates.get(queryTag).size === 0) {
+        loadingStates.delete(queryTag)
+      }
+    } else {
+      console.warn(`no loadingState found for ${encodedState}`)
     }
   }
 

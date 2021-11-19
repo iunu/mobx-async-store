@@ -1132,6 +1132,24 @@ describe('Store', () => {
       expect(todos[0].notes).toHaveLength(0)
     })
 
+    it('only fetches once when called multiple times', async () => {
+      expect.assertions(2)
+
+      console.warn = jest.fn()
+      const mockResponseData = JSON.stringify({ data: [] })
+
+      fetch.mockResponseOnce(() => (new Promise((resolve) => setTimeout(() => resolve(mockResponseData), 100))))
+      fetch.mockResponseOnce(Promise.resolve(mockResponseData))
+
+      await Promise.all([
+        store.fetchAll('todos'),
+        store.fetchAll('todos')
+      ])
+
+      expect(fetch.mock.calls).toHaveLength(1)
+      expect(console.warn).toHaveBeenCalledWith('no loadingState found for {"url":"/example_api/todos","type":"todos","queryTag":"todos"}')
+    })
+
     it('supports queryParams', async () => {
       expect.assertions(2)
       fetch.mockResponse(mockTodosResponse)
