@@ -1,9 +1,8 @@
-/* global fetch */
 import { action, makeObservable, observable, runInAction, toJS } from 'mobx'
 import pick from 'lodash/pick'
 import uniqBy from 'lodash/uniqBy'
 import {
-  combineRacedRequests,
+  fetchWithRetry,
   idOrNewId,
   deriveIdQueryStrings,
   parseErrorPointer,
@@ -660,6 +659,7 @@ class Store {
     this.baseUrl = options.baseUrl || ''
     this.defaultFetchOptions = options.defaultFetchOptions || {}
     this.headersOfInterest = options.headersOfInterest || []
+    this.retryOptions = options.retryOptions || { attempts: 1, delay: 0 } // do not retry by default
   }
 
   /**
@@ -709,13 +709,11 @@ class Store {
    * @param {Object} options
    */
   fetch (url, options = {}) {
-    const { defaultFetchOptions, headersOfInterest } = this
+    const { defaultFetchOptions, headersOfInterest, retryOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
-    const key = JSON.stringify({ url, fetchOptions })
+    const { attempts, delay } = retryOptions
 
-    return combineRacedRequests(key, () =>
-      fetch(url, { ...defaultFetchOptions, ...options })
-    ).then(response => {
+    const handleResponse = (response) => {
       // Capture headers of interest
       if (headersOfInterest) {
         runInAction(() => {
@@ -728,7 +726,9 @@ class Store {
       }
 
       return response
-    })
+    }
+
+    return fetchWithRetry(url, fetchOptions, attempts, delay).then(handleResponse)
   }
 
   /**

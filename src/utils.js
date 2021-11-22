@@ -1,3 +1,4 @@
+/* global fetch */
 import { v1 as uuidv1 } from 'uuid'
 import QueryString from './QueryString'
 import pluralize from 'pluralize'
@@ -81,26 +82,38 @@ export function combineRacedRequests (key, fn) {
   // keep track of the number of callers waiting for this promise to resolve
   incrementBlocked()
 
-  function handleResponse (response) {
-    const count = decrementBlocked()
-    // if there are other callers waiting for this request to resolve, we should
-    // clone the response before returning so that we can re-use it for the
-    // remaining callers
-    if (count > 0) return response.clone()
-    // if there are no more callers waiting for this promise to resolve (i.e. if
-    // this is the last one), we can remove the reference to the pending promise
-    // allowing subsequent requests to proceed unblocked.
-    delete pending[key]
-    return response
-  }
+  // Add the current call to our pending list in case another request comes in
+  // before it resolves. If there is a request already pending, we'll use the
+  // existing one instead
+  if (!pending[key]) { pending[key] = fn.call() }
 
-  // Return pending promise if one already exists
-  if (pending[key]) return pending[key].then(handleResponse)
-  // Otherwise call the method and on resolution
-  // clear out the pending promise for the key
-  pending[key] = fn.call()
+  return pending[key]
+    .finally(() => {
+      const count = decrementBlocked()
+      // if there are no more callers waiting for this promise to resolve (i.e. if
+      // this is the last one), we can remove the reference to the pending promise
+      // allowing subsequent requests to proceed unblocked.
+      if (count === 0) delete pending[key]
+    })
+    .then(
+      // if there are other callers waiting for this request to resolve, clone the
+      // response before returning so that we can re-use it for the remaining callers
+      response => response.clone(),
+      // Bubble the error up to be handled by the consuming code
+      error => Promise.reject(error)
+    )
+}
 
-  return pending[key].then(handleResponse)
+export function fetchWithRetry (url, fetchOptions, attempts, delay) {
+  const key = JSON.stringify({ url, fetchOptions })
+
+  return combineRacedRequests(key, () => fetch(url, fetchOptions))
+    .catch(error => {
+      const attemptsRemaining = attempts - 1
+      if (!attemptsRemaining) { throw error }
+      return new Promise((resolve) => setTimeout(resolve, delay))
+        .then(() => fetchWithRetry(url, fetchOptions, attemptsRemaining, delay))
+    })
 }
 
 /**

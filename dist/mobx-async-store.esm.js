@@ -126,27 +126,49 @@ function combineRacedRequests(key, fn) {
   var incrementBlocked = incrementor(key);
   var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
 
-  incrementBlocked();
+  incrementBlocked(); // Add the current call to our pending list in case another request comes in
+  // before it resolves. If there is a request already pending, we'll use the
+  // existing one instead
 
-  function handleResponse(response) {
-    var count = decrementBlocked(); // if there are other callers waiting for this request to resolve, we should
-    // clone the response before returning so that we can re-use it for the
-    // remaining callers
+  if (!pending[key]) {
+    pending[key] = fn.call();
+  }
 
-    if (count > 0) return response.clone(); // if there are no more callers waiting for this promise to resolve (i.e. if
+  return pending[key].finally(function () {
+    var count = decrementBlocked(); // if there are no more callers waiting for this promise to resolve (i.e. if
     // this is the last one), we can remove the reference to the pending promise
     // allowing subsequent requests to proceed unblocked.
 
-    delete pending[key];
-    return response;
-  } // Return pending promise if one already exists
+    if (count === 0) delete pending[key];
+  }).then( // if there are other callers waiting for this request to resolve, clone the
+  // response before returning so that we can re-use it for the remaining callers
+  function (response) {
+    return response.clone();
+  }, // Bubble the error up to be handled by the consuming code
+  function (error) {
+    return Promise.reject(error);
+  });
+}
+function fetchWithRetry(url, fetchOptions, attempts, delay) {
+  var key = JSON.stringify({
+    url: url,
+    fetchOptions: fetchOptions
+  });
+  return combineRacedRequests(key, function () {
+    return fetch(url, fetchOptions);
+  }).catch(function (error) {
+    var attemptsRemaining = attempts - 1;
 
+    if (!attemptsRemaining) {
+      throw error;
+    }
 
-  if (pending[key]) return pending[key].then(handleResponse); // Otherwise call the method and on resolution
-  // clear out the pending promise for the key
-
-  pending[key] = fn.call();
-  return pending[key].then(handleResponse);
+    return new Promise(function (resolve) {
+      return setTimeout(resolve, delay);
+    }).then(function () {
+      return fetchWithRetry(url, fetchOptions, attemptsRemaining, delay);
+    });
+  });
 }
 /**
  * convert a value into a date, pass Date or Moment instances thru
@@ -1451,7 +1473,7 @@ var Store = (_class = /*#__PURE__*/function () {
         }, _callee);
       }));
 
-      return function (_x2, _x3) {
+      return function (_x, _x2) {
         return _ref.apply(this, arguments);
       };
     }());
@@ -1676,7 +1698,7 @@ var Store = (_class = /*#__PURE__*/function () {
         }, _callee2);
       }));
 
-      return function (_x4) {
+      return function (_x3) {
         return _ref4.apply(this, arguments);
       };
     }());
@@ -1801,7 +1823,7 @@ var Store = (_class = /*#__PURE__*/function () {
         }, _callee3, this);
       }));
 
-      function fetchOne(_x5, _x6) {
+      function fetchOne(_x4, _x5) {
         return _fetchOne.apply(this, arguments);
       }
 
@@ -1904,6 +1926,10 @@ var Store = (_class = /*#__PURE__*/function () {
       this.baseUrl = options.baseUrl || '';
       this.defaultFetchOptions = options.defaultFetchOptions || {};
       this.headersOfInterest = options.headersOfInterest || [];
+      this.retryOptions = options.retryOptions || {
+        attempts: 1,
+        delay: 0
+      }; // default to no retry
     }
     /**
      * Entry point for configuring the store
@@ -1957,32 +1983,20 @@ var Store = (_class = /*#__PURE__*/function () {
 
   }, {
     key: "fetch",
-    value: function (_fetch) {
-      function fetch(_x) {
-        return _fetch.apply(this, arguments);
-      }
-
-      fetch.toString = function () {
-        return _fetch.toString();
-      };
-
-      return fetch;
-    }(function (url) {
+    value: function fetch(url) {
       var _this3 = this;
 
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var defaultFetchOptions = this.defaultFetchOptions,
-          headersOfInterest = this.headersOfInterest;
+          headersOfInterest = this.headersOfInterest,
+          retryOptions = this.retryOptions;
 
       var fetchOptions = _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options);
 
-      var key = JSON.stringify({
-        url: url,
-        fetchOptions: fetchOptions
-      });
-      return combineRacedRequests(key, function () {
-        return fetch(url, _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options));
-      }).then(function (response) {
+      var attempts = retryOptions.attempts,
+          delay = retryOptions.delay;
+
+      var handleResponse = function handleResponse(response) {
         // Capture headers of interest
         if (headersOfInterest) {
           runInAction(function () {
@@ -1995,7 +2009,9 @@ var Store = (_class = /*#__PURE__*/function () {
         }
 
         return response;
-      });
+      };
+
+      return fetchWithRetry(url, fetchOptions, attempts, delay).then(handleResponse);
     }
     /**
      * Gets type of collection from data observable
@@ -2004,7 +2020,7 @@ var Store = (_class = /*#__PURE__*/function () {
      * @param {String} type
      * @return {Object} observable type object structure
      */
-    )
+
   }, {
     key: "getType",
     value: function getType(type) {
@@ -2389,7 +2405,7 @@ var Store = (_class = /*#__PURE__*/function () {
           }, _callee4, null, [[16, 22]]);
         }));
 
-        return function (_x7) {
+        return function (_x6) {
           return _ref5.apply(this, arguments);
         };
       }(), function (error) {
@@ -2875,26 +2891,21 @@ var disallowFetches = function disallowFetches(store) {
   store.fetchAll = circularFindError;
   store.fetchMany = circularFindError;
 };
-
-var serverFailureStatuses = [500];
 /**
- * Wraps response JSON or object as needed. For a server failure (500), returns Promise.reject
- * For any other request, returns Promise.resolve wrapped around a Response object.
+ * Wraps response JSON or object in a Response object that is itself wrapped in a
+ * resolved Promise. If no status is given then it will fill in a default based on
+ * the method.
  * @method wrapResponse
- * @param {*} response JSON string unless a 500 error, in which case it's an object
+ * @param {*} response JSON string
  * @param {String} method
  * @param {Number} status
  * @return {Promise}
  */
 
+
 var wrapResponse = function wrapResponse(response, method, status) {
   if (!status) {
     status = method === 'POST' ? 201 : 200;
-  } // Simulate the server itself fails
-
-
-  if (serverFailureStatuses.includes(status)) {
-    return Promise.reject(response);
   }
 
   return Promise.resolve(new Response(response, {
@@ -3346,7 +3357,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   _inherits(RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
@@ -3475,7 +3486,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
 
 
   _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species2,
+    key: _Symbol$species,
     get: function get() {
       return Array;
     }
@@ -3489,6 +3500,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array), _Symbol$species);
+}( /*#__PURE__*/_wrapNativeSuper(Array));
 
 export { FactoryFarm, MockServer, Model, QueryString, Store, attribute, relatedToMany, relatedToOne, serverResponse, validates };

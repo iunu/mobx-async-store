@@ -1,5 +1,6 @@
+/* global fetch */
 import QueryString from '../src/QueryString'
-import { deriveIdQueryStrings, URL_MAX_LENGTH } from '../src/utils'
+import { deriveIdQueryStrings, fetchWithRetry, URL_MAX_LENGTH } from '../src/utils'
 
 describe('deriveIdQueryStrings', () => {
   const shortIds = [1, 2, 3]
@@ -19,5 +20,41 @@ describe('deriveIdQueryStrings', () => {
     const idQueryStrings = deriveIdQueryStrings(shortIds, baseUrl)
     expect(idQueryStrings).toHaveLength(1)
     expect(idQueryStrings[0].length + baseUrl.length).toBeLessThan(URL_MAX_LENGTH)
+  })
+})
+
+// function fetchWithRetry (url, fetchOptions, retryAttempts, delay, handleResponse) {
+describe('fetchWithRetry', () => {
+  let url, fetchOptions
+
+  beforeEach(() => {
+    url = 'https://example.com'
+    fetchOptions = {}
+    fetch.resetMocks()
+  })
+
+  it('will retry the request if there is a fetch failure', async () => {
+    fetch.mockRejectOnce('network error')
+    await fetchWithRetry(url, fetchOptions, 2, 0)
+    expect(fetch.mock.calls.length).toEqual(2)
+  })
+
+  it('makes as many requests as the attempts arguement calls for', async () => {
+    expect.assertions(1)
+
+    fetch.mockReject('network error')
+    await fetchWithRetry(url, fetchOptions, 5, 0).catch((_error) => {
+      expect(fetch.mock.calls.length).toEqual(5)
+    })
+  })
+
+  it('stops retrying once it gets a successful response', async () => {
+    expect.assertions(2)
+
+    fetch.mockRejectOnce('network error')
+    fetch.mockResponseOnce('success')
+    const result = await fetchWithRetry(url, fetchOptions, 5, 0)
+    expect(result.body.toString()).toEqual('success')
+    expect(fetch.mock.calls.length).toEqual(2)
   })
 })

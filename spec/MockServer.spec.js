@@ -281,9 +281,7 @@ describe('MockServer', () => {
           path: /todos\/1/,
           method: 'PATCH',
           status: 500,
-          response: () => ({
-            title: 'You made a bad request.'
-          })
+          response: () => ''
         }
       ]
       mockServer.start({ responseOverrides })
@@ -293,7 +291,7 @@ describe('MockServer', () => {
       try {
         await user.save()
       } catch (error) {
-        expect(user.errors.title).toEqual('You made a bad request.')
+        expect(error.message).toEqual('Something went wrong.')
         expect(fetch.mock.calls).toHaveLength(1)
       }
     })
