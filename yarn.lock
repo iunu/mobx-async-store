@@ -307,10 +307,10 @@
     "@babel/helper-plugin-utils" "^7.14.5"
     "@babel/plugin-syntax-class-static-block" "^7.14.5"
 
-"@babel/plugin-proposal-decorators@^7.16.0":
-  version "7.16.0"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-decorators/-/plugin-proposal-decorators-7.16.0.tgz#515db5f6891611c0d176b63ede0844fbd9be797b"
-  integrity sha512-ttvhKuVnQwoNQrcTd1oe6o49ahaZ1kns1fsJKzTVOaS/FJDJoK4qzgVS68xzJhYUMgTnbXW6z/T6rlP3lL7tJw==
+"@babel/plugin-proposal-decorators@^7.16.4":
+  version "7.16.4"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-decorators/-/plugin-proposal-decorators-7.16.4.tgz#9b35ce0716425a93b978e79099e5f7ba217c1364"
+  integrity sha512-RESBNX16eNqnBeEVR5sCJpnW0mHiNLNNvGA8PrRuK/4ZJ4TO+6bHleRUuGQYDERVySOKtOhSya/C4MIhwAMAgg==
   dependencies:
     "@babel/helper-create-class-features-plugin" "^7.16.0"
     "@babel/helper-plugin-utils" "^7.14.5"
@@ -3406,10 +3406,10 @@ jsdom@^16.6.0:
     ws "^7.4.6"
     xml-name-validator "^3.0.0"
 
-jsdom@^18.1.0:
-  version "18.1.0"
-  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-18.1.0.tgz#43e88a0e4d6d2aeeec0a18810c0934c02b2ae3e4"
-  integrity sha512-q6QFAfSGLEUqRJ+GCV6vn6ItZCMARWh1d33wiJZPxc+wMNw7HK71JPmQ4C2lIZAsBH8TiJu4uplach/UcrC6bQ==
+jsdom@^18.1.1:
+  version "18.1.1"
+  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-18.1.1.tgz#15ec896f5ab7df9669a62375606f47c8c09551aa"
+  integrity sha512-NmJQbjQ/gpS/1at/ce3nCx89HbXL/f5OcenBe8wU1Eik0ROhyUc3LtmG3567dEHAGXkN8rmILW/qtCOPxPHQJw==
   dependencies:
     abab "^2.0.5"
     acorn "^8.5.0"
