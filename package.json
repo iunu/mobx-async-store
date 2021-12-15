@@ -32,7 +32,7 @@
     "eslint-plugin-promise": "^5.1.1",
     "eslint-plugin-react": "^7.27.1",
     "eslint-plugin-standard": "^5.0.0",
-    "jest": "^27.3.1",
+    "jest": "^27.4.4",
     "jest-coverage-badges": "^1.1.2",
     "jest-fetch-mock": "^3.0.3",
     "jsdom": "^19.0.0",
