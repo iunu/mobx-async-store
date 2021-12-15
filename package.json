@@ -10,7 +10,7 @@
     "lodash": "^4.17.21",
     "mobx": "6.3.5",
     "pluralize": "^8.0.0",
-    "qs": "^6.9.4",
+    "qs": "^6.10.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
