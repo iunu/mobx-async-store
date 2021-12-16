@@ -1363,13 +1363,27 @@ describe('Store', () => {
       })
     })
 
-    describe('no records of the specified type and ids are the store', () => {
+    describe('all records of the specified type and ids are the store', () => {
       it('uses the cache instead of requesting from the server', async () => {
         expect.assertions(3)
 
         store.add('todos', createMockTodosAttributes(400, '1000'))
 
         const ids = createMockIds(300, '1000')
+        const todos = await store.findMany('todos', ids)
+
+        expect(todos).toHaveLength(300)
+        expect(store.getAll('todos')).toHaveLength(400)
+
+        expect(fetch.mock.calls).toHaveLength(0)
+      })
+
+      it('uses the cache instead of requesting from the server, even with duplicate ids', async () => {
+        expect.assertions(3)
+
+        store.add('todos', createMockTodosAttributes(400, '1000'))
+
+        const ids = [...createMockIds(300, '1000'), ...createMockIds(300, '1000')]
         const todos = await store.findMany('todos', ids)
 
         expect(todos).toHaveLength(300)
