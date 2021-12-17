@@ -1123,6 +1123,24 @@ describe('Store', () => {
       expect(store.loadingStates.get('todos')).toBeUndefined()
     })
 
+    it('supports loading from a fetchMany', async () => {
+      expect.assertions(2)
+
+      let responseTime = 100
+
+      fetch.mockResponse(() => {
+        responseTime = responseTime - 10
+        return new Promise((resolve) => setTimeout(() => resolve(JSON.stringify({ data: [] })), responseTime))
+      })
+
+      const fetchedPromise = store.fetchMany('todos', createMockIds(300, '1000'), { queryParams: { c: 'd' } })
+
+      expect(store.loadingStates.get('todos').size).toEqual(3)
+      await fetchedPromise
+
+      expect(store.loadingStates.get('todos')).toBeUndefined()
+    })
+
     it('records meta', async () => {
       expect.assertions(3)
       fetch.mockResponse(mockTodosResponseWithMeta)

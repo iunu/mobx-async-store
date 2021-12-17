@@ -1573,9 +1573,10 @@ var Store = (_class = /*#__PURE__*/function () {
 
       var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
       var queries = idQueries.map(function (queryIds) {
-        queryParams.filter.ids = queryIds;
+        var params = cloneDeep__default["default"](queryParams);
+        params.filter.ids = queryIds;
         return _this.fetchAll(type, {
-          queryParams: queryParams,
+          queryParams: params,
           queryTag: queryTag
         });
       });

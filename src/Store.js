@@ -9,6 +9,7 @@ import {
   requestUrl
 } from './utils'
 import schema from './schema'
+import cloneDeep from 'lodash/cloneDeep'
 
 /**
  * Defines the Artemis Data Store class.
@@ -372,8 +373,10 @@ class Store {
     const baseUrl = this.fetchUrl(type, queryParams)
     const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
     const queries = idQueries.map((queryIds) => {
-      queryParams.filter.ids = queryIds
-      return this.fetchAll(type, { queryParams, queryTag })
+      const params = cloneDeep(queryParams)
+      params.filter.ids = queryIds
+
+      return this.fetchAll(type, { queryParams: params, queryTag })
     })
 
     return Promise.all(queries)
