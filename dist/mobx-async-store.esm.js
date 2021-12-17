@@ -1554,7 +1554,8 @@ var Store = (_class = /*#__PURE__*/function () {
 
     _defineProperty(this, "findMany", function (type, ids) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      var idsToQuery = ids.slice().map(String);
+
+      var idsToQuery = _toConsumableArray(new Set(ids)).map(String);
 
       var recordsInStore = _this.getAll(type, options).filter(function (record) {
         return idsToQuery.includes(String(record.id));
@@ -1929,7 +1930,7 @@ var Store = (_class = /*#__PURE__*/function () {
       this.retryOptions = options.retryOptions || {
         attempts: 1,
         delay: 0
-      }; // default to no retry
+      }; // do not retry by default
     }
     /**
      * Entry point for configuring the store
@@ -3357,7 +3358,7 @@ function setRelatedRecord(record, relatedRecord, property) {
  */
 
 _Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
+var RelatedRecordsArray = /*#__PURE__*/function (_Array, _Symbol$species2) {
   _inherits(RelatedRecordsArray, _Array);
 
   var _super = _createSuper(RelatedRecordsArray);
@@ -3486,7 +3487,7 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
 
 
   _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species,
+    key: _Symbol$species2,
     get: function get() {
       return Array;
     }
@@ -3500,6 +3501,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   }]);
 
   return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array));
+}( /*#__PURE__*/_wrapNativeSuper(Array), _Symbol$species);
 
 export { FactoryFarm, MockServer, Model, QueryString, Store, attribute, relatedToMany, relatedToOne, serverResponse, validates };

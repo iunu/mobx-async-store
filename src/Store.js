@@ -402,7 +402,7 @@ class Store {
    * @return {Promise||Object} // TODO: make this always return a Promise
    */
   findMany = (type, ids, options = {}) => {
-    let idsToQuery = ids.slice().map(String)
+    let idsToQuery = [...new Set(ids)].map(String)
     const recordsInStore = this.getAll(type, options).filter((record) =>
       idsToQuery.includes(String(record.id))
     )
