@@ -88,24 +88,8 @@ class Organization extends Model {
   static type = 'organizations'
   static endpoint = 'organizations'
 
-  @validates
-  @attribute(String) title = 'NEW TODO'
-
-  @attribute(Date) due_at = timestamp
-
-  @validates(validatesArray)
-  @attribute(Array) tags
-
-  @validates(validatesOptions)
-  @attribute(Object) options = {}
-
-  @validates(validatesArrayPresence)
-  @relatedToMany notes
-
-  @relatedToMany awesome_notes
+  @attribute(String) name = 'NEWCO'
   @relatedToMany categories
-
-  @relatedToOne user
 }
 
 class Todo extends Model {
@@ -197,21 +181,21 @@ describe('Model', () => {
 
   describe('initialization', () => {
     it('attributes default to specified type', () => {
-      const todo = new Organization()
+      const todo = new Todo()
       expect(todo.tags).toBeInstanceOf(Array)
       const note = new Note()
       expect(note.description).toEqual('')
     })
 
     it('attributes can have default values', () => {
-      const todo = new Organization()
+      const todo = new Todo()
       expect(todo.title).toEqual('NEW TODO')
       todo.title = 'test'
       expect(todo.title).toEqual('test')
     })
 
     it('attributes are observable', (done) => {
-      const todo = new Organization({ title: 'one' })
+      const todo = new Todo({ title: 'one' })
       expect(isObservable(todo)).toBe(true)
 
       let runs = 0
@@ -234,12 +218,12 @@ describe('Model', () => {
     })
 
     it('attributes are overridable in constructor', () => {
-      const todo = new Organization({ title: 'Buy Milk' })
+      const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.title).toEqual('Buy Milk')
     })
 
     it('attributes can be set', () => {
-      const todo = new Organization()
+      const todo = new Todo()
       todo.title = 'Do laundry'
       expect(todo.title).toEqual('Do laundry')
       todo.tags.push('chore')
@@ -248,7 +232,7 @@ describe('Model', () => {
     })
 
     it('attributes are observable', (done) => {
-      const todo = new Organization({})
+      const todo = new Todo({})
 
       let runs = 0
       const expected = [undefined, 'one', 'two']
@@ -260,6 +244,8 @@ describe('Model', () => {
         }
       })
 
+      todo.options = {}
+
       runInAction(() => {
         todo.options.test = 'one'
       })
@@ -270,7 +256,7 @@ describe('Model', () => {
     })
 
     it('attributes are observable', () => {
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk', options: { test: 'one' } })
 
       expect(todo.options.test).toEqual('one')
     })
@@ -280,9 +266,9 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
-      note.organization = todo
-      expect(note.organization).toEqual(todo)
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      note.todo = todo
+      expect(note.todo).toEqual(todo)
     })
 
     it('relatedToOne relationship can be unset', () => {
@@ -290,13 +276,13 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
 
-      note.organization = todo
-      expect(note.organization).toEqual(todo)
+      note.todo = todo
+      expect(note.todo).toEqual(todo)
 
-      note.organization = null
-      expect(note.organization).toBeFalsy()
+      note.todo = null
+      expect(note.todo).toBeFalsy()
     })
 
     it('relatedToOne relationship adds to inverse', () => {
@@ -304,9 +290,9 @@ describe('Model', () => {
         id: 1,
         description: 'Example description'
       })
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
 
-      note.organization = todo
+      note.todo = todo
       expect(todo.notes).toContain(note)
     })
 
@@ -316,20 +302,20 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      const todo = store.add('organizations', { id: 1, title: 'Buy Milk' })
+      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
 
-      note.organization = todo
+      note.todo = todo
       expect(todo.notes).toContain(note)
 
-      note.organization = null
-      expect(note.organization).toBeFalsy()
+      note.todo = null
+      expect(note.todo).toBeFalsy()
     })
 
     it('builds relatedToMany relationship with existing models', async () => {
       store.add('notes', { id: 1, description: 'Example description' })
 
       fetch.mockResponse(exampleRelatedToManyResponse)
-      const todo = await store.findOne('organizations', 1)
+      const todo = await store.findOne('todos', 1)
 
       expect(todo.title).toEqual('Do laundry')
       expect(todo.notes).toHaveLength(1)
@@ -403,7 +389,7 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
     const { notes } = todo
 
     notes.add(note)
@@ -413,13 +399,13 @@ describe('Model', () => {
   })
 
   it('relatedToMany doesn\'t blow up on empty iteration', () => {
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
     expect(todo.notes).toHaveLength(0)
     expect(todo.notes.map(note => note)).toHaveLength(0)
   })
 
   it('relatedToMany doesn\'t blow up after adding to empty array', () => {
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
     expect(todo.notes).toHaveLength(0)
     expect(todo.notes.map(note => note)).toHaveLength(0)
 
@@ -440,7 +426,7 @@ describe('Model', () => {
     const note2 = store.add('notes', {
       description: 'Another note'
     })
-    const todo = store.add('organizations', {
+    const todo = store.add('todos', {
       title: 'Buy Milk',
       notes: [
         {
@@ -464,7 +450,7 @@ describe('Model', () => {
     const note2 = store.add('notes', {
       description: 'Another note'
     })
-    const todo = store.add('organizations', { title: 'Buy Milk' })
+    const todo = store.add('todos', { title: 'Buy Milk' })
 
     todo.notes.add(note1)
     todo.notes.add(note2)
@@ -479,12 +465,12 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
 
     expect(todo.notes).toContain(note)
-    expect(note.organization).toEqual(todo)
+    expect(note.todo).toEqual(todo)
   })
 
   it('relatedToMany models remove inverse relationships', () => {
@@ -492,15 +478,15 @@ describe('Model', () => {
       id: 10,
       description: 'Example description'
     })
-    const todo = store.add('organizations', { id: 10, title: 'Buy Milk' })
+    const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
 
     todo.notes.add(note)
 
-    expect(note.organization).toEqual(todo)
+    expect(note.todo).toEqual(todo)
 
     todo.notes.remove(note)
 
-    expect(note.organization).toBeFalsy()
+    expect(note.todo).toBeFalsy()
   })
 
   it('inverse relationships are used when the base model did not load the relationship', () => {
@@ -509,22 +495,22 @@ describe('Model', () => {
     store.createOrUpdateModel({
       type: 'notes',
       id: 10,
-      attributes: { description: 'Note 1 for Org 100' },
-      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+      attributes: { description: 'Note 1 for Todo 1' },
+      relationships: { todo: { data: { type: 'todos', id: 1 } } }
     })
 
     store.createOrUpdateModel({
       type: 'notes',
       id: 11,
-      attributes: { description: 'Note 2 for Org 100' },
-      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+      attributes: { description: 'Note 2 for Todo 1' },
+      relationships: { todo: { data: { type: 'todos', id: 1 } } }
     })
 
     store.createOrUpdateModel({
       type: 'notes',
       id: 12,
-      attributes: { description: 'Note 1 for Org 200' },
-      relationships: { organization: { data: { type: 'organizations', id: 200 } } }
+      attributes: { description: 'Note 1 for Todo 2' },
+      relationships: { todo: { data: { type: 'todos', id: 2 } } }
     })
 
     store.createOrUpdateModel({
@@ -534,22 +520,22 @@ describe('Model', () => {
       relationships: { }
     })
 
-    const org100 = store.createOrUpdateModel({
-      type: 'organizations',
-      id: 100,
-      attributes: { description: 'Org 100' },
+    const todo1 = store.createOrUpdateModel({
+      type: 'todos',
+      id: 1,
+      attributes: { description: 'Todo 1' },
       relationships: { notes: { included: false } }
     })
 
-    const org200 = store.createOrUpdateModel({
-      type: 'organizations',
-      id: 200,
-      attributes: { description: 'Org 200' },
+    const todo2 = store.createOrUpdateModel({
+      type: 'todos',
+      id: 2,
+      attributes: { description: 'Todo 2' },
       relationships: { notes: { included: false } }
     })
 
-    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 100'])
-    expect(org200.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 200'])
+    expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 1', 'Note 2 for Todo 1'])
+    expect(todo2.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 2'])
   })
 
   it('relationship data is cached when falling back to inverse relationships', () => {
@@ -558,34 +544,34 @@ describe('Model', () => {
     store.createOrUpdateModel({
       type: 'notes',
       id: 10,
-      attributes: { description: 'Note 1 for Org 100' },
-      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+      attributes: { description: 'Note 1 for Todo 100' },
+      relationships: { todo: { data: { type: 'todos', id: 100 } } }
     })
 
     store.createOrUpdateModel({
       type: 'notes',
       id: 11,
-      attributes: { description: 'Note 2 for Org 100' },
-      relationships: { organization: { data: { type: 'organizations', id: 100 } } }
+      attributes: { description: 'Note 2 for Todo 100' },
+      relationships: { todo: { data: { type: 'todos', id: 100 } } }
     })
 
-    const org100 = store.createOrUpdateModel({
-      type: 'organizations',
+    const todo1 = store.createOrUpdateModel({
+      type: 'todos',
       id: 100,
-      attributes: { description: 'Org 100' },
+      attributes: { description: 'Todo 100' },
       relationships: { notes: { included: false } }
     })
 
-    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 100'])
+    expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 100'])
 
     store.createOrUpdateModel({
       type: 'notes',
       id: 11,
-      attributes: { description: 'Note 2 for Org 101' },
-      relationships: { organization: { data: { type: 'organizations', id: 101 } } }
+      attributes: { description: 'Note 2 for Todo 101' },
+      relationships: { organization: { data: { type: 'todos', id: 101 } } }
     })
 
-    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 101'])
+    expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 101'])
   })
 
   it('id attributes used when there are no inverse relationships and the base model did not load the relationship', () => {
@@ -594,43 +580,43 @@ describe('Model', () => {
     store.createOrUpdateModel({
       type: 'notes',
       id: 10,
-      attributes: { description: 'Note 1 for Org 100', organization_id: 100 }
+      attributes: { description: 'Note 1 for Todo 100', todo_id: 100 }
     })
 
     store.createOrUpdateModel({
       type: 'notes',
       id: 11,
-      attributes: { description: 'Note 2 for Org 100', organization_id: 100 }
+      attributes: { description: 'Note 2 for Todo 100', todo_id: 100 }
     })
 
     store.createOrUpdateModel({
       type: 'notes',
       id: 12,
-      attributes: { description: 'Note 1 for Org 200', organization_id: 200 }
+      attributes: { description: 'Note 1 for Todo 200', todo_id: 200 }
     })
 
-    const org100 = store.createOrUpdateModel({
-      type: 'organizations',
+    const todo100 = store.createOrUpdateModel({
+      type: 'todos',
       id: 100,
-      attributes: { description: 'Org 100' },
+      attributes: { description: 'Todo 100' },
       relationships: { notes: { included: false } }
     })
 
     const org200 = store.createOrUpdateModel({
-      type: 'organizations',
+      type: 'todos',
       id: 200,
-      attributes: { description: 'Org 200' },
+      attributes: { description: 'Todo 200' },
       relationships: { notes: { included: false } }
     })
 
     const originalWarnFn = console.warn
     console.warn = jest.fn()
 
-    expect(org100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 100', 'Note 2 for Org 100'])
-    expect(org200.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Org 200'])
+    expect(todo100.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 100'])
+    expect(org200.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 200'])
     expect(console.warn.mock.calls).toEqual([
-      ['Support for including non-canonical jsonapi references will be removed in future versions. Record type: organizations. Relation: notes. Reference: organization_id.'],
-      ['Support for including non-canonical jsonapi references will be removed in future versions. Record type: organizations. Relation: notes. Reference: organization_id.']
+      ['Support for including non-canonical jsonapi references will be removed in future versions. Record type: todos. Relation: notes. Reference: todo_id.'],
+      ['Support for including non-canonical jsonapi references will be removed in future versions. Record type: todos. Relation: notes. Reference: todo_id.']
     ])
 
     console.warn = originalWarnFn
@@ -1254,7 +1240,7 @@ describe('Model', () => {
         })
       })
 
-      const todo = store.add('organizations', { title: 'Buy Milk' })
+      const todo = store.add('tod', { title: 'Buy Milk' })
       expect(todo.isInFlight).toBe(false)
 
       todo.save()
