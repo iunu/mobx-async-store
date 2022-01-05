@@ -36,9 +36,9 @@ describe('MockServer', () => {
     mockServer.add('todos', { id: '2', title: 'Plant Seeds' })
     mockServer.start()
 
-    const user = await store.fetchOne('todos', '2')
-    expect(user.id).toEqual('2')
-    expect(user.title).toEqual('Plant Seeds')
+    const todo = await store.fetchOne('todos', '2')
+    expect(todo.id).toEqual('2')
+    expect(todo.title).toEqual('Plant Seeds')
   })
 
   it('"finds" one using a factory when record not defined in store', async () => {
@@ -51,9 +51,9 @@ describe('MockServer', () => {
 
     mockServer.start()
 
-    const user = await store.fetchOne('todos', '1')
-    expect(user.id).toEqual('1')
-    expect(user.title).toEqual('Plant Seeds')
+    const todo = await store.fetchOne('todos', '1')
+    expect(todo.id).toEqual('1')
+    expect(todo.title).toEqual('Plant Seeds')
   })
 
   it('finds all from a mocked store', async () => {
@@ -89,8 +89,8 @@ describe('MockServer', () => {
 
     expect(todos).toHaveLength(1)
 
-    const [user] = todos
-    expect(user.title).toEqual('Plant Seeds')
+    const [todo] = todos
+    expect(todo.title).toEqual('Plant Seeds')
     expect(result.body.toString()).toMatch('Plant Seeds')
   })
 
@@ -98,9 +98,22 @@ describe('MockServer', () => {
     const mockServer = new MockServer({ factoryFarm })
     mockServer.start()
 
-    const user = store.add('todos', { title: 'Harvest Plants' })
-    await user.save()
-    expect(user.id).toEqual('1')
+    const todo = store.add('todos', { title: 'Harvest Plants' })
+    await todo.save()
+    expect(todo.id).toEqual('1')
+    expect(fetch.mock.calls).toHaveLength(1)
+  })
+
+  it('bulk saves a new model', async () => {
+    const mockServer = new MockServer({ factoryFarm })
+    mockServer.start()
+
+    const todo1 = store.add('todos', { title: 'Plant Seeds' })
+    const todo2 = store.add('todos', { title: 'Harvest Plants' })
+
+    await store.bulkSave('todos', [todo1, todo2])
+    expect(todo1.id).toEqual('1')
+    expect(todo2.id).toEqual('2')
     expect(fetch.mock.calls).toHaveLength(1)
   })
 
@@ -109,14 +122,14 @@ describe('MockServer', () => {
     mockServer.add('todos', { id: '1', title: 'Plant Seeds' })
     mockServer.start()
 
-    const user = await store.findOne('todos', '1')
-    expect(user.title).toEqual('Plant Seeds')
+    const todo = await store.findOne('todos', '1')
+    expect(todo.title).toEqual('Plant Seeds')
 
-    user.title = 'Harvest Plants'
-    await user.save()
+    todo.title = 'Harvest Plants'
+    await todo.save()
 
-    expect(user.id).toEqual('1')
-    expect(user.title).toEqual('Harvest Plants')
+    expect(todo.id).toEqual('1')
+    expect(todo.title).toEqual('Harvest Plants')
     expect(fetch.mock.calls).toHaveLength(2)
     const updateResponse = await fetch.mock.results[1].value
     expect(updateResponse.body.toString()).toMatch('Harvest Plants')
@@ -130,14 +143,12 @@ describe('MockServer', () => {
       id: '1'
     })
 
-    const responseOverrides = [
-      {
-        path: /todos\/1/,
-        response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '2' }))
-      }
-    ]
+    mockServer.respond({
+      path: /todos\/1/,
+      response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '2' }))
+    })
 
-    mockServer.start({ responseOverrides })
+    mockServer.start()
 
     const record = await store.findOne('todos', '1')
     expect(record.id).toEqual('2')
@@ -261,13 +272,13 @@ describe('MockServer', () => {
         }
       ]
 
-      const user = store.add('todos', { id: '1', title: 'Spray Plants' })
+      const todo = store.add('todos', { id: '1', title: 'Spray Plants' })
       mockServer.start({ responseOverrides })
 
       try {
-        await user.save()
+        await todo.save()
       } catch (error) {
-        expect(user.errors.title[0].detail).toEqual("can't be weird")
+        expect(todo.errors.title[0].detail).toEqual("can't be weird")
         const results = await fetch.mock.results[0].value
         expect(results.status).toEqual(422)
         expect(fetch.mock.calls).toHaveLength(1)
@@ -286,10 +297,10 @@ describe('MockServer', () => {
       ]
       mockServer.start({ responseOverrides })
 
-      const user = store.add('todos', { id: '1', title: 'Spray Plants' })
+      const todo = store.add('todos', { id: '1', title: 'Spray Plants' })
 
       try {
-        await user.save()
+        await todo.save()
       } catch (error) {
         expect(error.message).toEqual('Something went wrong.')
         expect(fetch.mock.calls).toHaveLength(1)

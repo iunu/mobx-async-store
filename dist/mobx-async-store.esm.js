@@ -2823,19 +2823,40 @@ function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if 
 function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys$1(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 var simulatePost = function simulatePost(store, type, body) {
-  var attributes = JSON.parse(body.toString()).data.attributes;
-  var id = String(store.getAll(type).length + 1);
+  var _JSON$parse = JSON.parse(body.toString()),
+      data = _JSON$parse.data;
 
-  var attributesWithId = _objectSpread$1(_objectSpread$1({}, attributes), {}, {
-    id: id
-  });
+  if (Array.isArray(data)) {
+    var records = data.map(function (record) {
+      var attributes = record.attributes,
+          _record$relationships = record.relationships,
+          relationships = _record$relationships === void 0 ? {} : _record$relationships;
+      var id = String(store.getAll(type).length + 1);
 
-  return store.add(type, attributesWithId);
+      var properties = _objectSpread$1(_objectSpread$1(_objectSpread$1({}, attributes), relationships.data), {}, {
+        id: id
+      });
+
+      return store.add(type, properties);
+    });
+    return records;
+  } else {
+    var attributes = data.attributes,
+        _data$relationships = data.relationships,
+        relationships = _data$relationships === void 0 ? {} : _data$relationships;
+    var id = String(store.getAll(type).length + 1);
+
+    var properties = _objectSpread$1(_objectSpread$1(_objectSpread$1({}, attributes), relationships.data), {}, {
+      id: id
+    });
+
+    return store.add(type, properties);
+  }
 };
 
 var simulatePatch = function simulatePatch(store, type, body) {
-  var _JSON$parse = JSON.parse(body.toString()),
-      data = _JSON$parse.data;
+  var _JSON$parse2 = JSON.parse(body.toString()),
+      data = _JSON$parse2.data;
 
   var record = store.getOne(type, String(data.id));
   record.updateAttributesFromResponse(data);
@@ -2923,9 +2944,11 @@ var wrapResponse = function wrapResponse(response, method, status) {
 var MockServer =
 /**
  * Sets properties needed internally
- * factoryFarm can be passed into the constructor
+ *   - factoryFarm: a pre-existing factory to use on this server
+ *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
+ *     from the internal store.
  * @method constructor
- * @param {*} param
+ * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
  */
 function MockServer() {
   var _this = this;
@@ -2933,6 +2956,10 @@ function MockServer() {
   var _options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
   _classCallCheck(this, MockServer);
+
+  _defineProperty(this, "respond", function (options) {
+    _this.responseOverrides.push(options);
+  });
 
   _defineProperty(this, "start", function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -2948,7 +2975,7 @@ function MockServer() {
         var method = definition.method || 'GET';
         return req.url.match(definition.path) && req.method.match(method);
       });
-      var response = foundQuery ? foundQuery.response(_this) : serverResponse(_this._findFromStore(req, factoriesForTypes));
+      var response = foundQuery ? foundQuery.response(_this, req) : serverResponse(_this._findFromStore(req, factoriesForTypes));
       return wrapResponse(response, req.method, foundQuery === null || foundQuery === void 0 ? void 0 : foundQuery.status);
     });
   });
@@ -3009,17 +3036,17 @@ function MockServer() {
   this._backendFactoryFarm = _options.factoryFarm || new FactoryFarm();
   this._backendFactoryFarm.__usedForMockServer__ = true;
   this._backendFactoryFarm.store.__usedForMockServer__ = true;
-  this.responseOverrides = _options.responseOverrides;
+  this.responseOverrides = _options.responseOverrides || [];
   disallowFetches(this._backendFactoryFarm.store);
 }
 /**
- * Sets up fetch mocking to intercept requests. It will then either use overrides, or use its own
- * internal store to simulate serving JSON responses of new data.
- *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
- *     from the internal store.
- *   - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist
- * @method start
- * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
+ * Adds a response override to the server
+ * @method respond
+ * @param {Object} args
+ *   - path
+ *   - method: defaults to GET
+ *   - status: defaults to 200
+ *   - response: a method that takes the server as an argument and returns the body of the response
  */
 ;
 

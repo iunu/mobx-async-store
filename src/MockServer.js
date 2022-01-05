@@ -3,12 +3,26 @@ import FactoryFarm from './FactoryFarm'
 import { serverResponse } from './testUtils'
 
 const simulatePost = (store, type, body) => {
-  const { attributes } = JSON.parse(body.toString()).data
-  const id = String(store.getAll(type).length + 1)
+  const { data } = JSON.parse(body.toString())
 
-  const attributesWithId = { ...attributes, id }
+  if (Array.isArray(data)) {
+    const records = data.map((record) => {
+      const { attributes, relationships = {} } = record
+      const id = String(store.getAll(type).length + 1)
 
-  return store.add(type, attributesWithId)
+      const properties = { ...attributes, ...relationships.data, id }
+      return store.add(type, properties)
+    })
+
+    return records
+  } else {
+    const { attributes, relationships = {} } = data
+    const id = String(store.getAll(type).length + 1)
+
+    const properties = { ...attributes, ...relationships.data, id }
+
+    return store.add(type, properties)
+  }
 }
 
 const simulatePatch = (store, type, body) => {
@@ -95,18 +109,32 @@ const wrapResponse = (response, method, status) => {
 class MockServer {
   /**
    * Sets properties needed internally
-   * factoryFarm can be passed into the constructor
+   *   - factoryFarm: a pre-existing factory to use on this server
+   *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
+   *     from the internal store.
    * @method constructor
-   * @param {*} param
+   * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
    */
   constructor (options = {}) {
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm()
     this._backendFactoryFarm.__usedForMockServer__ = true
     this._backendFactoryFarm.store.__usedForMockServer__ = true
 
-    this.responseOverrides = options.responseOverrides
-
+    this.responseOverrides = options.responseOverrides || []
     disallowFetches(this._backendFactoryFarm.store)
+  }
+
+  /**
+   * Adds a response override to the server
+   * @method respond
+   * @param {Object} args
+   *   - path
+   *   - method: defaults to GET
+   *   - status: defaults to 200
+   *   - response: a method that takes the server as an argument and returns the body of the response
+   */
+  respond = (options) => {
+    this.responseOverrides.push(options)
   }
 
   /**
@@ -134,7 +162,7 @@ class MockServer {
       })
 
       const response = foundQuery
-        ? foundQuery.response(this)
+        ? foundQuery.response(this, req)
         : serverResponse(this._findFromStore(req, factoriesForTypes))
 
       return wrapResponse(response, req.method, foundQuery?.status)
