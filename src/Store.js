@@ -39,11 +39,21 @@ class Store {
   @observable lastResponseHeaders = {}
 
   /**
+   * Data that is in flight
    * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
    * @property loadingStates
    * @type {Map}
    */
   loadingStates = observable.map()
+
+  /**
+   * Data that has been loaded
+   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
+   * @property loadingStates
+   * @type {Map}
+   */
+
+  loadedStates = observable.map()
 
   genericErrorMessage = 'Something went wrong.'
 
@@ -494,16 +504,22 @@ class Store {
 
   /**
    * Removes a loading state. If that leaves an empty array for the map key in `loadingStates`,
-   * will also delete the set.
+   * will also delete the set. Also adds to loadedStates.
    * @method deleteLoadingState
    * @param {Object} state the state to remove
    */
   @action
   deleteLoadingState = (state) => {
-    const { loadingStates } = this
+    const { loadingStates, loadedStates } = this
     const { queryTag } = state
 
     const encodedState = JSON.stringify(state)
+
+    if (!loadedStates.get(queryTag)) {
+      loadedStates.set(queryTag, new Set())
+    }
+
+    loadedStates.get(queryTag).add(encodedState)
 
     if (loadingStates.get(queryTag)) {
       loadingStates.get(queryTag).delete(encodedState)

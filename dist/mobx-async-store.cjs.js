@@ -1375,6 +1375,14 @@ var Store = (_class = /*#__PURE__*/function () {
    */
 
   /**
+   * Data that is in flight
+   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
+   * @property loadingStates
+   * @type {Map}
+   */
+
+  /**
+   * Data that has been loaded
    * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
    * @property loadingStates
    * @type {Map}
@@ -1395,6 +1403,8 @@ var Store = (_class = /*#__PURE__*/function () {
     _initializerDefineProperty__default["default"](this, "lastResponseHeaders", _descriptor2, this);
 
     _defineProperty__default["default"](this, "loadingStates", mobx.observable.map());
+
+    _defineProperty__default["default"](this, "loadedStates", mobx.observable.map());
 
     _defineProperty__default["default"](this, "genericErrorMessage", 'Something went wrong.');
 
@@ -2545,9 +2555,16 @@ var Store = (_class = /*#__PURE__*/function () {
     var _this10 = this;
 
     return function (state) {
-      var loadingStates = _this10.loadingStates;
+      var loadingStates = _this10.loadingStates,
+          loadedStates = _this10.loadedStates;
       var queryTag = state.queryTag;
       var encodedState = JSON.stringify(state);
+
+      if (!loadedStates.get(queryTag)) {
+        loadedStates.set(queryTag, new Set());
+      }
+
+      loadedStates.get(queryTag).add(encodedState);
 
       if (loadingStates.get(queryTag)) {
         loadingStates.get(queryTag).delete(encodedState);
