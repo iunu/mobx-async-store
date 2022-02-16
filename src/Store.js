@@ -344,6 +344,11 @@ class Store {
     }
     const record = this.getOne(type, id, options)
     if (record?.id) {
+      // TODO Recommend we go through the fetching life cycle here
+      const { queryParams } = options
+      const url = this.fetchUrl(type, queryParams)
+      this.setAndDeleteLoadingState({ ...options, type, url })
+
       return record
     } else {
       return this.fetchOne(type, id, options)
@@ -421,6 +426,11 @@ class Store {
     )
 
     if (recordsInStore.length === idsToQuery.length) {
+      // TODO Recommend we go through the fetching life cycle here
+      const { queryParams } = options
+      const url = this.fetchUrl(type, queryParams)
+      this.setAndDeleteLoadingState({ ...options, type, url })
+
       return recordsInStore
     }
 
@@ -473,6 +483,12 @@ class Store {
     } else {
       return this.getRecords(type)
     }
+  }
+
+  @action
+  setAndDeleteLoadingState = ({ url, type, queryParams, queryTag }) => {
+    const state = this.setLoadingState({ url, type, queryParams, queryTag })
+    this.deleteLoadingState(state)
   }
 
   /**
@@ -623,6 +639,11 @@ class Store {
   findAll = (type, options = {}) => {
     const records = this.getAll(type, options)
     if (records.length > 0) {
+      // TODO Recommend we go through the fetching life cycle here
+      const { queryParams } = options
+      const url = this.fetchUrl(type, queryParams)
+      this.setAndDeleteLoadingState({ ...options, type, url })
+
       return records
     } else {
       return this.fetchAll(type, options)
