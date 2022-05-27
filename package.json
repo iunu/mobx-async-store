@@ -33,6 +33,7 @@
     "eslint-plugin-react": "^7.29.4",
     "eslint-plugin-standard": "^5.0.0",
     "jest": "^28.1.0",
+    "jest-environment-jsdom": "^28.1.0",
     "jest-coverage-badges": "^1.1.2",
     "jest-fetch-mock": "^3.0.3",
     "jsdom": "^19.0.0",
@@ -53,29 +54,6 @@
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
     "lint": "node_modules/.bin/eslint src spec"
-  },
-  "jest": {
-    "automock": false,
-    "coverageReporters": [
-      "json-summary",
-      "text",
-      "lcov"
-    ],
-    "setupFiles": [
-      "./setupJest.js"
-    ],
-    "transform": {
-      "^.+\\.js?$": "babel-jest"
-    },
-    "testPathIgnorePatterns": [
-      "/tests/fixtures/",
-      "/tests/support/",
-      "/dist/",
-      "/node_modules/",
-      "/rollup.config.js",
-      "/setupJest.js"
-    ],
-    "testEnvironment": "jsdom"
   },
   "files": [
     "dist"
