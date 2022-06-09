@@ -490,6 +490,56 @@ describe('Store', () => {
     })
   })
 
+  describe('bulkCreate', () => {
+    it('raises an invariant error if any record already has a persisted id', async () => {
+      expect.assertions(1)
+
+      const newTodo = store.add('todos', { title: 'Pet Dog' })
+      const oldTodo = store.add('todos', { id: 1, title: 'Give Dog Treat' })
+
+      try {
+        await store.bulkCreate('todos', [newTodo, oldTodo])
+      } catch (err) {
+        expect(err.message).toMatch('Invariant violated')
+      }
+    })
+
+    it('sends a POST request', () => {
+      const todo1 = store.add('todos', { title: 'Pet Dog' })
+      const todo2 = store.add('todos', { title: 'Give Dog Treat' })
+
+      fetch.mockResponse(JSON.stringify({}))
+      store.bulkCreate('todos', [todo1, todo2])
+
+      expect(fetch.mock.calls[0][1].method).toEqual('POST')
+    })
+  })
+
+  describe('bulkUpdate', () => {
+    it('raises an invariant error if any record already has a persisted id', async () => {
+      expect.assertions(1)
+
+      const newTodo = store.add('todos', { title: 'Pet Dog' })
+      const oldTodo = store.add('todos', { id: 1, title: 'Give Dog Treat' })
+
+      try {
+        await store.bulkUpdate('todos', [newTodo, oldTodo])
+      } catch (err) {
+        expect(err.message).toMatch('Invariant violated')
+      }
+    })
+
+    it('sends a PATCH request', () => {
+      const todo1 = store.add('todos', { id: 1, title: 'Pet Dog' })
+      const todo2 = store.add('todos', { id: 2, title: 'Give Dog Treat' })
+
+      fetch.mockResponse(JSON.stringify({}))
+      store.bulkUpdate('todos', [todo1, todo2])
+
+      expect(fetch.mock.calls[0][1].method).toEqual('PATCH')
+    })
+  })
+
   describe('updateRecords', () => {
     function mockRequest (errors) {
       return new Promise((resolve, reject) => {
