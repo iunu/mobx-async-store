@@ -1,4 +1,6 @@
 import {
+  MockServer,
+  FactoryFarm,
   Model,
   Store,
   attribute,
@@ -491,6 +493,14 @@ describe('Store', () => {
   })
 
   describe('bulkCreate', () => {
+    let factoryFarm
+
+    beforeEach(() => {
+      store = new AppStore()
+      const backendStore = new AppStore()
+      factoryFarm = new FactoryFarm(backendStore)
+    })
+
     it('raises an invariant error if any record already has a persisted id', async () => {
       expect.assertions(1)
 
@@ -504,18 +514,29 @@ describe('Store', () => {
       }
     })
 
-    it('sends a POST request', () => {
+    it('sends a POST request', async () => {
+      const mockServer = new MockServer({ factoryFarm })
+      mockServer.start()
+
       const todo1 = store.add('todos', { title: 'Pet Dog' })
       const todo2 = store.add('todos', { title: 'Give Dog Treat' })
 
-      fetch.mockResponse(JSON.stringify({}))
-      store.bulkCreate('todos', [todo1, todo2])
+      await store.bulkCreate('todos', [todo1, todo2])
 
       expect(fetch.mock.calls[0][1].method).toEqual('POST')
     })
   })
 
   describe('bulkUpdate', () => {
+    let factoryFarm
+    let backendStore
+
+    beforeEach(() => {
+      store = new AppStore()
+      backendStore = new AppStore()
+      factoryFarm = new FactoryFarm(backendStore)
+    })
+
     it('raises an invariant error if any record already has a persisted id', async () => {
       expect.assertions(1)
 
@@ -529,12 +550,16 @@ describe('Store', () => {
       }
     })
 
-    it('sends a PATCH request', () => {
-      const todo1 = store.add('todos', { id: 1, title: 'Pet Dog' })
-      const todo2 = store.add('todos', { id: 2, title: 'Give Dog Treat' })
+    it('sends a PATCH request', async () => {
+      const mockServer = new MockServer({ factoryFarm })
+      mockServer.start()
 
-      fetch.mockResponse(JSON.stringify({}))
-      store.bulkUpdate('todos', [todo1, todo2])
+      const todo1 = store.add('todos', { id: 1, title: 'Pet Dog' })
+      backendStore.add('todos', { id: 1, title: 'Pet Dog' })
+      const todo2 = store.add('todos', { id: 2, title: 'Give Dog Treat' })
+      backendStore.add('todos', { id: 2, title: 'Give Dog Treat' })
+
+      await store.bulkUpdate('todos', [todo1, todo2])
 
       expect(fetch.mock.calls[0][1].method).toEqual('PATCH')
     })

@@ -210,9 +210,9 @@ class Store {
    * @param {Array} records
    * @param {Object} options {queryParams, extensions}
    */
-  bulkSave = async (type, records, options = {}) => {
+  bulkSave = (type, records, options = {}) => {
     console.warn('bulkSave is being deprecated. Please use either bulkCreate or bulkUpdate to be more precise about your request.')
-    this._bulkSave(type, records, options, 'POST')
+    return this._bulkSave(type, records, options, 'POST')
   }
 
   /**
@@ -226,7 +226,7 @@ class Store {
    * @param {Object} options {queryParams, extensions}
    * @param {String} method
    */
-  _bulkSave = async (type, records, options = {}, method) => {
+  _bulkSave = (type, records, options = {}, method) => {
     const { queryParams, extensions } = options
 
     // get url for record type
@@ -270,7 +270,7 @@ class Store {
     if (records.some((record) => !record.isNew)) {
       throw new Error('Invariant violated: all records must be new records to perform a create')
     }
-    this._bulkSave(type, records, options, 'POST')
+    return this._bulkSave(type, records, options, 'POST')
   }
 
   /**
@@ -286,7 +286,7 @@ class Store {
     if (records.some((record) => record.isNew)) {
       throw new Error('Invariant violated: all records must have a persisted id to perform an update')
     }
-    this._bulkSave(type, records, options, 'PATCH')
+    return this._bulkSave(type, records, options, 'PATCH')
   }
 
   /**

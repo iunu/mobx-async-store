@@ -111,7 +111,7 @@ describe('MockServer', () => {
     const todo1 = store.add('todos', { title: 'Plant Seeds' })
     const todo2 = store.add('todos', { title: 'Harvest Plants' })
 
-    await store.bulkSave('todos', [todo1, todo2])
+    await store.bulkCreate('todos', [todo1, todo2])
     expect(todo1.id).toEqual('1')
     expect(todo2.id).toEqual('2')
     expect(fetch.mock.calls).toHaveLength(1)
@@ -133,6 +133,33 @@ describe('MockServer', () => {
     expect(fetch.mock.calls).toHaveLength(2)
     const updateResponse = await fetch.mock.results[1].value
     expect(updateResponse.body.toString()).toMatch('Harvest Plants')
+  })
+
+  it('bulk updates a model', async () => {
+    const mockServer = new MockServer({ factoryFarm })
+    mockServer.add('todos', { id: '1', title: 'Plant Seeds' })
+    mockServer.add('todos', { id: '2', title: 'Harvest Plants' })
+    mockServer.start()
+
+    const todo1 = await store.findOne('todos', '1')
+    const todo2 = await store.findOne('todos', '2')
+
+    expect(todo1.title).toEqual('Plant Seeds')
+    expect(todo2.title).toEqual('Harvest Plants')
+
+    todo1.title = 'Transplant Seedlings'
+    todo2.title = 'Harvest Half Plants'
+    await store.bulkUpdate('todos', [todo1, todo2])
+
+    expect(todo1.id).toEqual('1')
+    expect(todo1.title).toEqual('Transplant Seedlings')
+    expect(todo2.id).toEqual('2')
+    expect(todo2.title).toEqual('Harvest Half Plants')
+
+    expect(fetch.mock.calls).toHaveLength(3)
+    const updateResponse = await fetch.mock.results[2].value
+    expect(updateResponse.body.toString()).toMatch('Transplant Seedlings')
+    expect(updateResponse.body.toString()).toMatch('Harvest Half Plants')
   })
 
   it('allows a response override', async () => {

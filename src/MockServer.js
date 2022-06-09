@@ -27,9 +27,20 @@ const simulatePost = (store, type, body) => {
 
 const simulatePatch = (store, type, body) => {
   const { data } = JSON.parse(body.toString())
-  const record = store.getOne(type, String(data.id))
-  record.updateAttributesFromResponse(data)
-  return record
+
+  if (Array.isArray(data)) {
+    const records = data.map((recordData) => {
+      const record = store.getOne(type, String(recordData.id))
+      record.updateAttributesFromResponse(recordData)
+      return record
+    })
+
+    return records
+  } else {
+    const record = store.getOne(type, String(data.id))
+    record.updateAttributesFromResponse(data)
+    return record
+  }
 }
 
 const getOneFromFactory = (_backendFactoryFarm, factory, type, id) => {
