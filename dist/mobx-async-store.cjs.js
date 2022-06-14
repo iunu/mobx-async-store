@@ -1471,58 +1471,66 @@ var Store = (_class = /*#__PURE__*/function () {
       });
     });
 
-    _defineProperty__default["default"](this, "bulkSave", /*#__PURE__*/function () {
-      var _ref = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee(type, records) {
-        var options,
-            queryParams,
-            extensions,
-            url,
-            recordAttributes,
-            body,
-            extensionStr,
-            response,
-            _args = arguments;
-        return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                options = _args.length > 2 && _args[2] !== undefined ? _args[2] : {};
-                queryParams = options.queryParams, extensions = options.extensions; // get url for record type
+    _defineProperty__default["default"](this, "bulkSave", function (type, records) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      console.warn('bulkSave is being deprecated. Please use either bulkCreate or bulkUpdate to be more precise about your request.');
+      return _this._bulkSave(type, records, options, 'POST');
+    });
 
-                url = _this.fetchUrl(type, queryParams, null); // convert records to an appropriate jsonapi attribute/relationship format
+    _defineProperty__default["default"](this, "_bulkSave", function (type, records) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var method = arguments.length > 3 ? arguments[3] : undefined;
+      var queryParams = options.queryParams,
+          extensions = options.extensions; // get url for record type
 
-                recordAttributes = records.map(function (record) {
-                  return record.jsonapi(options);
-                }); // build a data payload
+      var url = _this.fetchUrl(type, queryParams, null); // convert records to an appropriate jsonapi attribute/relationship format
 
-                body = JSON.stringify({
-                  data: recordAttributes
-                }); // build the json api extension string
 
-                extensionStr = extensions !== null && extensions !== void 0 && extensions.length ? "ext=\"bulk,".concat(extensions.join(), "\"") : 'ext="bulk"'; // send request
+      var recordAttributes = records.map(function (record) {
+        return record.jsonapi(options);
+      }); // build a data payload
 
-                response = _this.fetch(url, {
-                  headers: _objectSpread$3(_objectSpread$3({}, _this.defaultFetchOptions.headers), {}, {
-                    'Content-Type': "application/vnd.api+json; ".concat(extensionStr)
-                  }),
-                  method: 'POST',
-                  body: body
-                }); // update records based on response
+      var body = JSON.stringify({
+        data: recordAttributes
+      }); // build the json api extension string
 
-                return _context.abrupt("return", _this.updateRecords(response, records));
+      var extensionStr = extensions !== null && extensions !== void 0 && extensions.length ? "ext=\"bulk,".concat(extensions.join(), "\"") : 'ext="bulk"'; // send request
 
-              case 8:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee);
-      }));
+      var response = _this.fetch(url, {
+        headers: _objectSpread$3(_objectSpread$3({}, _this.defaultFetchOptions.headers), {}, {
+          'Content-Type': "application/vnd.api+json; ".concat(extensionStr)
+        }),
+        method: method,
+        body: body
+      }); // update records based on response
 
-      return function (_x, _x2) {
-        return _ref.apply(this, arguments);
-      };
-    }());
+
+      return _this.updateRecords(response, records);
+    });
+
+    _defineProperty__default["default"](this, "bulkCreate", function (type, records) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (records.some(function (record) {
+        return !record.isNew;
+      })) {
+        throw new Error('Invariant violated: all records must be new records to perform a create');
+      }
+
+      return _this._bulkSave(type, records, options, 'POST');
+    });
+
+    _defineProperty__default["default"](this, "bulkUpdate", function (type, records) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (records.some(function (record) {
+        return record.isNew;
+      })) {
+        throw new Error('Invariant violated: all records must have a persisted id to perform an update');
+      }
+
+      return _this._bulkSave(type, records, options, 'PATCH');
+    });
 
     _initializerDefineProperty__default["default"](this, "remove", _descriptor4, this);
 
@@ -1591,9 +1599,9 @@ var Store = (_class = /*#__PURE__*/function () {
         });
       });
       return Promise.all(queries).then(function (records) {
-        var _ref2;
+        var _ref;
 
-        return (_ref2 = []).concat.apply(_ref2, _toConsumableArray__default["default"](records));
+        return (_ref = []).concat.apply(_ref, _toConsumableArray__default["default"](records));
       }).catch(function (err) {
         return Promise.reject(err);
       });
@@ -1612,8 +1620,8 @@ var Store = (_class = /*#__PURE__*/function () {
         return recordsInStore;
       }
 
-      var recordIdsInStore = recordsInStore.map(function (_ref3) {
-        var id = _ref3.id;
+      var recordIdsInStore = recordsInStore.map(function (_ref2) {
+        var id = _ref2.id;
         return String(id);
       });
       idsToQuery = idsToQuery.filter(function (id) {
@@ -1655,7 +1663,7 @@ var Store = (_class = /*#__PURE__*/function () {
     _initializerDefineProperty__default["default"](this, "deleteLoadingState", _descriptor6, this);
 
     _defineProperty__default["default"](this, "fetchAll", /*#__PURE__*/function () {
-      var _ref4 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee2(type) {
+      var _ref3 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee(type) {
         var options,
             queryParams,
             url,
@@ -1663,38 +1671,38 @@ var Store = (_class = /*#__PURE__*/function () {
             response,
             json,
             records,
-            _args2 = arguments;
-        return _regeneratorRuntime__default["default"].wrap(function _callee2$(_context2) {
+            _args = arguments;
+        return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context.prev = _context.next) {
               case 0:
-                options = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : {};
+                options = _args.length > 1 && _args[1] !== undefined ? _args[1] : {};
                 queryParams = options.queryParams;
                 url = _this.fetchUrl(type, queryParams);
                 state = _this.setLoadingState(_objectSpread$3(_objectSpread$3({}, options), {}, {
                   type: type,
                   url: url
                 }));
-                _context2.next = 6;
+                _context.next = 6;
                 return _this.fetch(url, {
                   method: 'GET'
                 });
 
               case 6:
-                response = _context2.sent;
+                response = _context.sent;
 
                 if (!(response.status === 200)) {
-                  _context2.next = 17;
+                  _context.next = 17;
                   break;
                 }
 
                 _this.data[type].cache.set(url, []);
 
-                _context2.next = 11;
+                _context.next = 11;
                 return response.json();
 
               case 11:
-                json = _context2.sent;
+                json = _context.sent;
                 mobx.runInAction(function () {
                   if (json.included) {
                     _this.createModelsFromData(json.included);
@@ -1730,24 +1738,24 @@ var Store = (_class = /*#__PURE__*/function () {
                   _this.getType(type).meta.set(url, json.meta);
                 }
 
-                return _context2.abrupt("return", records);
+                return _context.abrupt("return", records);
 
               case 17:
                 mobx.runInAction(function () {
                   _this.deleteLoadingState(state);
                 });
-                return _context2.abrupt("return", Promise.reject(response.status));
+                return _context.abrupt("return", Promise.reject(response.status));
 
               case 19:
               case "end":
-                return _context2.stop();
+                return _context.stop();
             }
           }
-        }, _callee2);
+        }, _callee);
       }));
 
-      return function (_x3) {
-        return _ref4.apply(this, arguments);
+      return function (_x) {
+        return _ref3.apply(this, arguments);
       };
     }());
 
@@ -1796,7 +1804,7 @@ var Store = (_class = /*#__PURE__*/function () {
      * @return {Object} record
      */
     function () {
-      var _fetchOne = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee3(type, id) {
+      var _fetchOne = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee2(type, id) {
         var options,
             queryParams,
             url,
@@ -1806,20 +1814,20 @@ var Store = (_class = /*#__PURE__*/function () {
             data,
             included,
             record,
-            _args3 = arguments;
-        return _regeneratorRuntime__default["default"].wrap(function _callee3$(_context3) {
+            _args2 = arguments;
+        return _regeneratorRuntime__default["default"].wrap(function _callee2$(_context2) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context2.prev = _context2.next) {
               case 0:
-                options = _args3.length > 2 && _args3[2] !== undefined ? _args3[2] : {};
+                options = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : {};
 
                 if (id) {
-                  _context3.next = 4;
+                  _context2.next = 4;
                   break;
                 }
 
                 console.error("No id given while calling 'fetchOne' on ".concat(type));
-                return _context3.abrupt("return");
+                return _context2.abrupt("return");
 
               case 4:
                 queryParams = options.queryParams;
@@ -1829,24 +1837,24 @@ var Store = (_class = /*#__PURE__*/function () {
                   id: id,
                   url: url
                 }));
-                _context3.next = 9;
+                _context2.next = 9;
                 return this.fetch(url, {
                   method: 'GET'
                 });
 
               case 9:
-                response = _context3.sent;
+                response = _context2.sent;
 
                 if (!(response.status === 200)) {
-                  _context3.next = 22;
+                  _context2.next = 22;
                   break;
                 }
 
-                _context3.next = 13;
+                _context2.next = 13;
                 return response.json();
 
               case 13:
-                json = _context3.sent;
+                json = _context2.sent;
                 data = json.data, included = json.included;
 
                 if (included) {
@@ -1856,22 +1864,22 @@ var Store = (_class = /*#__PURE__*/function () {
                 record = this.createOrUpdateModel(data);
                 this.data[type].cache.set(url, [record.id]);
                 this.deleteLoadingState(state);
-                return _context3.abrupt("return", record);
+                return _context2.abrupt("return", record);
 
               case 22:
                 // TODO: return Promise.reject(response.status)
                 this.deleteLoadingState(state);
-                return _context3.abrupt("return", null);
+                return _context2.abrupt("return", null);
 
               case 24:
               case "end":
-                return _context3.stop();
+                return _context2.stop();
             }
           }
-        }, _callee3, this);
+        }, _callee2, this);
       }));
 
-      function fetchOne(_x4, _x5) {
+      function fetchOne(_x2, _x3) {
         return _fetchOne.apply(this, arguments);
       }
 
@@ -2348,12 +2356,12 @@ var Store = (_class = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref5 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee4(response) {
+        var _ref4 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee3(response) {
           var status, json, data, included, _json, errorString;
 
-          return _regeneratorRuntime__default["default"].wrap(function _callee4$(_context4) {
+          return _regeneratorRuntime__default["default"].wrap(function _callee3$(_context3) {
             while (1) {
-              switch (_context4.prev = _context4.next) {
+              switch (_context3.prev = _context3.next) {
                 case 0:
                   status = response.status;
                   recordsArray.forEach(function (record) {
@@ -2361,20 +2369,20 @@ var Store = (_class = /*#__PURE__*/function () {
                   });
 
                   if (!(status === 200 || status === 201)) {
-                    _context4.next = 15;
+                    _context3.next = 15;
                     break;
                   }
 
-                  _context4.next = 5;
+                  _context3.next = 5;
                   return response.json();
 
                 case 5:
-                  json = _context4.sent;
+                  json = _context3.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
 
                   if (!(data.length !== recordsArray.length)) {
-                    _context4.next = 10;
+                    _context3.next = 10;
                     break;
                   }
 
@@ -2391,39 +2399,39 @@ var Store = (_class = /*#__PURE__*/function () {
                   // again - this may be a single record so preserve the structure
 
 
-                  return _context4.abrupt("return", records);
+                  return _context3.abrupt("return", records);
 
                 case 15:
                   _json = {};
-                  _context4.prev = 16;
-                  _context4.next = 19;
+                  _context3.prev = 16;
+                  _context3.next = 19;
                   return response.json();
 
                 case 19:
-                  _json = _context4.sent;
-                  _context4.next = 25;
+                  _json = _context3.sent;
+                  _context3.next = 25;
                   break;
 
                 case 22:
-                  _context4.prev = 22;
-                  _context4.t0 = _context4["catch"](16);
-                  return _context4.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
+                  _context3.prev = 22;
+                  _context3.t0 = _context3["catch"](16);
+                  return _context3.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
 
                 case 25:
                   if (_json.errors) {
-                    _context4.next = 27;
+                    _context3.next = 27;
                     break;
                   }
 
-                  return _context4.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
+                  return _context3.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
 
                 case 27:
                   if (Array.isArray(_json.errors)) {
-                    _context4.next = 29;
+                    _context3.next = 29;
                     break;
                   }
 
-                  return _context4.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
+                  return _context3.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
 
                 case 29:
                   mobx.runInAction(function () {
@@ -2443,18 +2451,18 @@ var Store = (_class = /*#__PURE__*/function () {
                       return JSON.stringify(record.errors);
                     }).join(';');
                   });
-                  return _context4.abrupt("return", Promise.reject(new Error(errorString)));
+                  return _context3.abrupt("return", Promise.reject(new Error(errorString)));
 
                 case 31:
                 case "end":
-                  return _context4.stop();
+                  return _context3.stop();
               }
             }
-          }, _callee4, null, [[16, 22]]);
+          }, _callee3, null, [[16, 22]]);
         }));
 
-        return function (_x6) {
-          return _ref5.apply(this, arguments);
+        return function (_x4) {
+          return _ref4.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -2525,11 +2533,11 @@ var Store = (_class = /*#__PURE__*/function () {
   initializer: function initializer() {
     var _this9 = this;
 
-    return function (_ref6) {
-      var url = _ref6.url,
-          type = _ref6.type,
-          queryParams = _ref6.queryParams,
-          queryTag = _ref6.queryTag;
+    return function (_ref5) {
+      var url = _ref5.url,
+          type = _ref5.type,
+          queryParams = _ref5.queryParams,
+          queryTag = _ref5.queryTag;
       queryTag = queryTag || type;
       var loadingStateInfo = {
         url: url,
@@ -2911,9 +2919,18 @@ var simulatePatch = function simulatePatch(store, type, body) {
   var _JSON$parse2 = JSON.parse(body.toString()),
       data = _JSON$parse2.data;
 
-  var record = store.getOne(type, String(data.id));
-  record.updateAttributesFromResponse(data);
-  return record;
+  if (Array.isArray(data)) {
+    var records = data.map(function (recordData) {
+      var record = store.getOne(type, String(recordData.id));
+      record.updateAttributesFromResponse(recordData);
+      return record;
+    });
+    return records;
+  } else {
+    var record = store.getOne(type, String(data.id));
+    record.updateAttributesFromResponse(data);
+    return record;
+  }
 };
 
 var getOneFromFactory = function getOneFromFactory(_backendFactoryFarm, factory, type, id) {

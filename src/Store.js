@@ -202,15 +202,31 @@ class Store {
   }
 
   /**
-   * Saves a collection of records via a bulk-supported JSONApi
-   * endpoint. All records need to be of the same type.
+   * Saves a collection of records via a bulk-supported JSONApi endpoint.
+   * All records need to be of the same type.
    *
    * @method bulkSave
    * @param {String} type
    * @param {Array} records
    * @param {Object} options {queryParams, extensions}
    */
-  bulkSave = async (type, records, options = {}) => {
+  bulkSave = (type, records, options = {}) => {
+    console.warn('bulkSave is being deprecated. Please use either bulkCreate or bulkUpdate to be more precise about your request.')
+    return this._bulkSave(type, records, options, 'POST')
+  }
+
+  /**
+   * Saves a collection of records via a bulk-supported JSONApi endpoint.
+   * All records need to be of the same type.
+   *
+   * @method bulkSave
+   * @private
+   * @param {String} type
+   * @param {Array} records
+   * @param {Object} options {queryParams, extensions}
+   * @param {String} method
+   */
+  _bulkSave = (type, records, options = {}, method) => {
     const { queryParams, extensions } = options
 
     // get url for record type
@@ -233,12 +249,44 @@ class Store {
         ...this.defaultFetchOptions.headers,
         'Content-Type': `application/vnd.api+json; ${extensionStr}`
       },
-      method: 'POST',
+      method,
       body
     })
 
     // update records based on response
     return this.updateRecords(response, records)
+  }
+
+  /**
+   * Save a collection of new records via a bulk-supported JSONApi endpoint.
+   * All records need to be of the same type and not have an existing id.
+   *
+   * @method bulkCreate
+   * @param {String} type
+   * @param {Array} records
+   * @param {Object} options {queryParams, extensions}
+   */
+  bulkCreate = (type, records, options = {}) => {
+    if (records.some((record) => !record.isNew)) {
+      throw new Error('Invariant violated: all records must be new records to perform a create')
+    }
+    return this._bulkSave(type, records, options, 'POST')
+  }
+
+  /**
+   * Updates a collection of records via a bulk-supported JSONApi endpoint.
+   * All records need to be of the same type and have an existing id.
+   *
+   * @method bulkUpdate
+   * @param {String} type
+   * @param {Array} records
+   * @param {Object} options {queryParams, extensions}
+   */
+  bulkUpdate = (type, records, options = {}) => {
+    if (records.some((record) => record.isNew)) {
+      throw new Error('Invariant violated: all records must have a persisted id to perform an update')
+    }
+    return this._bulkSave(type, records, options, 'PATCH')
   }
 
   /**
