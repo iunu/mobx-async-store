@@ -123,7 +123,7 @@ export function getRelatedRecords (record, property, modelType = null) {
  *
  * @method getRelatedRecord
  */
-export function getRelatedRecord (record, property, modelType = null) {
+export function getRelatedRecord (record, property) {
   // Get relationships
   const { relationships } = record
 
@@ -131,14 +131,13 @@ export function getRelatedRecord (record, property, modelType = null) {
   if (!relationships) return
 
   // Use property name unless model type is provided
-  const relationType = modelType ? singularizeType(modelType) : property
-  const reference = relationships[relationType]
+  const reference = relationships[property]
 
   // Short circuit if matching reference is not found
   if (!reference || !reference.data) return
 
   const { id, type } = reference.data
-  const recordType = modelType || type
+  const recordType = type
 
   return record.store.getRecord(recordType, id)
 }
