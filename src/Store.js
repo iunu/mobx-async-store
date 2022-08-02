@@ -55,8 +55,6 @@ class Store {
 
   loadedStates = observable.map()
 
-  genericErrorMessage = 'Something went wrong.'
-
   /**
    * Initializer for Store class
    *
@@ -713,6 +711,7 @@ class Store {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
+    this.initializeErrorMessages(options)
   }
 
   /**
@@ -766,6 +765,27 @@ class Store {
         meta: observable.map()
       }
     })
+  }
+
+  /**
+   * Configure the error messages returned from the store when API requests fail
+   *
+   * @method initializeErrorMessages
+   * @param {Object} options for initializing the store
+   * @param {Object} options.errorMessages
+   *   options for initializing error messages for different HTTP status codes
+   */
+  @action
+  initializeErrorMessages (options = {}) {
+    const errorMessages = { ...options.errorMessages }
+
+    this.genericErrorMessage = errorMessages.default || 'Something went wrong.'
+    delete errorMessages.default
+
+    this.errorMessages = {
+      500: this.genericErrorMessage,
+      ...errorMessages
+    }
   }
 
   /**
@@ -1068,6 +1088,8 @@ class Store {
           // on success, return the original record(s).
           // again - this may be a single record so preserve the structure
           return records
+        } else if (Object.prototype.hasOwnProperty.call(this.errorMessages, status)) {
+          return Promise.reject(new Error(this.errorMessages[status]))
         } else {
           let json = {}
           try {

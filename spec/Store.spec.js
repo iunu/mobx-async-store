@@ -566,10 +566,10 @@ describe('Store', () => {
   })
 
   describe('updateRecords', () => {
-    function mockRequest (errors) {
+    function mockRequest (errors, status = 422) {
       return new Promise((resolve, reject) => {
         const body = JSON.stringify({ errors })
-        process.nextTick(() => resolve(new Response(body, { status: 422 })))
+        process.nextTick(() => resolve(new Response(body, { status })))
       })
     }
 
@@ -737,6 +737,55 @@ describe('Store', () => {
         } catch (error) {
           expect(error.message).toMatch('Something went wrong.')
           expect(error.name).toBe('Error')
+        }
+      })
+    })
+
+    describe('with HTTP response code exceptions', () => {
+      beforeEach(() => {
+        store = new AppStore({
+          baseUrl: mockBaseUrl,
+          defaultFetchOptions: mockFetchOptions,
+          headersOfInterest: ['X-Mobx-Example'],
+          errorMessages: {
+            403: "You don't have permission to access this record.",
+            500: 'Oh no!',
+            default: 'Sorry.'
+          }
+        })
+      })
+
+      it('uses the configured error message for the corresponding HTTP status code', async () => {
+        const todo = store.add('todos', { title: '' })
+        let errors = [
+          {
+            status: '403',
+            title: 'Forbidden'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors, 403), todo)
+        } catch (error) {
+          expect(error.message).toMatch("You don't have permission to access this record.")
+        }
+
+        errors = [{ status: '500' }]
+
+        try {
+          await store.updateRecords(mockRequest(errors, 500), todo)
+        } catch (error) {
+          expect(error.message).toMatch('Oh no!')
+        }
+      })
+
+      it('uses the default error message when the response cannot be parsed', async () => {
+        const todo = store.add('todos', {})
+
+        try {
+          await store.updateRecords(mockRequest(undefined), todo)
+        } catch (error) {
+          expect(error.message).toMatch('Sorry.')
         }
       })
     })
