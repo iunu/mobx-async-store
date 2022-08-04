@@ -1262,9 +1262,14 @@ describe('Store', () => {
 
     it('returns a rejected Promise with the status if fetching fails', async () => {
       fetch.mockResponse('', { status: 401 })
-      const query = store.fetchAll('todos')
-      expect(query).toBeInstanceOf(Promise)
-      await expect(query).rejects.toEqual(401)
+      try {
+        await store.fetchAll('todos')
+      } catch (error) {
+        const jsonError = JSON.parse(error.message)[0]
+        expect(jsonError.detail).toBe('Something went wrong.')
+        expect(jsonError.status).toBe(401)
+        expect(error.name).toBe('Error')
+      }
     })
 
     it('allows setting a tag for a query', async () => {

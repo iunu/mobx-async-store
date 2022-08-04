@@ -627,7 +627,11 @@ class Store {
       runInAction(() => {
         this.deleteLoadingState(state)
       })
-      return Promise.reject(response.status)
+      const error = {
+        detail: this.errorMessages[response.status] || this.genericErrorMessage,
+        status: response.status
+      }
+      throw new Error(JSON.stringify([error]))
     }
   }
 
