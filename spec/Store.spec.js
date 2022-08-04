@@ -1464,12 +1464,16 @@ describe('Store', () => {
     })
 
     it('returns a rejected Promise with the status if fetching fails', async () => {
-      expect.assertions(2)
       fetch.mockResponse('', { status: 401 })
       const ids = createMockIds(5, '1000')
-      const query = store.fetchMany('todos', ids)
-      expect(query).toBeInstanceOf(Promise)
-      await expect(query).rejects.toEqual(401)
+      try {
+        await store.fetchMany('todos', ids)
+      } catch (error) {
+        const jsonError = JSON.parse(error.message)[0]
+        expect(jsonError.detail).toBe('Something went wrong.')
+        expect(jsonError.status).toBe(401)
+        expect(error.name).toBe('Error')
+      }
     })
 
     it('uses multiple fetches for data from server', async () => {

@@ -1102,17 +1102,17 @@ class Store {
           } catch (error) {
             // server doesn't return a parsable response
             const errorResponse = { detail: this.genericErrorMessage, status }
-            return Promise.reject(new Error(JSON.stringify([errorResponse])))
+            throw new Error(JSON.stringify([errorResponse]))
           }
 
           if (!json.errors) {
             const errorResponse = { detail: this.genericErrorMessage, status }
-            return Promise.reject(new Error(JSON.stringify([errorResponse])))
+            throw new Error(JSON.stringify([errorResponse]))
           }
 
           if (!Array.isArray(json.errors)) {
             const errorResponse = { detail: 'Top level errors in response are not an array.', status }
-            return Promise.reject(new TypeError(JSON.stringify([errorResponse])))
+            throw new TypeError(JSON.stringify([errorResponse]))
           }
 
           // Add all errors from the API response to the record(s).
@@ -1135,7 +1135,7 @@ class Store {
             })
           })
 
-          return Promise.reject(new Error(JSON.stringify(errorsArray)))
+          throw new Error(JSON.stringify(errorsArray))
         }
       },
       function (error) {
