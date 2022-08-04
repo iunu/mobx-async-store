@@ -574,7 +574,7 @@ describe('Store', () => {
     }
 
     describe('error handling', () => {
-      it('ignores errors without a pointer', async () => {
+      it('ignores errors without a pointer or status', async () => {
         const todo = store.add('todos', { title: '' })
         const errors = [
           {
@@ -603,6 +603,25 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), todo)
         } catch (error) {
+          expect(todo.errors).toEqual({})
+        }
+      })
+
+      it('surfaces errors with a status and no pointer', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: 'Forbidden',
+            status: 403
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Forbidden')
+          expect(jsonError.status).toBe(403)
           expect(todo.errors).toEqual({})
         }
       })
@@ -722,7 +741,9 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch (error) {
-          expect(error.message).toBe('Top level errors in response are not an array.')
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Top level errors in response are not an array.')
+          expect(jsonError.status).toBe(422)
           expect(error.name).toBe('TypeError')
         }
       })
@@ -735,7 +756,9 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch (error) {
-          expect(error.message).toMatch('Something went wrong.')
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Something went wrong.')
+          expect(jsonError.status).toBe(422)
           expect(error.name).toBe('Error')
         }
       })
@@ -759,7 +782,8 @@ describe('Store', () => {
         const todo = store.add('todos', { title: '' })
         let errors = [
           {
-            status: '403',
+            detail: "No you don't!",
+            status: 403,
             title: 'Forbidden'
           }
         ]
@@ -767,15 +791,21 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors, 403), todo)
         } catch (error) {
-          expect(error.message).toMatch("You don't have permission to access this record.")
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe("You don't have permission to access this record.")
+          expect(jsonError.status).toBe(403)
+          expect(error.name).toBe('Error')
         }
 
-        errors = [{ status: '500' }]
+        errors = [{ status: 500 }]
 
         try {
           await store.updateRecords(mockRequest(errors, 500), todo)
         } catch (error) {
-          expect(error.message).toMatch('Oh no!')
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Oh no!')
+          expect(jsonError.status).toBe(500)
+          expect(error.name).toBe('Error')
         }
       })
 
@@ -783,9 +813,12 @@ describe('Store', () => {
         const todo = store.add('todos', {})
 
         try {
-          await store.updateRecords(mockRequest(undefined), todo)
+          await store.updateRecords(mockRequest(undefined, 400), todo)
         } catch (error) {
-          expect(error.message).toMatch('Sorry.')
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Sorry.')
+          expect(jsonError.status).toBe(400)
+          expect(error.name).toBe('Error')
         }
       })
     })
