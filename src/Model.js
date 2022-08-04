@@ -458,16 +458,16 @@ class Model {
 
           return _this
         } else {
-          runInAction(() => {
-            _this.errors = { status: response.status }
-          })
-          return _this
+          const error = {
+            detail: _this.store.errorMessages[response.status] || _this.store.genericErrorMessage,
+            status: response.status
+          }
+          throw new Error(JSON.stringify([error]))
         }
       },
       function (error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false
-        _this.errors = error
         throw error
       }
     )

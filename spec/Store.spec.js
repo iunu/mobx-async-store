@@ -936,6 +936,43 @@ describe('Store', () => {
       expect(store.loadingStates.get('loadingSpecialTodos')).toBeUndefined()
       expect(toJS(store.loadedStates.get('loadingSpecialTodo'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos/3', type: 'todos', queryParams: undefined, queryTag: 'loadingSpecialTodo' })]))
     })
+
+    describe('error handling', () => {
+      it('rejects with the status', async () => {
+        fetch.mockResponses(['', { status: 500 }])
+        try {
+          await store.fetchOne('todos', '3')
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Something went wrong.')
+          expect(jsonError.status).toBe(500)
+          expect(error.name).toBe('Error')
+        }
+      })
+
+      it('uses the configured error message for the corresponding HTTP status code', async () => {
+        store = new AppStore({
+          baseUrl: mockBaseUrl,
+          defaultFetchOptions: mockFetchOptions,
+          errorMessages: {
+            403: "You don't have permission to access this record.",
+            500: 'Oh no!',
+            default: 'Sorry.'
+          }
+        })
+
+        fetch.mockResponses(['', { status: 403 }])
+
+        try {
+          await store.fetchOne('todos', '3')
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe("You don't have permission to access this record.")
+          expect(jsonError.status).toBe(403)
+          expect(error.name).toBe('Error')
+        }
+      })
+    })
   })
 
   describe('findOne', () => {
