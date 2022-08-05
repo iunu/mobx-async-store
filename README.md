@@ -23,7 +23,7 @@ Mobx-based store for async data fetching and state management. https://artemis-a
   - [Clear the query cache](#clear-the-query-cache)
   - [Adding records with `Store#add`](#adding-records-with-storeadd)
   - [Persisting records with `Model#save`](#persisting-records-with-modelsave)
-  - [Handling errors with `Model#errors`](#handling-errors-with-modelerrors)
+  - [Handling errors](#handling-errors)
 
 ## Introduction
 
@@ -121,10 +121,19 @@ const store = new AppStore({
       'Content-Type': 'application/vnd.api+json',
       'X-CSRF-Token': 'EXAMPLE-CSRF-TOKEN'
     }
+  },
+  errorMessages: {
+    400: 'Bad request.',
+    403: 'Forbidden',
+    ...
+    default: 'Something went wrong.',
   }
 })
-
 ```
+
+`errorMessages`: These are optional error messages that can be configured to provide additional details
+when returning errors for various requests. Each property corresponds to an HTTP status code which can be
+customized, and any errors returned from the server that have a `status` matching this code will have their `detail` property overriden by this value. A `default` can also be set as a fallback.
 
 ### Getting all records with `Store#getAll`
 
@@ -283,8 +292,7 @@ store.getOne('todos', todo.id)
 ### Fetching single records with `Store#fetchOne`
 
 Fetches a single record with the given id from the server.
-This will always fetch from the server.
-It will soon be updated to always return a promise
+This will always fetch from the server and return a promise that will resolve with the new record.
 
 ```JavaScript
 const todo = store.add('todos', { title: 'Pay bills' })
@@ -292,6 +300,8 @@ const todo = store.add('todos', { title: 'Pay bills' })
 // Request made, record is always returned from the server.
 await store.fetchOne('todos', todo.id)
 ```
+
+If the server responds with any status other than 200, the promise will reject with an [error](#handling-errors)
 
 ### Finding single records with `Store#findOne`
 
@@ -380,9 +390,39 @@ const todo = store.add('todos', { title: 'Buy Milk', category: 'chores' })
 await todo.save()
 ```
 
-### Handling errors with `Model#errors`
+If the server responds to a `save` with a status code that is not 200 or 201, then the `Model#errors`
+object will populated by matching [source pointers](https://jsonapi.org/format/#error-objects) from the
+response to the attributes on the model.
 
-If a `save` method call on a model fails for any reason (and your API support JSON::API errors), then the model
-will populate the `Model#errors` object.
+
+### Handling errors
+
+If any fetch, save, or destroy fails, the query will return a rejected promise with an error
+containing any JSONAPI errors returned with the response. If no errors are present, then the response
+status will be converted to an error and returned with the corresponding [configured error message](#initializing-stores).
+
+For example, if the server returns a 500 response with no body for a `fetchOne`, then the error returned
+will be
+
+```JavaScript
+  [
+    {
+      detail: "Something went wrong.",
+      status: 500
+    }
+  ]
+```
+
+This value will always be a stringified JSON array, so you can handle errors as such:
+
+```JavaScript
+  try {
+    await store.fetchMany('todos', ids);
+  } catch (error) {
+    const errors = JSON.parse(error.message);
+    console.log(errors[0].detail); // "Something went wrong."
+    console.log(errors[0].status); // 500
+  }
+```
 
 ### To Be Continued...

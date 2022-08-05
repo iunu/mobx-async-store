@@ -5,6 +5,7 @@ import {
   fetchWithRetry,
   idOrNewId,
   deriveIdQueryStrings,
+  parseErrors,
   parseErrorPointer,
   requestUrl
 } from './utils'
@@ -361,11 +362,8 @@ class Store {
       return record
     } else {
       this.deleteLoadingState(state)
-      const error = {
-        detail: this.errorMessages[response.status] || this.genericErrorMessage,
-        status: response.status
-      }
-      throw new Error(JSON.stringify([error]))
+      const errors = await parseErrors(response, this.errorMessages)
+      throw new Error(JSON.stringify(errors))
     }
   }
 
@@ -422,7 +420,7 @@ class Store {
    * @param {String} type the type to get
    * @param {String} ids the ids of the records to get
    * @param {Object} options { queryParams }
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   fetchMany = (type, ids, options = {}) => {
     const idsToQuery = ids.slice().map(String)
@@ -587,7 +585,7 @@ class Store {
    * @method fetchAll
    * @param {String} type the type to find
    * @param {Object} options
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   fetchAll = async (type, options = {}) => {
     const { queryParams } = options
@@ -627,11 +625,8 @@ class Store {
       runInAction(() => {
         this.deleteLoadingState(state)
       })
-      const error = {
-        detail: this.errorMessages[response.status] || this.genericErrorMessage,
-        status: response.status
-      }
-      throw new Error(JSON.stringify([error]))
+      const errors = await parseErrors(response, this.errorMessages)
+      throw new Error(JSON.stringify(errors))
     }
   }
 
@@ -671,7 +666,7 @@ class Store {
    * @method findAll
    * @param {String} type the type to find
    * @param {Object} options { queryParams }
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   findAll = (type, options = {}) => {
     const records = this.getAll(type, options)
@@ -786,11 +781,8 @@ class Store {
   initializeErrorMessages (options = {}) {
     const errorMessages = { ...options.errorMessages }
 
-    this.genericErrorMessage = errorMessages.default || 'Something went wrong.'
-    delete errorMessages.default
-
     this.errorMessages = {
-      500: this.genericErrorMessage,
+      default: 'Something went wrong.',
       ...errorMessages
     }
   }
@@ -1096,46 +1088,20 @@ class Store {
           // again - this may be a single record so preserve the structure
           return records
         } else {
-          let json = {}
-          try {
-            json = await response.json()
-          } catch (error) {
-            // server doesn't return a parsable response
-            const errorResponse = { detail: this.genericErrorMessage, status }
-            throw new Error(JSON.stringify([errorResponse]))
-          }
-
-          if (!json.errors) {
-            const errorResponse = { detail: this.genericErrorMessage, status }
-            throw new Error(JSON.stringify([errorResponse]))
-          }
-
-          if (!Array.isArray(json.errors)) {
-            const errorResponse = { detail: 'Top level errors in response are not an array.', status }
-            throw new TypeError(JSON.stringify([errorResponse]))
-          }
-
-          // Add all errors from the API response to the record(s).
-          // This is done by comparing the pointer in the error to
-          // the request.
-          const errorsArray = []
+          const errors = await parseErrors(response, this.errorMessages)
           runInAction(() => {
-            json.errors.forEach((error) => {
+            errors.forEach((error) => {
               const { index, key } = parseErrorPointer(error)
               if (key != null) {
                 // add the error to the record
                 const errors = recordsArray[index].errors[key] || []
                 errors.push(error)
                 recordsArray[index].errors[key] = errors
-              } else if (error.status && this.errorMessages[error.status]) {
-                // when there is no pointer, replace the detail with HTTP status code configuration
-                error.detail = this.errorMessages[error.status]
               }
-              errorsArray.push(error)
             })
           })
 
-          throw new Error(JSON.stringify(errorsArray))
+          throw new Error(JSON.stringify(errors))
         }
       },
       function (error) {

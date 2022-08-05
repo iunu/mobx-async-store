@@ -1393,7 +1393,6 @@ describe('Model', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Something went wrong.')
           expect(jsonError.status).toBe(500)
-          expect(error.name).toBe('Error')
         }
       })
 

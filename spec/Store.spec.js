@@ -744,7 +744,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Top level errors in response are not an array.')
           expect(jsonError.status).toBe(422)
-          expect(error.name).toBe('TypeError')
         }
       })
 
@@ -759,7 +758,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Something went wrong.')
           expect(jsonError.status).toBe(422)
-          expect(error.name).toBe('Error')
         }
       })
     })
@@ -794,7 +792,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe("You don't have permission to access this record.")
           expect(jsonError.status).toBe(403)
-          expect(error.name).toBe('Error')
         }
 
         errors = [{ status: 500 }]
@@ -805,7 +802,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Oh no!')
           expect(jsonError.status).toBe(500)
-          expect(error.name).toBe('Error')
         }
       })
 
@@ -818,7 +814,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Sorry.')
           expect(jsonError.status).toBe(400)
-          expect(error.name).toBe('Error')
         }
       })
     })
@@ -946,7 +941,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Something went wrong.')
           expect(jsonError.status).toBe(500)
-          expect(error.name).toBe('Error')
         }
       })
 
@@ -969,7 +963,6 @@ describe('Store', () => {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe("You don't have permission to access this record.")
           expect(jsonError.status).toBe(403)
-          expect(error.name).toBe('Error')
         }
       })
     })
