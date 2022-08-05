@@ -164,6 +164,22 @@ export function diff (a = {}, b = {}) {
   })).filter((x) => x)
 }
 
+/**
+ * Parses JSONAPI error objects from a fetch response.
+ * If the response's body is undefined or is not formatted with a top-level `errors` key
+ * containing an array of errors, it builds a JSONAPI error object from the response status
+ * and a `errorMessages` configuration.
+ *
+ * Errors that are returned which contain a status also have their `detail` overridden with
+ * values from this configuration.
+ *
+ * @method parseErrors
+ * @param {Object} response
+ *   a fetch response
+ * @param {Object} errorMessages
+ *   store configuration of error messages corresponding to HTTP status codes
+ * @return Array<Object> An array of JSONAPI errors
+ */
 export async function parseErrors (response, errorMessages) {
   let json = {}
   try {
