@@ -313,7 +313,7 @@ describe('MockServer', () => {
     })
 
     it('allows a simulated response for a server failure', async () => {
-      expect.assertions(2)
+      expect.assertions(3)
       const responseOverrides = [
         {
           path: /todos\/1/,
@@ -329,7 +329,9 @@ describe('MockServer', () => {
       try {
         await todo.save()
       } catch (error) {
-        expect(error.message).toEqual('Something went wrong.')
+        const jsonError = JSON.parse(error.message)[0]
+        expect(jsonError.detail).toBe('Something went wrong.')
+        expect(jsonError.status).toBe(500)
         expect(fetch.mock.calls).toHaveLength(1)
       }
     })

@@ -1382,5 +1382,53 @@ describe('Model', () => {
       expect(store.getAll('todos'))
         .toHaveLength(0)
     })
+
+    describe('error handling', () => {
+      it('rejects with the status', async () => {
+        fetch.mockResponses([JSON.stringify({}), { status: 500 }])
+        const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+        try {
+          await todo.destroy()
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Something went wrong.')
+          expect(jsonError.status).toBe(500)
+        }
+      })
+
+      it('uses the configured error message for the corresponding HTTP status code', async () => {
+        const store2 = new AppStore({
+          baseUrl: mockBaseUrl,
+          defaultFetchOptions: mockFetchOptions,
+          errorMessages: {
+            403: "You don't have permission to access this record.",
+            500: 'Oh no!',
+            default: 'Sorry.'
+          }
+        })
+
+        fetch.mockResponses([JSON.stringify({}), { status: 403 }])
+        const todo = store2.add('todos', { id: 1, title: 'Buy Milk' })
+
+        try {
+          await todo.destroy()
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe("You don't have permission to access this record.")
+          expect(jsonError.status).toBe(403)
+          expect(error.name).toBe('Error')
+        }
+      })
+
+      it('does not remove the record from the store', async () => {
+        fetch.mockResponses([JSON.stringify({}), { status: 500 }])
+        const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+        try {
+          await todo.destroy()
+        } catch (error) {
+          expect(store.getAll('todos')).toHaveLength(1)
+        }
+      })
+    })
   })
 })

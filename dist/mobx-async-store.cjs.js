@@ -262,6 +262,26 @@ function diff() {
   });
 }
 /**
+ * Parses JSONAPI error objects from a fetch response.
+ * If the response's body is undefined or is not formatted with a top-level `errors` key
+ * containing an array of errors, it builds a JSONAPI error object from the response status
+ * and a `errorMessages` configuration.
+ *
+ * Errors that are returned which contain a status also have their `detail` overridden with
+ * values from this configuration.
+ *
+ * @method parseErrors
+ * @param {Object} response
+ *   a fetch response
+ * @param {Object} errorMessages
+ *   store configuration of error messages corresponding to HTTP status codes
+ * @return Array<Object> An array of JSONAPI errors
+ */
+
+function parseErrors(_x, _x2) {
+  return _parseErrors.apply(this, arguments);
+}
+/**
  * Parses the pointer of the error to retrieve the index of the
  * record the error belongs to and the full path to the attribute
  * which will serve as the key for the error.
@@ -286,6 +306,78 @@ function diff() {
  * @param {Object} error
  * @return {Object} the matching parts of the pointer
  */
+
+function _parseErrors() {
+  _parseErrors = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee(response, errorMessages) {
+    var json, statusError, _statusError, _statusError2;
+
+    return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            json = {};
+            _context.prev = 1;
+            _context.next = 4;
+            return response.json();
+
+          case 4:
+            json = _context.sent;
+            _context.next = 11;
+            break;
+
+          case 7:
+            _context.prev = 7;
+            _context.t0 = _context["catch"](1);
+            // server doesn't return a parsable response
+            statusError = {
+              detail: errorMessages[response.status] || errorMessages.default,
+              status: response.status
+            };
+            return _context.abrupt("return", [statusError]);
+
+          case 11:
+            if (json.errors) {
+              _context.next = 14;
+              break;
+            }
+
+            _statusError = {
+              detail: errorMessages[response.status] || errorMessages.default,
+              status: response.status
+            };
+            return _context.abrupt("return", [_statusError]);
+
+          case 14:
+            if (Array.isArray(json.errors)) {
+              _context.next = 17;
+              break;
+            }
+
+            _statusError2 = {
+              detail: 'Top level errors in response are not an array.',
+              status: response.status
+            };
+            return _context.abrupt("return", [_statusError2]);
+
+          case 17:
+            return _context.abrupt("return", json.errors.map(function (error) {
+              // override or add the configured error message based on response status
+              if (error.status && errorMessages[error.status]) {
+                error.detail = errorMessages[error.status];
+              }
+
+              return error;
+            }));
+
+          case 18:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee, null, [[1, 7]]);
+  }));
+  return _parseErrors.apply(this, arguments);
+}
 
 function parseErrorPointer() {
   var error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -851,7 +943,7 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       _this.errors = {};
       return promise.then( /*#__PURE__*/function () {
         var _ref = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee(response) {
-          var json;
+          var json, errors;
           return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
             while (1) {
               switch (_context.prev = _context.next) {
@@ -900,14 +992,14 @@ var Model = (_class$1 = /*#__PURE__*/function () {
                   return _context.abrupt("return", _this);
 
                 case 17:
-                  mobx.runInAction(function () {
-                    _this.errors = {
-                      status: response.status
-                    };
-                  });
-                  return _context.abrupt("return", _this);
+                  _context.next = 19;
+                  return parseErrors(response, _this.store.errorMessages);
 
                 case 19:
+                  errors = _context.sent;
+                  throw new Error(JSON.stringify(errors));
+
+                case 21:
                 case "end":
                   return _context.stop();
               }
@@ -921,7 +1013,6 @@ var Model = (_class$1 = /*#__PURE__*/function () {
       }(), function (error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false;
-        _this.errors = error;
         throw error;
       });
     }
@@ -1406,8 +1497,6 @@ var Store = (_class = /*#__PURE__*/function () {
 
     _defineProperty__default["default"](this, "loadedStates", mobx.observable.map());
 
-    _defineProperty__default["default"](this, "genericErrorMessage", 'Something went wrong.');
-
     _defineProperty__default["default"](this, "add", function (type, data) {
       if (data.constructor.name === 'Array') {
         return _this.addModels(type, data);
@@ -1671,6 +1760,7 @@ var Store = (_class = /*#__PURE__*/function () {
             response,
             json,
             records,
+            errors,
             _args = arguments;
         return _regeneratorRuntime__default["default"].wrap(function _callee$(_context) {
           while (1) {
@@ -1744,9 +1834,14 @@ var Store = (_class = /*#__PURE__*/function () {
                 mobx.runInAction(function () {
                   _this.deleteLoadingState(state);
                 });
-                return _context.abrupt("return", Promise.reject(response.status));
+                _context.next = 20;
+                return parseErrors(response, _this.errorMessages);
 
-              case 19:
+              case 20:
+                errors = _context.sent;
+                throw new Error(JSON.stringify(errors));
+
+              case 22:
               case "end":
                 return _context.stop();
             }
@@ -1814,6 +1909,7 @@ var Store = (_class = /*#__PURE__*/function () {
             data,
             included,
             record,
+            errors,
             _args2 = arguments;
         return _regeneratorRuntime__default["default"].wrap(function _callee2$(_context2) {
           while (1) {
@@ -1867,11 +1963,15 @@ var Store = (_class = /*#__PURE__*/function () {
                 return _context2.abrupt("return", record);
 
               case 22:
-                // TODO: return Promise.reject(response.status)
                 this.deleteLoadingState(state);
-                return _context2.abrupt("return", null);
+                _context2.next = 25;
+                return parseErrors(response, this.errorMessages);
 
-              case 24:
+              case 25:
+                errors = _context2.sent;
+                throw new Error(JSON.stringify(errors));
+
+              case 27:
               case "end":
                 return _context2.stop();
             }
@@ -1967,6 +2067,7 @@ var Store = (_class = /*#__PURE__*/function () {
       this.initializeNetworkConfiguration(options);
       this.initializeModelTypeIndex();
       this.initializeObservableDataProperty();
+      this.initializeErrorMessages(options);
     }
     /**
      * Entry point for configuring the store
@@ -2028,6 +2129,26 @@ var Store = (_class = /*#__PURE__*/function () {
           meta: mobx.observable.map()
         };
       });
+    }
+    /**
+     * Configure the error messages returned from the store when API requests fail
+     *
+     * @method initializeErrorMessages
+     * @param {Object} options for initializing the store
+     * @param {Object} options.errorMessages
+     *   options for initializing error messages for different HTTP status codes
+     */
+
+  }, {
+    key: "initializeErrorMessages",
+    value: function initializeErrorMessages() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      var errorMessages = _objectSpread$3({}, options.errorMessages);
+
+      this.errorMessages = _objectSpread$3({
+        default: 'Something went wrong.'
+      }, errorMessages);
     }
     /**
      * Wrapper around fetch applies user defined fetch options
@@ -2357,8 +2478,7 @@ var Store = (_class = /*#__PURE__*/function () {
       });
       return promise.then( /*#__PURE__*/function () {
         var _ref4 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee3(response) {
-          var status, json, data, included, _json, errorString;
-
+          var status, json, data, included, errors;
           return _regeneratorRuntime__default["default"].wrap(function _callee3$(_context3) {
             while (1) {
               switch (_context3.prev = _context3.next) {
@@ -2402,63 +2522,35 @@ var Store = (_class = /*#__PURE__*/function () {
                   return _context3.abrupt("return", records);
 
                 case 15:
-                  _json = {};
-                  _context3.prev = 16;
-                  _context3.next = 19;
-                  return response.json();
+                  _context3.next = 17;
+                  return parseErrors(response, _this6.errorMessages);
 
-                case 19:
-                  _json = _context3.sent;
-                  _context3.next = 25;
-                  break;
-
-                case 22:
-                  _context3.prev = 22;
-                  _context3.t0 = _context3["catch"](16);
-                  return _context3.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
-
-                case 25:
-                  if (_json.errors) {
-                    _context3.next = 27;
-                    break;
-                  }
-
-                  return _context3.abrupt("return", Promise.reject(new Error(_this6.genericErrorMessage)));
-
-                case 27:
-                  if (Array.isArray(_json.errors)) {
-                    _context3.next = 29;
-                    break;
-                  }
-
-                  return _context3.abrupt("return", Promise.reject(new TypeError('Top level errors in response are not an array.')));
-
-                case 29:
+                case 17:
+                  errors = _context3.sent;
                   mobx.runInAction(function () {
-                    _json.errors.forEach(function (error) {
+                    errors.forEach(function (error) {
                       var _parseErrorPointer = parseErrorPointer(error),
                           index = _parseErrorPointer.index,
                           key = _parseErrorPointer.key;
 
                       if (key != null) {
-                        var errors = recordsArray[index].errors[key] || [];
-                        errors.push(error);
-                        recordsArray[index].errors[key] = errors;
+                        // add the error to the record
+                        var _errors = recordsArray[index].errors[key] || [];
+
+                        _errors.push(error);
+
+                        recordsArray[index].errors[key] = _errors;
                       }
                     });
-
-                    errorString = recordsArray.map(function (record) {
-                      return JSON.stringify(record.errors);
-                    }).join(';');
                   });
-                  return _context3.abrupt("return", Promise.reject(new Error(errorString)));
+                  throw new Error(JSON.stringify(errors));
 
-                case 31:
+                case 20:
                 case "end":
                   return _context3.stop();
               }
             }
-          }, _callee3, null, [[16, 22]]);
+          }, _callee3);
         }));
 
         return function (_x4) {
@@ -2585,7 +2677,7 @@ var Store = (_class = /*#__PURE__*/function () {
       }
     };
   }
-}), _applyDecoratedDescriptor__default["default"](_class.prototype, "reset", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "init", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeNetworkConfiguration", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeModelTypeIndex", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createOrUpdateModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createModelsFromData", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "updateRecords", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
+}), _applyDecoratedDescriptor__default["default"](_class.prototype, "reset", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "reset"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "init", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "init"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeNetworkConfiguration", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeNetworkConfiguration"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeModelTypeIndex", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeModelTypeIndex"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeObservableDataProperty", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeObservableDataProperty"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "initializeErrorMessages", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "initializeErrorMessages"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createOrUpdateModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createOrUpdateModel"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createModelsFromData", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModelsFromData"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "createModel", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "createModel"), _class.prototype), _applyDecoratedDescriptor__default["default"](_class.prototype, "updateRecords", [mobx.action], Object.getOwnPropertyDescriptor(_class.prototype, "updateRecords"), _class.prototype)), _class);
 
 var _excluded = ["type"],
     _excluded2 = ["type", "parent"];
@@ -3374,20 +3466,18 @@ function getRelatedRecords(record, property) {
  */
 
 function getRelatedRecord(record, property) {
-  var modelType = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   // Get relationships
   var relationships = record.relationships; // Short circuit if no relationships are present
 
   if (!relationships) return; // Use property name unless model type is provided
 
-  var relationType = modelType ? singularizeType(modelType) : property;
-  var reference = relationships[relationType]; // Short circuit if matching reference is not found
+  var reference = relationships[property]; // Short circuit if matching reference is not found
 
   if (!reference || !reference.data) return;
   var _reference$data = reference.data,
       id = _reference$data.id,
       type = _reference$data.type;
-  var recordType = modelType || type;
+  var recordType = type;
   return record.store.getRecord(recordType, id);
 }
 /**

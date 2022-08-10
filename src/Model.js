@@ -8,7 +8,7 @@ import {
   runInAction
 } from 'mobx'
 
-import { diff, makeDate } from './utils'
+import { diff, makeDate, parseErrors } from './utils'
 
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
@@ -458,16 +458,13 @@ class Model {
 
           return _this
         } else {
-          runInAction(() => {
-            _this.errors = { status: response.status }
-          })
-          return _this
+          const errors = await parseErrors(response, _this.store.errorMessages)
+          throw new Error(JSON.stringify(errors))
         }
       },
       function (error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false
-        _this.errors = error
         throw error
       }
     )

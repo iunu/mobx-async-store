@@ -5,6 +5,7 @@ import {
   fetchWithRetry,
   idOrNewId,
   deriveIdQueryStrings,
+  parseErrors,
   parseErrorPointer,
   requestUrl
 } from './utils'
@@ -54,8 +55,6 @@ class Store {
    */
 
   loadedStates = observable.map()
-
-  genericErrorMessage = 'Something went wrong.'
 
   /**
    * Initializer for Store class
@@ -362,9 +361,9 @@ class Store {
       this.deleteLoadingState(state)
       return record
     } else {
-      // TODO: return Promise.reject(response.status)
       this.deleteLoadingState(state)
-      return null
+      const errors = await parseErrors(response, this.errorMessages)
+      throw new Error(JSON.stringify(errors))
     }
   }
 
@@ -421,7 +420,7 @@ class Store {
    * @param {String} type the type to get
    * @param {String} ids the ids of the records to get
    * @param {Object} options { queryParams }
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   fetchMany = (type, ids, options = {}) => {
     const idsToQuery = ids.slice().map(String)
@@ -586,7 +585,7 @@ class Store {
    * @method fetchAll
    * @param {String} type the type to find
    * @param {Object} options
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   fetchAll = async (type, options = {}) => {
     const { queryParams } = options
@@ -626,7 +625,8 @@ class Store {
       runInAction(() => {
         this.deleteLoadingState(state)
       })
-      return Promise.reject(response.status)
+      const errors = await parseErrors(response, this.errorMessages)
+      throw new Error(JSON.stringify(errors))
     }
   }
 
@@ -666,7 +666,7 @@ class Store {
    * @method findAll
    * @param {String} type the type to find
    * @param {Object} options { queryParams }
-   * @return {Promise} Promise.resolve(records) or Promise.reject(status)
+   * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   findAll = (type, options = {}) => {
     const records = this.getAll(type, options)
@@ -713,6 +713,7 @@ class Store {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
+    this.initializeErrorMessages(options)
   }
 
   /**
@@ -766,6 +767,24 @@ class Store {
         meta: observable.map()
       }
     })
+  }
+
+  /**
+   * Configure the error messages returned from the store when API requests fail
+   *
+   * @method initializeErrorMessages
+   * @param {Object} options for initializing the store
+   * @param {Object} options.errorMessages
+   *   options for initializing error messages for different HTTP status codes
+   */
+  @action
+  initializeErrorMessages (options = {}) {
+    const errorMessages = { ...options.errorMessages }
+
+    this.errorMessages = {
+      default: 'Something went wrong.',
+      ...errorMessages
+    }
   }
 
   /**
@@ -1069,41 +1088,20 @@ class Store {
           // again - this may be a single record so preserve the structure
           return records
         } else {
-          let json = {}
-          try {
-            json = await response.json()
-          } catch (error) {
-            // 500 doesn't return a parsable response
-            return Promise.reject(new Error(this.genericErrorMessage))
-          }
-
-          if (!json.errors) {
-            return Promise.reject(new Error(this.genericErrorMessage))
-          }
-
-          if (!Array.isArray(json.errors)) {
-            return Promise.reject(new TypeError('Top level errors in response are not an array.'))
-          }
-
-          // Add all errors from the API response to the record(s).
-          // This is done by comparing the pointer in the error to
-          // the request.
-          let errorString
+          const errors = await parseErrors(response, this.errorMessages)
           runInAction(() => {
-            json.errors.forEach((error) => {
+            errors.forEach((error) => {
               const { index, key } = parseErrorPointer(error)
               if (key != null) {
+                // add the error to the record
                 const errors = recordsArray[index].errors[key] || []
                 errors.push(error)
                 recordsArray[index].errors[key] = errors
               }
             })
-            errorString = recordsArray
-              .map((record) => JSON.stringify(record.errors))
-              .join(';')
           })
 
-          return Promise.reject(new Error(errorString))
+          throw new Error(JSON.stringify(errors))
         }
       },
       function (error) {

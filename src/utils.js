@@ -165,6 +165,60 @@ export function diff (a = {}, b = {}) {
 }
 
 /**
+ * Parses JSONAPI error objects from a fetch response.
+ * If the response's body is undefined or is not formatted with a top-level `errors` key
+ * containing an array of errors, it builds a JSONAPI error object from the response status
+ * and a `errorMessages` configuration.
+ *
+ * Errors that are returned which contain a status also have their `detail` overridden with
+ * values from this configuration.
+ *
+ * @method parseErrors
+ * @param {Object} response
+ *   a fetch response
+ * @param {Object} errorMessages
+ *   store configuration of error messages corresponding to HTTP status codes
+ * @return Array<Object> An array of JSONAPI errors
+ */
+export async function parseErrors (response, errorMessages) {
+  let json = {}
+  try {
+    json = await response.json()
+  } catch (error) {
+    // server doesn't return a parsable response
+    const statusError = {
+      detail: errorMessages[response.status] || errorMessages.default,
+      status: response.status
+    }
+    return [statusError]
+  }
+
+  if (!json.errors) {
+    const statusError = {
+      detail: errorMessages[response.status] || errorMessages.default,
+      status: response.status
+    }
+    return [statusError]
+  }
+
+  if (!Array.isArray(json.errors)) {
+    const statusError = {
+      detail: 'Top level errors in response are not an array.',
+      status: response.status
+    }
+    return [statusError]
+  }
+
+  return json.errors.map((error) => {
+    // override or add the configured error message based on response status
+    if (error.status && errorMessages[error.status]) {
+      error.detail = errorMessages[error.status]
+    }
+    return error
+  })
+}
+
+/**
  * Parses the pointer of the error to retrieve the index of the
  * record the error belongs to and the full path to the attribute
  * which will serve as the key for the error.

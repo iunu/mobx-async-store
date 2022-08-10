@@ -566,15 +566,15 @@ describe('Store', () => {
   })
 
   describe('updateRecords', () => {
-    function mockRequest (errors) {
+    function mockRequest (errors, status = 422) {
       return new Promise((resolve, reject) => {
         const body = JSON.stringify({ errors })
-        process.nextTick(() => resolve(new Response(body, { status: 422 })))
+        process.nextTick(() => resolve(new Response(body, { status })))
       })
     }
 
     describe('error handling', () => {
-      it('ignores errors without a pointer', async () => {
+      it('ignores errors without a pointer or status', async () => {
         const todo = store.add('todos', { title: '' })
         const errors = [
           {
@@ -603,6 +603,25 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), todo)
         } catch (error) {
+          expect(todo.errors).toEqual({})
+        }
+      })
+
+      it('surfaces errors with a status and no pointer', async () => {
+        const todo = store.add('todos', { title: '' })
+        const errors = [
+          {
+            detail: 'Forbidden',
+            status: 403
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors), todo)
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Forbidden')
+          expect(jsonError.status).toBe(403)
           expect(todo.errors).toEqual({})
         }
       })
@@ -722,8 +741,9 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch (error) {
-          expect(error.message).toBe('Top level errors in response are not an array.')
-          expect(error.name).toBe('TypeError')
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Top level errors in response are not an array.')
+          expect(jsonError.status).toBe(422)
         }
       })
 
@@ -735,8 +755,65 @@ describe('Store', () => {
         try {
           await store.updateRecords(mockRequest(errors), [todo1, todo2])
         } catch (error) {
-          expect(error.message).toMatch('Something went wrong.')
-          expect(error.name).toBe('Error')
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Something went wrong.')
+          expect(jsonError.status).toBe(422)
+        }
+      })
+    })
+
+    describe('with HTTP response code exceptions', () => {
+      beforeEach(() => {
+        store = new AppStore({
+          baseUrl: mockBaseUrl,
+          defaultFetchOptions: mockFetchOptions,
+          headersOfInterest: ['X-Mobx-Example'],
+          errorMessages: {
+            403: "You don't have permission to access this record.",
+            500: 'Oh no!',
+            default: 'Sorry.'
+          }
+        })
+      })
+
+      it('uses the configured error message for the corresponding HTTP status code', async () => {
+        const todo = store.add('todos', { title: '' })
+        let errors = [
+          {
+            detail: "No you don't!",
+            status: 403,
+            title: 'Forbidden'
+          }
+        ]
+
+        try {
+          await store.updateRecords(mockRequest(errors, 403), todo)
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe("You don't have permission to access this record.")
+          expect(jsonError.status).toBe(403)
+        }
+
+        errors = [{ status: 500 }]
+
+        try {
+          await store.updateRecords(mockRequest(errors, 500), todo)
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Oh no!')
+          expect(jsonError.status).toBe(500)
+        }
+      })
+
+      it('uses the default error message when the response cannot be parsed', async () => {
+        const todo = store.add('todos', {})
+
+        try {
+          await store.updateRecords(mockRequest(undefined, 400), todo)
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Sorry.')
+          expect(jsonError.status).toBe(400)
         }
       })
     })
@@ -853,6 +930,41 @@ describe('Store', () => {
       await store.fetchOne('todos', '3', { queryTag: 'loadingSpecialTodo' })
       expect(store.loadingStates.get('loadingSpecialTodos')).toBeUndefined()
       expect(toJS(store.loadedStates.get('loadingSpecialTodo'))).toMatchObject(new Set([JSON.stringify({ url: '/example_api/todos/3', type: 'todos', queryParams: undefined, queryTag: 'loadingSpecialTodo' })]))
+    })
+
+    describe('error handling', () => {
+      it('rejects with the status', async () => {
+        fetch.mockResponses(['', { status: 500 }])
+        try {
+          await store.fetchOne('todos', '3')
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe('Something went wrong.')
+          expect(jsonError.status).toBe(500)
+        }
+      })
+
+      it('uses the configured error message for the corresponding HTTP status code', async () => {
+        store = new AppStore({
+          baseUrl: mockBaseUrl,
+          defaultFetchOptions: mockFetchOptions,
+          errorMessages: {
+            403: "You don't have permission to access this record.",
+            500: 'Oh no!',
+            default: 'Sorry.'
+          }
+        })
+
+        fetch.mockResponses(['', { status: 403 }])
+
+        try {
+          await store.fetchOne('todos', '3')
+        } catch (error) {
+          const jsonError = JSON.parse(error.message)[0]
+          expect(jsonError.detail).toBe("You don't have permission to access this record.")
+          expect(jsonError.status).toBe(403)
+        }
+      })
     })
   })
 
@@ -1143,9 +1255,14 @@ describe('Store', () => {
 
     it('returns a rejected Promise with the status if fetching fails', async () => {
       fetch.mockResponse('', { status: 401 })
-      const query = store.fetchAll('todos')
-      expect(query).toBeInstanceOf(Promise)
-      await expect(query).rejects.toEqual(401)
+      try {
+        await store.fetchAll('todos')
+      } catch (error) {
+        const jsonError = JSON.parse(error.message)[0]
+        expect(jsonError.detail).toBe('Something went wrong.')
+        expect(jsonError.status).toBe(401)
+        expect(error.name).toBe('Error')
+      }
     })
 
     it('allows setting a tag for a query', async () => {
@@ -1340,12 +1457,16 @@ describe('Store', () => {
     })
 
     it('returns a rejected Promise with the status if fetching fails', async () => {
-      expect.assertions(2)
       fetch.mockResponse('', { status: 401 })
       const ids = createMockIds(5, '1000')
-      const query = store.fetchMany('todos', ids)
-      expect(query).toBeInstanceOf(Promise)
-      await expect(query).rejects.toEqual(401)
+      try {
+        await store.fetchMany('todos', ids)
+      } catch (error) {
+        const jsonError = JSON.parse(error.message)[0]
+        expect(jsonError.detail).toBe('Something went wrong.')
+        expect(jsonError.status).toBe(401)
+        expect(error.name).toBe('Error')
+      }
     })
 
     it('uses multiple fetches for data from server', async () => {
