@@ -1,6 +1,8 @@
 /* eslint-disable no-tabs */
 import babel from 'rollup-plugin-babel'
 import pkg from './package.json'
+import typescript from '@rollup/plugin-typescript'
+import commonjs from '@rollup/plugin-commonjs'
 
 export default [
 	// browser-friendly UMD build
@@ -56,19 +58,28 @@ export default [
 			'mobx',
 			'moment',
 			'uuid/v1',
+			'crypto',
+			'util',
 			'@babel/runtime/helpers/assertThisInitialized',
 			'@babel/runtime/helpers/toConsumableArray',
 			'@babel/runtime/helpers/wrapNativeSuper'
 		],
 		output: [
-			{ file: pkg.main, format: 'cjs' },
-			{ file: pkg.module, format: 'es' }
+			{ file: pkg.main, format: 'cjs', sourcemap: true },
+			{ file: pkg.module, format: 'es', sourcemap: true }
 		],
 		plugins: [
 			babel({
 				exclude: ['node_modules/**', '/coverage'],
 				runtimeHelpers: true,
 				plugins: [['@babel/transform-runtime', { regenerator: true, useESModules: false }]]
+			}),
+			commonjs(),
+			typescript({
+				tsconfig: './tsconfig.build.json',
+				declaration: true,
+				declarationDir: 'types',
+				outputToFilesystem: false
 			})
 		]
 	}

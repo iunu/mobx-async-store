@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2019",
+    "composite": false,
+    "experimentalDecorators": true,
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "allowJs": true,
+    "noImplicitAny": true,
+    "allowUmdGlobalAccess": true,
+    "strictNullChecks": true
+  },
+  "exclude": ["**/*.config.js", "jsconfig.json", "node_modules", "coverage"],
+  "include": ["src"]
+}
