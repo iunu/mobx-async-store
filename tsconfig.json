@@ -14,11 +14,11 @@
     "experimentalDecorators": true,
     "noEmit": false,
     "rootDir": ".",
-    "declarationDir": "types",
     "outDir": "dist",
     "allowJs": true,
     "noImplicitAny": true,
-    "allowUmdGlobalAccess": true
+    "allowUmdGlobalAccess": true,
+    "strictNullChecks": true
   },
   "exclude": ["**/*.config.js", "jsconfig.json", "node_modules", "coverage"],
   "include": ["src"]
