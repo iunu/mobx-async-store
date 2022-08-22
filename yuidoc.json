@@ -1,6 +1,6 @@
 {
     "name": "mobx-async-store",
-    "description": "Asyc Data Store for mobx",
+    "description": "Async Data Store for mobx",
     "url": "https://github.com/artemis-ag/mobx-async-store",
     "options": {
         "outdir": "./docs",

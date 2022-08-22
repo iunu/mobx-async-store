@@ -6,3 +6,4 @@ package-lock.json
 /coverage/coverage-summary.json
 /coverage/lcov.info
 .DS_Store
+.idea
