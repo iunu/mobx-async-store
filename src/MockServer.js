@@ -1,4 +1,3 @@
-/* global fetch Response */
 import FactoryFarm from './FactoryFarm'
 import { serverResponse } from './testUtils'
 

@@ -1,4 +1,4 @@
-import { set } from 'mobx'
+import { ObservableMap, set } from 'mobx'
 import schema from '../schema'
 import { makeDate } from '../utils'
 
@@ -9,7 +9,7 @@ import { makeDate } from '../utils'
  * @param value
  * @return {Boolean}
  */
-export function isPresent (value) {
+export function isPresent(value: string): boolean {
   return value !== null && value !== undefined && value !== ''
 }
 
@@ -18,13 +18,13 @@ export function isPresent (value) {
  * @method validatePresence
  * @param value
  */
-function validatePresence (value) {
+function validatePresence(value: string): { isValid: boolean, errors: { key: string, message: string }[] } {
   return {
     isValid: isPresent(value),
     errors: [{
       key: 'blank',
-      message: 'can\'t be blank'
-    }]
+      message: 'can\'t be blank',
+    }],
   }
 }
 
@@ -32,7 +32,7 @@ function validatePresence (value) {
  * Helper method for apply the correct defaults to attributes.
  * @method defaultValueForDescriptor
  */
-function defaultValueForDescriptor (descriptor, DataType) {
+function defaultValueForDescriptor(descriptor: { initializer: Function }, DataType: { name: string | Array<string | number> }) {
   if (typeof descriptor.initializer === 'function') {
     const value = descriptor.initializer()
     if (DataType.name === 'Date') {
@@ -59,8 +59,8 @@ function defaultValueForDescriptor (descriptor, DataType) {
  * ```
  * @method attribute
  */
-export function attribute (dataType = (obj) => obj) {
-  return function (target, property, descriptor) {
+export function attribute(dataType = (obj) => obj) {
+  return function(target, property, descriptor) {
     const { type } = target.constructor
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
     // Update the schema
@@ -95,7 +95,7 @@ export function attribute (dataType = (obj) => obj) {
  * ```
  * @method validates
  */
-export function validates (target, property) {
+export function validates (target: Function, property: string) {
    let validator = validatePresence
 
    if (typeof target === 'function') {

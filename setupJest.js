@@ -1,3 +1,3 @@
-const mockFetch = require('jest-fetch-mock')
+const mockFetch = require('jest-fetch-mock').enableFetchMocks()
 
-global.fetch = mockFetch
+// global.fetch = mockFetch

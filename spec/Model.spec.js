@@ -6,7 +6,6 @@ import {
   relatedToOne,
   validates
 } from '../src/main'
-/* global fetch */
 import { autorun, isObservable, runInAction } from 'mobx'
 import {
   exampleRelatedToManyIncludedResponse,

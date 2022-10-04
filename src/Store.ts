@@ -668,7 +668,7 @@ class Store {
    * @param {Object} options { queryParams }
    * @return {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
-  findAll = (type, options = {}) => {
+  findAll = (type: string, options: object) => {
     const records = this.getAll(type, options)
     if (records.length > 0) {
       return records
@@ -688,7 +688,7 @@ class Store {
    * @method reset
    */
   @action
-  reset (type) {
+  reset (type?: string): void {
     if (type) {
       this.data[type] = {
         records: observable.map(),
@@ -1042,7 +1042,7 @@ class Store {
    * set of records with the data returned from the API
    *
    * @method updateRecords
-   * @param {Promise} a request to the API
+   * @param {Promise} promise
    * @param {Model|Array} records to be updated
    */
   @action
