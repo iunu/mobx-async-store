@@ -13,12 +13,7 @@ module.exports = {
   ],
   transform: {
     '^.+\\.js?$': 'babel-jest',
-    '^.+.tsx?$': [
-      {
-        tsconfig: 'tsconfig.spec.js',
-        isolatedModules: true
-      }
-    ]
+    '^.+.tsx?$': 'ts-jest'
   },
   testPathIgnorePatterns: [
     '/tests/fixtures/',

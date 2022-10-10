@@ -16,6 +16,7 @@ import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 import union from 'lodash/union'
+import { ErrorMessageProps } from 'interfaces/global'
 
 /**
  * Maps the passed-in property names through and runs validations against those properties
@@ -26,9 +27,9 @@ import union from 'lodash/union'
  * @return {Array} an array of booleans representing results of validations
  */
 
-function validateProperties (model, propertyNames, propertyDefinitions) {
+function validateProperties (model: IModel, propertyNames: string[], propertyDefinitions: object) {
   return propertyNames.map((property) => {
-    const { validator } = propertyDefinitions[property]
+    const { validator } = propertyDefinitions[property as keyof object]
 
     if (!validator) return true
 
@@ -52,6 +53,31 @@ function stringifyIds (object) {
       stringifyIds(property)
     }
   })
+}
+
+interface ISnapshot {
+  attributes: object
+  relationships: object[]
+}
+
+export interface IModel {
+  id: string
+  isDirty: boolean
+  dirtyAttributes: string[]
+  dirtyRelationships: string[]
+  hasUnpersistedChanges: boolean
+  snapshot: ISnapshot
+  previousSnapshot: ISnapshot
+  persistedSnapshot: ISnapshot
+  type: string
+  attributes: object
+  attributeDefinitions: object
+  relationshipDefinitions: object
+  hasErrors: boolean
+  attributeNames: string[]
+  relationshipNames: string[]
+  defaultAttributes: object,
+  errors: ErrorMessageProps[]
 }
 
 /*
