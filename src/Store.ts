@@ -77,10 +77,10 @@ class Store {
    * ```
    * @method add
    * @param {String} type
-   * @param {Object} properties the properties to use
+   * @param {Object} data
    * @return {Object} the new record
    */
-  add = (type, data) => {
+  add = (type: string, data: { [k: string]: string }): { [k: string]: string } => {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
@@ -101,7 +101,7 @@ class Store {
    * @param {String} type
    * @return {Object}
    */
-  pickAttributes = (properties, type) => {
+  pickAttributes = (properties: { [k: string]: string }, type: string): { [k: string]: string } => {
     const attributeNames = Object.keys(this.schema.structure[type])
     return pick(properties, attributeNames)
   }
@@ -126,22 +126,22 @@ class Store {
    * @param {String} type
    * @return {Object}
    */
-  pickRelationships = (properties, type) => {
+  pickRelationships = (properties: object, type: string): { [k: string]: string } => {
     const relationshipNames = Object.keys(this.schema.relations[type] || {})
     const allRelationships = pick(properties, relationshipNames)
 
     return Object.keys(allRelationships).reduce((references, key) => {
-      const relatedModel = allRelationships[key]
+      const relatedModel = allRelationships[key as keyof object]
       let data
       if (Array.isArray(relatedModel)) {
-        data = relatedModel.map((model) => ({
+        data = relatedModel.map((model: { id: string; type: string }) => ({
           id: model.id,
           type: model.type
         }))
       } else {
-        data = { id: relatedModel.id, type: relatedModel.type }
+        data = { id: relatedModel.id, type: relatedModel?.[type] }
       }
-      references[key] = { data }
+      references[key as keyof object] = { data }
       return references
     }, {})
   }
@@ -160,7 +160,7 @@ class Store {
    * @param {Object} properties the properties to use
    * @return {Object} the new record
    */
-  build = (type, properties) => {
+  build = (type: string, properties: { [k: string]: string }): { [k: string]: string } => {
     const id = idOrNewId(properties.id)
 
     const attributes = this.pickAttributes(properties, type)
@@ -172,11 +172,11 @@ class Store {
   /**
    * @method addModel
    * @param {String} type
-   * @param {Object} attributes json api attributes
+   * @param {Object} properties json api attributes
    * @return {Object} Artemis Data record
    */
   @action
-  addModel = (type, properties) => {
+  addModel = (type: string, properties: { [k: string]: string }): { [k: string]: string } => {
     const id = idOrNewId(properties.id)
 
     const attributes = this.pickAttributes(properties, type)
@@ -185,7 +185,7 @@ class Store {
     const model = this.createModel(type, id, { attributes, relationships })
 
     // Add the model to the type records index
-    this.data[type].records.set(String(model.id), model)
+    this.data[type as keyof object].records.set(String(model.id), model)
 
     return model
   }
@@ -196,8 +196,8 @@ class Store {
    * @param {String} data array of data objects
    * @return {Array} array of ArtemisData records
    */
-  addModels = (type, data) => {
-    return runInAction(() => data.map((obj) => this.addModel(type, obj)))
+  addModels = (type: string, data: { [k: string]: string }[]): { [k: string]: string }[] => {
+    return runInAction(() => data.map((obj: { [k: string]: string }) => this.addModel(type, obj)))
   }
 
   /**
@@ -209,7 +209,7 @@ class Store {
    * @param {Array} records
    * @param {Object} options {queryParams, extensions}
    */
-  bulkSave = (type, records, options = {}) => {
+  bulkSave = (type: string, records: { [k: string]: string }[], options = {}): { [k: string]: string } => {
     console.warn('bulkSave is being deprecated. Please use either bulkCreate or bulkUpdate to be more precise about your request.')
     return this._bulkSave(type, records, options, 'POST')
   }
@@ -225,7 +225,7 @@ class Store {
    * @param {Object} options {queryParams, extensions}
    * @param {String} method
    */
-  _bulkSave = (type, records, options = {}, method) => {
+  _bulkSave = (type: string, records: { [k: string]: string }[], options = {}, method: string): { [k: string]: string } => {
     const { queryParams, extensions } = options
 
     // get url for record type
@@ -498,7 +498,7 @@ class Store {
    * @param {String} type the type to find
    * @param {Object} options
    */
-  fetchUrl (type, queryParams, id, options) {
+  fetchUrl (type: string, queryParams, id: string, options: { [k: string]: string }) {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 

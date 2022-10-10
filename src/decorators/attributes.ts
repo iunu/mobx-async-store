@@ -1,4 +1,4 @@
-import { ObservableMap, set } from 'mobx'
+import { set } from 'mobx'
 import schema from '../schema'
 import { makeDate } from '../utils'
 

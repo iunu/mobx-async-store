@@ -46,7 +46,7 @@ export function singularizeType (recordType: string): string {
  * @method requestUrl
  * @return {string} formatted url string
  */
-export function requestUrl (baseUrl: string, endpoint: string, queryParams: { [k: string]: string }, id: number | string): string {
+export function requestUrl (baseUrl: string, endpoint: string, queryParams: string, id: number | string): string {
   let queryParamString = ''
   if (Object.keys(queryParams).length > 0) {
     queryParamString = `?${QueryString.stringify(queryParams)}`
@@ -183,7 +183,7 @@ export function diff (a = {}, b = {}): string[] {
  *   store configuration of error messages corresponding to HTTP status codes
  * @return Array<Object> An array of JSONAPI errors
  */
-export async function parseErrors (response: Response, errorMessages: ErrorMessageProps) {
+export async function parseErrors (response: Response, errorMessages: ErrorMessageProps): Promise<ErrorMessageProps | ErrorMessageProps[]> {
   const json = await response.json()
     .catch (() => {
     // server doesn't return a parsable response
