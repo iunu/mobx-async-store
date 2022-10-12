@@ -27,7 +27,7 @@ import { ErrorMessageProps } from 'interfaces/global'
  * @return {Array} an array of booleans representing results of validations
  */
 
-function validateProperties (model: IModel, propertyNames: string[], propertyDefinitions: object) {
+function validateProperties (model: IModel, propertyNames: string[], propertyDefinitions: object): boolean | ErrorMessageProps[] {
   return propertyNames.map((property) => {
     const { validator } = propertyDefinitions[property as keyof object]
 
@@ -36,17 +36,21 @@ function validateProperties (model: IModel, propertyNames: string[], propertyDef
     const validationResult = validator(model[property], model)
 
     if (!validationResult.isValid) {
-      model.errors[property] = validationResult.errors
+      model.errors[property as keyof object] = validationResult.errors
     }
 
     return validationResult.isValid
   })
 }
 
-function stringifyIds (object) {
-  Object.keys(object).forEach(key => {
-    const property = object[key]
-    if (typeof property === 'object') {
+type StringifyIdsProps<Type> = {
+  [Property in keyof Type]: Type[Property]
+}
+
+function stringifyIds<T> (object: StringifyIdsProps<T>) {
+  Object.keys(object).forEach((key) => {
+    const property = object[key as keyof StringifyIdsProps<T>]
+    if(typeof property === 'object') {
       if (property.id) {
         property.id = String(property.id)
       }
@@ -108,6 +112,8 @@ export interface IModel {
  @class Model
  */
 class Model {
+  id: string | null = null;
+  store: unknown;
   /**
    * Initializer for model
    *
@@ -171,7 +177,7 @@ class Model {
    * @property isDirty
    * @type {Boolean}
    */
-  get isDirty () {
+  get isDirty (): boolean {
     return this.dirtyAttributes.length > 0 || this.dirtyRelationships.length > 0
   }
 
@@ -254,7 +260,7 @@ class Model {
    * @property hasUnpersistedChanges
    * @type {Boolean}
    */
-  get hasUnpersistedChanges () {
+  get hasUnpersistedChanges (): boolean {
     return this.isDirty || !this.previousSnapshot.persisted
   }
 
@@ -263,7 +269,7 @@ class Model {
    * @property isNew
    * @type {Boolean}
    */
-  @computed get isNew () {
+  @computed get isNew (): boolean {
     const { id } = this
     if (!id) return true
     if (String(id).indexOf('tmp') === -1) return false
@@ -285,7 +291,7 @@ class Model {
    * @type {Boolean}
    * @default false
    */
-  isInFlight = false
+  isInFlight: boolean = false
 
   /**
    * A hash of errors from the server
@@ -298,12 +304,12 @@ class Model {
    * @type {Object}
    * @default {}
    */
-  @observable errors = {}
+  @observable errors: ErrorMessageProps = { detail: {}, status: 0 }
 
   /**
    * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
    *
-   * @property snapshots
+   * @property _snapshots
    * @type {Array<Snapshot>}
    * @default []
    */
@@ -322,7 +328,7 @@ class Model {
    * ```
    * @method rollback
    */
-  rollback () {
+  rollback (): void {
     this._applySnapshot(this.previousSnapshot)
   }
 
@@ -331,7 +337,7 @@ class Model {
    * state if the model was never persisted
    * @method rollbackToPersisted
    */
-  rollbackToPersisted () {
+  rollbackToPersisted (): void {
     this._applySnapshot(this.persistedSnapshot)
     this._takeSnapshot({ persisted: true })
   }
@@ -342,7 +348,7 @@ class Model {
    * @return {Promise}
    * @param {Object} options
    */
-  save (options = {}) {
+  save (options: { skip_validations: boolean, queryParams: string, relationships: string[], attributes: string[] }) {
     if (!options.skip_validations && !this.validate()) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -417,8 +423,8 @@ class Model {
    * @return {Boolean}
    */
 
-  validate (options = {}) {
-    this.errors = {}
+  validate (options: { attributes: string[], relationships: string[] }): boolean {
+    this.errors = { detail: {}, status: 0 }
     const { attributeDefinitions, relationshipDefinitions } = this
 
     const attributeNames = options.attributes || this.attributeNames
@@ -427,7 +433,7 @@ class Model {
     const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
     const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
 
-    return validAttributes.concat(validRelationships).every(value => value)
+    return validAttributes.concat(validRelationships).every((value) => value)
   }
 
   /**
@@ -435,7 +441,7 @@ class Model {
    * @method destroy
    * @return {Promise} an empty promise with any success/error status
    */
-  destroy (options = {}) {
+  destroy (options: { params?: {} | undefined; skipRemove?: boolean }) {
     const {
       constructor: { type }, id, snapshot, isNew
     } = this
@@ -643,7 +649,7 @@ class Model {
    * @method hasErrors
    * @return {Boolean}
    */
-  get hasErrors () {
+  get hasErrors (): boolean {
     return Object.keys(this.errors).length > 0
   }
 
@@ -653,7 +659,7 @@ class Model {
    * @method hasErrors
    * @return {Boolean}
    */
-  errorForKey (key) {
+  errorForKey (key: string): boolean {
     return this.errors[key]
   }
 

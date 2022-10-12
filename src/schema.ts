@@ -1,20 +1,6 @@
-
-
-export interface ISchemaDefinition {
-  validator: () => boolean
-  defaultValue: string
-  dataType: string
-}
-
-export interface IStructure {
-  [k: string]: {
-    [l: string]: ISchemaDefinition
-  }
-}
-
-export interface ISchema {
-  structure: IStructure,
-  relations: IStructure
+export interface ISchema<S, R> {
+  structure: S
+  relations: R
 }
 
 /**
@@ -23,21 +9,38 @@ export interface ISchema {
  *
  * @class Schema
  */
-export class Schema implements ISchema {
-  structure = {}
-  relations = {}
+export class Schema<S, R> implements ISchema<S, R> {
+  structure: S
+  relations: R
 
-  addAttribute ({ type, property, dataType, defaultValue }: { type: string, property: object, dataType: string, defaultValue: string}): void {
-    this.structure[type as keyof IStructure] = this.structure[type as keyof object] || {}
-    this.structure[type as keyof IStructure][property as keyof object] = {
-      defaultValue, dataType
+  constructor(structure: S, relations: R) {
+    this.structure = structure
+    this.relations = relations
+  }
+
+  addAttribute ({ type, property, dataType, defaultValue }: { type: string, property: string, dataType: string, defaultValue: string}): void {
+    // this.structure[type as keyof S] = this.structure[type as keyof S]
+    // this.structure[type as keyof S] = this.structure[property] = {
+    //   defaultValue, dataType
+    // }
+    this.structure = {
+      ...this.structure,
+      [type]: {
+        [property]: { defaultValue, dataType }
+      }
     }
   }
 
   addRelationship ({ type, property, dataType }: { type: string, property: string, dataType: string}): void {
-    this.relations[type as keyof IStructure] = this.relations[type as keyof object] || {}
-    this.relations[type as keyof IStructure][property as keyof object] = {
-      dataType
+    // this.relations[type as keyof R] = this.relations[type as keyof R]
+    // this.relations[type as keyof R][property] = {
+    //   dataType
+    // }
+    this.relations = {
+      ...this.relations,
+      [type]: {
+        [property]: { dataType }
+      }
     }
   }
 
@@ -46,15 +49,21 @@ export class Schema implements ISchema {
    * @method addValidation
    * @param {Object} options includes `type`, `property`, and `validator`
    */
-  addValidation ({ type, property, validator }: { type: string, property: string, validator: string }): void {
-    if (this.structure[type as keyof object][property]) {
-      this.structure[type as keyof object][property].validator = validator
-    } else {
-      this.relations[type as keyof object][property].validator = validator
+  addValidation ({ type, property, validator }: { type: string, property: string, validator: () => void }): void {
+    // if (this.structure[type][property]) {
+    //   this.structure[type][property].validator = validator
+    // } else {
+    //   this.relations[type as keyof object][property].validator = validator
+    // }
+    this.structure = {
+      ...this.structure,
+      [type]: {
+        [property]: { validator }
+      }
     }
   }
 }
 
-const schema = new Schema()
+const schema = Schema
 
 export default schema

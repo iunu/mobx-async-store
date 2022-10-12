@@ -35,7 +35,12 @@ class Relationshipless extends Model {
   @attribute(String) name
 }
 
-function validatesArray (property) {
+/**
+ *
+ * @param {Array<string>} property
+ * @returns {{isValid: boolean, errors: [{message: string, key: string}]}}
+ */
+function validatesArray (property: string[] | number[]): { isValid: boolean; errors: { key: string; message: string }[] } {
   return {
     isValid: Array.isArray(property),
     errors: [{
@@ -45,7 +50,7 @@ function validatesArray (property) {
   }
 }
 
-function validatesArrayPresence (property) {
+function validatesArrayPresence (property: string[] | number[]): { isValid: boolean, errors: { key: string; message: string }[] } {
   return {
     isValid: Array.isArray(property) && property.length > 0,
     errors: [{
@@ -55,11 +60,11 @@ function validatesArrayPresence (property) {
   }
 }
 
-function validatesOptions (property, target) {
-  const errors = []
+function validatesOptions (property: { [x: string]: string }, target: { requiredOptions: (string | number)[] }): { isValid: boolean, errors: { key: string; message: string; data: object }[] } {
+  const errors: { key: string; message: string; data: object }[] = []
 
   if (target.requiredOptions) {
-    target.requiredOptions.forEach(optionKey => {
+    target.requiredOptions.forEach((optionKey: string | number) => {
       if (!property[optionKey]) {
         errors.push({
           key: 'blank',

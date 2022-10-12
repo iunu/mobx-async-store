@@ -44,10 +44,10 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
     dataType: Object
   })
   return {
-    get () {
+    get (): typeof property {
       return getRelatedRecord(this, property)
     },
-    set (record) {
+    set (record: object): object {
       return setRelatedRecord(this, record, property)
     }
   }
@@ -58,11 +58,11 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  * type if specified.
  *
  * @method getRelatedRecords
- * @param {Object} record the record with the relationship
- * @param {String} property the related property to set
- * @param {String} modelType an override of the modelType
+ * @param {object} record the record with the relationship
+ * @param {string} property the related property to set
+ * @param {string} modelType an override of the modelType
  */
-export function getRelatedRecords (record, property, modelType = null) {
+export function getRelatedRecords (record: object, property: string, modelType: string | null = null) {
   const { relationships, cachedRelationships } = record
 
   const relationType = modelType || property
@@ -149,18 +149,18 @@ export function getRelatedRecord (record, property) {
  * - Attempts to find an inverse relationship, and if successful adds it as well
  *
  * @method setRelatedRecord
- * @param {Object} record the record with the relationship
- * @param {Object} relatedRecord the record that will be related
- * @param {String} property the related property to set
- * @param {String} modelType an override of the modelType
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the record that will be related
+ * @param {string} property the related property to set
+ * @param {string} modelType an override of the modelType
  */
 export function setRelatedRecord (
-  record,
-  relatedRecord,
-  property,
-  modelType = null
+  record: Model,
+  relatedRecord: Model,
+  property: string,
+  modelType: string | null = null
 ) {
-  if (relatedRecord && !(relatedRecord instanceof Model)) {
+  if (relatedRecord) {
     throw new Error('Related record must be a valid Model object')
   }
 

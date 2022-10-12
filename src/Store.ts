@@ -496,9 +496,11 @@ class Store {
    *
    * @method fetchUrl
    * @param {String} type the type to find
+   * @param {String} queryParams
+   * @param {String} id
    * @param {Object} options
    */
-  fetchUrl (type: string, queryParams, id: string, options: { [k: string]: string }) {
+  fetchUrl (type: string, queryParams, id: string, options?: { [k: string]: string }): string {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
@@ -513,7 +515,7 @@ class Store {
    * @param {Object} options
    * @return {Array} array of records
    */
-  getAll = (type, options = {}) => {
+  getAll = (type: string, options = {}): string[] => {
     const { queryParams } = options
     if (queryParams) {
       return this.getCachedRecords(type, queryParams)
@@ -862,11 +864,11 @@ class Store {
    * @param {String} type
    * @return {Array} array of objects
    */
-  getRecords (type) {
+  getRecords (type: string): object[] {
     const records = Array.from(this.getType(type).records.values()).filter(
       (value) => value && value !== 'undefined'
     )
-    return uniqBy(records, 'id')
+    return uniqBy(records, 'id') as object[]
   }
 
   /**
@@ -877,7 +879,7 @@ class Store {
    * @param {Array} ids
    * @return {Array} array or records
    */
-  getRecordsById (type, ids = []) {
+  getRecordsById (type: string, ids: string[]) {
     // NOTE: Is there a better way to do this?
     return ids
       .map((id) => this.getRecord(type, id))
