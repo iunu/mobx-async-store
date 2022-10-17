@@ -9,7 +9,7 @@ import {
   parseErrorPointer,
   requestUrl
 } from './utils'
-import schema from './schema'
+import schema, { Schema } from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 
 /**
@@ -27,7 +27,7 @@ class Store {
    * @type {Object}
    * @default {}
    */
-  @observable data = {}
+  @observable data: object = {}
 
   /**
    * Observable property used to store values for most recent response headers
@@ -37,7 +37,7 @@ class Store {
    * @type {Object}
    * @default {}
    */
-  @observable lastResponseHeaders = {}
+  @observable lastResponseHeaders: object = {}
 
   /**
    * Data that is in flight
@@ -55,6 +55,7 @@ class Store {
    */
 
   loadedStates = observable.map()
+  private schema: Schema
 
   /**
    * Initializer for Store class

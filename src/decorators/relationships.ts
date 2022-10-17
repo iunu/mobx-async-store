@@ -1,4 +1,4 @@
-import Model from '../Model'
+import Model, { IModel } from '../Model'
 import schema from '../schema'
 import { singularizeType } from '../utils'
 import { transaction } from 'mobx'
@@ -17,7 +17,7 @@ import { transaction } from 'mobx'
  * ```
  * @method relatedToMany
  */
-export function relatedToMany (targetOrModelKlass, property, descriptor) {
+export function relatedToMany (targetOrModelKlass, property: string, descriptor: string) {
   schema.addRelationship({
     type: targetOrModelKlass.constructor.type,
     property,
@@ -37,7 +37,7 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
  *
  * @method relatedToOne
  */
-export function relatedToOne (targetOrModelKlass, property, descriptor) {
+export function relatedToOne (targetOrModelKlass, property: string, descriptor: string) {
   schema.addRelationship({
     type: targetOrModelKlass.constructor.type,
     property,
@@ -211,10 +211,13 @@ export function setRelatedRecord (
  */
 
 export class RelatedRecordsArray extends Array {
-  constructor (array, record, property) {
+  property: string
+  record: IModel
+
+  constructor (array: Array<number | undefined>, record: IModel, property: string) {
     super(...array)
-    this.property = property
     this.record = record
+    this.property = property
   }
 
   /*
@@ -228,7 +231,7 @@ export class RelatedRecordsArray extends Array {
    * For more details, see:
    * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
    */
-  static get [Symbol.species] () {
+  static get [Symbol.species] (): ArrayConstructor {
     return Array
   }
 
@@ -238,7 +241,7 @@ export class RelatedRecordsArray extends Array {
    * @param {Object} relatedRecord the record to add to the array
    * @return {Object} the original relatedRecord
    */
-  add = relatedRecord => {
+  add = (relatedRecord: Model): Model => {
     const { record, property } = this
     const {
       constructor: { type: recordType }
@@ -258,19 +261,19 @@ export class RelatedRecordsArray extends Array {
 
     const { relationships } = record
 
-    if (!relationships[property]) {
-      relationships[property] = {}
+    if (!relationships[property as keyof object & string]) {
+      Object.assign(relationships, { [property]: {} })
     }
 
     if (!relationships[property].data) {
-      relationships[property].data = []
+      Object.assign(relationships, { [property]: { data: [] } })
     }
 
     const existingRelationships = relationships[property]
     const alreadyThere =
       existingRelationships &&
       existingRelationships.data.find(
-        model => model.id === id && model.type === type
+          (model: { id: string; type: string }) => model.id === id && model.type === type
       )
     if (!alreadyThere) {
       relationships[property].data.push({ id, type })
@@ -292,7 +295,7 @@ export class RelatedRecordsArray extends Array {
    * @param {Object} relatedRecord the record to remove from the array
    * @return {Object} the original relatedRecord
    */
-  remove = relatedRecord => {
+  remove = (relatedRecord: Model): Model => {
     const { record, property } = this
     const {
       relationships,
@@ -329,13 +332,13 @@ export class RelatedRecordsArray extends Array {
     return relatedRecord
   }
 
-  replace = array => {
+  replace(array: Model[]): void {
     const { record, property } = this
     const { relationships } = record
 
     transaction(() => {
-      relationships[property] = { data: [] }
-      array.forEach(object => this.add(object))
+      relationships[property as keyof object & string] = { data: [] }
+      array.forEach((object: Model) => this.add(object))
     })
   }
 }

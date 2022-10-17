@@ -1,28 +1,14 @@
-export interface ISchema<S, R> {
-  structure: S
-  relations: R
-}
-
 /**
  * Utility class used to store the schema
  * of model attribute definitions
  *
  * @class Schema
  */
-export class Schema<S, R> implements ISchema<S, R> {
-  structure: S
-  relations: R
+export class Schema {
+  public static relations: object
+  public static structure: object
 
-  constructor(structure: S, relations: R) {
-    this.structure = structure
-    this.relations = relations
-  }
-
-  addAttribute ({ type, property, dataType, defaultValue }: { type: string, property: string, dataType: string, defaultValue: string}): void {
-    // this.structure[type as keyof S] = this.structure[type as keyof S]
-    // this.structure[type as keyof S] = this.structure[property] = {
-    //   defaultValue, dataType
-    // }
+  static addAttribute ({ type, property, dataType, defaultValue }: { type: string, property: string, dataType: string, defaultValue: string}): void {
     this.structure = {
       ...this.structure,
       [type]: {
@@ -31,11 +17,7 @@ export class Schema<S, R> implements ISchema<S, R> {
     }
   }
 
-  addRelationship ({ type, property, dataType }: { type: string, property: string, dataType: string}): void {
-    // this.relations[type as keyof R] = this.relations[type as keyof R]
-    // this.relations[type as keyof R][property] = {
-    //   dataType
-    // }
+  static addRelationship ({ type, property, dataType }: { type: string, property: string, dataType: string}): void {
     this.relations = {
       ...this.relations,
       [type]: {
@@ -49,12 +31,7 @@ export class Schema<S, R> implements ISchema<S, R> {
    * @method addValidation
    * @param {Object} options includes `type`, `property`, and `validator`
    */
-  addValidation ({ type, property, validator }: { type: string, property: string, validator: () => void }): void {
-    // if (this.structure[type][property]) {
-    //   this.structure[type][property].validator = validator
-    // } else {
-    //   this.relations[type as keyof object][property].validator = validator
-    // }
+  static addValidation ({ type, property, validator }: { type: string, property: string, validator: () => void }): void {
     this.structure = {
       ...this.structure,
       [type]: {

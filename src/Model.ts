@@ -27,29 +27,25 @@ import { ErrorMessageProps } from 'interfaces/global'
  * @return {Array} an array of booleans representing results of validations
  */
 
-function validateProperties (model: IModel, propertyNames: string[], propertyDefinitions: object): boolean | ErrorMessageProps[] {
+function validateProperties (model: IModel, propertyNames: string[], propertyDefinitions: object): boolean[] {
   return propertyNames.map((property) => {
-    const { validator } = propertyDefinitions[property as keyof object]
+    const { validator } = propertyDefinitions[property as keyof object & string]
 
     if (!validator) return true
 
     const validationResult = validator(model[property], model)
 
     if (!validationResult.isValid) {
-      model.errors[property as keyof object] = validationResult.errors
+      model.errors[property as keyof object & string] = validationResult.errors
     }
 
     return validationResult.isValid
   })
 }
 
-type StringifyIdsProps<Type> = {
-  [Property in keyof Type]: Type[Property]
-}
-
-function stringifyIds<T> (object: StringifyIdsProps<T>) {
-  Object.keys(object).forEach((key) => {
-    const property = object[key as keyof StringifyIdsProps<T>]
+function stringifyIds<ObjectType> (object: ObjectType): void {
+  Object.keys(object).forEach((key: string) => {
+    const property = object[key as keyof ObjectType & string]
     if(typeof property === 'object') {
       if (property.id) {
         property.id = String(property.id)
@@ -60,8 +56,9 @@ function stringifyIds<T> (object: StringifyIdsProps<T>) {
 }
 
 interface ISnapshot {
-  attributes: object
-  relationships: object[]
+  attributes: { [k: string]: string }
+  relationships: { [k: string]: string }
+  persisted?: boolean
 }
 
 export interface IModel {
@@ -82,6 +79,8 @@ export interface IModel {
   relationshipNames: string[]
   defaultAttributes: object,
   errors: ErrorMessageProps[]
+  relationships: object
+  store: object
 }
 
 /*
@@ -111,15 +110,16 @@ export interface IModel {
 /**
  @class Model
  */
-class Model {
-  id: string | null = null;
-  store: unknown;
+class Model implements IModel {
+  id: string
+  relationships: object
+  store: object
   /**
    * Initializer for model
    *
    * @method constructor
    */
-  constructor (initialAttributes = {}) {
+  constructor (initialAttributes: IModel) {
     makeObservable(this)
     const { defaultAttributes } = this
 
@@ -129,6 +129,9 @@ class Model {
     })
 
     this._takeSnapshot({ persisted: !this.isNew })
+    this.id = initialAttributes.id
+    this.relationships = initialAttributes.relationships
+    this.store = initialAttributes.store
   }
 
   /**
@@ -197,9 +200,9 @@ class Model {
    * @property dirtyAttributes
    * @type {Array}
    */
-  get dirtyAttributes () {
+  get dirtyAttributes (): string[] {
     return Array.from(Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
-      const currentValue = this.attributes[attr]
+      const currentValue = this.attributes[attr as keyof object & string]
       const previousValue = this.previousSnapshot.attributes[attr]
 
       if (isObject(currentValue)) {
@@ -214,7 +217,7 @@ class Model {
       }
 
       return dirtyAccumulator
-    }, new Set()))
+    }, new Set())) as string[]
   }
 
   /**
@@ -231,10 +234,10 @@ class Model {
    * @method dirtyRelationships
    * @return {Array} dirty relationship paths
    */
-  get dirtyRelationships () {
+  get dirtyRelationships (): string[] {
     // TODO: make what returns from this.relationships to be more consistent
     const previousRelationships = this.previousSnapshot.relationships || {}
-    const currentRelationships = this.relationships || {}
+    const currentRelationships = this.relationships
     const schemaRelationships = this.relationshipNames
 
     if (Object.keys(currentRelationships).length === 0) {
@@ -252,7 +255,7 @@ class Model {
       }
 
       return dirtyAccumulator
-    }, new Set()))
+    }, new Set())) as string[]
   }
 
   /**
@@ -304,7 +307,7 @@ class Model {
    * @type {Object}
    * @default {}
    */
-  @observable errors: ErrorMessageProps = { detail: {}, status: 0 }
+  @observable errors: ErrorMessageProps[] = [{ detail: {}, status: 0 }]
 
   /**
    * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
@@ -348,7 +351,7 @@ class Model {
    * @return {Promise}
    * @param {Object} options
    */
-  save (options: { skip_validations: boolean, queryParams: string, relationships: string[], attributes: string[] }) {
+  save (options: { skip_validations: boolean, queryParams: string, relationships: string[], attributes: string[] }): Promise<never> {
     if (!options.skip_validations && !this.validate()) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -424,7 +427,7 @@ class Model {
    */
 
   validate (options: { attributes: string[], relationships: string[] }): boolean {
-    this.errors = { detail: {}, status: 0 }
+    this.errors = [{ detail: {}, status: 0 }]
     const { attributeDefinitions, relationshipDefinitions } = this
 
     const attributeNames = options.attributes || this.attributeNames
@@ -457,7 +460,7 @@ class Model {
     this.isInFlight = true
     const promise = this.store.fetch(url, { method: 'DELETE' })
     const _this = this
-    _this.errors = {}
+    _this.errors = []
 
     return promise.then(
       async function (response) {
@@ -467,7 +470,10 @@ class Model {
             _this.store.remove(type, id)
           }
 
-          let json
+          let json: {
+            included: boolean
+            data: { attributes: { [k: string]: string } } } = { included: false, data: { attributes: {}}}
+
           try {
             json = await response.json()
             if (json.data && json.data.attributes) {
@@ -484,7 +490,7 @@ class Model {
 
           // NOTE: If deleting a record changes other related model
           // You can return then in the delete response
-          if (json && json.included) {
+          if (json && json?.included) {
             _this.store.createModelsFromData(json.included)
           }
 
@@ -494,7 +500,7 @@ class Model {
           throw new Error(JSON.stringify(errors))
         }
       },
-      function (error) {
+      function (error: Error) {
         // TODO: Handle error states correctly
         _this.isInFlight = false
         throw error
@@ -519,7 +525,7 @@ class Model {
    * @method snapshot
    * @return {Object} current attributes
    */
-  get snapshot () {
+  get snapshot (): ISnapshot {
     return {
       attributes: this.attributes,
       relationships: toJS(this.relationships)
@@ -531,7 +537,7 @@ class Model {
    *
    * @method setPreviousSnapshot
    */
-  setPreviousSnapshot () {
+  setPreviousSnapshot (): void {
     this._takeSnapshot()
   }
 
@@ -540,7 +546,7 @@ class Model {
    *
    * @method previousSnapshot
    */
-  get previousSnapshot () {
+  get previousSnapshot (): ISnapshot {
     const length = this._snapshots.length
     if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
@@ -582,14 +588,14 @@ class Model {
    * @method _applySnapshot
    * @param {Object} snapshot
    */
-  _applySnapshot (snapshot) {
+  _applySnapshot (snapshot: ISnapshot) {
     if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
     runInAction(() => {
       this.attributeNames.forEach((key) => {
         this[key] = snapshot.attributes[key]
       })
       this.relationships = snapshot.relationships
-      this.errors = {}
+      this.errors = [{ status: 0, detail: "" }]
     })
   }
 
@@ -599,7 +605,7 @@ class Model {
    * @method type
    * @return {String} current attributes
   */
-  get type () {
+  get type (): string {
     return this.constructor.type
   }
 
@@ -629,7 +635,7 @@ class Model {
    */
   get attributeDefinitions () {
     const { type } = this.constructor
-    return schema.structure[type] || {}
+    return schema.structure[type as keyof object & string] || {}
   }
 
   /**
@@ -659,8 +665,8 @@ class Model {
    * @method hasErrors
    * @return {Boolean}
    */
-  errorForKey (key: string): boolean {
-    return this.errors[key]
+  errorForKey (key: string): ErrorMessageProps {
+    return this.errors[key as keyof object & string]
   }
 
   /**
@@ -669,7 +675,7 @@ class Model {
    * @method attributeNames
    * @return {Array}
    */
-  get attributeNames () {
+  get attributeNames (): string[] {
     return Object.keys(this.attributeDefinitions)
   }
 
@@ -679,7 +685,7 @@ class Model {
    * @method relationshipNames
    * @return {Array}
    */
-  get relationshipNames () {
+  get relationshipNames (): string[] {
     return Object.keys(this.relationshipDefinitions)
   }
 
@@ -773,7 +779,7 @@ class Model {
     return data
   }
 
-  updateAttributes (attributes) {
+  updateAttributes (attributes: { [x: string]: string }): void {
     runInAction(() => {
       Object.keys(attributes).forEach(key => {
         this[key] = attributes[key]
@@ -781,7 +787,7 @@ class Model {
     })
   }
 
-  updateAttributesFromResponse (data, included) {
+  updateAttributesFromResponse (data: IModel, included): void {
     const tmpId = this.id
     const { id, attributes, relationships } = data
 
@@ -789,7 +795,7 @@ class Model {
       set(this, 'id', id)
 
       Object.keys(attributes).forEach(key => {
-        set(this, key, attributes[key])
+        set(this, key, attributes[key as keyof object & string])
       })
       if (relationships) {
         Object.keys(relationships).forEach((key) => {
@@ -820,7 +826,7 @@ class Model {
     })
   }
 
-  clone () {
+  clone (): IModel {
     const attributes = cloneDeep(this.snapshot.attributes)
     const relationships = cloneDeep(this.snapshot.relationships)
     return this.store.createModel(this.type, this.id, { attributes, relationships })
@@ -835,7 +841,7 @@ class Model {
    * @param {Object} other
    * @return {Object}
    */
-  isSame (other) {
+  isSame (other: { id: string; type: string } & { [k: string]: string }): boolean {
     if (!other) return false
     return this.type === other.type && this.id === other.id
   }
