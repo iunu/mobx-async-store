@@ -89,14 +89,21 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     makeObservable(this)
-    const { defaultAttributes } = this
+    const { definedAttributesWithDefaults } = this
 
     extendObservable(this, {
-      ...defaultAttributes,
+      ...definedAttributesWithDefaults,
       ...initialAttributes
     })
 
     this._takeSnapshot({ persisted: !this.isNew })
+  }
+
+  get definedAttributesWithDefaults () {
+    return Object.keys(this.attributeDefinition).reduce((allAttrs, key) => {
+      allAttrs[key] = this.attributeDefinitions[key].defaultValue
+      return allAttrs
+    }, {})
   }
 
   /**

@@ -22,13 +22,13 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  static attributeDefinitions = [{
+  static attributeDefinitions = {
     description: {
       transformer: toString,
       validator: validatesString,
       defaultValue: 'description'
     }
-  }]
+  }
 
   @relatedToOne organization
 
@@ -39,12 +39,12 @@ class Relationshipless extends Model {
   static type = 'relationshipless'
   static endpoint = 'relationshipless'
 
-  static attributeDefinitions = [{
+  static attributeDefinitions = {
     name: {
       transformer: toString,
       defaultValue: 'name'
     }
-  }]
+  }
 }
 
 function validatesString (property) {
@@ -102,24 +102,24 @@ class User extends Model {
   static type = 'users'
   static endpoint = 'users'
 
-  static attributeDefinitions = [{
+  static attributeDefinitions = {
     name: {
       transformer: toString,
       defaultValue: 'name'
     }
-  }]
+  }
 }
 
 class Organization extends Model {
   static type = 'organizations'
   static endpoint = 'organizations'
 
-  static attributeDefinitions = [{
+  static attributeDefinitions = {
     name: {
       transformer: toString,
       defaultValue: 'NEWCO'
     }
-  }]
+  }
 
   @relatedToMany categories
 }
@@ -128,14 +128,14 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  static attributeDefinitions = [{
+  static attributeDefinitions = {
     title: {
       transformer: toString,
       validator: validatesString,
       defaultValue: 'NEW TODO'
     },
     due_at: {
-      defaultValue: timestamp
+      defaultValue: new Date()
     },
     tags: {
       validator: validatesArray,
@@ -145,7 +145,7 @@ class Todo extends Model {
       validator: validatesOptions,
       defaultValue: {}
     }
-  }]
+  }
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
@@ -160,13 +160,13 @@ class Category extends Model {
   static type = 'categories'
   static endpoint = 'categories'
 
-  static attributeDefinitions = [{
+  static attributeDefinitions = {
     name: {
       transformer: toString,
       validator: validatesString,
       defaultValue: 'name'
     }
-  }]
+  }
 
   @relatedToMany targets // polymorphic
 }
