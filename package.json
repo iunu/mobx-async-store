@@ -6,6 +6,7 @@
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
+    "@types/fetch-mock": "^7.3.5",
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.21",
     "mobx": "6.3.5",

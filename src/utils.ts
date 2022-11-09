@@ -5,7 +5,7 @@ import pluralize from 'pluralize'
 import dig from 'lodash/get'
 import { isMoment, Moment } from 'moment'
 import flattenDeep from 'lodash/flattenDeep'
-import { ErrorMessageProps } from './interfaces/global'
+import { ErrorMessageProps, IObjectWithStringOrNumber, IObjectWithStrings } from './interfaces/global'
 
 const pending: object = {}
 const counter: object = {}
@@ -46,7 +46,7 @@ export function singularizeType (recordType: string): string {
  * @method requestUrl
  * @return {string} formatted url string
  */
-export function requestUrl (baseUrl: string, endpoint: string, queryParams: string, id: number | string): string {
+export function requestUrl (baseUrl: string, endpoint: string, queryParams: IObjectWithStringOrNumber, id: number | string): string {
   let queryParamString = ''
   if (Object.keys(queryParams).length > 0) {
     queryParamString = `?${QueryString.stringify(queryParams)}`
@@ -284,3 +284,6 @@ export function deriveIdQueryStrings (ids: string[] | number[], restOfUrl: strin
 
   return encodedIds.map((id) => decodeURIComponent(id as string))
 }
+
+export const toString = (text: string | number): string => String(text)
+export const toDate = (date: Date | string): Date => new Date(date)

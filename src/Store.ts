@@ -11,6 +11,48 @@ import {
 } from './utils'
 import schema, { Schema } from './schema'
 import cloneDeep from 'lodash/cloneDeep'
+import Model, { IModel } from 'Model'
+import { IObjectWithAny } from 'interfaces/global'
+
+interface IStoreInitOptions {
+  baseUrl?: RequestInfo
+  defaultFetchOptions?: RequestInit
+  headersOfInterest?: string[]
+  retryOptions?: {
+    attempts?: number,
+    delay?: number
+  }
+  errorMessages?: {
+    [errorKey: string]: string
+  }
+}
+
+interface IFetchOptions {
+
+
+
+
+  
+}
+
+export interface IStore {
+  data: {
+    [recordType: string]: {
+      records: Map<string, typeof Model[]>
+      cache: Map<string, typeof Model[]>
+    }
+  }
+  lastResponseHeaders: object
+  loadingStates: Map<string, Set<string>>
+  loadedStates: Map<string, Set<string>>
+  baseUrl: RequestInfo
+  defaultFetchOptions: RequestInit
+  headersOfInterest: string[]
+  retryOptions: {
+    attempts: number
+    delay: number
+  }
+}
 
 /**
  * Defines the Artemis Data Store class.
@@ -18,16 +60,23 @@ import cloneDeep from 'lodash/cloneDeep'
  * @class Store
  * @constructor
  */
-class Store {
+class Store implements IStore {
+  static types = []
+
   /**
-   * Observable property used to store data and
-   * handle changes to state
+   * Storage of records and cached queries.
+   * {
+   *   todos: {
+   *     records: Map (by id)
+   *     cache: Map (by url)
+   *   }
+   * }
    *
    * @property data
    * @type {Object}
    * @default {}
    */
-  @observable data: object = {}
+  @observable data = {}
 
   /**
    * Observable property used to store values for most recent response headers
@@ -58,11 +107,40 @@ class Store {
   private schema: Schema
 
   /**
+   * The url to use to query
+   * @type {string}
+   * @default ''
+   */
+  baseUrl = ''
+
+  /**
+   * The options to be used by fetch
+   * @type {object}
+   * @default {}
+   */
+  defaultFetchOptions: RequestInit = {}
+
+  /**
+   * Headers that will be viewed for changes. This can be used to check versions
+   * of api releases and force refresh, for example.
+   * @type {Array}
+   * @default []
+   */
+  headersOfInterest = []
+
+  /**
+   * The number of retries and the interval for retries if a fetch query fails
+   * @type {object}
+   * @default { attempts: 1, delay: 0 }
+   */
+  retryOptions = { attempts: 1, delay: 0 }
+
+  /**
    * Initializer for Store class
    *
    * @method constructor
    */
-  constructor (options) {
+  constructor (options: IStoreInitOptions) {
     makeObservable(this)
     this.init(options)
     this.schema = schema
@@ -81,7 +159,7 @@ class Store {
    * @param {Object} data
    * @return {Object} the new record
    */
-  add = (type: string, data: { [k: string]: string }): { [k: string]: string } => {
+  add = (type: string, data: IObjectWithAny | IObjectWithAny[]): IModel | IModel[] => {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
@@ -177,7 +255,7 @@ class Store {
    * @return {Object} Artemis Data record
    */
   @action
-  addModel = (type: string, properties: { [k: string]: string }): { [k: string]: string } => {
+  addModel = (type: string, properties: IObjectWithAny): IModel => {
     const id = idOrNewId(properties.id)
 
     const attributes = this.pickAttributes(properties, type)
@@ -197,8 +275,8 @@ class Store {
    * @param {String} data array of data objects
    * @return {Array} array of ArtemisData records
    */
-  addModels = (type: string, data: { [k: string]: string }[]): { [k: string]: string }[] => {
-    return runInAction(() => data.map((obj: { [k: string]: string }) => this.addModel(type, obj)))
+  @action addModels = (type: string, data: IObjectWithAny): IModel[] => {
+      return data.map((modelDatum: {[key: string]}): IModel => this.addModel(type, modelDatum))
   }
 
   /**
@@ -219,7 +297,7 @@ class Store {
    * Saves a collection of records via a bulk-supported JSONApi endpoint.
    * All records need to be of the same type.
    *
-   * @method bulkSave
+   * @method _bulkSave
    * @private
    * @param {String} type
    * @param {Array} records
@@ -501,7 +579,7 @@ class Store {
    * @param {String} id
    * @param {Object} options
    */
-  fetchUrl (type: string, queryParams, id: string, options?: { [k: string]: string }): string {
+  fetchUrl (type: string, queryParams, id: string | null, options?: { [k: string]: string }): string {
     const { baseUrl, modelTypeIndex } = this
     const { endpoint } = modelTypeIndex[type]
 
@@ -712,7 +790,7 @@ class Store {
    * @param {Object} options passed to constructor
    */
   @action
-  init (options) {
+  init (options: IStoreInitOptions = {}): void {
     this.initializeNetworkConfiguration(options)
     this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
@@ -726,17 +804,18 @@ class Store {
    * @param {Object} options for nextwork config
    */
   @action
-  initializeNetworkConfiguration (options = {}) {
-    this.baseUrl = options.baseUrl || ''
-    this.defaultFetchOptions = options.defaultFetchOptions || {}
-    this.headersOfInterest = options.headersOfInterest || []
-    this.retryOptions = options.retryOptions || { attempts: 1, delay: 0 } // do not retry by default
+  initializeNetworkConfiguration (options: IStoreInitOptions = {}): void {
+    const { baseUrl, defaultFetchOptions, headersOfInterest, retryOptions } = options
+    if (baseUrl) { this.baseUrl = baseUrl }
+    if (defaultFetchOptions) { this.defaultFetchOptions = defaultFetchOptions }
+    if (headersOfInterest) { this.headersOfInterest = headersOfInterest || [] }
+    if (retryOptions) { this.retryOptions = retryOptions }
   }
 
   /**
    * Entry point for configuring the store
    *
-   * @method initializeNetworkConfiguration
+   * @method initializeModelTypeIndex
    * @param {Object} options for nextwork config
    */
   @action
@@ -797,9 +876,9 @@ class Store {
    * @param {String} url
    * @param {Object} options
    */
-  fetch (url, options = {}) {
+  fetch (url: RequestInfo, fetchOptions: RequestInit) {
     const { defaultFetchOptions, headersOfInterest, retryOptions } = this
-    const fetchOptions = { ...defaultFetchOptions, ...options }
+    const fetchOptions = { ...defaultFetchOptions, ...fetchOptions }
     const { attempts, delay } = retryOptions
 
     const handleResponse = (response) => {

@@ -12,3 +12,8 @@ export type NestedKeyOf<ObjectType extends object> =
     ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
     : `${Key}`
   }[keyof ObjectType & (string | number)];
+
+export type IObjectWithStringOrNumber  = {[key: string]: string | number }
+export type IObjectWithString = {[key: string]: string }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type IObjectWithAny = {[key: string]: any }

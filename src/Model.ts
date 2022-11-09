@@ -10,11 +10,9 @@ import {
 
 import { diff, makeDate, parseErrors } from './utils'
 
-import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
-import findLast from 'lodash/findLast'
 import union from 'lodash/union'
 import { ErrorMessageProps } from 'interfaces/global'
 
@@ -58,11 +56,11 @@ function stringifyIds<ObjectType> (object: ObjectType): void {
 interface ISnapshot {
   attributes: { [k: string]: string }
   relationships: { [k: string]: string }
-  persisted?: boolean
+  persisted: boolean
 }
 
 export interface IModel {
-  id: string
+  id?: string
   isDirty: boolean
   dirtyAttributes: string[]
   dirtyRelationships: string[]
@@ -72,15 +70,14 @@ export interface IModel {
   persistedSnapshot: ISnapshot
   type: string
   attributes: object
-  attributeDefinitions: object
-  relationshipDefinitions: object
   hasErrors: boolean
   attributeNames: string[]
   relationshipNames: string[]
   defaultAttributes: object,
   errors: ErrorMessageProps[]
-  relationships: object
-  store: object
+  relationships?: object
+  store?: object,
+  _snapshots: ISnapshot[]
 }
 
 /*
@@ -111,27 +108,39 @@ export interface IModel {
  @class Model
  */
 class Model implements IModel {
-  id: string
-  relationships: object
-  store: object
+  [x: string]: any
+
+  id
+  relationships
+  store
+
+  // static attributeDefinitions: { [key: string]: object } = {}
+  // static relationshipDefinitions: { [key: string]: object } = {}
+  static attributeDefinitions: object = {}
+  static relationshipDefinitions: object = {}
+
+
   /**
    * Initializer for model
    *
    * @method constructor
    */
-  constructor (initialAttributes: IModel) {
+  constructor (initialAttributes?: any) {
     makeObservable(this)
     const { defaultAttributes } = this
 
+    console.log(defaultAttributes)
+
     extendObservable(this, {
       ...defaultAttributes,
-      ...initialAttributes
+      ...initialAttributes,
+      relationships: {}
     })
 
     this._takeSnapshot({ persisted: !this.isNew })
-    this.id = initialAttributes.id
-    this.relationships = initialAttributes.relationships
-    this.store = initialAttributes.store
+    this.id = initialAttributes?.id
+    this.relationships = initialAttributes?.relationships
+    this.store = initialAttributes?.store
   }
 
   /**
@@ -428,7 +437,7 @@ class Model implements IModel {
 
   validate (options: { attributes: string[], relationships: string[] }): boolean {
     this.errors = [{ detail: {}, status: 0 }]
-    const { attributeDefinitions, relationshipDefinitions } = this
+    const { attributeDefinitions, relationshipDefinitions } = (this.constructor as typeof Model)
 
     const attributeNames = options.attributes || this.attributeNames
     const relationshipNames = options.relationships || this.relationshipNames
@@ -557,8 +566,8 @@ class Model implements IModel {
    *
    * @method previousSnapshot
    */
-  get persistedSnapshot () {
-    return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
+  get persistedSnapshot (): ISnapshot {
+    return this._snapshots.reverse.find((ss: ISnapshot) => ss.persisted) || this._snapshots[0]
   }
 
   /**
@@ -616,37 +625,13 @@ class Model implements IModel {
    * @return {Object} current attributes
    */
   get attributes () {
-    return this.attributeNames.reduce((attributes, key) => {
-      const value = toJS(this[key])
-      if (value == null) {
-        delete attributes[key]
-      } else {
+    return this.attributeNames.reduce((attributes: object, key: string) => {
+      const value = toJS(this[key]
+      if (value != null) {
         attributes[key] = value
       }
       return attributes
     }, {})
-  }
-
-  /**
-   * Getter find the attribute definition for the model type.
-   *
-   * @method attributeDefinitions
-   * @return {Object}
-   */
-  get attributeDefinitions () {
-    const { type } = this.constructor
-    return schema.structure[type as keyof object & string] || {}
-  }
-
-  /**
-   * Getter find the relationship definitions for the model type.
-   *
-   * @method relationshipDefinitions
-   * @return {Object}
-   */
-  get relationshipDefinitions () {
-    const { type } = this.constructor
-    return schema.relations[type] || {}
   }
 
   /**
@@ -696,14 +681,12 @@ class Model implements IModel {
    * @return {Object}
    */
   get defaultAttributes () {
-    const { attributeDefinitions } = this
-    return this.attributeNames.reduce((defaults, key) => {
-      const { defaultValue } = attributeDefinitions[key]
+    const { attributeDefinitions } = (this.constructor as typeof Model)
+    return this.attributeNames.reduce((defaults, key: string) => {
+      const { defaultValue: any } = attributeDefinitions[key]
       defaults[key] = defaultValue
       return defaults
-    }, {
-      relationships: {}
-    })
+    }, {})
   }
 
   /**

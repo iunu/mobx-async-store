@@ -48,6 +48,10 @@ function defaultValueForDescriptor(descriptor: { initializer: Function }, DataTy
   return null
 }
 
+interface IAttributeOptions {
+  dataType: StringConstructor | DateConstructor
+}
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Defines attributes that will be serialized and deserialized. Takes one argument, a class that the attribute will be coerced to.
  * This can be a Javascript primitive or another class. `id` cannot be defined as it is assumed to exist.
@@ -59,9 +63,10 @@ function defaultValueForDescriptor(descriptor: { initializer: Function }, DataTy
  * ```
  * @method attribute
  */
-export function attribute(dataType = (obj) => obj) {
-  return function(target, property, descriptor) {
+export function attribute(options: IAttributeOptions) {
+  return function(target: any, property: any, descriptor: any): IAttributeOptions {
     const { type } = target.constructor
+    const { dataType } = options
     const defaultValue = defaultValueForDescriptor(descriptor, dataType)
     // Update the schema
     schema.addAttribute({
@@ -75,7 +80,7 @@ export function attribute(dataType = (obj) => obj) {
       get () {
         return defaultValue
       },
-      set (value) {
+      set (value: any) {
         set(target, property, value)
       }
     }

@@ -9,7 +9,7 @@ module.exports = {
     'lcov'
   ],
   setupFiles: [
-    './setupJest.js'
+    './setupJest.ts'
   ],
   transform: {
     '^.+\\.js?$': 'babel-jest',
