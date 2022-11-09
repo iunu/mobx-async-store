@@ -1,7 +1,6 @@
 import {
   Model,
   Store,
-  attribute,
   relatedToMany,
   relatedToOne,
   validates
@@ -15,6 +14,7 @@ import {
   exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
+import { isEmptyString } from '../src/utils'
 
 const timestamp = new Date(Date.now())
 
@@ -22,9 +22,14 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  @attribute(String) description
+  static attributeDefinitions = [{
+    description: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'description'
+    }
+  }]
 
-  @validates
   @relatedToOne organization
 
   @relatedToOne todo
@@ -33,7 +38,23 @@ class Note extends Model {
 class Relationshipless extends Model {
   static type = 'relationshipless'
   static endpoint = 'relationshipless'
-  @attribute(String) name
+
+  static attributeDefinitions = [{
+    name: {
+      transformer: toString,
+      defaultValue: 'name'
+    }
+  }]
+}
+
+function validatesString (property) {
+  return {
+    isValid: !isEmptyString(property),
+    errors: [{
+      key: 'must_not_be_empty',
+      message: 'must not be empty'
+    }]
+  }
 }
 
 function validatesArray (property) {
@@ -81,14 +102,25 @@ class User extends Model {
   static type = 'users'
   static endpoint = 'users'
 
-  @attribute(String) name
+  static attributeDefinitions = [{
+    name: {
+      transformer: toString,
+      defaultValue: 'name'
+    }
+  }]
 }
 
 class Organization extends Model {
   static type = 'organizations'
   static endpoint = 'organizations'
 
-  @attribute(String) name = 'NEWCO'
+  static attributeDefinitions = [{
+    name: {
+      transformer: toString,
+      defaultValue: 'NEWCO'
+    }
+  }]
+
   @relatedToMany categories
 }
 
@@ -96,16 +128,24 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @validates
-  @attribute(String) title = 'NEW TODO'
-
-  @attribute(Date) due_at = timestamp
-
-  @validates(validatesArray)
-  @attribute(Array) tags
-
-  @validates(validatesOptions)
-  @attribute(Object) options = {}
+  static attributeDefinitions = [{
+    title: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'NEW TODO'
+    },
+    due_at: {
+      defaultValue: timestamp
+    },
+    tags: {
+      validator: validatesArray,
+      defaultValue: []
+    },
+    options: {
+      validator: validatesOptions,
+      defaultValue: {}
+    }
+  }]
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
@@ -120,8 +160,13 @@ class Category extends Model {
   static type = 'categories'
   static endpoint = 'categories'
 
-  @validates
-  @attribute(String) name
+  static attributeDefinitions = [{
+    name: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'name'
+    }
+  }]
 
   @relatedToMany targets // polymorphic
 }

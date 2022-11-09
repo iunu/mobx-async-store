@@ -283,3 +283,5 @@ export function deriveIdQueryStrings (ids, restOfUrl = '') {
 
   return encodedIds.map(decodeURIComponent)
 }
+
+export const isEmptyString = (data) => typeof data === 'string' && data.trim().length === 0
