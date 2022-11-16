@@ -102,7 +102,7 @@ class Store {
    * @return {Object}
    */
   pickAttributes = (properties, type) => {
-    const attributeNames = Object.keys(this.schema.structure[type])
+    const attributeNames = Object.keys(properties)
     return pick(properties, attributeNames)
   }
 

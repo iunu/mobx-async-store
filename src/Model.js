@@ -28,17 +28,19 @@ import union from 'lodash/union'
 
 function validateProperties (model, propertyNames, propertyDefinitions) {
   return propertyNames.map((property) => {
-    const { validator } = propertyDefinitions[property]
+    if (propertyDefinitions) {
+      const { validator } = propertyDefinitions[property]
 
-    if (!validator) return true
+      if (!validator) return true
 
-    const validationResult = validator(model[property], model)
+      const validationResult = validator(model[property], model)
 
-    if (!validationResult.isValid) {
-      model.errors[property] = validationResult.errors
-    }
+      if (!validationResult.isValid) {
+        model.errors[property] = validationResult.errors
+      }
 
-    return validationResult.isValid
+      return validationResult.isValid
+    } else return false
   })
 }
 
@@ -89,19 +91,25 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     makeObservable(this)
-    const { definedAttributesWithDefaults } = this
-
+    const { definedAttributesWithDefaults, definedValidatorsWithDefaults } = this
     extendObservable(this, {
       ...definedAttributesWithDefaults,
+      ...definedValidatorsWithDefaults,
       ...initialAttributes
     })
-
     this._takeSnapshot({ persisted: !this.isNew })
   }
 
   get definedAttributesWithDefaults () {
-    return Object.keys(this.attributeDefinition).reduce((allAttrs, key) => {
-      allAttrs[key] = this.attributeDefinitions[key].defaultValue
+      return Object.keys(this.attributeDefinitions).reduce((allAttrs, key) => {
+        allAttrs[key] = this.attributeDefinitions[key].defaultValue
+        return allAttrs
+      }, {})
+  }
+
+  get definedValidatorsWithDefaults () {
+    return Object.keys(this.attributeDefinitions).reduce((allAttrs, key) => {
+      allAttrs[key] = this.attributeDefinitions[key].validator
       return allAttrs
     }, {})
   }
@@ -324,7 +332,7 @@ class Model {
    * @param {Object} options
    */
   save (options = {}) {
-    if (!options.skip_validations && !this.validate()) {
+    if (!options.skip_validations && !this.validate(options)) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
     }
@@ -402,7 +410,7 @@ class Model {
     this.errors = {}
     const { attributeDefinitions, relationshipDefinitions } = this
 
-    const attributeNames = options.attributes || this.attributeNames
+    const attributeNames = options.attributes || Object.keys(attributeDefinitions)
     const relationshipNames = options.relationships || this.relationshipNames
 
     const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
@@ -602,10 +610,13 @@ class Model {
    * @method attributeDefinitions
    * @return {Object}
    */
+
+ /*
+  *Old attributeDefinitions getter from schema.structure =
   get attributeDefinitions () {
     const { type } = this.constructor
-    return schema.structure[type] || {}
-  }
+    return schema.structure[type]
+  } */
 
   /**
    * Getter find the relationship definitions for the model type.
