@@ -8,7 +8,7 @@ import {
   runInAction
 } from 'mobx'
 
-import { diff, makeDate, parseErrors } from './utils'
+import { diff, getDataType, makeDate, parseErrors } from './utils'
 
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
@@ -91,27 +91,20 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     makeObservable(this)
-    const { definedAttributesWithDefaults, definedValidatorsWithDefaults } = this
+    const { definedAttributesWithDefaults } = this
     extendObservable(this, {
       ...definedAttributesWithDefaults,
-      ...definedValidatorsWithDefaults,
       ...initialAttributes
     })
     this._takeSnapshot({ persisted: !this.isNew })
   }
 
   get definedAttributesWithDefaults () {
-      return Object.keys(this.attributeDefinitions).reduce((allAttrs, key) => {
-        allAttrs[key] = this.attributeDefinitions[key].defaultValue
+      const { attributeDefinitions } = this
+      return Object.keys(attributeDefinitions).reduce((allAttrs, key) => {
+        allAttrs[key] = attributeDefinitions[key].defaultValue
         return allAttrs
       }, {})
-  }
-
-  get definedValidatorsWithDefaults () {
-    return Object.keys(this.attributeDefinitions).reduce((allAttrs, key) => {
-      allAttrs[key] = this.attributeDefinitions[key].validator
-      return allAttrs
-    }, {})
   }
 
   /**
@@ -713,14 +706,16 @@ class Model {
     const attributes = filteredAttributeNames.reduce((attrs, key) => {
       const value = this[key]
       if (value) {
-        const { dataType: DataType } = attributeDefinitions[key]
+        const dataType = getDataType(value)
         let attr
-        if (DataType.name === 'Array' || DataType.name === 'Object') {
+        if (dataType === 'Array' || dataType === 'Object') {
           attr = toJS(value)
-        } else if (DataType.name === 'Date') {
+        } else if (dataType === 'Date') {
           attr = makeDate(value).toISOString()
+        } else if (dataType === 'String') {
+          attr = value.toString()
         } else {
-          attr = DataType(value)
+          if (attributeDefinitions[key].transformer) { attr = attributeDefinitions[key].transformer(value) }
         }
         attrs[key] = attr
       } else {

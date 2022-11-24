@@ -1029,7 +1029,6 @@ class Store {
     const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
     const ModelKlass = this.getKlass(type)
-
     if (!ModelKlass) {
       throw new Error(`Could not find a model for '${type}'`)
     }

@@ -110,6 +110,7 @@ class User extends Model {
     return {
       name: {
         transformer: toString,
+        validator: validatesString,
         defaultValue: 'name'
       }
     }
@@ -124,6 +125,7 @@ class Organization extends Model {
     return {
       name: {
         transformer: toString,
+        validator: validatesString,
         defaultValue: 'NEWCO'
       }
     }

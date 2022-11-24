@@ -285,3 +285,15 @@ export function deriveIdQueryStrings (ids, restOfUrl = '') {
 }
 
 export const isEmptyString = (data) => typeof data === 'string' && data.trim().length === 0
+
+export const getDataType = (value) => {
+  if (value instanceof Date) {
+    return 'Date'
+  } else if (Array.isArray(value)) {
+    return 'Array'
+  } else if (value instanceof Object) {
+    return 'Object'
+  } else if (typeof value === 'string') {
+    return 'String'
+  } else return undefined
+}
