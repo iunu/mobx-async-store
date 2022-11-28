@@ -146,7 +146,7 @@ class Todo extends Model {
         defaultValue: 'NEW TODO'
       },
       due_at: {
-        defaultValue: new Date()
+        defaultValue: timestamp
       },
       tags: {
         validator: validatesArray,
