@@ -611,6 +611,10 @@ class Model {
     return schema.structure[type]
   } */
 
+  get attributeDefinitions () {
+    return this.constructor.attributeDefinitions
+  }
+
   /**
    * Getter find the relationship definitions for the model type.
    *

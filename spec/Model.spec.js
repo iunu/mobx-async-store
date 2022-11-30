@@ -22,13 +22,11 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  get attributeDefinitions () {
-    return {
+  static attributeDefinitions = {
       description: {
         transformer: toString,
         defaultValue: ''
       }
-    }
   }
 
   @validates
@@ -41,12 +39,10 @@ class Relationshipless extends Model {
   static type = 'relationshipless'
   static endpoint = 'relationshipless'
 
-  get attributeDefinitions () {
-    return {
-      name: {
-        transformer: toString,
-        defaultValue: 'name'
-      }
+  static attributeDefinitions = {
+    name: {
+      transformer: toString,
+      defaultValue: 'name'
     }
   }
 }
@@ -56,7 +52,7 @@ function validatesString (property) {
     isValid: !isEmptyString(property),
     errors: [{
       key: 'blank',
-      message: 'can\'t be blank'
+      message: "can't be blank"
     }]
   }
 }
@@ -106,13 +102,11 @@ class User extends Model {
   static type = 'users'
   static endpoint = 'users'
 
-  get attributeDefinitions () {
-    return {
-      name: {
-        transformer: toString,
-        validator: validatesString,
-        defaultValue: 'name'
-      }
+  static attributeDefinitions = {
+    name: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'name'
     }
   }
 }
@@ -121,13 +115,11 @@ class Organization extends Model {
   static type = 'organizations'
   static endpoint = 'organizations'
 
-  get attributeDefinitions () {
-    return {
-      name: {
-        transformer: toString,
-        validator: validatesString,
-        defaultValue: 'NEWCO'
-      }
+  static attributeDefinitions = {
+    name: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'NEWCO'
     }
   }
 
@@ -138,24 +130,22 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  get attributeDefinitions () {
-    return {
-      title: {
-        transformer: toString,
-        validator: validatesString,
-        defaultValue: 'NEW TODO'
-      },
-      due_at: {
-        defaultValue: timestamp
-      },
-      tags: {
-        validator: validatesArray,
-        defaultValue: []
-      },
-      options: {
-        validator: validatesOptions,
-        defaultValue: {}
-      }
+  static attributeDefinitions = {
+    title: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'NEW TODO'
+    },
+    due_at: {
+      defaultValue: timestamp
+    },
+    tags: {
+      validator: validatesArray,
+      defaultValue: []
+    },
+    options: {
+      validator: validatesOptions,
+      defaultValue: {}
     }
   }
 
@@ -172,13 +162,11 @@ class Category extends Model {
   static type = 'categories'
   static endpoint = 'categories'
 
-  get attributeDefinitions () {
-    return {
-      name: {
-        transformer: toString,
-        validator: validatesString,
-        defaultValue: 'name'
-      }
+  static attributeDefinitions = {
+    name: {
+      transformer: toString,
+      validator: validatesString,
+      defaultValue: 'name'
     }
   }
 
