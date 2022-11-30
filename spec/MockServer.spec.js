@@ -5,7 +5,6 @@ import {
   FactoryFarm,
   Model,
   Store,
-  attribute,
   serverResponse
 } from '../src/main'
 
@@ -13,8 +12,16 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) title = ''
-  @attribute(String) subtitle = ''
+  static attributeDefinitions = {
+    title: {
+      transformer: toString,
+      defaultValue: ''
+    },
+    subtitle: {
+      transformer: toString,
+      defaultValue: ''
+    }
+  }
 }
 
 class AppStore extends Store {

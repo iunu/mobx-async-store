@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/extend-expect'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { Provider } from 'mobx-react'
 import { isObservable } from 'mobx'
-import { Store, Model, attribute } from '../src/main'
+import { Store, Model } from '../src/main'
 
 import ExampleApp from './ExampleApp'
 
@@ -12,8 +12,15 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) title = ''
-  @attribute(Object) options = {}
+  static attributeDefinitions = {
+    title: {
+      transformer: toString,
+      defaultValue: ''
+    },
+    options: {
+      defaultValue: {}
+    }
+  }
 }
 
 class AppStore extends Store {

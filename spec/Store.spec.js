@@ -3,7 +3,6 @@ import {
   FactoryFarm,
   Model,
   Store,
-  attribute,
   relatedToMany,
   relatedToOne
 } from '../src/main'
@@ -18,7 +17,13 @@ class Tag extends Model {
   static type = 'tags'
   static endpoint = 'tags'
 
-  @attribute(String) label = ''
+  static attributeDefinitions = {
+    label: {
+      transformer: toString,
+      defaultValue: ''
+    }
+  }
+
   @relatedToOne todo
 }
 
@@ -26,7 +31,13 @@ class Category extends Model {
   static type = 'categories'
   static endpoint = 'categories'
 
-  @attribute(String) name = ''
+  static attributeDefinitions = {
+    name: {
+      transformer: toString,
+      defaultValue: ''
+    }
+  }
+
   @relatedToOne todo
 }
 
@@ -34,7 +45,13 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  @attribute(String) text = ''
+  static attributeDefinitions = {
+    text: {
+      transformer: toString,
+      defaultValue: ''
+    }
+  }
+
   @relatedToOne todo
 }
 
@@ -42,7 +59,13 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) title = ''
+  static attributeDefinitions = {
+    title: {
+      transformer: toString,
+      defaultValue: ''
+    }
+  }
+
   @relatedToMany notes
   @relatedToOne category
   @relatedToMany tags

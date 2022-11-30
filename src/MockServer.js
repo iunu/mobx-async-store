@@ -231,8 +231,8 @@ class MockServer {
     const { store } = _backendFactoryFarm
 
     const { pathname } = new URL(url, 'http://example.com')
+    const type = Object.keys(store.data).find((model_type) => pathname.match(model_type))
 
-    const type = Object.keys(store.schema.structure).find((model_type) => pathname.match(model_type))
     let id = pathname.match(/\d+$/)
     id = id && String(id)
 
