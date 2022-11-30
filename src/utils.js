@@ -4,11 +4,18 @@ import QueryString from './QueryString'
 import pluralize from 'pluralize'
 import dig from 'lodash/get'
 import flattenDeep from 'lodash/flattenDeep'
+import { toJS } from 'mobx'
 
 const pending = {}
 const counter = {}
 export const URL_MAX_LENGTH = 1024
 const ENCODED_COMMA = encodeURIComponent(',')
+
+export const arrayType = (value) => toJS(value)
+export const objectType = (value) => toJS(value)
+export const dateType = (value) => makeDate(value).toISOString()
+export const stringType = (value) => value.toString()
+export const numberType = (value) => Number(value)
 
 const incrementor = (key) => () => {
   const count = (counter[key] || 0) + 1
@@ -285,15 +292,3 @@ export function deriveIdQueryStrings (ids, restOfUrl = '') {
 }
 
 export const isEmptyString = (data) => typeof data === 'string' && data.trim().length === 0
-
-export const getDataType = (value) => {
-  if (value instanceof Date) {
-    return 'Date'
-  } else if (Array.isArray(value)) {
-    return 'Array'
-  } else if (value instanceof Object) {
-    return 'Object'
-  } else if (typeof value === 'string') {
-    return 'String'
-  } else return undefined
-}

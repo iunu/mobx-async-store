@@ -8,7 +8,7 @@ import {
   runInAction
 } from 'mobx'
 
-import { diff, getDataType, makeDate, parseErrors } from './utils'
+import { diff, parseErrors } from './utils'
 
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
@@ -708,23 +708,11 @@ class Model {
     }
 
     const attributes = filteredAttributeNames.reduce((attrs, key) => {
-      const value = this[key]
+      let value = this[key]
       if (value) {
-        const dataType = getDataType(value)
-        let attr
-        if (dataType === 'Array' || dataType === 'Object') {
-          attr = toJS(value)
-        } else if (dataType === 'Date') {
-          attr = makeDate(value).toISOString()
-        } else if (dataType === 'String') {
-          attr = value.toString()
-        } else {
-          if (attributeDefinitions[key].transformer) { attr = attributeDefinitions[key].transformer(value) }
-        }
-        attrs[key] = attr
-      } else {
-        attrs[key] = value
+        if (attributeDefinitions[key].transformer) { value = attributeDefinitions[key].transformer(value) }
       }
+      attrs[key] = value
       return attrs
     }, {})
 

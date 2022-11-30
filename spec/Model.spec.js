@@ -14,7 +14,7 @@ import {
   exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
-import { isEmptyString } from '../src/utils'
+import { isEmptyString, stringType } from '../src/utils'
 
 const timestamp = new Date(Date.now())
 
@@ -24,7 +24,7 @@ class Note extends Model {
 
   static attributeDefinitions = {
       description: {
-        transformer: toString,
+        transformer: stringType,
         defaultValue: ''
       }
   }
@@ -279,7 +279,9 @@ describe('Model', () => {
     })
 
     it('attributes are observable', (done) => {
-      const todo = new Todo({})
+      expect.assertions(3)
+
+      const todo = new Todo({ options: {} })
 
       let runs = 0
       const expected = [undefined, 'one', 'two']
@@ -290,8 +292,6 @@ describe('Model', () => {
           done()
         }
       })
-
-      todo.options = {}
 
       runInAction(() => {
         todo.options.test = 'one'
