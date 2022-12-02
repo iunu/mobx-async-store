@@ -102,7 +102,8 @@ class Store {
    * @return {Object}
    */
   pickAttributes = (properties, type) => {
-    const attributeNames = Object.keys(properties)
+    const ModelKlass = this.getKlass(type)
+    const attributeNames = Object.keys(ModelKlass.attributeDefinitions)
     return pick(properties, attributeNames)
   }
 

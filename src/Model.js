@@ -40,7 +40,7 @@ function validateProperties (model, propertyNames, propertyDefinitions) {
       }
 
       return validationResult.isValid
-    } else return false
+    } else return true
   })
 }
 
@@ -603,13 +603,6 @@ class Model {
    * @method attributeDefinitions
    * @return {Object}
    */
-
- /*
-  *Old attributeDefinitions getter from schema.structure =
-  get attributeDefinitions () {
-    const { type } = this.constructor
-    return schema.structure[type]
-  } */
 
   get attributeDefinitions () {
     return this.constructor.attributeDefinitions
