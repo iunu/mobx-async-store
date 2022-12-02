@@ -9,7 +9,7 @@ import {
 import { computed, isObservable, toJS } from 'mobx'
 import { Schema } from '../src/schema'
 
-import { URL_MAX_LENGTH } from '../src/utils'
+import { stringType, URL_MAX_LENGTH } from '../src/utils'
 
 /* global fetch Response */
 
@@ -19,7 +19,7 @@ class Tag extends Model {
 
   static attributeDefinitions = {
     label: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
@@ -33,7 +33,7 @@ class Category extends Model {
 
   static attributeDefinitions = {
     name: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
@@ -47,7 +47,7 @@ class Note extends Model {
 
   static attributeDefinitions = {
     text: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
@@ -61,7 +61,7 @@ class Todo extends Model {
 
   static attributeDefinitions = {
     title: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }

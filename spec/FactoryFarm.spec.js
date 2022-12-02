@@ -6,6 +6,7 @@ import {
   relatedToOne,
   serverResponse
 } from '../src/main'
+import { stringType } from '../src/utils'
 
 class Tag extends Model {
   static type = 'tags'
@@ -13,7 +14,7 @@ class Tag extends Model {
 
   static attributeDefinitions = {
     label: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
@@ -27,7 +28,7 @@ class Category extends Model {
 
   static attributeDefinitions = {
     name: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
@@ -41,7 +42,7 @@ class Note extends Model {
 
   static attributeDefinitions = {
     text: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
@@ -55,11 +56,11 @@ class Todo extends Model {
 
   static attributeDefinitions = {
     title: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     },
     subtitle: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }

@@ -14,7 +14,7 @@ import {
   exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
-import { isEmptyString, stringType } from '../src/utils'
+import { arrayType, dateType, isEmptyString, objectType, stringType } from '../src/utils'
 
 const timestamp = new Date(Date.now())
 
@@ -41,7 +41,7 @@ class Relationshipless extends Model {
 
   static attributeDefinitions = {
     name: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: 'name'
     }
   }
@@ -104,7 +104,7 @@ class User extends Model {
 
   static attributeDefinitions = {
     name: {
-      transformer: toString,
+      transformer: stringType,
       validator: validatesString,
       defaultValue: 'name'
     }
@@ -117,7 +117,7 @@ class Organization extends Model {
 
   static attributeDefinitions = {
     name: {
-      transformer: toString,
+      transformer: stringType,
       validator: validatesString,
       defaultValue: 'NEWCO'
     }
@@ -132,18 +132,21 @@ class Todo extends Model {
 
   static attributeDefinitions = {
     title: {
-      transformer: toString,
+      transformer: stringType,
       validator: validatesString,
       defaultValue: 'NEW TODO'
     },
     due_at: {
+      transformer: dateType,
       defaultValue: timestamp
     },
     tags: {
+      transformer: arrayType,
       validator: validatesArray,
       defaultValue: []
     },
     options: {
+      transformer: objectType,
       validator: validatesOptions,
       defaultValue: {}
     }
@@ -164,7 +167,7 @@ class Category extends Model {
 
   static attributeDefinitions = {
     name: {
-      transformer: toString,
+      transformer: stringType,
       validator: validatesString,
       defaultValue: 'name'
     }

@@ -7,6 +7,7 @@ import {
   Store,
   serverResponse
 } from '../src/main'
+import { stringType } from '../src/utils'
 
 class Todo extends Model {
   static type = 'todos'
@@ -14,11 +15,11 @@ class Todo extends Model {
 
   static attributeDefinitions = {
     title: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     },
     subtitle: {
-      transformer: toString,
+      transformer: stringType,
       defaultValue: ''
     }
   }
