@@ -5,16 +5,24 @@ import {
   FactoryFarm,
   Model,
   Store,
-  attribute,
   serverResponse
 } from '../src/main'
+import { stringType } from '../src/utils'
 
 class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) title = ''
-  @attribute(String) subtitle = ''
+  static attributeDefinitions = {
+    title: {
+      transformer: stringType,
+      defaultValue: ''
+    },
+    subtitle: {
+      transformer: stringType,
+      defaultValue: ''
+    }
+  }
 }
 
 class AppStore extends Store {

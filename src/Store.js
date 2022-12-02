@@ -102,7 +102,8 @@ class Store {
    * @return {Object}
    */
   pickAttributes = (properties, type) => {
-    const attributeNames = Object.keys(this.schema.structure[type])
+    const ModelKlass = this.getKlass(type)
+    const attributeNames = Object.keys(ModelKlass.attributeDefinitions)
     return pick(properties, attributeNames)
   }
 
@@ -1029,7 +1030,6 @@ class Store {
     const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
     const ModelKlass = this.getKlass(type)
-
     if (!ModelKlass) {
       throw new Error(`Could not find a model for '${type}'`)
     }

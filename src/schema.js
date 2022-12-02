@@ -5,15 +5,7 @@
  * @class Schema
  */
 export class Schema {
-  structure = {}
   relations = {}
-
-  addAttribute ({ type, property, dataType, defaultValue }) {
-    this.structure[type] = this.structure[type] || {}
-    this.structure[type][property] = {
-      defaultValue, dataType
-    }
-  }
 
   addRelationship ({ type, property, dataType }) {
     this.relations[type] = this.relations[type] || {}
@@ -28,11 +20,7 @@ export class Schema {
    * @param {Object} options includes `type`, `property`, and `validator`
    */
   addValidation ({ type, property, validator }) {
-    if (this.structure[type][property]) {
-      this.structure[type][property].validator = validator
-    } else {
       this.relations[type][property].validator = validator
-    }
   }
 }
 

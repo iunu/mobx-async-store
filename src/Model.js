@@ -8,7 +8,7 @@ import {
   runInAction
 } from 'mobx'
 
-import { diff, makeDate, parseErrors } from './utils'
+import { diff, parseErrors } from './utils'
 
 import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
@@ -28,17 +28,19 @@ import union from 'lodash/union'
 
 function validateProperties (model, propertyNames, propertyDefinitions) {
   return propertyNames.map((property) => {
-    const { validator } = propertyDefinitions[property]
+    if (propertyDefinitions) {
+      const { validator } = propertyDefinitions[property]
 
-    if (!validator) return true
+      if (!validator) return true
 
-    const validationResult = validator(model[property], model)
+      const validationResult = validator(model[property], model)
 
-    if (!validationResult.isValid) {
-      model.errors[property] = validationResult.errors
-    }
+      if (!validationResult.isValid) {
+        model.errors[property] = validationResult.errors
+      }
 
-    return validationResult.isValid
+      return validationResult.isValid
+    } else return true
   })
 }
 
@@ -89,14 +91,20 @@ class Model {
    */
   constructor (initialAttributes = {}) {
     makeObservable(this)
-    const { defaultAttributes } = this
-
+    const { definedAttributesWithDefaults } = this
     extendObservable(this, {
-      ...defaultAttributes,
+      ...definedAttributesWithDefaults,
       ...initialAttributes
     })
-
     this._takeSnapshot({ persisted: !this.isNew })
+  }
+
+  get definedAttributesWithDefaults () {
+      const { attributeDefinitions } = this
+      return Object.keys(attributeDefinitions).reduce((allAttrs, key) => {
+        allAttrs[key] = attributeDefinitions[key].defaultValue
+        return allAttrs
+      }, {})
   }
 
   /**
@@ -317,7 +325,7 @@ class Model {
    * @param {Object} options
    */
   save (options = {}) {
-    if (!options.skip_validations && !this.validate()) {
+    if (!options.skip_validations && !this.validate(options)) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
     }
@@ -395,7 +403,7 @@ class Model {
     this.errors = {}
     const { attributeDefinitions, relationshipDefinitions } = this
 
-    const attributeNames = options.attributes || this.attributeNames
+    const attributeNames = options.attributes || Object.keys(attributeDefinitions)
     const relationshipNames = options.relationships || this.relationshipNames
 
     const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
@@ -595,9 +603,9 @@ class Model {
    * @method attributeDefinitions
    * @return {Object}
    */
+
   get attributeDefinitions () {
-    const { type } = this.constructor
-    return schema.structure[type] || {}
+    return this.constructor.attributeDefinitions
   }
 
   /**
@@ -693,21 +701,11 @@ class Model {
     }
 
     const attributes = filteredAttributeNames.reduce((attrs, key) => {
-      const value = this[key]
+      let value = this[key]
       if (value) {
-        const { dataType: DataType } = attributeDefinitions[key]
-        let attr
-        if (DataType.name === 'Array' || DataType.name === 'Object') {
-          attr = toJS(value)
-        } else if (DataType.name === 'Date') {
-          attr = makeDate(value).toISOString()
-        } else {
-          attr = DataType(value)
-        }
-        attrs[key] = attr
-      } else {
-        attrs[key] = value
+        if (attributeDefinitions[key].transformer) { value = attributeDefinitions[key].transformer(value) }
       }
+      attrs[key] = value
       return attrs
     }, {})
 

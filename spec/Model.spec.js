@@ -1,7 +1,6 @@
 import {
   Model,
   Store,
-  attribute,
   relatedToMany,
   relatedToOne,
   validates
@@ -15,6 +14,7 @@ import {
   exampleRelatedToManyWithNoiseResponse,
   exampleRelatedToOneUnmatchedTypeResponse
 } from './fixtures/exampleRelationalResponses'
+import { arrayType, dateType, isEmptyString, objectType, stringType } from '../src/utils'
 
 const timestamp = new Date(Date.now())
 
@@ -22,7 +22,12 @@ class Note extends Model {
   static type = 'notes'
   static endpoint = 'notes'
 
-  @attribute(String) description
+  static attributeDefinitions = {
+      description: {
+        transformer: stringType,
+        defaultValue: ''
+      }
+  }
 
   @validates
   @relatedToOne organization
@@ -33,7 +38,23 @@ class Note extends Model {
 class Relationshipless extends Model {
   static type = 'relationshipless'
   static endpoint = 'relationshipless'
-  @attribute(String) name
+
+  static attributeDefinitions = {
+    name: {
+      transformer: stringType,
+      defaultValue: 'name'
+    }
+  }
+}
+
+function validatesString (property) {
+  return {
+    isValid: !isEmptyString(property),
+    errors: [{
+      key: 'blank',
+      message: "can't be blank"
+    }]
+  }
 }
 
 function validatesArray (property) {
@@ -81,14 +102,27 @@ class User extends Model {
   static type = 'users'
   static endpoint = 'users'
 
-  @attribute(String) name
+  static attributeDefinitions = {
+    name: {
+      transformer: stringType,
+      validator: validatesString,
+      defaultValue: 'name'
+    }
+  }
 }
 
 class Organization extends Model {
   static type = 'organizations'
   static endpoint = 'organizations'
 
-  @attribute(String) name = 'NEWCO'
+  static attributeDefinitions = {
+    name: {
+      transformer: stringType,
+      validator: validatesString,
+      defaultValue: 'NEWCO'
+    }
+  }
+
   @relatedToMany categories
 }
 
@@ -96,16 +130,27 @@ class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @validates
-  @attribute(String) title = 'NEW TODO'
-
-  @attribute(Date) due_at = timestamp
-
-  @validates(validatesArray)
-  @attribute(Array) tags
-
-  @validates(validatesOptions)
-  @attribute(Object) options = {}
+  static attributeDefinitions = {
+    title: {
+      transformer: stringType,
+      validator: validatesString,
+      defaultValue: 'NEW TODO'
+    },
+    due_at: {
+      transformer: dateType,
+      defaultValue: timestamp
+    },
+    tags: {
+      transformer: arrayType,
+      validator: validatesArray,
+      defaultValue: []
+    },
+    options: {
+      transformer: objectType,
+      validator: validatesOptions,
+      defaultValue: {}
+    }
+  }
 
   @validates(validatesArrayPresence)
   @relatedToMany notes
@@ -120,8 +165,13 @@ class Category extends Model {
   static type = 'categories'
   static endpoint = 'categories'
 
-  @validates
-  @attribute(String) name
+  static attributeDefinitions = {
+    name: {
+      transformer: stringType,
+      validator: validatesString,
+      defaultValue: 'name'
+    }
+  }
 
   @relatedToMany targets // polymorphic
 }
@@ -232,7 +282,9 @@ describe('Model', () => {
     })
 
     it('attributes are observable', (done) => {
-      const todo = new Todo({})
+      expect.assertions(3)
+
+      const todo = new Todo({ options: {} })
 
       let runs = 0
       const expected = [undefined, 'one', 'two']
@@ -243,8 +295,6 @@ describe('Model', () => {
           done()
         }
       })
-
-      todo.options = {}
 
       runInAction(() => {
         todo.options.test = 'one'
