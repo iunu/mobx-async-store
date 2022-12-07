@@ -6,6 +6,7 @@ import MockServer from './MockServer'
 import { attribute, validates } from './decorators/attributes'
 import { relatedToMany, relatedToOne } from './decorators/relationships'
 import { serverResponse } from './testUtils'
+import { arrayType, objectType, dateType, stringType, numberType } from './utils'
 
 export {
   Model,
@@ -17,5 +18,10 @@ export {
   QueryString,
   serverResponse,
   FactoryFarm,
-  MockServer
+  MockServer,
+  dateType,
+  stringType,
+  numberType,
+  objectType,
+  arrayType
 }
