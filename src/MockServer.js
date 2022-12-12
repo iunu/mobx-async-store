@@ -29,17 +29,9 @@ const simulatePatch = (store, type, body) => {
   const { data } = JSON.parse(body.toString())
 
   if (Array.isArray(data)) {
-    const records = data.map((recordData) => {
-      const record = store.getOne(type, String(recordData.id))
-      record.updateAttributesFromResponse(recordData)
-      return record
-    })
-
-    return records
+    return store.createOrUpdateModelsFromData(data)
   } else {
-    const record = store.getOne(type, String(data.id))
-    record.updateAttributesFromResponse(data)
-    return record
+    return store.createOrUpdateModelFromData(data)
   }
 }
 

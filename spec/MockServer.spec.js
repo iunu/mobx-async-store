@@ -26,7 +26,7 @@ class Todo extends Model {
 }
 
 class AppStore extends Store {
-  static types = [Todo]
+  static models = [Todo]
 }
 
 describe('MockServer', () => {
@@ -377,10 +377,14 @@ describe('MockServer', () => {
       )
     })
 
-    it('does not allow a POST call', () => {
-      expect(() => store.add('todos', { title: 'Plant Seeds' }).save()).toThrow(
-        "You tried to call fetch from MockServer with POST /todos, which is circular and would call itself. This was caused by calling a method such as 'save' on a model that was created from MockServer. To fix the problem, use FactoryFarm without MockServer"
-      )
+    it('does not allow a POST call', async () => {
+      const todo = store.add('todos', { title: 'Plant Seeds' })
+      expect.assertions(1)
+      try {
+        await todo.save()
+      } catch (error) {
+        expect(error).toEqual(new Error("You tried to call fetch from MockServer with POST /todos, which is circular and would call itself. This was caused by calling a method such as 'save' on a model that was created from MockServer. To fix the problem, use FactoryFarm without MockServer"))
+      }
     })
   })
 

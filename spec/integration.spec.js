@@ -24,7 +24,7 @@ class Todo extends Model {
 }
 
 class AppStore extends Store {
-  static types = [
+  static models = [
     Todo
   ]
 }

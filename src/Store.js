@@ -9,7 +9,6 @@ import {
   parseErrorPointer,
   requestUrl
 } from './utils'
-import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 
 /**
@@ -59,7 +58,6 @@ class Store {
   constructor (options) {
     makeObservable(this)
     this.init(options)
-    this.schema = schema
   }
 
   /**
@@ -79,13 +77,13 @@ class Store {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
-      return this.addModel(type, toJS(data))
+      return this.addModel(type, cloneDeep(data))
     }
   }
 
   /**
    * Given a set of properties and type, returns an object with only the properties
-   * that are defined as attributes in the schema for that type.
+   * that are defined as attributes in the model for that type.
    * ```
    * properties = { title: 'Do laundry', unrelatedProperty: 'Do nothing' }
    * pickAttributes(properties, 'todos')
@@ -97,14 +95,13 @@ class Store {
    * @returns {object} the scrubbed attributes
    */
   pickAttributes = (properties, type) => {
-    const ModelKlass = this.getKlass(type)
-    const attributeNames = Object.keys(ModelKlass.attributeDefinitions)
+    const attributeNames = Object.keys(this.getKlass(type).attributeDefinitions)
     return pick(properties, attributeNames)
   }
 
   /**
    * Given a set of properties and type, returns an object with only the properties
-   * that are defined as relationships in the schema for that type.
+   * that are defined as relationships in the model for that type.
    * ```
    * properties = { notes: [note1, note2], category: cat1, title: 'Fold Laundry' }
    * pickRelationships(properties, 'todos')
@@ -123,46 +120,8 @@ class Store {
    * @returns {object} the scrubbed relationships
    */
   pickRelationships = (properties, type) => {
-    const relationshipNames = Object.keys(this.schema.relations[type] || {})
-    const allRelationships = pick(properties, relationshipNames)
-
-    return Object.keys(allRelationships).reduce((references, key) => {
-      const relatedModel = allRelationships[key]
-      let data
-      if (Array.isArray(relatedModel)) {
-        data = relatedModel.map((model) => ({
-          id: model.id,
-          type: model.type
-        }))
-      } else {
-        data = { id: relatedModel.id, type: relatedModel.type }
-      }
-      references[key] = { data }
-      return references
-    }, {})
-  }
-
-  /**
-   * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.
-   * Does not support relationships, since they require references to objects in the store.
-   * ```
-   * kpiHash = { name: "A good thing to measure" }
-   * kpi = store.build('kpis', kpiHash)
-   * kpi.name
-   * => "A good thing to measure"
-   * ```
-   *
-   * @param {string} type the model type
-   * @param {object} properties the properties to use
-   * @returns {object} the new record
-   */
-  build = (type, properties) => {
-    const id = idOrNewId(properties.id)
-
-    const attributes = this.pickAttributes(properties, type)
-    const model = this.createModel(type, id, { attributes })
-
-    return model
+    const definitions = this.getKlass(type).relationshipDefinitions
+    return definitions ? pick(properties, Object.keys(definitions)) : {}
   }
 
   /**
@@ -179,7 +138,14 @@ class Store {
     const attributes = this.pickAttributes(properties, type)
     const relationships = this.pickRelationships(properties, type)
 
-    const model = this.createModel(type, id, { attributes, relationships })
+    const serializedRelationships = Object.entries(relationships).reduce((relationshipsData, [relationshipName, data]) => {
+      relationshipsData[relationshipName] = {
+        data: Array.isArray(data) ? data.map((model) => pick(model, ['id', 'type'])) : pick(data, ['id', 'type'])
+      }
+      return relationshipsData
+    }, {})
+
+    const model = this.createModelFromData({ type, id, attributes, relationships: serializedRelationships })
 
     // Add the model to the type records index
     this.data[type].records.set(String(model.id), model)
@@ -343,14 +309,13 @@ class Store {
     const response = await this.fetch(url, { method: 'GET' })
 
     if (response.status === 200) {
-      const json = await response.json()
-      const { data, included } = json
+      const { data, included } = await response.json()
+
+      const record = this.createOrUpdateModelFromData(data)
 
       if (included) {
-        this.createModelsFromData(included)
+        this.createOrUpdateModelsFromData(included)
       }
-
-      const record = this.createOrUpdateModel(data)
 
       this.data[type].cache.set(url, [record.id])
       this.deleteLoadingState(state)
@@ -488,8 +453,8 @@ class Store {
    * @returns {string} a formatted url
    */
   fetchUrl (type, queryParams, id, options) {
-    const { baseUrl, modelTypeIndex } = this
-    const { endpoint } = modelTypeIndex[type]
+    const { baseUrl } = this
+    const { endpoint } = this.getKlass(type)
 
     return requestUrl(baseUrl, endpoint, queryParams, id, options)
   }
@@ -588,27 +553,26 @@ class Store {
 
     if (response.status === 200) {
       this.data[type].cache.set(url, [])
-      const json = await response.json()
+      const { included, data, meta } = await response.json()
 
       let records
       runInAction(() => {
-        if (json.included) {
-          this.createModelsFromData(json.included)
+        if (included) {
+          this.createOrUpdateModelsFromData(included)
         }
 
-        records = json.data.map((dataObject) => {
-          const { id, attributes = {}, relationships = {} } = dataObject
-          const record = this.createModel(type, id, { attributes, relationships })
+        records = data.map((document) => {
+          const record = this.createModelFromData(document)
           const cachedIds = this.data[type].cache.get(url)
-          this.data[type].cache.set(url, [...cachedIds, id])
-          this.data[type].records.set(String(id), record)
+          this.data[type].cache.set(url, [...cachedIds, document.id])
+          this.data[type].records.set(String(document.id), record)
           return record
         })
         this.deleteLoadingState(state)
       })
-      if (json.meta) {
-        records.meta = json.meta
-        this.getType(type).meta.set(url, json.meta)
+      if (meta) {
+        records.meta = meta
+        this.getType(type).meta.set(url, meta)
       }
       return records
     } else {
@@ -699,7 +663,7 @@ class Store {
   @action
   init (options) {
     this.initializeNetworkConfiguration(options)
-    this.initializeModelTypeIndex()
+    this.initializeModelIndex(options)
     this.initializeObservableDataProperty()
     this.initializeErrorMessages(options)
   }
@@ -721,12 +685,8 @@ class Store {
    * Creates the key/value index of model types
    */
   @action
-  initializeModelTypeIndex () {
-    const { types } = this.constructor
-    this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
-      modelTypeIndex[modelKlass.type] = modelKlass
-      return modelTypeIndex
-    }, {})
+  initializeModelIndex (options = {}) {
+    this.models = this.constructor.models || options.models
   }
 
   /**
@@ -738,12 +698,12 @@ class Store {
    */
   @action
   initializeObservableDataProperty () {
-    const { types } = this.constructor
+    const { models } = this
 
     // NOTE: Is there a performance cost to setting
     // each property individually?
     // Is Map the most efficient structure?
-    types.forEach((modelKlass) => {
+    models.forEach((modelKlass) => {
       this.data[modelKlass.type] = {
         records: observable.map(),
         cache: observable.map(),
@@ -939,7 +899,7 @@ class Store {
    * @returns {Function} model constructor
    */
   getKlass (type) {
-    return this.modelTypeIndex[type]
+    return this.models.find((model) => model.type === type)
   }
 
   /**
@@ -949,19 +909,48 @@ class Store {
    * @returns {object} the record
    */
   @action
-  createOrUpdateModel (dataObject) {
-    const { attributes = {}, id, relationships = {}, type } = dataObject
+  createOrUpdateModelFromData (data) {
+    const { id, type } = data
 
     let record = this.getRecord(type, id)
 
     if (record) {
-      record.updateAttributesFromResponse({ attributes, id, relationships })
+      this.updateRecordFromData(record, data)
     } else {
-      record = this.createModel(type, id, { attributes, relationships })
+      record = this.createModelFromData(data)
     }
 
     this.data[type].records.set(String(record.id), record)
     return record
+  }
+
+  updateRecordFromData (record, data) {
+    const tmpId = record.id
+    const { id, type, attributes, relationships = {} } = data
+
+    runInAction(() => {
+      record.id = id
+
+      Object.entries(attributes).forEach(([key, value]) => {
+        record[key] = value
+      })
+
+      Object.keys(relationships).forEach((relationshipName) => {
+        if (relationships[relationshipName].included === false) {
+          delete relationships[relationshipName]
+        }
+      })
+
+      record.relationships = { ...record.relationships, ...relationships }
+    })
+
+    record.isInFlight = false
+    record.takeSnapshot({ persisted: true })
+
+    runInAction(() => {
+      this.data[type].records.set(String(tmpId), record)
+      this.data[type].records.set(String(id), record)
+    })
   }
 
   /**
@@ -971,13 +960,13 @@ class Store {
    * @returns {Array} an array of the models serialized
    */
   @action
-  createModelsFromData (data) {
+  createOrUpdateModelsFromData (data) {
     return data.map((dataObject) => {
       // Only build objects for which we have a type defined.
       // And ignore silently anything else included in the JSON response.
       // TODO: Put some console message in development mode
       if (this.getType(dataObject.type)) {
-        return this.createOrUpdateModel(dataObject)
+        return this.createOrUpdateModelFromData(dataObject)
       } else {
         console.warn(`no type defined for ${dataObject.type}`)
         return null
@@ -994,15 +983,17 @@ class Store {
    * @returns {object} model instance
    */
   @action
-  createModel (type, id, data) {
-    const { attributes = {}, relationships = {} } = toJS(data)
+  createModelFromData (data) {
+    const { id, type, attributes, relationships } = data
+
     const store = this
     const ModelKlass = this.getKlass(type)
+
     if (!ModelKlass) {
       throw new Error(`Could not find a model for '${type}'`)
     }
 
-    return new ModelKlass({ id, store, relationships, ...attributes })
+    return new ModelKlass({ id, relationships, ...attributes }, store)
   }
 
   /**
@@ -1041,15 +1032,10 @@ class Store {
             )
           }
 
-          data.forEach((targetData, index) => {
-            recordsArray[index].updateAttributesFromResponse(
-              targetData,
-              included
-            )
-          })
+          recordsArray.forEach((record, i) => this.updateRecordFromData(record, data[i]))
 
-          if (json.included) {
-            this.createModelsFromData(json.included)
+          if (included) {
+            this.createOrUpdateModelsFromData(included)
           }
 
           // on success, return the original record(s).

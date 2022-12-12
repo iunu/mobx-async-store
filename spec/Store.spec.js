@@ -2,14 +2,12 @@ import {
   MockServer,
   FactoryFarm,
   Model,
-  Store,
-  relatedToMany,
-  relatedToOne
+  Store
 } from '../src/main'
 import { computed, isObservable, toJS } from 'mobx'
 import { Schema } from '../src/schema'
 
-import { stringType, URL_MAX_LENGTH } from '../src/utils'
+import { stringType, URL_MAX_LENGTH, validatesArrayPresence } from '../src/utils'
 
 /* global fetch Response */
 
@@ -24,7 +22,11 @@ class Tag extends Model {
     }
   }
 
-  @relatedToOne todo
+  static relationshipDefinitions = {
+    todo: {
+      direction: 'toOne'
+    }
+  }
 }
 
 class Category extends Model {
@@ -38,7 +40,11 @@ class Category extends Model {
     }
   }
 
-  @relatedToOne todo
+  static relationshipDefinitions = {
+    todo: {
+      direction: 'toOne'
+    }
+  }
 }
 
 class Note extends Model {
@@ -52,7 +58,15 @@ class Note extends Model {
     }
   }
 
-  @relatedToOne todo
+  static relationshipDefinitions = {
+    todo: {
+      direction: 'toOne',
+      inverse: {
+        name: 'notes',
+        direction: 'toMany'
+      }
+    }
+  }
 }
 
 class Todo extends Model {
@@ -66,9 +80,22 @@ class Todo extends Model {
     }
   }
 
-  @relatedToMany notes
-  @relatedToOne category
-  @relatedToMany tags
+  static relationshipDefinitions = {
+    notes: {
+      direction: 'toMany',
+      validator: validatesArrayPresence,
+      inverse: {
+        name: 'todo',
+        direction: 'toOne'
+      }
+    },
+    category: {
+      direction: 'toOne'
+    },
+    tags: {
+      direction: 'toMany'
+    }
+  }
 }
 
 class AppStore extends Store {
@@ -76,7 +103,7 @@ class AppStore extends Store {
     return this.loadingStates.get('todos')?.size > 0
   }
 
-  static types = [Note, Todo, Tag, Category]
+  static models = [Note, Todo, Tag, Category]
 }
 
 const mockBaseUrl = '/example_api'
@@ -248,10 +275,6 @@ describe('Store', () => {
     })
   })
 
-  it('has a reference to the schema object', () => {
-    expect(store.schema).toBeInstanceOf(Schema)
-  })
-
   it('has observable data property', () => {
     expect(isObservable(store.data)).toBe(true)
   })
@@ -267,12 +290,12 @@ describe('Store', () => {
   })
 
   it('sets model type index', () => {
-    expect(store.modelTypeIndex).toEqual({
-      todos: Todo,
-      notes: Note,
-      categories: Category,
-      tags: Tag
-    })
+    expect(store.models).toEqual(expect.arrayContaining([
+      Todo,
+      Note,
+      Category,
+      Tag
+    ]))
   })
 
   it('initializes data observable', () => {
@@ -327,28 +350,6 @@ describe('Store', () => {
 
       const foundExamples = store.getAll('todos')
       expect(foundExamples).toHaveLength(2)
-    })
-  })
-
-  describe('build', () => {
-    it('builds a model instance', () => {
-      const example = store.build('todos', { title: 'Buy Milk' })
-      expect(example.title).toEqual('Buy Milk')
-    })
-
-    it('does not add it to the store', () => {
-      const example = store.build('todos', { title: 'Buy Milk' })
-      expect(store.getRecord('todos', example.id)).toBeUndefined()
-    })
-
-    it('gives the record a temporary id', () => {
-      const example = store.build('todos', { title: 'Buy Milk' })
-      expect(example.id).toMatch(/^tmp-/)
-    })
-
-    it('unless an id is present in attributes', () => {
-      const example = store.build('todos', { id: 'foo', title: 'Buy Milk' })
-      expect(example.id).toBe('foo')
     })
   })
 
@@ -1715,26 +1716,30 @@ describe('Store', () => {
     })
   })
 
-  describe('createModel', () => {
+  describe('createModelFromData', () => {
     it('creates a model obj with attributes', () => {
       const todoData = {
+        type: 'todos',
+        id: '1',
         attributes: { title: 'hello!' }
       }
-      const todo = store.createModel('todos', 1, todoData)
-      expect(todo.id).toEqual(1)
+      const todo = store.createModelFromData(todoData)
+      expect(todo.id).toEqual('1')
       expect(todo.title).toEqual(todoData.attributes.title)
     })
 
     it('creates a model obj with relatedToOne property', () => {
       const category = store.add('categories', { id: 5, name: 'Cat5' })
       const todoData = {
+        type: 'todos',
+        id: '1',
         attributes: { title: 'hello!' },
         relationships: {
           category: { data: { id: category.id, type: 'categories' } }
         }
       }
-      const todo = store.createModel('todos', 1, todoData)
-      expect(todo.id).toEqual(1)
+      const todo = store.createModelFromData(todoData)
+      expect(todo.id).toEqual('1')
       expect(todo.category.id).toEqual(category.id)
       expect(todo.category.name).toEqual(category.name)
     })
@@ -1742,25 +1747,27 @@ describe('Store', () => {
     it('creates a model with relatedToMany property', () => {
       const tag = store.add('tags', { id: 3, label: 'Tag #3' })
       const todoData = {
+        type: 'todos',
+        id: '1',
         attributes: { title: 'hello!' },
         relationships: {
           tags: { data: [{ id: tag.id, type: 'tags' }] }
         }
       }
-      const todo = store.createModel('todos', 1, todoData)
-      expect(todo.id).toEqual(1)
+      const todo = store.createModelFromData(todoData)
+      expect(todo.id).toEqual('1')
       expect(todo.tags[0].id).toEqual(tag.id)
       expect(todo.tags[0].label).toEqual(tag.label)
     })
   })
 
-  describe('createOrUpdateModel', () => {
+  describe('createOrUpdateModelFromData', () => {
     let record
 
     beforeEach(() => {
       store.add('notes', { id: 3, text: 'hi' })
 
-      record = store.createOrUpdateModel({
+      record = store.createOrUpdateModelFromData({
         id: 3,
         type: 'notes',
         attributes: {
@@ -1778,7 +1785,7 @@ describe('Store', () => {
     })
   })
 
-  describe('createModelsFromData', () => {
+  describe('createOrUpdateModelsFromData', () => {
     it('creates a list of model objs from a list of data objs', () => {
       const dataObjs = [
         {
@@ -1794,7 +1801,7 @@ describe('Store', () => {
           relationships: {}
         }
       ]
-      const todos = store.createModelsFromData(dataObjs)
+      const todos = store.createOrUpdateModelsFromData(dataObjs)
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(todos[1].type).toEqual('todos')
@@ -1819,7 +1826,7 @@ describe('Store', () => {
           relationships: {}
         }
       ]
-      const todos = store.createModelsFromData(dataObjs)
+      const todos = store.createOrUpdateModelsFromData(dataObjs)
       expect(todos).toHaveLength(2)
       expect(todos[0].type).toEqual('todos')
       expect(todos[1]).toBe(null)

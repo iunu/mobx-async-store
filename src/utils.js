@@ -292,3 +292,69 @@ export function deriveIdQueryStrings (ids, restOfUrl = '') {
 }
 
 export const isEmptyString = (data) => typeof data === 'string' && data.trim().length === 0
+
+/**
+ * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
+ * @method validatePresence
+ * @param value
+ */
+export const validatesPresence = (value) => {
+  return {
+    isValid: (value) => value != null && value !== '',
+    errors: [{
+      key: 'blank',
+      message: 'can\'t be blank'
+    }]
+  }
+}
+
+export const validatesString = (property) => {
+  return {
+    isValid: !isEmptyString(property),
+    errors: [{
+      key: 'blank',
+      message: "can't be blank"
+    }]
+  }
+}
+
+export const validatesArray = (property) => {
+  return {
+    isValid: Array.isArray(property),
+    errors: [{
+      key: 'must_be_an_array',
+      message: 'must be an array'
+    }]
+  }
+}
+
+export const validatesArrayPresence = (property) => {
+  return {
+    isValid: Array.isArray(property) && property.length > 0,
+    errors: [{
+      key: 'empty',
+      message: 'must have at least one record'
+    }]
+  }
+}
+
+export const validatesOptions = (property, target) => {
+  const errors = []
+
+  if (target.requiredOptions) {
+    target.requiredOptions.forEach(optionKey => {
+      if (!property[optionKey]) {
+        errors.push({
+          key: 'blank',
+          message: 'can\t be blank',
+          data: { optionKey }
+        })
+      }
+    })
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}

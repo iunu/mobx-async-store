@@ -1,21 +1,23 @@
 import {
   computed,
-  extendObservable,
   set,
   toJS,
   observable,
   makeObservable,
-  runInAction
+  runInAction,
+  extendObservable
 } from 'mobx'
 
 import { diff, parseErrors } from './utils'
 
-import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 import union from 'lodash/union'
+import Store from './Store'
+import { defineToManyRelationships, defineToOneRelationships } from './relationships'
+import pick from 'lodash/pick'
 
 /**
  * Maps the passed-in property names through and runs validations against those properties
@@ -69,22 +71,49 @@ class Model {
    *
    * @param {object} initialAttributes relationships and attributes to override defaults
    */
-  constructor (initialAttributes = {}) {
+  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] })) {
+    const { id, relationships, ...attributes } = initialProperties
+
+    const { initializeAttributes, initializeRelationships } = this
+    this.store = store
+    this.id = id
+    this.relationships = relationships
+
     makeObservable(this)
-    const { definedAttributesWithDefaults } = this
-    extendObservable(this, {
-      ...definedAttributesWithDefaults,
-      ...initialAttributes
-    })
-    this._takeSnapshot({ persisted: !this.isNew })
+
+    initializeAttributes(attributes)
+    initializeRelationships()
+
+    this.takeSnapshot({ persisted: !this.isNew })
   }
 
-  get definedAttributesWithDefaults () {
-      const { attributeDefinitions } = this
-      return Object.keys(attributeDefinitions).reduce((allAttrs, key) => {
-        allAttrs[key] = attributeDefinitions[key].defaultValue
-        return allAttrs
-      }, {})
+  initializeAttributes = (overrides) => {
+    const { attributeDefinitions } = this
+
+    const attributes = Object.keys(attributeDefinitions).reduce((object, attributeName) => {
+      object[attributeName] = overrides[attributeName] === undefined ? attributeDefinitions[attributeName].defaultValue : overrides[attributeName]
+      return object
+    }, {})
+
+    extendObservable(this, attributes)
+  }
+
+  /**
+   * Initializes relationships based on the `relationships` hash.
+   * @method initializeRelationships
+   */
+  initializeRelationships = () => {
+    const { store, relationshipDefinitions = {} } = this
+    const definitionEntries = Object.entries(relationshipDefinitions)
+
+    const toOneDefinitions = definitionEntries.filter(([_, definition]) => definition.direction === 'toOne')
+    const toManyDefinitions = definitionEntries.filter(([_, definition]) => definition.direction === 'toMany')
+
+    const toOneRelationships = defineToOneRelationships(this, store, toOneDefinitions)
+    const toManyRelationships = defineToManyRelationships(this, store, toManyDefinitions)
+
+    extendObservable(this, toOneRelationships)
+    extendObservable(this, toManyRelationships)
   }
 
   /**
@@ -139,7 +168,7 @@ class Model {
    * @type {boolean}
    */
   get isDirty () {
-    return this.dirtyAttributes.length > 0 || this.dirtyRelationships.length > 0
+    return this.dirtyAttributes.length > 0 || this.dirtyRelationships.size > 0
   }
 
   /**
@@ -186,32 +215,34 @@ class Model {
    * => []
    * todo.note = note1
    * todo.dirtyRelationships
-   * => ['relationships.note']
+   * => ['note']
    *
    * @type {Array}
    */
   get dirtyRelationships () {
-    // TODO: make what returns from this.relationships to be more consistent
-    const previousRelationships = this.previousSnapshot.relationships || {}
-    const currentRelationships = this.relationships || {}
-    const schemaRelationships = this.relationshipNames
+    if (this._snapshots.length === 0 || !this.relationshipDefinitions) { return new Set() }
 
-    if (Object.keys(currentRelationships).length === 0) {
-      return Object.keys(previousRelationships)
-    }
+    const { previousSnapshot, persistedOrFirstSnapshot, relationshipDefinitions } = this
 
-    return Array.from(schemaRelationships.reduce((dirtyAccumulator, name) => {
-      const currentValues = currentRelationships[name]?.data || []
-      const previousValues = previousRelationships[name]?.data || []
-      const currentIds = Array.isArray(currentValues) ? currentValues.map(value => [value.id, value.type]).sort() : [currentValues.id, currentValues.type]
-      const previousIds = Array.isArray(previousValues) ? previousValues.map(value => [value.id, value.type]).sort() : [previousValues.id, previousValues.type]
+    return Object.entries(relationshipDefinitions || {}).reduce((relationshipSet, [relationshipName, definition]) => {
+      const { direction } = definition
+      let firstData = persistedOrFirstSnapshot.relationships?.[relationshipName]?.data
+      let currentData = previousSnapshot.relationships?.[relationshipName]?.data
+      let isDifferent
 
-      if (!isEqual(currentIds, previousIds)) {
-        dirtyAccumulator.add(name)
+      if (direction === 'toMany') {
+        firstData = firstData || []
+        currentData = currentData || []
+        isDifferent = firstData.length !== currentData?.length || firstData.some(({ id, type }, i) => currentData[i].id !== id || currentData[i].type !== type)
+      } else {
+        isDifferent = firstData?.id !== currentData?.id || firstData?.type !== currentData?.type
       }
 
-      return dirtyAccumulator
-    }, new Set()))
+      if (isDifferent) {
+        relationshipSet.add(relationshipName)
+      }
+      return relationshipSet
+    }, new Set())
   }
 
   /**
@@ -294,8 +325,8 @@ class Model {
    * state if the model was never persisted
    */
   rollbackToPersisted () {
-    this._applySnapshot(this.persistedSnapshot)
-    this._takeSnapshot({ persisted: true })
+    this._applySnapshot(this.persistedOrFirstSnapshot)
+    this.takeSnapshot({ persisted: true })
   }
 
   /**
@@ -304,7 +335,7 @@ class Model {
    * @param {object} options query params and sparse fields to use
    * @returns {Promise} the persisted record
    */
-  save (options = {}) {
+  save = async (options = {}) => {
     if (!options.skip_validations && !this.validate(options)) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -347,7 +378,8 @@ class Model {
     }
 
     const response = this.store.fetch(url, { method, body })
-    const result = this.store.updateRecords(response, this)
+    const result = await this.store.updateRecords(response, this)
+    this.takeSnapshot({ persisted: true })
 
     return result
   }
@@ -483,13 +515,6 @@ class Model {
   }
 
   /**
-   * Sets previous snapshot to current snapshot
-   */
-  setPreviousSnapshot () {
-    this._takeSnapshot()
-  }
-
-  /**
    * the latest snapshot
    *
    * @type {object}
@@ -505,7 +530,7 @@ class Model {
    *
    * @type {object}
    */
-  get persistedSnapshot () {
+  get persistedOrFirstSnapshot () {
     return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
@@ -516,18 +541,18 @@ class Model {
    *
    * @param {object} options options to use to set the persisted state
    */
-  _takeSnapshot (options = {}) {
+  takeSnapshot = (options = {}) => {
     const persisted = options.persisted || false
-    const { attributes, relationships } = this.snapshot
-    const snapshot = {
+    const properties = cloneDeep(pick(this, ['attributes', 'relationships']))
+
+    this._snapshots.push({
       persisted,
-      attributes,
-      relationships
-    }
-    if (persisted) {
-      this._snapshots = []
-    }
-    this._snapshots.push(snapshot)
+      ...properties
+    })
+  }
+
+  clearSnapshots = () => {
+    this._snapshots = []
   }
 
   /**
@@ -564,9 +589,7 @@ class Model {
   get attributes () {
     return this.attributeNames.reduce((attributes, key) => {
       const value = toJS(this[key])
-      if (value == null) {
-        delete attributes[key]
-      } else {
+      if (value != null) {
         attributes[key] = value
       }
       return attributes
@@ -580,7 +603,7 @@ class Model {
    */
 
   get attributeDefinitions () {
-    return this.constructor.attributeDefinitions
+    return this.constructor.attributeDefinitions || {}
   }
 
   /**
@@ -589,8 +612,7 @@ class Model {
    * @type {object}
    */
   get relationshipDefinitions () {
-    const { type } = this.constructor
-    return schema.relations[type] || {}
+    return this.constructor.relationshipDefinitions || {}
   }
 
   /**
@@ -686,8 +708,8 @@ class Model {
     }
 
     if (options.relationships) {
-      filteredRelationshipNames = Object.keys(this.relationships)
-        .filter(name => options.relationships.includes(name))
+      filteredRelationshipNames = this.relationshipNames
+        .filter(name => options.relationships.includes(name) && this.relationships[name])
 
       const relationships = filteredRelationshipNames.reduce((rels, key) => {
         rels[key] = toJS(this.relationships[key])
@@ -715,63 +737,6 @@ class Model {
         this[key] = attributes[key]
       })
     })
-  }
-
-  /**
-   * Used after a save. TODO: move to store with other fetch methods
-   *
-   * @param {object} data in jsonapi format
-   * @param {Array} included array of data in jsonapi format
-   */
-
-  updateAttributesFromResponse (data, included) {
-    const tmpId = this.id
-    const { id, attributes, relationships } = data
-
-    runInAction(() => {
-      set(this, 'id', id)
-
-      Object.keys(attributes).forEach(key => {
-        set(this, key, attributes[key])
-      })
-      if (relationships) {
-        Object.keys(relationships).forEach((key) => {
-          // Don't try to create relationship if meta included false
-          if (relationships[key].meta?.included !== false) {
-            set(this.relationships, key, relationships[key])
-          }
-        })
-      }
-      if (included) {
-        this.store.createModelsFromData(included)
-      }
-    })
-
-    // Update target isInFlight
-    this.isInFlight = false
-    this._takeSnapshot({ persisted: true })
-
-    runInAction(() => {
-      // NOTE: This resolves an issue where a record is persisted but the
-      // index key is still a temp uuid. We can't simply remove the temp
-      // key because there may be associated records that have the temp
-      // uuid id as its only reference to the newly persisted record.
-      // TODO: Figure out a way to update associated records to use the
-      // newly persisted id.
-      this.store.data[this.type].records.set(String(tmpId), this)
-      this.store.data[this.type].records.set(String(this.id), this)
-    })
-  }
-
-  /**
-   * Clones this model TODO: REMOVE
-   *
-   * @returns {object} a clone of this model
-   */
-  clone () {
-    const attributes = cloneDeep(this.snapshot.attributes)
-    const relationships = cloneDeep(this.snapshot.relationships)
-    return this.store.createModel(this.type, this.id, { attributes, relationships })
   }
 
   /**
