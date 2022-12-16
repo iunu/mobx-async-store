@@ -9,7 +9,7 @@ import Model from './Model'
  * @param {object} record
  * @param {object} store
  * @param {object} toOneDefinitions
- * @returns {object}
+ * @return {object}
  */
 
 export const defineToOneRelationships = (record, store, toOneDefinitions) => {
@@ -42,8 +42,8 @@ export const defineToOneRelationships = (record, store, toOneDefinitions) => {
  *
  * @param {object} record
  * @param {object} store
- * @param {object} toOneDefinitions
- * @returns {object}
+ * @param toManyDefinitions
+ * @return {object}
  */
 
 export const defineToManyRelationships = (record, store, toManyDefinitions) => {
