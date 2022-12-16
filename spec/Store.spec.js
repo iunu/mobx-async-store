@@ -5,7 +5,6 @@ import {
   Store
 } from '../src/main'
 import { computed, isObservable, toJS } from 'mobx'
-import { Schema } from '../src/schema'
 
 import { stringType, URL_MAX_LENGTH, validatesArrayPresence } from '../src/utils'
 

@@ -1137,7 +1137,7 @@ describe('Model', () => {
 
     it('ignores differences in attrs and relationships', () => {
       const { id, type } = original
-      const sameIdAndType = { id, type}
+      const sameIdAndType = { id, type }
       expect(original.isSame(sameIdAndType)).toBe(true)
     })
   })
