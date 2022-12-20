@@ -1,120 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>mobx-async-store</title>
-    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
-    <link rel="stylesheet" href="./assets/vendor/prettify/prettify-min.css">
-    <link rel="stylesheet" href="./assets/css/main.css" id="site_styles">
-    <link rel="icon" href="./assets/favicon.ico">
-    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
-</head>
-<body class="yui3-skin-sam">
+<!DOCTYPE html><html lang="en" style="font-size:16px"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Home</title><!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]--><script src="scripts/third-party/hljs.js" defer="defer"></script><script src="scripts/third-party/hljs-line-num.js" defer="defer"></script><script src="scripts/third-party/popper.js" defer="defer"></script><script src="scripts/third-party/tippy.js" defer="defer"></script><script src="scripts/third-party/tocbot.min.js"></script><script>var baseURL="/",locationPathname="",baseURL=(locationPathname=document.location.pathname).substr(0,locationPathname.lastIndexOf("/")+1)</script><link rel="stylesheet" href="styles/clean-jsdoc-theme.min.css"><svg aria-hidden="true" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none"><defs><symbol id="copy-icon" viewbox="0 0 488.3 488.3"><g><path d="M314.25,85.4h-227c-21.3,0-38.6,17.3-38.6,38.6v325.7c0,21.3,17.3,38.6,38.6,38.6h227c21.3,0,38.6-17.3,38.6-38.6V124    C352.75,102.7,335.45,85.4,314.25,85.4z M325.75,449.6c0,6.4-5.2,11.6-11.6,11.6h-227c-6.4,0-11.6-5.2-11.6-11.6V124    c0-6.4,5.2-11.6,11.6-11.6h227c6.4,0,11.6,5.2,11.6,11.6V449.6z"/><path d="M401.05,0h-227c-21.3,0-38.6,17.3-38.6,38.6c0,7.5,6,13.5,13.5,13.5s13.5-6,13.5-13.5c0-6.4,5.2-11.6,11.6-11.6h227    c6.4,0,11.6,5.2,11.6,11.6v325.7c0,6.4-5.2,11.6-11.6,11.6c-7.5,0-13.5,6-13.5,13.5s6,13.5,13.5,13.5c21.3,0,38.6-17.3,38.6-38.6    V38.6C439.65,17.3,422.35,0,401.05,0z"/></g></symbol><symbol id="search-icon" viewBox="0 0 512 512"><g><g><path d="M225.474,0C101.151,0,0,101.151,0,225.474c0,124.33,101.151,225.474,225.474,225.474    c124.33,0,225.474-101.144,225.474-225.474C450.948,101.151,349.804,0,225.474,0z M225.474,409.323    c-101.373,0-183.848-82.475-183.848-183.848S124.101,41.626,225.474,41.626s183.848,82.475,183.848,183.848    S326.847,409.323,225.474,409.323z"/></g></g><g><g><path d="M505.902,476.472L386.574,357.144c-8.131-8.131-21.299-8.131-29.43,0c-8.131,8.124-8.131,21.306,0,29.43l119.328,119.328    c4.065,4.065,9.387,6.098,14.715,6.098c5.321,0,10.649-2.033,14.715-6.098C514.033,497.778,514.033,484.596,505.902,476.472z"/></g></g></symbol><symbol id="font-size-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11.246 15H4.754l-2 5H.6L7 4h2l6.4 16h-2.154l-2-5zm-.8-2L8 6.885 5.554 13h4.892zM21 12.535V12h2v8h-2v-.535a4 4 0 1 1 0-6.93zM19 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol><symbol id="add-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></symbol><symbol id="minus-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M5 11h14v2H5z"/></symbol><symbol id="dark-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></symbol><symbol id="light-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></symbol><symbol id="reset-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M18.537 19.567A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 2.136-.67 4.116-1.81 5.74L17 12h3a8 8 0 1 0-2.46 5.772l.997 1.795z"/></symbol><symbol id="down-icon" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.7803 6.21967C13.0732 6.51256 13.0732 6.98744 12.7803 7.28033L8.53033 11.5303C8.23744 11.8232 7.76256 11.8232 7.46967 11.5303L3.21967 7.28033C2.92678 6.98744 2.92678 6.51256 3.21967 6.21967C3.51256 5.92678 3.98744 5.92678 4.28033 6.21967L8 9.93934L11.7197 6.21967C12.0126 5.92678 12.4874 5.92678 12.7803 6.21967Z"></path></symbol><symbol id="codepen-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M16.5 13.202L13 15.535v3.596L19.197 15 16.5 13.202zM14.697 12L12 10.202 9.303 12 12 13.798 14.697 12zM20 10.869L18.303 12 20 13.131V10.87zM19.197 9L13 4.869v3.596l3.5 2.333L19.197 9zM7.5 10.798L11 8.465V4.869L4.803 9 7.5 10.798zM4.803 15L11 19.131v-3.596l-3.5-2.333L4.803 15zM4 13.131L5.697 12 4 10.869v2.262zM2 9a1 1 0 0 1 .445-.832l9-6a1 1 0 0 1 1.11 0l9 6A1 1 0 0 1 22 9v6a1 1 0 0 1-.445.832l-9 6a1 1 0 0 1-1.11 0l-9-6A1 1 0 0 1 2 15V9z"/></symbol><symbol id="close-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/></symbol><symbol id="menu-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></symbol></defs></svg></head><body class="dark" data-theme="dark"><div class="sidebar-container"><div class="sidebar" id="sidebar"><a href="/" class="sidebar-title sidebar-title-anchor">Home</a><div class="sidebar-items-container"><div class="sidebar-section-title with-arrow" data-isopen="false" id="FGy1l57fNk4UoJcJB640p"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="MockServer.html">MockServer</a></div><div class="sidebar-section-children"><a href="Model.html">Model</a></div><div class="sidebar-section-children"><a href="Store.html">Store</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="G8u7SHmMC2Ta12ZcKygGO"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#addIncluded">addIncluded</a></div><div class="sidebar-section-children"><a href="global.html#circularFetchError">circularFetchError</a></div><div class="sidebar-section-children"><a href="global.html#circularFindError">circularFindError</a></div><div class="sidebar-section-children"><a href="global.html#combineRacedRequests">combineRacedRequests</a></div><div class="sidebar-section-children"><a href="global.html#deriveIdQueryStrings">deriveIdQueryStrings</a></div><div class="sidebar-section-children"><a href="global.html#diff">diff</a></div><div class="sidebar-section-children"><a href="global.html#disallowFetches">disallowFetches</a></div><div class="sidebar-section-children"><a href="global.html#makeDate">makeDate</a></div><div class="sidebar-section-children"><a href="global.html#parseErrorPointer">parseErrorPointer</a></div><div class="sidebar-section-children"><a href="global.html#parseErrors">parseErrors</a></div><div class="sidebar-section-children"><a href="global.html#requestUrl">requestUrl</a></div><div class="sidebar-section-children"><a href="global.html#serverResponse">serverResponse</a></div><div class="sidebar-section-children"><a href="global.html#singularizeType">singularizeType</a></div><div class="sidebar-section-children"><a href="global.html#stringifyIds">stringifyIds</a></div><div class="sidebar-section-children"><a href="global.html#validateProperties">validateProperties</a></div><div class="sidebar-section-children"><a href="global.html#walk">walk</a></div><div class="sidebar-section-children"><a href="global.html#wrapResponse">wrapResponse</a></div></div></div></div></div><div class="navbar-container" id="VuAckcnZhf"><nav class="navbar"><div class="navbar-left-items"></div><div class="navbar-right-items"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#light-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div><nav></nav></nav></div><div class="toc-container"><div class="toc-content"><span class="bold">On this page</span><div id="eed4d2a0bfd64539bb9df78095dec881"></div></div></div><div class="body-wrapper"><div class="main-content"><div class="main-wrapper"><section class="readme"><article><p><img src="./coverage/badge-statements.svg" alt="Statements Covered!"> <img src="./coverage/badge-lines.svg" alt="Lines Covered!"> <img src="./coverage/badge-functions.svg" alt="Functions Covered!"></p><h1>mobx-async-store</h1><p>Mobx-based store for async data fetching and state management. https://iunu.github.io/mobx-async-store/</p><h2>Table of Contents</h2><ul><li><a href="#introduction">Introduction</a></li><li><a href="#development-setup">Development Setup</a></li><li><a href="#testing">Testing</a></li><li><a href="#distribution">Distribution</a></li><li><a href="#installation">Installation</a></li><li><a href="#usage">Usage</a><ul><li><a href="#create-models">Creating models by extending <code>Model</code></a></li><li><a href="#create-stores">Creating stores by extending <code>Store</code></a></li><li><a href="#initializing-stores">Initializing stores</a></li><li><a href="#getting-all-records-with-storegetall">Fetching all records with <code>Store#getAll</code>, <code>Store#fetchAll</code>, <code>Store#findAll</code></a></li><li><a href="#getting-records-by-id-with-storegetmany">Finding records by id with <code>Store#getMany</code>, <code>Store#fetchMany</code>, <code>Store#findMany</code></a></li><li><a href="#findfetch-options">Find/fetch options</a></li><li><a href="#getting-single-records-with-storegetone">Finding single records with <code>Store#getOne</code>, <code>Store#fetchOne</code>, <code>Store#findOne</code></a></li><li><a href="#clear-the-query-cache">Clear the query cache</a></li><li><a href="#adding-records-with-storeadd">Adding records with <code>Store#add</code></a></li><li><a href="#persisting-records-with-modelsave">Persisting records with <code>Model#save</code></a></li><li><a href="#handling-errors">Handling errors</a></li></ul></li></ul><h2>Introduction</h2><p><code>mobx-async-store</code> was designed to consume <a href="https://jsonapi.org">JSON::API specification</a> compliant REST APIs and provide a state management system for conveniently manipulating client-side data and keeping it in sync with the server-side. In the future, <code>mobx-async-store</code> may add support for other APIs types like GraphQL or custom REST APIs.</p><p>The library uses <code>mobx</code> internally to provide reactivity and observability; i.e when you fetch data from the server or make changes to client-side records then the UI should update accordingly. This system has only be tested in combination with <code>mobx-react</code>, but should hypothetically work with libraries like <code>mobx-vue</code> or <code>mobx-angular</code>.</p><h2>Development setup</h2><p>Clone this repository and install its dependencies:</p><pre class="prettyprint source lang-bash"><code>git clone git@github.com:artemis-ag/mobx-async-store.git
+cd mobx-async-store
+yarn install
+</code></pre><h2>Testing</h2><p><code>yarn test</code> builds the library, then tests it.</p><h2>Distribution</h2><h3>Step 1 - Build the dist files</h3><p><code>yarn build</code> builds the library to <code>dist</code>, generating three files:</p><ul><li><code>dist/mobx-async-store.cjs.js</code> A CommonJS bundle, suitable for use in Node.js, that <code>require</code>s the external dependency. This corresponds to the <code>&quot;main&quot;</code> field in package.json</li><li><code>dist/mobx-async-store.esm.js</code> an ES module bundle, suitable for use in other people's libraries and applications, that <code>import</code>s the external dependency. This corresponds to the <code>&quot;module&quot;</code> field in package.json</li><li><code>dist/mobx-async-store.umd.js</code> a UMD build, suitable for use in any environment (including the browser, as a <code>&lt;script&gt;</code> tag), that includes the external dependency. This corresponds to the <code>&quot;browser&quot;</code> field in package.json</li></ul><h3>Step 2 - Update the documentation</h3><p><code>yarn run docs</code> updates the documentation, located in <code>docs</code>.</p><h3>Step 3 - Publish</h3><p><code>npm login</code> to authenticate yourself as someone authorized to publish this package <code>npm publish</code></p><h2>Installation</h2><pre class="prettyprint source"><code>yarn add git+ssh://git@github.com:artemis-ag/mobx-async-store.git
+</code></pre><h2>Usage</h2><h3>Create models</h3><pre class="prettyprint source lang-JavaScript"><code>import { Model, attribute } from 'mobx-async-store'
 
-<div id="doc">
-    <div id="hd" class="yui3-g header">
-        <div class="yui3-u-3-4">
-                <h1><img src="./assets/css/logo.png" title="mobx-async-store" width="117" height="52"></h1>
-        </div>
-        <div class="yui3-u-1-4 version">
-            <em>API Docs for: 4.3.4</em>
-        </div>
-    </div>
-    <div id="bd" class="yui3-g">
+class Todo extends Model {
+  static type = 'todos'
+  static endpoint = 'todos'
 
-        <div class="yui3-u-1-4">
-            <div id="docs-sidebar" class="sidebar apidocs">
-                <div id="api-list">
-                    <h2 class="off-left">APIs</h2>
-                    <div id="api-tabview" class="tabview">
-                        <ul class="tabs">
-                            <li><a href="#api-classes">Classes</a></li>
-                            <li><a href="#api-modules">Modules</a></li>
-                        </ul>
-                
-                        <div id="api-tabview-filter">
-                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-                        </div>
-                
-                        <div id="api-tabview-panel">
-                            <ul id="api-classes" class="apis classes">
-                                <li><a href="./classes/FactoryFarm.html">FactoryFarm</a></li>
-                                <li><a href="./classes/MockServer.html">MockServer</a></li>
-                                <li><a href="./classes/Model.html">Model</a></li>
-                                <li><a href="./classes/RelatedRecordsArray.html">RelatedRecordsArray</a></li>
-                                <li><a href="./classes/Schema.html">Schema</a></li>
-                                <li><a href="./classes/Store.html">Store</a></li>
-                            </ul>
-                
-                
-                            <ul id="api-modules" class="apis modules">
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="yui3-u-3-4">
-                <div id="api-options">
-                    Show:
-                    <label for="api-show-inherited">
-                        <input type="checkbox" id="api-show-inherited" checked>
-                        Inherited
-                    </label>
-            
-                    <label for="api-show-protected">
-                        <input type="checkbox" id="api-show-protected">
-                        Protected
-                    </label>
-            
-                    <label for="api-show-private">
-                        <input type="checkbox" id="api-show-private">
-                        Private
-                    </label>
-                    <label for="api-show-deprecated">
-                        <input type="checkbox" id="api-show-deprecated">
-                        Deprecated
-                    </label>
-            
-                </div>
-            
-            <div class="apidocs">
-                <div id="docs-main">
-                    <div class="content">
-    <div class="apidocs">
-        <div id="docs-main" class="content">
-            <p>
-            Browse to a module or class using the sidebar to view its API documentation.
-            </p>
+  @attribute(String) title = ''
+  @attribute(Boolean) completed = false
+  @attribute(String) category = 'uncategorized'
+}
 
-            <h2>Keyboard Shortcuts</h2>
+export default Todo
+</code></pre><h3>Create stores</h3><pre class="prettyprint source lang-JavaScript"><code>import { Store } from 'mobx-async-store'
+import Todo from './Todo'
 
-            <ul>
-                <li><p>Press <kbd>s</kbd> to focus the API search box.</p></li>
+class AppStore extends Store {
+  static types = [
+    Todo
+  ]
+}
 
-                <li><p>Use <kbd>Up</kbd> and <kbd>Down</kbd> to select classes, modules, and search results.</p></li>
+export default AppStore
+</code></pre><h3>Initializing stores</h3><pre class="prettyprint source lang-JavaScript"><code>import AppStore from './AppStore'
 
-                <li class="mac-only"><p>With the API search box or sidebar focused, use <kbd><span class="cmd">&#x2318;</span>-Left</kbd> or <kbd><span class="cmd">&#x2318;</span>-Right</kbd> to switch sidebar tabs.</p></li>
+const store = new AppStore({
+  baseUrl: 'https//api.example.com',
+  defaultFetchOptions: {
+    credentials: 'include',
+    headers: {
+      'Accepts': 'application/json',
+      'Content-Type': 'application/vnd.api+json',
+      'X-CSRF-Token': 'EXAMPLE-CSRF-TOKEN'
+    }
+  },
+  errorMessages: {
+    400: 'Bad request.',
+    403: 'Forbidden',
+    ...
+    default: 'Something went wrong.',
+  }
+})
+</code></pre><p><code>errorMessages</code>: These are optional error messages that can be configured to provide additional details when returning errors for various requests. Each property corresponds to an HTTP status code which can be customized, and any errors returned from the server that have a <code>status</code> matching this code will have their <code>detail</code> property overriden by this value. A <code>default</code> can also be set as a fallback.</p><h3>Getting all records with <code>Store#getAll</code></h3><p>Gets all records matching the type provided from the store. This never hits the server.</p><pre class="prettyprint source lang-JavaScript"><code>// No request is made, return result from the store
+store.getAll('todos')
+</code></pre><h3>Fetching all records with <code>Store#fetchAll</code></h3><p>Fetches all records matching the given type from the server. This will always fetch from the server and return a promise.</p><pre class="prettyprint source lang-JavaScript"><code>// GET /todos
+await store.fetchAll('todos')
+</code></pre><h3>Finding all records with <code>Store#findAll</code></h3><p>Finds all records first in the store, otherwise will fetch from the server. Subsequent calls to <code>.findAll</code> will hit a local cache instead of making another request.</p><pre class="prettyprint source lang-JavaScript"><code>// GET /todos
+await store.findAll('todos')
 
-                <li class="pc-only"><p>With the API search box or sidebar focused, use <kbd>Ctrl+Left</kbd> and <kbd>Ctrl+Right</kbd> to switch sidebar tabs.</p></li>
-            </ul>
-        </div>
-    </div>
+// No request is made, return result from the store
+await store.findAll('todos')
+</code></pre><h3>Getting records by id with <code>Store#getMany</code></h3><p>Gets records with the given ids and type provided from the store. This will never fetch from the server.</p><pre class="prettyprint source lang-JavaScript"><code>// No request is made, return result from the store
+const ids = ['2', '3', '4']
+store.getMany('todos', ids)
+</code></pre><h3>Fetching records by id with <code>Store#fetchMany</code></h3><p>Fetches records with the given ids and type from the server. This will always fetch from the server and return a promise.</p><pre class="prettyprint source lang-JavaScript"><code>// GET /todos with ids 4, 5
+const ids = ['4', '5']
+await store.fetchMany('todos', ids)
+</code></pre><h3>Finding records by id with <code>Store#findMany</code></h3><p>Finds records with the given ids and type first in the store, otherwise will fetch from the server. Subsequent calls to <code>.findMany</code> will hit a local cache instead of making another request.</p><pre class="prettyprint source lang-JavaScript"><code>// GET /todos with ids 1, 4
+const ids = ['1', '4']
+await store.findMany('todos', ids)
 
+// No request is made, return result from the store
+await store.findMany('todos', ids)
+</code></pre><h3>find/fetch options</h3><p>The <code>find</code> and <code>fetch</code> methods can take an options object as a second argument.</p><pre class="prettyprint source lang-JavaScript"><code>await store.fetchOne(MODEL_TYPE, OPTIONS)
+await store.findOne(MODEL_TYPE, OPTIONS)
 
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<script src="./assets/vendor/prettify/prettify-min.js"></script>
-<script>prettyPrint();</script>
-<script src="./assets/js/yui-prettify.js"></script>
-<script src="./assets/../api.js"></script>
-<script src="./assets/js/api-filter.js"></script>
-<script src="./assets/js/api-list.js"></script>
-<script src="./assets/js/api-search.js"></script>
-<script src="./assets/js/apidocs.js"></script>
-</body>
-</html>
+await store.fetchAll(MODEL_TYPE, OPTIONS)
+await store.findAll(MODEL_TYPE, OPTIONS)
+
+await store.fetchMany(MODEL_TYPE, OPTIONS)
+await store.findMany(MODEL_TYPE, OPTIONS)
+</code></pre><h4><code>queryParams</code> options</h4><p><code>mobx-async-store</code> builds queries that are <code>JSON::API</code> compliant. Requests are cached from the previous call - including any <code>queryParams</code> given.</p><pre class="prettyprint source lang-JavaScript"><code>store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { overdue: true } } })
+// The query is: '/example_api/todos?filter[title]=Do taxes&filter[overdue]=true'
+// This fetches from the server and stores the result of the query in the cache.
+
+store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { overdue: true } } })
+// Returns result from the cache.
+</code></pre><h5><code>queryParams.filter</code></h5><p>To filter API results you can use the <code>filter</code> key. See the <a href="https://jsonapi.org/format/#fetching-filtering">JSON::API filter documentation</a> for more information.</p><pre class="prettyprint source lang-JavaScript"><code>store.findMany('todos', ['1', '2'], {
+  queryParams: {
+    filter: {
+      completed: true,
+      category: 'chores'
+    }
+  }
+})
+</code></pre><h5><code>queryParams.include</code></h5><p>If the record type you are fetching has related data you need to side-load you can provide the <code>include</code> key. See <a href="https://jsonapi.org/format/#fetching-includes">JSON::API includes documentation</a> and the relationships section blow for details.</p><pre class="prettyprint source lang-JavaScript"><code>store.fetchAll('todos', {
+  queryParams: {
+    filter: {
+      include: 'todos.notes'
+    }
+  }
+})
+</code></pre><h5><code>queryParams</code> miscellaneous params</h5><p>If you do need to use a non JSON::API compliance param you can simply pass a key/value pair to queryParams.</p><pre class="prettyprint source lang-JavaScript"><code>store.findAll('todos', { queryParams: { foo: 'bar' } })
+</code></pre><h4><code>refresh</code> / <code>lazyLoad</code> / <code>load</code> options</h4><p><code>mobx-async-store</code> needs additional options for keeping the local store in sync with the server-side. These options are pending an RFC.</p><h3>Getting single records with <code>Store#getOne</code></h3><p>You can get a single record from the store with the <code>getOne</code> method. This will never fetch from the server.</p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.add('todos', { title: 'Buy Milk' })
+
+// Returns record from the store, no request made.
+store.getOne('todos', todo.id)
+
+// No record returned as it never fetches from the server.
+store.reset('todos')
+store.getOne('todos', todo.id)
+</code></pre><h3>Fetching single records with <code>Store#fetchOne</code></h3><p>Fetches a single record with the given id from the server. This will always fetch from the server and return a promise that will resolve with the new record.</p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.add('todos', { title: 'Pay bills' })
+
+// Request made, record is always returned from the server.
+await store.fetchOne('todos', todo.id)
+</code></pre><p>If the server responds with any status other than 200, the promise will reject with an <a href="#handling-errors">error</a></p><h3>Finding single records with <code>Store#findOne</code></h3><p>Finds a single record with the given id and type first in the store, otherwise will fetch from the server. Subsequent calls to <code>.findOne</code> will hit a local cache instead of making another request.</p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.add('todos', { title: 'Buy Milk' })
+
+// Returns record from the store, no request made.
+store.findOne('todos', todo.id)
+
+// Returns record from the server if it's not in the store.
+store.reset('todos')
+store.findOne('todos', todo.id)
+</code></pre><h3>Clear the query cache</h3><p>Sometimes the query cache from <code>findAll</code> can cause weird frontend bugs, to fix this use the <code>clearCache</code> method. This will clear the query cache for the type you pass as a parameter.</p><pre class="prettyprint source lang-Javascript"><code>store.clearCache('todos')
+</code></pre><p>The next time you use <code>findAll</code> after clearing the cache, it will pull a query directly from the server and repopulate the cache.</p><h3>Adding records with <code>Store#add</code></h3><p>Records can be added to a store via the <code>add</code> method.</p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.add('todos', { title: 'Buy Milk', category: 'chores' })
+</code></pre><p>Newly created client records with have a temporary id by default.</p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.add('todos', {})
+
+todo.id
+// => tmp-6b46fa20-db49-11e9-8256-1be9dad543b1
+</code></pre><p>Multiple records can be added at the same time.</p><pre class="prettyprint source lang-JavaScript"><code>const todos = store.add('todos', [
+  { title: 'Buy Milk', category: 'chores' },
+  { title: 'Do laundry', category: 'chores' }
+])
+</code></pre><h3>Building without adding to the store</h3><p>Records can be built without being added to the store with <code>Store#build</code></p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.build('todos', { title: 'Buy Milk', category: 'chores' })
+</code></pre><p>Newly created client records with have a temporary id by default.</p><pre class="prettyprint source lang-JavaScript"><code>todo.id
+// => tmp-6b46fa20-db49-11e9-8256-1be9dad543b1
+</code></pre><p>The newly built record will be ephemeral and will not be added to the store</p><pre class="prettyprint source lang-JavaScript"><code>store.findOne('todos', todo.id)
+// => undefined
+</code></pre><h3>Persisting records with <code>Model#save</code></h3><p>Records created on client side can be persisted via an AJAX request by calling the <code>save</code> method on the record.</p><pre class="prettyprint source lang-JavaScript"><code>const todo = store.add('todos', { title: 'Buy Milk', category: 'chores' })
+
+// POST /todos
+await todo.save()
+</code></pre><p>If the server responds to a <code>save</code> with a status code that is not 200 or 201, then the <code>Model#errors</code> object will populated by matching <a href="https://jsonapi.org/format/#error-objects">source pointers</a> from the response to the attributes on the model.</p><h3>Handling errors</h3><p>If any fetch, save, or destroy fails, the query will return a rejected promise with an error containing any JSONAPI errors returned with the response. If no errors are present, then the response status will be converted to an error and returned with the corresponding <a href="#initializing-stores">configured error message</a>.</p><p>For example, if the server returns a 500 response with no body for a <code>fetchOne</code>, then the error returned will be</p><pre class="prettyprint source lang-JavaScript"><code>  [
+    {
+      detail: &quot;Something went wrong.&quot;,
+      status: 500
+    }
+  ]
+</code></pre><p>This value will always be a stringified JSON array, so you can handle errors as such:</p><pre class="prettyprint source lang-JavaScript"><code>  try {
+    await store.fetchMany('todos', ids);
+  } catch (error) {
+    const errors = JSON.parse(error.message);
+    console.log(errors[0].detail); // &quot;Something went wrong.&quot;
+    console.log(errors[0].status); // 500
+  }
+</code></pre><h3>To Be Continued...</h3></article></section></div></div></div><div class="search-container" id="PkfLWpAbet" style="display:none"><div class="wrapper" id="iCxFxjkHbP"><button class="icon-button search-close-button" id="VjLlGakifb" aria-label="close search"><svg><use xlink:href="#close-icon"></use></svg></button><div class="search-box-c"><svg><use xlink:href="#search-icon"></use></svg> <input type="text" id="vpcKVYIppa" class="search-input" placeholder="Search..." autofocus></div><div class="search-result-c" id="fWwVHRuDuN"><span class="search-result-c-text">Type anything to view search result</span></div></div></div><div class="mobile-menu-icon-container"><button class="icon-button" id="mobile-menu" data-isopen="false" aria-label="menu"><svg><use xlink:href="#menu-icon"></use></svg></button></div><div id="mobile-sidebar" class="mobile-sidebar-container"><div class="mobile-sidebar-wrapper"><a href="/" class="sidebar-title sidebar-title-anchor">Home</a><div class="mobile-nav-links"></div><div class="mobile-sidebar-items-c"><div class="sidebar-section-title with-arrow" data-isopen="false" id="FGy1l57fNk4UoJcJB640p"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="MockServer.html">MockServer</a></div><div class="sidebar-section-children"><a href="Model.html">Model</a></div><div class="sidebar-section-children"><a href="Store.html">Store</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="G8u7SHmMC2Ta12ZcKygGO"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#addIncluded">addIncluded</a></div><div class="sidebar-section-children"><a href="global.html#circularFetchError">circularFetchError</a></div><div class="sidebar-section-children"><a href="global.html#circularFindError">circularFindError</a></div><div class="sidebar-section-children"><a href="global.html#combineRacedRequests">combineRacedRequests</a></div><div class="sidebar-section-children"><a href="global.html#deriveIdQueryStrings">deriveIdQueryStrings</a></div><div class="sidebar-section-children"><a href="global.html#diff">diff</a></div><div class="sidebar-section-children"><a href="global.html#disallowFetches">disallowFetches</a></div><div class="sidebar-section-children"><a href="global.html#makeDate">makeDate</a></div><div class="sidebar-section-children"><a href="global.html#parseErrorPointer">parseErrorPointer</a></div><div class="sidebar-section-children"><a href="global.html#parseErrors">parseErrors</a></div><div class="sidebar-section-children"><a href="global.html#requestUrl">requestUrl</a></div><div class="sidebar-section-children"><a href="global.html#serverResponse">serverResponse</a></div><div class="sidebar-section-children"><a href="global.html#singularizeType">singularizeType</a></div><div class="sidebar-section-children"><a href="global.html#stringifyIds">stringifyIds</a></div><div class="sidebar-section-children"><a href="global.html#validateProperties">validateProperties</a></div><div class="sidebar-section-children"><a href="global.html#walk">walk</a></div><div class="sidebar-section-children"><a href="global.html#wrapResponse">wrapResponse</a></div></div></div><div class="mobile-navbar-actions"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#light-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div></div></div><script type="text/javascript" src="scripts/core.min.js"></script><script src="scripts/search.min.js" defer="defer"></script><script src="scripts/third-party/fuse.js" defer="defer"></script><script type="text/javascript">var tocbotInstance=tocbot.init({tocSelector:"#eed4d2a0bfd64539bb9df78095dec881",contentSelector:".main-content",headingSelector:"h1, h2, h3",hasInnerContainers:!0,scrollContainer:".main-content",headingsOffset:130,onClick:bringLinkToView})</script></body></html>

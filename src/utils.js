@@ -31,9 +31,9 @@ const decrementor = (key) => () => {
 
 /**
  * Singularizes record type
- * @method singularizeType
- * @param {String} recordType type of record
- * @return {String}
+
+ * @param {string} recordType type of record
+ * @returns {string}
  */
 export function singularizeType (recordType) {
   let typeParts = recordType.split('_')
@@ -48,8 +48,8 @@ export function singularizeType (recordType) {
 /**
  * Build request url from base url, endpoint, query params, and ids.
  *
- * @method requestUrl
- * @return {String} formatted url string
+
+ * @returns {string} formatted url string
  */
 export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
   let queryParamString = ''
@@ -77,10 +77,10 @@ export function idOrNewId (id) {
  * already in-flight. Blocked requests will be resolved when the initial request
  * resolves by cloning the response.
  *
- * @method combineRacedRequests
- * @param {String} key the unique key for the request
+
+ * @param {string} key the unique key for the request
  * @param {Function} fn the function the generates the promise
- * @return {Promise}
+ * @returns {Promise}
  */
 export function combineRacedRequests (key, fn) {
   const incrementBlocked = incrementor(key)
@@ -126,7 +126,7 @@ export function fetchWithRetry (url, fetchOptions, attempts, delay) {
 /**
  * convert a value into a date, pass Date or Moment instances thru
  * untouched
- * @method makeDate
+
  * @param {*} value
  * @return {Date|Moment}
  */
@@ -138,10 +138,10 @@ export function makeDate (value) {
 /**
  * recursively walk an object and call the `iteratee` function for
  * each property. returns an array of results of calls to the iteratee.
- * @method walk
+
  * @param {*} obj
  * @param {Function} iteratee
- * @param {String} prefix
+ * @param {string} prefix
  * @return Array
  */
 export function walk (obj, iteratee, prefix) {
@@ -159,9 +159,9 @@ export function walk (obj, iteratee, prefix) {
  * toward object a. object a is walked and compared against values in
  * object b. if a property exists in object b, but not in object a, it
  * will not be counted as a difference.
- * @method diff
- * @param {Object} a
- * @param {Object} b
+
+ * @param {object} a
+ * @param {object} b
  * @return Array<String>
  */
 export function diff (a = {}, b = {}) {
@@ -180,10 +180,10 @@ export function diff (a = {}, b = {}) {
  * Errors that are returned which contain a status also have their `detail` overridden with
  * values from this configuration.
  *
- * @method parseErrors
- * @param {Object} response
+
+ * @param {object} response
  *   a fetch response
- * @param {Object} errorMessages
+ * @param {object} errorMessages
  *   store configuration of error messages corresponding to HTTP status codes
  * @return Array<Object> An array of JSONAPI errors
  */
@@ -246,9 +246,9 @@ export async function parseErrors (response, errorMessages) {
  *     key: 'options.foo'
  *   }
  *
- * @method parseErrorPointer
- * @param {Object} error
- * @return {Object} the matching parts of the pointer
+
+ * @param {object} error
+ * @returns {object} the matching parts of the pointer
  */
 export function parseErrorPointer (error = {}) {
   const regex = /\/data\/(?<index>\d+)?\/?attributes\/(?<key>.*)$/
@@ -264,9 +264,9 @@ export function parseErrorPointer (error = {}) {
 /**
  * Splits an array of ids into a series of strings that can be used to form
  * queries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.
- * @method deriveIdQueryStrings
+
  * @param {Array} ids an array of ids that will be used in the string
- * @param {String} restOfUrl the additional text URL that will be passed to the server
+ * @param {string} restOfUrl the additional text URL that will be passed to the server
  */
 
 export function deriveIdQueryStrings (ids, restOfUrl = '') {

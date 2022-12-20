@@ -16,8 +16,8 @@ export class Schema {
 
   /**
    * Adds a validation to either the schema `structure` (for attributes) or `relations` (for relationships)
-   * @method addValidation
-   * @param {Object} options includes `type`, `property`, and `validator`
+
+   * @param {object} options includes `type`, `property`, and `validator`
    */
   addValidation ({ type, property, validator }) {
       this.relations[type][property].validator = validator

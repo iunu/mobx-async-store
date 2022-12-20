@@ -6,6 +6,9 @@
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
+    "clean-jsdoc-theme": "^4.1.12",
+    "eslint-plugin-jsdoc": "^39.6.4",
+    "jsdoc": "^4.0.0",
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.21",
     "mobx": "6.3.5",
@@ -57,7 +60,9 @@
     "test": "jest --verbose",
     "test:coverage": "npm test -- --coverage",
     "test:badges": "npm run test:coverage  && jest-coverage-badges",
-    "lint": "node_modules/.bin/eslint src spec"
+    "lint": "node_modules/.bin/eslint src spec",
+    "lint:docs": "eslint -c .eslintrc.jsdoc.js src",
+    "docs": "jsdoc -c jsdoc.json --verbose"
   },
   "files": [
     "dist"
