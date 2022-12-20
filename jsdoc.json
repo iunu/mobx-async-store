@@ -1,0 +1,17 @@
+{
+  "tags": {
+    "dictionaries": ["jsdoc", "closure"]
+  },
+  "source": {
+    "include": ["src/FactoryFarm.js", "src/MockServer.js", "src/Model.js", "src/Store.js", "src/utils.js", "src/testUtils.js"],
+    "includePattern": ".+\\.js(doc|x)?$",
+    "excludePattern": "(spec\\.js|deprecated)"
+  },
+  "plugins": ["plugins/markdown"],
+  "opts": {
+    "destination": "docs",
+    "recurse": true,
+    "template": "node_modules/clean-jsdoc-theme",
+    "readme": "README.md"
+  }
+}

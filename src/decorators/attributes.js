@@ -5,9 +5,9 @@ import { makeDate } from '../utils'
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
  *
- * @method isPresent
+
  * @param value
- * @return {Boolean}
+ * @returns {boolean}
  */
 export function isPresent (value) {
   return value !== null && value !== undefined && value !== ''
@@ -15,7 +15,7 @@ export function isPresent (value) {
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
- * @method validatePresence
+
  * @param value
  */
 function validatePresence (value) {
@@ -30,7 +30,7 @@ function validatePresence (value) {
 
 /**
  * Helper method for apply the correct defaults to attributes.
- * @method defaultValueForDescriptor
+
  */
 function defaultValueForDescriptor (descriptor, DataType) {
   if (typeof descriptor.initializer === 'function') {
@@ -57,7 +57,7 @@ function defaultValueForDescriptor (descriptor, DataType) {
  *   @attribute(Date) start_time = new Date()
  * }
  * ```
- * @method attribute
+
  */
 export function attribute (dataType = (obj) => obj) {
   return function (target, property, descriptor) {
@@ -93,7 +93,7 @@ export function attribute (dataType = (obj) => obj) {
  *   `@attribute`(nonzero) numberOfAssignees
  * }
  * ```
- * @method validates
+
  */
 export function validates (target, property) {
    let validator = validatePresence

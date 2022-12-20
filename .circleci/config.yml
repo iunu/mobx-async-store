@@ -2,13 +2,13 @@ version: 2
 jobs:
   yarn_install:
     docker:
-      - image: cimg/node:16.11.1
+      - image: cimg/node:16.13.1
 
     steps:
       - checkout
       - restore_cache:
           name: Restore node_modules from cache
-          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
 
       - run: sudo yarn install
 
@@ -16,62 +16,68 @@ jobs:
           paths:
             - node_modules
           name: Cache node_modules
-          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
 
-  yuidoc:
+  lint_docs:
     docker:
-      - image: circleci/node:12.18.4
-    steps:
-      - checkout
-      - run:
-          name: Check Javascript Docs
-          command: sudo npm install -g yuidocjs && yuidoc --lint
-
-  eslint:
-    docker:
-      - image: circleci/node:12.18.4
+      - image: cimg/node:16.13.1
     steps:
       - checkout
       - restore_cache:
           name: Restore node_modules from cache
-          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
+      - run:
+          name: Check to make sure documentation coverage has improved
+          command: npm run lint:docs
+
+  eslint:
+    docker:
+      - image: cimg/node:16.13.1
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore node_modules from cache
+          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
       - run:
           name: Run Eslint
           command: node_modules/.bin/eslint src spec
 
   jest:
     docker:
-      - image: circleci/node:12.18.4
+      - image: cimg/node:16.13.1
     steps:
       - checkout
       - restore_cache:
           name: Restore node_modules from cache
-          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
       - run:
           name: Run Jest
           command: node_modules/.bin/jest spec
 
   verify_docs:
     docker:
-      - image: circleci/node:12.18.4
+      - image: cimg/node:16.13.1
     steps:
       - checkout
       - restore_cache:
           name: Restore node_modules from cache
-          key: yarn-dependencies-v1-{{ checksum "package.json" }}
+          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
+      - run:
+          name: Check to make sure docs are in correct format
+          command: npm run lint:docs
       - run:
           name: Build docs
-          command: sudo npm install -g yuidocjs && yuidoc --lint
-      - run:
-          name: Verify docs up-to-date
-          command: git diff --exit-code ./docs
+          command: yarn docs
+      # TODO: Reenable when jsdoc doesn't change div ids
+      # - run:
+      #     name: Verify docs up-to-date
+      #     command: git diff --exit-code ./docs
 
 workflows:
   version: 2
   run_tests:
     jobs:
       - yarn_install
-      - yuidoc
       - eslint:
           requires:
             - yarn_install

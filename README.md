@@ -4,7 +4,7 @@
 
 # mobx-async-store
 
-Mobx-based store for async data fetching and state management. https://artemis-ag.github.io/mobx-async-store/
+Mobx-based store for async data fetching and state management. https://iunu.github.io/mobx-async-store/
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -60,7 +60,7 @@ yarn install
 
 ### Step 2 - Update the documentation
 
-`yarn run yuidoc` updates the documentation, located in `docs`.
+`yarn run docs` updates the documentation, located in `docs`.
 
 ### Step 3 - Publish
 

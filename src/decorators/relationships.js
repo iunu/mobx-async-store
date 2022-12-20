@@ -15,7 +15,7 @@ import { transaction } from 'mobx'
  *   @relatedToMany(CropVariety) varieties
  * }
  * ```
- * @method relatedToMany
+
  */
 export function relatedToMany (targetOrModelKlass, property, descriptor) {
   schema.addRelationship({
@@ -35,7 +35,7 @@ export function relatedToMany (targetOrModelKlass, property, descriptor) {
  * Syntactic sugar of relatedToMany relationship. Basically
  * everything the same except it only returns a single record.
  *
- * @method relatedToOne
+
  */
 export function relatedToOne (targetOrModelKlass, property, descriptor) {
   schema.addRelationship({
@@ -57,10 +57,10 @@ export function relatedToOne (targetOrModelKlass, property, descriptor) {
  * Handles getting polymorphic records or only a specific
  * type if specified.
  *
- * @method getRelatedRecords
- * @param {Object} record the record with the relationship
- * @param {String} property the related property to set
- * @param {String} modelType an override of the modelType
+
+ * @param {object} record the record with the relationship
+ * @param {string} property the related property to set
+ * @param {string} modelType an override of the modelType
  */
 export function getRelatedRecords (record, property, modelType = null) {
   const { relationships, cachedRelationships } = record
@@ -121,7 +121,7 @@ export function getRelatedRecords (record, property, modelType = null) {
 /**
  * Handles getting polymorphic has_one/belong_to.
  *
- * @method getRelatedRecord
+
  */
 export function getRelatedRecord (record, property) {
   // Get relationships
@@ -148,11 +148,11 @@ export function getRelatedRecord (record, property) {
  * - Sets the relationship
  * - Attempts to find an inverse relationship, and if successful adds it as well
  *
- * @method setRelatedRecord
- * @param {Object} record the record with the relationship
- * @param {Object} relatedRecord the record that will be related
- * @param {String} property the related property to set
- * @param {String} modelType an override of the modelType
+
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the record that will be related
+ * @param {string} property the related property to set
+ * @param {string} modelType an override of the modelType
  */
 export function setRelatedRecord (
   record,
@@ -206,8 +206,8 @@ export function setRelatedRecord (
  * @class RelatedRecordsArray
  * @constructor
  * @param {Array} array the array to extend
- * @param {Object} record the record with the referenced array
- * @param {String} property the property on the record that references the array
+ * @param {object} record the record with the referenced array
+ * @param {string} property the property on the record that references the array
  */
 
 export class RelatedRecordsArray extends Array {
@@ -234,9 +234,9 @@ export class RelatedRecordsArray extends Array {
 
   /**
    * Adds a record to the array, and updates references in the store, as well as inverse references
-   * @method add
-   * @param {Object} relatedRecord the record to add to the array
-   * @return {Object} the original relatedRecord
+
+   * @param {object} relatedRecord the record to add to the array
+   * @returns {object} the original relatedRecord
    */
   add = relatedRecord => {
     const { record, property } = this
@@ -288,9 +288,9 @@ export class RelatedRecordsArray extends Array {
 
   /**
    * Removes a record from the array, and updates references in the store, as well as inverse references
-   * @method remove
-   * @param {Object} relatedRecord the record to remove from the array
-   * @return {Object} the original relatedRecord
+
+   * @param {object} relatedRecord the record to remove from the array
+   * @returns {object} the original relatedRecord
    */
   remove = relatedRecord => {
     const { record, property } = this

@@ -4,6 +4,7 @@ import times from 'lodash/times'
 
 /**
  * A class to create and use factories
+ *
  * @class FactoryFarm
  */
 class FactoryFarm {
@@ -15,20 +16,20 @@ class FactoryFarm {
   /**
    * A hash of available factories. A factory is an object with a structure like:
    * { name, type, attributes, relationships }.
-   * @property factories
-   * @type {Object}
+   *
+   * @type {object}
    */
   factories = {}
 
   /**
    * A hash of singleton objects.
-   * @property factories
-   * @type {Object}
+   *
+   * @type {object}
    */
   singletons = {}
 
   /**
-   * Allows easy building of ArtemisStore objects, including relationships.
+   * Allows easy building of Store objects, including relationships.
    * Takes parameters `attributes` and `relationships` to use for building.
    *
    *   const batchAction = store.build('cropBatchAction')
@@ -41,11 +42,10 @@ class FactoryFarm {
    *     ]
    *   })
    *
-   * @method build
-   * @param {String} factoryName the name of the factory to use
-   * @param {Object} overrideOptions overrides for the factory
-   * @param {Number} numberOfRecords optional number of models to build
-   * @return {Object} instance of an ArtemisStore model
+   * @param {string} factoryName the name of the factory to use
+   * @param {object} overrideOptions overrides for the factory
+   * @param {number} numberOfRecords optional number of models to build
+   * @returns {object} instance of an Store model
    */
   build (factoryName, overrideOptions = {}, numberOfRecords = 1) {
     const { store, factories, singletons, _verifyFactory, _buildModel } = this
@@ -92,15 +92,14 @@ class FactoryFarm {
    * Creates a factory with { name, type, parent, ...attributesAndRelationships }, which can be used for
    * building test data.
    * The factory is named, with a set of options to use to configure it.
-   *   * parent - use another factory as a basis for this one
-   *   * type - the type of model to use (for use if no parent)
-   *   * identity - whether this factory should be a singleton
+   *   - parent - use another factory as a basis for this one
+   *   - type - the type of model to use (for use if no parent)
+   *   - identity - whether this factory should be a singleton
    * attributesAndRelationships - attributes and relationships. If properties are a function or an array of functions, they
    *   will be executed at runtime.
    *
-   * @method define
-   * @param {String} name the name to use for the factory
-   * @param {Object} options
+   * @param {string} name the name to use for the factory
+   * @param {object} options options that can be used to configure the factory
    */
   define (name, options = {}) {
     const { type, parent, ...properties } = options
@@ -130,16 +129,16 @@ class FactoryFarm {
 
   /**
    * Alias for `this.store.add`
-   * @method add
-   * @param  {...any} params
-   * @return {*} object or array
+   *
+   * @param  {...any} params attributes and relationships to be added to the store
+   * @returns {*} object or array
    */
   add = (...params) => this.store.add(...params)
 
   /**
    * Verifies that the requested factory exists
-   * @method _verifyFactory
-   * @param {String} factoryName
+   *
+   * @param {string} factoryName the name of the factory
    * @private
    */
   _verifyFactory = (factoryName) => {
@@ -154,11 +153,10 @@ class FactoryFarm {
    * Builds model properties that will be used for creating models. Since factories can use
    * functions to define relationships, it loops through properties and attempts to execute any functions.
    *
-   * @method _buildModel
-   * @param {String} factoryName
-   * @param {Object} properties
-   * @param {Number} index
-   * @return {Object} an object of properties to be used.
+   * @param {string} factoryName the name of the factory
+   * @param {object} properties properties to build the object
+   * @param {number} index a number that can be used to build the object
+   * @returns {object} an object of properties to be used.
    * @private
    */
   _buildModel = (factoryName, properties, index = 0) => {
@@ -177,12 +175,12 @@ class FactoryFarm {
 
   /**
    * If `definition` is a function, calls the function. Otherwise, returns the definition.
-   * @method _callPropertyDefinition
-   * @param {*} definition
-   * @param {Number} index
-   * @param {String} factoryName
-   * @param {Object} properties
-   * @return {*}
+   *
+   * @param {*} definition a property or function
+   * @param {number} index an index to be passed to the called function
+   * @param {string} factoryName the name of the factory
+   * @param {object} properties properties to be passed to the executed function
+   * @returns {*} a definition or executed function
    */
   _callPropertyDefinition = (definition, index, factoryName, properties) => {
     return typeof definition === 'function' ? definition.call(this, index, factoryName, properties) : definition

@@ -3,10 +3,10 @@
  * we preserve the top-level object and pass it in to the next round
  * Because objects can have multiple relationships, we do a check of the array to make sure
  * it's not already there.
- * @method addIncluded
- * @param {Object} store
- * @param {Object} encodedData the jsonapi document
- * @param {Object} topLevel the object with `inlcluded` array
+
+ * @param {object} store
+ * @param {object} encodedData the jsonapi document
+ * @param {object} topLevel the object with `inlcluded` array
  */
 const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel]) => {
   const { relationships } = encodedModel
@@ -42,9 +42,9 @@ const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel])
  *   },
  *   included: []
  * }
- * @method serverResponse
+
  * @param {*} modelOrArray the data being encoded
- * @return {String} JSON encoded data
+ * @returns {string} JSON encoded data
  */
 
 export const serverResponse = function (modelOrArray) {

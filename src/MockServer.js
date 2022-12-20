@@ -57,8 +57,9 @@ const getOneFromFactory = (_backendFactoryFarm, factory, type, id) => {
 
 /**
  * Will throw an error if `fetch` is called from the mockServer, usually due to a `POST` or `PATCH` called by a `save`
- * @method circularFetchError
- * @param {String} url
+ *
+ * @param {string} url the url that is attempted
+ * @param {object} options options including the http method
  */
 const circularFetchError = (url, options) => {
   throw new Error(
@@ -68,9 +69,9 @@ const circularFetchError = (url, options) => {
 
 /**
  * Throws an error if MockServer tries to `findOne` or `findAll` from itself.
- * @method circularFindError
- * @param {String} type
- * @param {String} id
+ *
+ * @param {string} type the model type
+ * @param {string} id the model id
  */
 const circularFindError = (type, id) => {
   const idText = id ? ` with id ${id}` : ''
@@ -81,8 +82,8 @@ const circularFindError = (type, id) => {
 
 /**
  * Overrides store methods that could trigger a `fetch` to throw errors. MockServer should only provide data for fetches, never call a fetch itself.
- * @method disallowFetches
- * @param {Object} store
+ *
+ * @param {object} store the internal store
  */
 const disallowFetches = (store) => {
   store.fetch = circularFetchError
@@ -98,11 +99,11 @@ const disallowFetches = (store) => {
  * Wraps response JSON or object in a Response object that is itself wrapped in a
  * resolved Promise. If no status is given then it will fill in a default based on
  * the method.
- * @method wrapResponse
+ *
  * @param {*} response JSON string
- * @param {String} method
- * @param {Number} status
- * @return {Promise}
+ * @param {string} method the http method
+ * @param {number} status the http status
+ * @returns {Promise} a promise wrapping the response
  */
 
 const wrapResponse = (response, method, status) => {
@@ -115,7 +116,6 @@ const wrapResponse = (response, method, status) => {
 
 /**
  * A backend "server" to be used for creating jsonapi-compliant responses.
- * @class MockServer
  */
 class MockServer {
   /**
@@ -123,8 +123,8 @@ class MockServer {
    *   - factoryFarm: a pre-existing factory to use on this server
    *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
    *     from the internal store.
-   * @method constructor
-   * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
+   *
+   * @param {object} options currently `responseOverrides` and `factoriesForTypes`
    */
   constructor (options = {}) {
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm()
@@ -137,8 +137,8 @@ class MockServer {
 
   /**
    * Adds a response override to the server
-   * @method respond
-   * @param {Object} args
+   *
+   * @param {object} options path, method, status, and response to override
    *   - path
    *   - method: defaults to GET
    *   - status: defaults to 200
@@ -154,8 +154,8 @@ class MockServer {
    *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
    *     from the internal store.
    *   - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist
-   * @method start
-   * @param {Object} options currently `responseOverrides` and `factoriesForTypes`
+   *
+   * @param {object} options currently `responseOverrides` and `factoriesForTypes`
    */
   start = (options = {}) => {
     const { factoriesForTypes } = options
@@ -182,7 +182,6 @@ class MockServer {
 
   /**
    * Clears mocks and the store
-   * @method stop
    */
   stop = () => {
     fetch.resetMocks()
@@ -191,38 +190,39 @@ class MockServer {
 
   /**
    * Alias for `this._backendFactoryFarm.build`
-   * @method build
-   * @param {String} factoryName the name of the factory to use
-   * @param {Object} overrideOptions overrides for the factory
-   * @param {Number} numberOfRecords optional number of models to build
-   * @return {*} Object or Array
+   *
+   * @param {string} factoryName the name of the factory to use
+   * @param {object} overrideOptions overrides for the factory
+   * @param {number} numberOfRecords optional number of models to build
+   * @returns {*} Object or Array
    */
-  build = (...params) => this._backendFactoryFarm.build(...params)
+  build = (factoryName, overrideOptions, numberOfRecords) => this._backendFactoryFarm.build(factoryName, overrideOptions, numberOfRecords)
 
   /**
    * Alias for `this._backendFactoryFarm.define`
-   * @method define
-   * @param {String} name the name to use for the factory
-   * @param {Object} options
-   * @return {*} Object or Array
+   *
+   * @param {string} name the name to use for the factory
+   * @param {object} options options for defining a factory
+   * @returns {*} Object or Array
    */
-  define = (...params) => this._backendFactoryFarm.define(...params)
+  define = (name, options) => this._backendFactoryFarm.define(name, options)
 
   /**
    * Alias for `this._backendFactoryFarm.add`
-   * @method add
-   * @param {String} name the name to use for the factory
-   * @param {Object} options
-   * @return {*} Object or Array
+   *
+   * @param {string} name the name to use for the factory
+   * @param {object} options properties and other options for adding a model to the store
+   * @returns {*} Object or Array
    */
-  add = (...params) => this._backendFactoryFarm.add(...params)
+  add = (name, options) => this._backendFactoryFarm.add(name, options)
 
   /**
    * Based on a request, simulates building a response, either using found data
    * or a factory.
-   * @method _findFromStore
-   * @param {*} req
-   * @return {Object} the found or built store record(s)
+   *
+   * @param {object} req a method, url and body
+   * @param {object} factoriesForTypes allows an override for a particular type
+   * @returns {object} the found or built store record(s)
    * @private
    */
   _findFromStore = (req, factoriesForTypes = {}) => {
