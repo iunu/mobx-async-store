@@ -1,18 +1,26 @@
-import { transaction } from 'mobx'
+import { action, makeObservable, transaction } from 'mobx'
 import Model from './Model'
 
 /**
  * Takes the `toOne` definitions from a document type and creates getters and setters.
  * A getter finds a record from the store. The setter calls `setRelatedRecord`, which will
  * return an instance of a model and add it to the inverse relationship if necessary.
+ * A definition will look something like this:
  *
- * @param {object} record
- * @param {object} store
- * @param {object} toOneDefinitions
- * @return {object}
+ *    todo: {
+ *      direction: 'toOne',
+ *      inverse: {
+ *        name: 'notes',
+ *        direction: 'toMany'
+ *      }
+ *    }
+ *
+ * @param {object} record the record that will have the relationship
+ * @param {object} store the data store
+ * @param {object} toOneDefinitions an object with formatted definitions
+ * @returns {object} an object with getters and setters based on the defintions
  */
-
-export const defineToOneRelationships = (record, store, toOneDefinitions) => {
+export const defineToOneRelationships = action((record, store, toOneDefinitions) => {
   return toOneDefinitions.reduce((object, [relationshipName, definition]) => {
     const { inverse } = definition
 
@@ -30,7 +38,7 @@ export const defineToOneRelationships = (record, store, toOneDefinitions) => {
 
     return object
   }, {})
-}
+})
 
 /**
  * Takes the `toMany` definitions from a document type and creates getters and setters.
@@ -40,13 +48,22 @@ export const defineToOneRelationships = (record, store, toOneDefinitions) => {
  * The setter will unset the previous inverse and set the current inverse.
  * Both return a `RelatedRecordsArray`, which is an array with added methods `add`, `remove`, and `replace`
  *
- * @param {object} record
- * @param {object} store
- * @param toManyDefinitions
- * @return {object}
+ * A definition will look like this:
+ *
+ *    categories: {
+ *      direction: 'toMany',
+ *      inverse: {
+ *        name: 'organization',
+ *        direction: 'toOne'
+ *      }
+ *    }
+ *
+ * @param {object} record the record that will have the relationship
+ * @param {object} store the data store
+ * @param {object} toManyDefinitions an object with formatted definitions
+ * @returns {object} an object with getters and setters based on the defintions
  */
-
-export const defineToManyRelationships = (record, store, toManyDefinitions) => {
+export const defineToManyRelationships = action((record, store, toManyDefinitions) => {
   return toManyDefinitions.reduce((object, [relationshipName, definition]) => {
     const { inverse, types: relationshipTypes } = definition
 
@@ -94,9 +111,19 @@ export const defineToManyRelationships = (record, store, toManyDefinitions) => {
 
     return object
   }, {})
-}
+})
 
-export const setRelatedRecord = (relationshipName, record, relatedRecord, store, inverse) => {
+/**
+ * Sets a related record, as well as the inverse. Can also remove the record from a relationship.
+ *
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the object being set with a related record
+ * @param {object} relatedRecord the related record
+ * @param {object} store the store
+ * @param {object} inverse the inverse object information
+ * @returns {object} the related record
+ */
+export const setRelatedRecord = action((relationshipName, record, relatedRecord, store, inverse) => {
   if (relatedRecord != null) {
     relatedRecord = coerceDataToExistingRecord(store, relatedRecord)
     record.relationships[relationshipName] = { data: { id: relatedRecord.id, type: relatedRecord.type } }
@@ -114,9 +141,19 @@ export const setRelatedRecord = (relationshipName, record, relatedRecord, store,
 
   record.takeSnapshot()
   return relatedRecord
-}
+})
 
-export const removeRelatedRecord = (array, relationshipName, record, relatedRecord, inverse) => {
+/**
+ * Removes a record from an array of related records, removing both the object and the reference.
+ *
+ * @param {Array} array the related records array
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the related record being removed from the relationship
+ * @param {object} inverse the definition of the inverse relationship
+ * @returns {object} the removed record
+ */
+export const removeRelatedRecord = action((array, relationshipName, record, relatedRecord, inverse) => {
   if (array == null || relatedRecord == null) { return relatedRecord }
 
 if (Array.isArray(relatedRecord)) {
@@ -140,9 +177,19 @@ if (Array.isArray(relatedRecord)) {
 
   record.takeSnapshot()
   return coerceDataToExistingRecord(record.store, relatedRecord)
-}
+})
 
-export const addRelatedRecord = (array, relationshipName, record, relatedRecord, inverse) => {
+/**
+ * Adds a record to a related array and updates the jsonapi reference in the relationships
+ *
+ * @param {Array} array the related records array
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the related record being added to the relationship
+ * @param {object} inverse the definition of the inverse relationship
+ * @returns {object} the added record
+ */
+export const addRelatedRecord = action((array, relationshipName, record, relatedRecord, inverse) => {
   if (Array.isArray(relatedRecord)) {
     return relatedRecord.map(singleRecord => addRelatedRecord(array, relationshipName, record, singleRecord, inverse))
   }
@@ -166,35 +213,93 @@ export const addRelatedRecord = (array, relationshipName, record, relatedRecord,
 
   record.takeSnapshot()
   return recordFromStore
-}
+})
 
-export const coerceDataToExistingRecord = (store, record) => {
+/**
+ * Takes any object with { id, type } properties and gets an object from the store with that structure.
+ * Useful for allowing objects to be serialized in real time, saving overhead, while at the same time
+ * always returning an object of the same type.
+ *
+ * @param {object} store the store with the reference
+ * @param {object} record the potential record
+ * @returns {object} the store object
+ */
+export const coerceDataToExistingRecord = action((store, record) => {
   if (!store?.getType(record.type)) { return null }
   if (record && !(record instanceof Model)) {
     const { id, type } = record
     record = store.getOne(type, id) || store.add(type, { id })
   }
   return record
-}
+})
 
 /**
  * An array that allows for updating store references and relationships
- * @class RelatedRecordsArray
- * @constructor
- * @param {Array} array the array to extend
- * @param {Object} record the record with the referenced array
- * @param {String} property the property on the record that references the array
  */
-
 export class RelatedRecordsArray extends Array {
+  /**
+   * Extends an array to create an enhanced array.
+   *
+   * @param {object} record the record with the referenced array
+   * @param {string} property the property on the record that references the array
+   * @param {Array} array the array to extend
+   */
   constructor (record, property, array = []) {
     super(...array)
     this.property = property
     this.record = record
     this.store = record.store
     this.inverse = record.relationshipDefinitions[this.property].inverse
+
+    makeObservable(this, {
+      add: action,
+      remove: action,
+      replace: action
+    })
   }
 
+  /**
+   * Adds a record to the array, and updates references in the store, as well as inverse references
+   *
+   * @param {object} relatedRecord the record to add to the array
+   * @returns {object} a model record reflecting the original relatedRecord
+   */
+  add = (relatedRecord) => {
+    const { inverse, record, property } = this
+
+    return addRelatedRecord(this, property, record, relatedRecord, inverse)
+  }
+
+  /**
+   * Removes a record from the array, and updates references in the store, as well as inverse references
+   *
+   * @param {object} relatedRecord the record to remove from the array
+   * @returns {object} a model record reflecting the original relatedRecord
+   */
+  remove = (relatedRecord) => {
+    const { inverse, record, property } = this
+    return removeRelatedRecord(this, property, record, relatedRecord, inverse)
+  }
+
+  /**
+   * Replaces the internal array of objects with a new one, including inverse relationships
+   *
+   * @param {Array} array the array of objects that will replace the existing one
+   * @returns {Array} this internal array
+   */
+  replace = (array = []) => {
+    const { inverse, record, property } = this
+    let newRecords
+
+    transaction(() => {
+      this.forEach((relatedRecord) => removeRelatedRecord(this, property, record, relatedRecord, inverse))
+      newRecords = array.forEach((relatedRecord) => addRelatedRecord(this, property, record, relatedRecord, inverse))
+    })
+
+    return newRecords
+  }
+
+  /* eslint-disable */
   /*
    * This method is used by Array internals to decide
    * which class to use for resulting derived objects from array manipulation methods
@@ -209,39 +314,5 @@ export class RelatedRecordsArray extends Array {
   static get [Symbol.species] () {
     return Array
   }
-
-  /**
-   * Adds a record to the array, and updates references in the store, as well as inverse references
-   * @method add
-   * @param {Object} relatedRecord the record to add to the array
-   * @return {Object} a model record reflecting the original relatedRecord
-   */
-  add = (relatedRecord) => {
-    const { inverse, record, property } = this
-
-    return addRelatedRecord(this, property, record, relatedRecord, inverse)
-  }
-
-  /**
-   * Removes a record from the array, and updates references in the store, as well as inverse references
-   * @method remove
-   * @param {Object} relatedRecord the record to remove from the array
-   * @return {Object} a model record reflecting the original relatedRecord
-   */
-  remove = (relatedRecord) => {
-    const { inverse, record, property } = this
-    return removeRelatedRecord(this, property, record, relatedRecord, inverse)
-  }
-
-  replace = (array = []) => {
-    const { inverse, record, property } = this
-    let newRecords
-
-    transaction(() => {
-      this.forEach((relatedRecord) => removeRelatedRecord(this, property, record, relatedRecord, inverse))
-      newRecords = array.forEach((relatedRecord) => addRelatedRecord(this, property, record, relatedRecord, inverse))
-    })
-
-    return newRecords
-  }
+  /* eslint-enable */
 }

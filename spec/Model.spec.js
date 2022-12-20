@@ -82,8 +82,8 @@ class Organization extends Model {
     categories: {
       direction: 'toMany',
       inverse: {
-        name: 'categories',
-        direction: 'toMany'
+        name: 'organization',
+        direction: 'toOne'
       }
     }
   }

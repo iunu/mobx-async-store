@@ -12,43 +12,108 @@ import {
 import cloneDeep from 'lodash/cloneDeep'
 
 /**
+ * Annotations for mobx observability. We can't use `makeAutoObservable` because we have subclasses.
+ */
+
+const mobxAnnotations = {
+  data: observable,
+  lastResponseHeaders: observable,
+  loadingStates: observable,
+  add: action,
+  pickAttributes: action,
+  pickRelationships: action,
+  addModel: action,
+  addModels: action,
+  bulkSave: action,
+  _bulkSave: action,
+  bulkCreate: action,
+  bulkUpdate: action,
+  remove: action,
+  getOne: action,
+  fetchOne: action,
+  findOne: action,
+  getMany: action,
+  fetchMany: action,
+  findMany: action,
+  fetchUrl: action,
+  getAll: action,
+  setLoadingState: action,
+  deleteLoadingState: action,
+  fetchAll: action,
+  findAll: action,
+  reset: action,
+  init: action,
+  initializeNetworkConfiguration: action,
+  initializeModelIndex: action,
+  initializeObservableDataProperty: action,
+  initializeErrorMessages: action,
+  fetch: action,
+  getType: action,
+  getRecord: action,
+  getRecords: action,
+  getRecordsById: action,
+  clearCache: action,
+  getCachedRecord: action,
+  getCachedRecords: action,
+  getCachedIds: action,
+  getCachedId: action,
+  getKlass: action,
+  createOrUpdateModelFromData: action,
+  updateRecordFromData: action,
+  createOrUpdateModelsFromData: action,
+  createModelFromData: action,
+  updateRecordsFromResponse: action
+}
+
+/**
  * Defines the Data Store class.
  */
 class Store {
   /**
-   * Observable property used to store data and
-   * handle changes to state
+   * Stores data by type.
+   * {
+   *   todos: {
+   *     records: observable.map(), // records by id
+   *     cache: observable.map(), // cached ids by url
+   *     meta: observable.map() // meta information by url
+   *   }
+   * }
    *
    * @type {object}
    * @default {}
    */
-  @observable data = {}
+  data = {}
 
   /**
-   * Observable property used to store values for most recent response headers
-   * according to settings specified as `headersOfInterest`
+   * The most recent response headers according to settings specified as `headersOfInterest`
    *
    * @type {object}
    * @default {}
    */
-  @observable lastResponseHeaders = {}
+  lastResponseHeaders = {}
 
   /**
-   * Data that is in flight
-   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
+   * Map of data that is in flight. This can be observed to know if a given type (or tag)
+   * is still processing.
+   * - Key is a tag that is either the model type or a custom value
+   * - Falue is a Set of JSON-encoded objects with unique urls and queryParams
+   *   Set[JSON.stringify({ url, type, queryParams, queryTag })]
    *
    * @type {Map}
    */
-  loadingStates = observable.map()
+  loadingStates = new Map()
 
   /**
-   * Data that has been loaded
-   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
+   * Map of data that has been loaded into the store. This can be observed to know if a given
+   * type (or tag) has finished loading.
+   * - Key is a tag that is either the model type or a custom value
+   * - Falue is a Set of JSON-encoded objects with unique urls and queryParams
+   *   Set[JSON.stringify({ url, type, queryParams, queryTag })]
    *
    * @type {Map}
    */
 
-  loadedStates = observable.map()
+  loadedStates = new Map()
 
   /**
    * Initializer for Store class
@@ -56,24 +121,28 @@ class Store {
    * @param {object} options options to use for initialization
    */
   constructor (options) {
-    makeObservable(this)
+    makeObservable(this, mobxAnnotations)
     this.init(options)
   }
 
   /**
    * Adds an instance or an array of instances to the store.
    * ```
-   * kpiHash = { name: "A good thing to measure" }
-   * kpi = store.add('kpis', kpiHash)
-   * kpi.name
+   * const todo = store.add('todos', { name: "A good thing to measure" })
+   * todo.name
    * => "A good thing to measure"
+   *
+   * const todoArray = [{ name: "Another good thing to measure" }]
+   * const [todo] = store.add('todos', [{ name: "Another good thing to measure" }])
+   * todo.name
+   * => "Another good thing to measure"
    * ```
    *
    * @param {string} type the model type
    * @param {object|Array} data the properties to use
-   * @returns {object} the new record
+   * @returns {object|Array} the new record or records
    */
-  add = (type, data) => {
+  add (type, data) {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
@@ -94,7 +163,7 @@ class Store {
    * @param {string} type the model type
    * @returns {object} the scrubbed attributes
    */
-  pickAttributes = (properties, type) => {
+  pickAttributes (properties, type) {
     const attributeNames = Object.keys(this.getKlass(type).attributeDefinitions)
     return pick(properties, attributeNames)
   }
@@ -119,7 +188,7 @@ class Store {
    * @param {string} type the model type
    * @returns {object} the scrubbed relationships
    */
-  pickRelationships = (properties, type) => {
+  pickRelationships (properties, type) {
     const definitions = this.getKlass(type).relationshipDefinitions
     return definitions ? pick(properties, Object.keys(definitions)) : {}
   }
@@ -131,8 +200,7 @@ class Store {
    * @param {object} properties the attributes and relationships
    * @returns {object} Data record
    */
-  @action
-  addModel = (type, properties) => {
+  addModel (type, properties) {
     const id = idOrNewId(properties.id)
 
     const attributes = this.pickAttributes(properties, type)
@@ -160,7 +228,7 @@ class Store {
    * @param {string} data array of data objects
    * @returns {Array} array of records
    */
-  addModels = (type, data) => {
+  addModels (type, data) {
     return runInAction(() => data.map((obj) => this.addModel(type, obj)))
   }
 
@@ -173,7 +241,7 @@ class Store {
    * @param {object} options {queryParams, extensions}
    * @returns {Promise} the saved records
    */
-  bulkSave = (type, records, options = {}) => {
+  bulkSave (type, records, options = {}) {
     console.warn('bulkSave is deprecated. Please use either bulkCreate or bulkUpdate to be more precise about your request.')
     return this._bulkSave(type, records, options, 'POST')
   }
@@ -181,6 +249,12 @@ class Store {
   /**
    * Saves a collection of records via a bulk-supported JSONApi endpoint.
    * All records need to be of the same type.
+   * - gets url for record type
+   * - converts records to an appropriate jsonapi attribute/relationship format
+   * - builds a data payload
+   * - builds the json api extension string
+   * - sends request
+   * - update records based on response
    *
    * @private
    * @param {string} type the model type
@@ -189,24 +263,17 @@ class Store {
    * @param {string} method http method
    * @returns {Promise} the saved records
    */
-  _bulkSave = (type, records, options = {}, method) => {
+  _bulkSave (type, records, options = {}, method) {
     const { queryParams, extensions } = options
 
-    // get url for record type
     const url = this.fetchUrl(type, queryParams, null)
-
-    // convert records to an appropriate jsonapi attribute/relationship format
     const recordAttributes = records.map((record) => record.jsonapi(options))
-
-    // build a data payload
     const body = JSON.stringify({ data: recordAttributes })
 
-    // build the json api extension string
     const extensionStr = extensions?.length
       ? `ext="bulk,${extensions.join()}"`
       : 'ext="bulk"'
 
-    // send request
     const response = this.fetch(url, {
       headers: {
         ...this.defaultFetchOptions.headers,
@@ -216,8 +283,7 @@ class Store {
       body
     })
 
-    // update records based on response
-    return this.updateRecords(response, records)
+    return this.updateRecordsFromResponse(response, records)
   }
 
   /**
@@ -229,7 +295,7 @@ class Store {
    * @param {object} options {queryParams, extensions}
    * @returns {Promise} the created records
    */
-  bulkCreate = (type, records, options = {}) => {
+  bulkCreate (type, records, options = {}) {
     if (records.some((record) => !record.isNew)) {
       throw new Error('Invariant violated: all records must be new records to perform a create')
     }
@@ -245,7 +311,7 @@ class Store {
    * @param {object} options {queryParams, extensions}
    * @returns {Promise} the saved records
    */
-  bulkUpdate = (type, records, options = {}) => {
+  bulkUpdate (type, records, options = {}) {
     if (records.some((record) => record.isNew)) {
       throw new Error('Invariant violated: all records must have a persisted id to perform an update')
     }
@@ -253,20 +319,18 @@ class Store {
   }
 
   /**
-   * Adds a record from the store. We can't simply remove the record
-   * by deleting the records property/key via delete due to a bug
-   * in mobx.
+   * Removes a record from the store by deleting it from the
+   * type's record map
    *
    * @param {string} type the model type
    * @param {string} id of record to remove
    */
-  @action
-  remove = (type, id) => {
+  remove (type, id) {
     this.data[type].records.delete(String(id))
   }
 
   /**
-   * Gets a record from the store, will not fetch from the server if it doesn't exist in store.
+   * Gets a record from the store. Will never fetch from the server.
    * If given queryParams, it will check the cache for the record.
    *
    * @param {string} type the type to find
@@ -274,7 +338,7 @@ class Store {
    * @param {object} options { queryParams }
    * @returns {object} record
    */
-  getOne = (type, id, options = {}) => {
+  getOne (type, id, options = {}) {
     if (!id) {
       console.error(`No id given while calling 'getOne' on ${type}`)
       return undefined
@@ -294,7 +358,7 @@ class Store {
    * @param {string} type the record type to fetch
    * @param {string} id the id of the record to fetch
    * @param {object} options { queryParams }
-   * @returns {object} record
+   * @returns {Promise} record result wrapped in a Promise
    */
   async fetchOne (type, id, options = {}) {
     if (!id) {
@@ -328,22 +392,22 @@ class Store {
   }
 
   /**
-   * Finds a record by `id`.
+   * Finds a record by `id`, always returning a Promise.
    * If available in the store, it returns that record. Otherwise, it fetches the record from the server.
    *
    *   store.findOne('todos', 5)
    *   // fetch triggered
-   *   => event1
+   *   => Promise(todo)
    *   store.findOne('todos', 5)
    *   // no fetch triggered
-   *   => event1
+   *   => Promise(todo)
    *
    * @param {string} type the type to find
    * @param {string} id the id of the record to find
    * @param {object} options { queryParams }
    * @returns {Promise} a promise that will resolve to the record
    */
-  findOne = (type, id, options = {}) => {
+  findOne (type, id, options = {}) {
     if (!id) {
       console.error(`No id given while calling 'findOne' on ${type}`)
       return undefined
@@ -360,7 +424,7 @@ class Store {
    * @param {object} options { queryParams }
    * @returns {Array} array of records
    */
-  getMany = (type, ids, options = {}) => {
+  getMany (type, ids, options = {}) {
     const idsToQuery = ids.slice().map(String)
     const records = this.getAll(type, options)
 
@@ -375,7 +439,7 @@ class Store {
    * @param {object} options { queryParams }
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
-  fetchMany = (type, ids, options = {}) => {
+  fetchMany (type, ids, options = {}) {
     const idsToQuery = ids.slice().map(String)
     const { queryParams = {}, queryTag } = options
     queryParams.filter = queryParams.filter || {}
@@ -413,7 +477,7 @@ class Store {
   * @param {object} options { queryParams }
   * @returns {Promise} a promise that will resolve an array of records
   */
-  findMany = (type, ids, options = {}) => {
+  findMany (type, ids, options = {}) {
     let idsToQuery = [...new Set(ids)].map(String)
     const recordsInStore = this.getAll(type, options).filter((record) =>
       idsToQuery.includes(String(record.id))
@@ -444,7 +508,7 @@ class Store {
   }
 
   /**
-   * Builds fetch url based
+   * Builds fetch url based on type, queryParams, id, and options
    *
    * @param {string} type the type to find
    * @param {object} queryParams params to be used in the fetch
@@ -466,7 +530,7 @@ class Store {
    * @param {object} options options for fetching queryParams
    * @returns {Array} array of records
    */
-  getAll = (type, options = {}) => {
+  getAll (type, options = {}) {
     const { queryParams } = options
     if (queryParams) {
       return this.getCachedRecords(type, queryParams)
@@ -491,8 +555,7 @@ class Store {
    * @param {string} options.queryTag an optional tag to use in place of the type
    * @returns {object} the loading state that was added
    */
-  @action
-  setLoadingState = ({ url, type, queryParams, queryTag }) => {
+  setLoadingState ({ url, type, queryParams, queryTag }) {
     queryTag = queryTag || type
 
     const loadingStateInfo = { url, type, queryParams, queryTag }
@@ -511,8 +574,7 @@ class Store {
    *
    * @param {object} state the state to remove
    */
-  @action
-  deleteLoadingState = (state) => {
+  deleteLoadingState (state) {
     const { loadingStates, loadedStates } = this
     const { queryTag } = state
 
@@ -542,7 +604,7 @@ class Store {
    * @param {object} options query params and other options
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
-  fetchAll = async (type, options = {}) => {
+  async fetchAll (type, options = {}) {
     const { queryParams } = options
 
     const url = this.fetchUrl(type, queryParams)
@@ -586,7 +648,7 @@ class Store {
 
   /**
    * Finds all records of the given `type`.
-   * If all records are in the store, it returns those.
+   * If any records from the given type from url are in the store, it returns those.
    * Otherwise, it fetches all records from the server.
    *
    *   store.findAll('todos')
@@ -611,17 +673,11 @@ class Store {
    *     }
    *   })
    *
-   *
-   * NOTE: A broader RFC is in development to improve how we keep data in sync
-   * with the server. We likely will want to getAll and getRecords
-   * to return null if nothing is found. However, this causes several regressions
-   * in portal we will need to address in a larger PR for mobx-async-store updates.
-   *
    * @param {string} type the type to find
    * @param {object} options { queryParams }
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
-  findAll = (type, options = {}) => {
+  findAll (type, options = {}) {
     const records = this.getAll(type, options)
     if (records.length > 0) {
       return records
@@ -640,7 +696,6 @@ class Store {
    *
    * @param {string} type the model type
    */
-  @action
   reset (type) {
     if (type) {
       this.data[type] = {
@@ -653,17 +708,14 @@ class Store {
     }
   }
 
-  /* Private Methods */
-
   /**
    * Entry point for configuring the store
    *
    * @param {object} options passed to constructor
    */
-  @action
-  init (options) {
+  init (options = {}) {
     this.initializeNetworkConfiguration(options)
-    this.initializeModelIndex(options)
+    this.initializeModelIndex(options.models)
     this.initializeObservableDataProperty()
     this.initializeErrorMessages(options)
   }
@@ -671,22 +723,26 @@ class Store {
   /**
    * Configures the store's network options
    *
-   * @param {object} options for network config
+   * @param {string} options the parameters that will be used to set up network requests
+   * @param {string} options.baseUrl the API's root url
+   * @param {object} options.defaultFetchOptions options that will be used when fetching
+   * @param {Array} options.headersOfInterest an array of headers to watch
+   * @param {object} options.retryOptions options for re-fetch attempts and interval
    */
-  @action
-  initializeNetworkConfiguration (options = {}) {
-    this.baseUrl = options.baseUrl || ''
-    this.defaultFetchOptions = options.defaultFetchOptions || {}
-    this.headersOfInterest = options.headersOfInterest || []
-    this.retryOptions = options.retryOptions || { attempts: 1, delay: 0 } // do not retry by default
+  initializeNetworkConfiguration ({ baseUrl = '', defaultFetchOptions = {}, headersOfInterest = [], retryOptions = { attempts: 1, delay: 0 } }) {
+    this.baseUrl = baseUrl
+    this.defaultFetchOptions = defaultFetchOptions
+    this.headersOfInterest = headersOfInterest
+    this.retryOptions = retryOptions
   }
 
   /**
    * Creates the key/value index of model types
+   *
+   * @param {object} models a fallback list of models
    */
-  @action
-  initializeModelIndex (options = {}) {
-    this.models = this.constructor.models || options.models
+  initializeModelIndex (models) {
+    this.models = this.constructor.models || models
   }
 
   /**
@@ -696,7 +752,6 @@ class Store {
    * Observable({ todos: {} })
    *
    */
-  @action
   initializeObservableDataProperty () {
     const { models } = this
 
@@ -718,7 +773,6 @@ class Store {
    * @param {object} options for initializing the store
    *   options for initializing error messages for different HTTP status codes
    */
-  @action
   initializeErrorMessages (options = {}) {
     const errorMessages = { ...options.errorMessages }
 
@@ -735,27 +789,24 @@ class Store {
    * @param {object} options override options to use for fetching
    * @returns {Promise} the data from the server
    */
-  fetch (url, options = {}) {
+  async fetch (url, options = {}) {
     const { defaultFetchOptions, headersOfInterest, retryOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const { attempts, delay } = retryOptions
 
-    const handleResponse = (response) => {
-      // Capture headers of interest
-      if (headersOfInterest) {
-        runInAction(() => {
-          headersOfInterest.forEach(header => {
-            const value = response.headers.get(header)
-            // Only set if it has changed, to minimize observable changes
-            if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
-          })
-        })
-      }
+    const response = await fetchWithRetry(url, fetchOptions, attempts, delay)
 
-      return response
+    if (headersOfInterest) {
+      runInAction(() => {
+        headersOfInterest.forEach(header => {
+          const value = response.headers.get(header)
+          // Only set if it has changed, to minimize observable changes
+          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+        })
+      })
     }
 
-    return fetchWithRetry(url, fetchOptions, attempts, delay).then(handleResponse)
+    return response
   }
 
   /**
@@ -845,7 +896,7 @@ class Store {
   }
 
   /**
-   * Gets records from store based on cached query
+   * Gets records from store based on cached query and any previously requested ids
    *
    * @param {string} type type of records to get
    * @param {object} queryParams query params that were used for the query
@@ -853,13 +904,10 @@ class Store {
    * @returns {Array} array of records
    */
   getCachedRecords (type, queryParams, id) {
-    // Get the url the request would use
     const url = this.fetchUrl(type, queryParams, id)
-    // Get the matching ids from the response
     const ids = this.getCachedIds(type, url)
-    // get the meta for the request
     const meta = this.getType(type).meta.get(url)
-    // Get the records matching the ids
+
     const cachedRecords = this.getRecordsById(type, ids)
 
     if (meta) cachedRecords.meta = meta
@@ -905,10 +953,9 @@ class Store {
   /**
    * Creates or updates a model
    *
-   * @param {object} dataObject the object will be used to update or create a model
+   * @param {object} data the object will be used to update or create a model
    * @returns {object} the record
    */
-  @action
   createOrUpdateModelFromData (data) {
     const { id, type } = data
 
@@ -924,6 +971,12 @@ class Store {
     return record
   }
 
+  /**
+   * Updates a record from a jsonapi hash
+   *
+   * @param {object} record a Model record
+   * @param {object} data jsonapi-formatted data
+   */
   updateRecordFromData (record, data) {
     const tmpId = record.id
     const { id, type, attributes, relationships = {} } = data
@@ -954,17 +1007,14 @@ class Store {
   }
 
   /**
-   * Create multiple models from an array of data
+   * Create multiple models from an array of data. It will only build objects
+   * with defined models, and ignore everything else in the data.
    *
    * @param {Array} data the array of jsonapi data
    * @returns {Array} an array of the models serialized
    */
-  @action
   createOrUpdateModelsFromData (data) {
     return data.map((dataObject) => {
-      // Only build objects for which we have a type defined.
-      // And ignore silently anything else included in the JSON response.
-      // TODO: Put some console message in development mode
       if (this.getType(dataObject.type)) {
         return this.createOrUpdateModelFromData(dataObject)
       } else {
@@ -977,12 +1027,9 @@ class Store {
   /**
    * Helper to create a new model
    *
-   * @param {string} type the model type
-   * @param {string} id the model id
-   * @param {object} data attributes and relationships
+   * @param {object} data id, type, attributes and relationships
    * @returns {object} model instance
    */
-  @action
   createModelFromData (data) {
     const { id, type, attributes, relationships } = data
 
@@ -1000,12 +1047,11 @@ class Store {
    * Defines a resolution for an API call that will update a record or
    * set of records with the data returned from the API
    *
-   * @param {Promise} promise a request to the API
+   * @param {Promise} promise a response from the API
    * @param {object|Array} records to be updated
    * @returns {Promise} a resolved promise after operations have been performed
    */
-  @action
-  updateRecords (promise, records) {
+  updateRecordsFromResponse (promise, records) {
     // records may be a single record, if so wrap it in an array to make
     // iteration simpler
     const recordsArray = Array.isArray(records) ? records : [records]

@@ -1,10 +1,10 @@
 /* global fetch */
 import { v1 as uuidv1 } from 'uuid'
-import QueryString from './QueryString'
 import pluralize from 'pluralize'
 import dig from 'lodash/get'
 import flattenDeep from 'lodash/flattenDeep'
 import { toJS } from 'mobx'
+import qs from 'qs'
 
 const pending = {}
 const counter = {}
@@ -357,4 +357,12 @@ export const validatesOptions = (property, target) => {
     isValid: errors.length === 0,
     errors
   }
+}
+
+/**
+ * An object with default `parse` and `stringify` functions from qs
+ */
+export const QueryString = {
+  parse: (str) => qs.parse(str, { ignoreQueryPrefix: true }),
+  stringify: (str) => qs.stringify(str, { arrayFormat: 'brackets' })
 }

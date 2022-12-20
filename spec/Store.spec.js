@@ -588,7 +588,7 @@ describe('Store', () => {
     })
   })
 
-  describe('updateRecords', () => {
+  describe('updateRecordsFromResponse', () => {
     function mockRequest (errors, status = 422) {
       return new Promise((resolve, reject) => {
         const body = JSON.stringify({ errors })
@@ -607,7 +607,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors), todo)
         } catch (error) {
           expect(todo.errors).toEqual({})
         }
@@ -624,7 +624,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors), todo)
         } catch (error) {
           expect(todo.errors).toEqual({})
         }
@@ -640,7 +640,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors), todo)
         } catch (error) {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Forbidden')
@@ -660,7 +660,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors), todo)
         } catch (error) {
           expect(todo.errors.title).toEqual(errors)
         }
@@ -682,7 +682,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors), todo)
         } catch (error) {
           expect(todo.errors.title).toEqual(errors)
         }
@@ -702,7 +702,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors), todo)
         } catch (error) {
           expect(todo.errors['options.resources.0.quantity']).toEqual(errors)
         }
@@ -727,7 +727,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors), [todo1, todo2])
+          await store.updateRecordsFromResponse(mockRequest(errors), [todo1, todo2])
         } catch (error) {
           expect(todo2.errors.quantity).toEqual([errors[1]])
         }
@@ -745,7 +745,7 @@ describe('Store', () => {
         ]
 
         try {
-         await store.updateRecords(mockRequest(errors), [todo1, todo2])
+         await store.updateRecordsFromResponse(mockRequest(errors), [todo1, todo2])
         } catch (error) {
          expect(todo2.errors.title).toEqual(errors)
         }
@@ -762,7 +762,7 @@ describe('Store', () => {
         }
 
         try {
-          await store.updateRecords(mockRequest(errors), [todo1, todo2])
+          await store.updateRecordsFromResponse(mockRequest(errors), [todo1, todo2])
         } catch (error) {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Top level errors in response are not an array.')
@@ -776,7 +776,7 @@ describe('Store', () => {
         const errors = undefined
 
         try {
-          await store.updateRecords(mockRequest(errors), [todo1, todo2])
+          await store.updateRecordsFromResponse(mockRequest(errors), [todo1, todo2])
         } catch (error) {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Something went wrong.')
@@ -810,7 +810,7 @@ describe('Store', () => {
         ]
 
         try {
-          await store.updateRecords(mockRequest(errors, 403), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors, 403), todo)
         } catch (error) {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe("You don't have permission to access this record.")
@@ -820,7 +820,7 @@ describe('Store', () => {
         errors = [{ status: 500 }]
 
         try {
-          await store.updateRecords(mockRequest(errors, 500), todo)
+          await store.updateRecordsFromResponse(mockRequest(errors, 500), todo)
         } catch (error) {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Oh no!')
@@ -832,7 +832,7 @@ describe('Store', () => {
         const todo = store.add('todos', {})
 
         try {
-          await store.updateRecords(mockRequest(undefined, 400), todo)
+          await store.updateRecordsFromResponse(mockRequest(undefined, 400), todo)
         } catch (error) {
           const jsonError = JSON.parse(error.message)[0]
           expect(jsonError.detail).toBe('Sorry.')
