@@ -1,5 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
+import { IFactoryFarm } from 'FactoryFarm'
 import {
   MockServer,
   FactoryFarm,
@@ -8,7 +9,13 @@ import {
   serverResponse
 } from '../src/main'
 import { stringType } from '../src/utils'
+import { StoreClass } from 'Model';
+import { IMockServer } from 'MockServer';
+import { FetchMock } from 'jest-fetch-mock'
+const fetchMock = fetch as FetchMock;
+import { enableFetchMocks } from 'jest-fetch-mock'
 
+enableFetchMocks()
 class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
@@ -30,8 +37,8 @@ class AppStore extends Store {
 }
 
 describe('MockServer', () => {
-  let store
-  let factoryFarm
+  let store: StoreClass
+  let factoryFarm: IFactoryFarm
 
   beforeEach(() => {
     store = new AppStore()
@@ -93,7 +100,7 @@ describe('MockServer', () => {
     })
 
     const todos = await store.fetchAll('todos')
-    const result = await fetch.mock.results[0].value
+    const result = await fetchMock.mock.results[0].value
 
     expect(todos).toHaveLength(1)
 
@@ -109,7 +116,7 @@ describe('MockServer', () => {
     const todo = store.add('todos', { title: 'Harvest Plants' })
     await todo.save()
     expect(todo.id).toEqual('1')
-    expect(fetch.mock.calls).toHaveLength(1)
+    expect(fetchMock.mock.calls).toHaveLength(1)
   })
 
   it('bulk saves a new model', async () => {
@@ -122,7 +129,7 @@ describe('MockServer', () => {
     await store.bulkCreate('todos', [todo1, todo2])
     expect(todo1.id).toEqual('1')
     expect(todo2.id).toEqual('2')
-    expect(fetch.mock.calls).toHaveLength(1)
+    expect(fetchMock.mock.calls).toHaveLength(1)
   })
 
   it('updates a model', async () => {
@@ -138,8 +145,8 @@ describe('MockServer', () => {
 
     expect(todo.id).toEqual('1')
     expect(todo.title).toEqual('Harvest Plants')
-    expect(fetch.mock.calls).toHaveLength(2)
-    const updateResponse = await fetch.mock.results[1].value
+    expect(fetchMock.mock.calls).toHaveLength(2)
+    const updateResponse = await fetchMock.mock.results[1].value
     expect(updateResponse.body.toString()).toMatch('Harvest Plants')
   })
 
@@ -164,8 +171,8 @@ describe('MockServer', () => {
     expect(todo2.id).toEqual('2')
     expect(todo2.title).toEqual('Harvest Half Plants')
 
-    expect(fetch.mock.calls).toHaveLength(3)
-    const updateResponse = await fetch.mock.results[2].value
+    expect(fetchMock.mock.calls).toHaveLength(3)
+    const updateResponse = await fetchMock.mock.results[2].value
     expect(updateResponse.body.toString()).toMatch('Transplant Seedlings')
     expect(updateResponse.body.toString()).toMatch('Harvest Half Plants')
   })
@@ -180,7 +187,7 @@ describe('MockServer', () => {
 
     mockServer.respond({
       path: /todos\/1/,
-      response: (mockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '2' }))
+      response: (mockServer: IMockServer) => serverResponse(mockServer.build('planting', { title: 'Harvest Plants', id: '2' }))
     })
 
     mockServer.start()
@@ -315,9 +322,9 @@ describe('MockServer', () => {
         await todo.save()
       } catch (error) {
         expect(todo.errors.title[0].detail).toEqual("can't be weird")
-        const results = await fetch.mock.results[0].value
+        const results = await fetchMock.mock.results[0].value
         expect(results.status).toEqual(422)
-        expect(fetch.mock.calls).toHaveLength(1)
+        expect(fetchMock.mock.calls).toHaveLength(1)
       }
     })
 
@@ -342,13 +349,13 @@ describe('MockServer', () => {
         const jsonError = JSON.parse(error.message)[0]
         expect(jsonError.detail).toBe('Something went wrong.')
         expect(jsonError.status).toBe(500)
-        expect(fetch.mock.calls).toHaveLength(1)
+        expect(fetchMock.mock.calls).toHaveLength(1)
       }
     })
   })
 
   describe('incorrectly mixing frontend and backend factories', () => {
-    let store
+    let store: IMock
 
     beforeEach(() => {
       const mockServer = new MockServer({ factoryFarm })
@@ -407,7 +414,7 @@ describe('MockServer', () => {
       expect(factoryFarm.__usedForMockServer__).toBe(true)
       expect(factoryFarm.store.__usedForMockServer__).toBe(true)
       expect(mockServer._backendFactoryFarm.__usedForMockServer__).toBe(true)
-      expect(mockServer._backendFactoryFarm.store.__usedForMockServer__).toBe(true)
+      expect(mockServer._backendFactoryFarm.store?.__usedForMockServer__).toBe(true)
     })
   })
 })

@@ -1,23 +1,50 @@
-import Store from './Store'
+import Store, { ModelClass, ModelClassArray } from './Store'
 import clone from 'lodash/clone'
 import times from 'lodash/times'
+import { IModelInitOptions, StoreClass } from 'Model'
+import { IObjectWithAny, IRecordObject } from 'interfaces/global'
+
+export interface IFactoryFarm {
+  store?: StoreClass
+  factories: { [key: string]: IFactory }
+  build(factoryName: string, overrideOptions: IRecordObject): ModelClass
+  build(factoryName: string, overrideOptions: IRecordObject, numberOfRecords: number): ModelClass[]
+  build(factoryName: string, overrideOptions: IRecordObject, numberOfRecords?: number): ModelClass | ModelClass[]
+  add (type: string, props: IRecordObject, options?: IModelInitOptions): ModelClass
+  add (type: string, props: IRecordObject[], options?: IModelInitOptions): ModelClassArray
+  add (type: string, props: IRecordObject | IRecordObject[], options?: IModelInitOptions): ModelClass | ModelClassArray
+  define(name: string, options?: IDefineOptions): void
+  __usedForMockServer__?: boolean
+}
+
+export interface IDefineOptions {
+  type?: string
+  parent?: string
+  [key: string]: any
+}
+
+export interface IFactory {
+  type: string
+}
 
 /**
  * A class to create and use factories
  *
  * @class FactoryFarm
  */
-class FactoryFarm {
+class FactoryFarm implements IFactoryFarm {
   /**
    * Sets up the store, and a private property to make it apparent the store is used
    * for a FactoryFarm
    *
    * @param {object} store the store to use under the hood
    */
-  constructor (store) {
+  constructor (store: StoreClass | void) {
     this.store = store || new Store()
     this.store.__usedForFactoryFarm__ = true
   }
+
+  store: StoreClass
 
   /**
    * A hash of available factories. A factory is an object with a structure like:
@@ -25,15 +52,34 @@ class FactoryFarm {
    *
    * @type {object}
    */
-  factories = {}
+  factories: { [key: string]: IFactory } = {}
 
   /**
    * A hash of singleton objects.
    *
    * @type {object}
    */
-  singletons = {}
+  singletons: {
+    [key: string]: ModelClass
+  } = {}
 
+  /**
+   * Allows easy building of multipleStore objects, including relationships.
+   * 
+   * @param {string} factoryName the name of the factory to use
+   * @param {object} overrideOptions overrides for the factory
+   * @returns {object} instance of an Store model
+   */
+  build (factoryName: string, overrideOptions: object): ModelClass
+  /**
+   * Allows easy building of multipleStore objects, including relationships.
+   * 
+   * @param {string} factoryName the name of the factory to use
+   * @param {object} overrideOptions overrides for the factory
+   * @param {number} numberOfRecords number of models to build
+   * @returns {object} instance of an Store model
+   */
+  build (factoryName: string, overrideOptions: object, numberOfRecords: number): ModelClass[]
   /**
    * Allows easy building of Store objects, including relationships.
    * Takes parameters `attributes` and `relationships` to use for building.
@@ -53,7 +99,7 @@ class FactoryFarm {
    * @param {number} numberOfRecords optional number of models to build
    * @returns {object} instance of an Store model
    */
-  build (factoryName, overrideOptions = {}, numberOfRecords = 1) {
+  build (factoryName: string, overrideOptions = {}, numberOfRecords?: number): ModelClass | ModelClass[] {
     const { store, factories, singletons, _verifyFactory, _buildModel } = this
     _verifyFactory(factoryName)
     const { type, ...properties } = factories[factoryName]
@@ -62,42 +108,39 @@ class FactoryFarm {
       /**
        * Increments the id for the type based on ids already present
        *
-       * @param {number} i the number that will be used to create an id
+       * @param {number} index the number that will be used to create an id
        * @returns {number} an incremented number related to the latest id in the store
        */
-      id: (i) => String(store.getAll(type).length + i + 1),
+      id: (index: number) => String(store.getAll(type).length + index + 1),
       ...properties,
       ...overrideOptions
     }
 
-    let identity = false
+    let identity: string = factoryName
     if (newModelProperties.identity) {
       if (typeof newModelProperties.identity === 'string') {
         identity = newModelProperties.identity
-      } else {
-        identity = factoryName
       }
+
       delete newModelProperties.identity
-      if (numberOfRecords === 1) {
-        if (singletons[identity]) return singletons[identity]
+      if (typeof numberOfRecords === 'undefined' && singletons[identity]) {
+        return singletons[identity]
       }
     }
 
-    let addProperties
-
-    if (numberOfRecords > 1) {
-      addProperties = times(numberOfRecords, (i) => _buildModel(factoryName, newModelProperties, i))
-    } else {
-      addProperties = _buildModel(factoryName, newModelProperties)
+    if (typeof numberOfRecords !== 'undefined') {
+      const addProperties = times(numberOfRecords, (i) => _buildModel(factoryName, newModelProperties, i))
+      return store.add(type, addProperties)
     }
-
-    const results = store.add(type, addProperties)
+    
+    const addProperties = _buildModel(factoryName, newModelProperties)
+    const result = store.add(type, addProperties) as ModelClass
 
     if (identity) {
-      singletons[identity] = results
+      singletons[identity] = result
     }
 
-    return results
+    return result
   }
 
   /**
@@ -113,7 +156,7 @@ class FactoryFarm {
    * @param {string} name the name to use for the factory
    * @param {object} options options that can be used to configure the factory
    */
-  define (name, options = {}) {
+  define (name: string, options: IDefineOptions = {}): void {
     const { type, parent, ...properties } = options
 
     let factory
@@ -139,13 +182,21 @@ class FactoryFarm {
     this.factories[name] = factory
   }
 
+  /* eslint-disable jsdoc/require-jsdoc */
   /**
    * Alias for `this.store.add`
    *
-   * @param  {...any} params attributes and relationships to be added to the store
-   * @returns {*} object or array
+   * @param {string} type the model type
+   * @param {object|Array} props the properties to use
+   * @param {object} options currently supports `skipInitialization`
+   * @returns {ModelClass|ModelClassArray} the new record or records
    */
-  add = (...params) => this.store.add(...params)
+  add (type: string, props: IRecordObject, options?: IModelInitOptions): ModelClass
+  add (type: string, props: IRecordObject[], options?: IModelInitOptions): ModelClassArray
+  add (type: string, props: IRecordObject | IRecordObject[], options?: IModelInitOptions): ModelClass | ModelClassArray {
+    return this.store.add(type, props, options)
+  }
+  /* eslint-enable jsdoc/require-jsdoc */
 
   /**
    * Verifies that the requested factory exists
@@ -153,7 +204,7 @@ class FactoryFarm {
    * @param {string} factoryName the name of the factory
    * @private
    */
-  _verifyFactory = (factoryName) => {
+  private _verifyFactory = (factoryName: string) => {
     const factory = this.factories[factoryName]
 
     if (!factory) {
@@ -171,11 +222,11 @@ class FactoryFarm {
    * @returns {object} an object of properties to be used.
    * @private
    */
-  _buildModel = (factoryName, properties, index = 0) => {
+  private _buildModel (factoryName: string, properties: IObjectWithAny, index = 0) {
     properties = clone(properties)
     Object.keys(properties).forEach((key) => {
       if (Array.isArray(properties[key])) {
-        properties[key] = properties[key].map((propDefinition) => {
+        properties[key] = properties[key].map((propDefinition: any) => {
           return this._callPropertyDefinition(propDefinition, index, factoryName, properties)
         })
       } else {
@@ -193,8 +244,9 @@ class FactoryFarm {
    * @param {string} factoryName the name of the factory
    * @param {object} properties properties to be passed to the executed function
    * @returns {*} a definition or executed function
+   * @private
    */
-  _callPropertyDefinition = (definition, index, factoryName, properties) => {
+  private _callPropertyDefinition = (definition: any, index: number, factoryName: string, properties: IObjectWithAny) => {
     return typeof definition === 'function' ? definition.call(this, index, factoryName, properties) : definition
   }
 }

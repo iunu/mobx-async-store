@@ -15,43 +15,18 @@ import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 import union from 'lodash/union'
-import Store from './Store'
+import Store, { IStore, ModelClass } from './Store'
 import { defineToManyRelationships, defineToOneRelationships, definitionsByDirection } from './relationships'
 import pick from 'lodash/pick'
-
-/**
- * Maps the passed-in property names through and runs validations against those properties
- *
- * @param {object} model the model to check
- * @param {Array} propertyNames the names of the model properties to check
- * @param {object} propertyDefinitions a hash map containing validators by property
- * @returns {Array} an array of booleans representing results of validations
- */
-function validateProperties (model, propertyNames, propertyDefinitions) {
-  return propertyNames.map((propertyName) => {
-    if (propertyDefinitions) {
-      const { validator } = propertyDefinitions[propertyName]
-
-      if (!validator) return true
-
-      const validationResult = validator(model[propertyName], model, propertyName)
-
-      if (!validationResult.isValid) {
-        model.errors[propertyName] = validationResult.errors
-      }
-
-      return validationResult.isValid
-    } else return true
-  })
-}
+import { ValidationResult, JSONAPIRelationshipObject, JSONAPIDocument, IRequestParamsOpts, JSONAPISingleDocument, IObjectWithAny, JSONAPIRelationshipReference, IQueryParams, JSONAPIDocumentReference, JSONAPIDataObject, UnpersistedJSONAPIDataObject, JSONAPIErrorObject, IErrorMessage } from 'interfaces/global'
 
 /**
  * Coerces all ids to strings
  *
  * @param {object} object object to coerce
  */
-function stringifyIds (object) {
-  Object.keys(object).forEach(key => {
+function stringifyIds (object: Record<string, any>): void {
+  Object.keys(object).forEach((key: string) => {
     const property = object[key]
     if (typeof property === 'object') {
       if (property.id) {
@@ -66,46 +41,132 @@ function stringifyIds (object) {
  * Annotations for mobx observability. We can't use `makeAutoObservable` because we have subclasses.
  */
 const mobxAnnotations = {
-  isDirty: computed,
-  dirtyAttributes: computed,
-  dirtyRelationships: computed,
-  hasUnpersistedChanges: computed,
-  snapshot: computed,
-  previousSnapshot: computed,
-  persistedOrFirstSnapshot: computed,
-  type: computed,
-  attributes: computed,
-  attributeDefinitions: computed,
-  relationshipDefinitions: computed,
-  hasErrors: computed,
-  attributeNames: computed,
-  relationshipNames: computed,
-  defaultAttributes: computed,
-  isInFlight: observable,
   errors: observable,
+  isInFlight: observable,
   relationships: observable,
   _snapshots: observable,
+  attributeDefinitions: computed,
+  attributeNames: computed,
+  attributes: computed,
+  defaultAttributes: computed,
+  dirtyAttributes: computed,
+  dirtyRelationships: computed,
+  hasErrors: computed,
+  hasUnpersistedChanges: computed,
+  isDirty: computed,
+  isNew: computed,
+  previousSnapshot: computed,
+  persistedOrFirstSnapshot: computed,
+  relationshipDefinitions: computed,
+  snapshot: computed,
+  type: computed,
+  relationshipNames: computed,
+  destroy: action,
+  clearSnapshots: action,
+  errorForKey: action,
   initializeAttributes: action,
   initializeRelationships: action,
-  rollback: action,
-  undo: action,
-  save: action,
-  reload: action,
-  validate: action,
-  destroy: action,
-  takeSnapshot: action,
-  clearSnapshots: action,
-  _applySnapshot: action,
-  errorForKey: action,
+  isSame: action,
   jsonapi: action,
+  reload: action,
+  rollback: action,
+  save: action,
+  takeSnapshot: action,
+  validate: action,
+  undo: action,
   updateAttributes: action,
-  isSame: action
+  _applySnapshot: action
+}
+
+export type StoreClass = InstanceType<typeof Store> | IStore
+
+interface ISnapshot {
+  relationships: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null }
+  attributes: { [key: string]: any }
+  persisted: boolean
+}
+
+interface IAttributeDefinition {
+  transformer?: (property: any) => any
+  validator?: (property?: any, model?: ModelClass, propertyName?: string) => ValidationResult
+  defaultValue?: any
+}
+
+export interface IRelationshipInverseDefinition {
+  name: string
+  direction: string
+  types?: string[]
+}
+
+export interface IRelationshipDefinition {
+  validator?: (property?: any, model?: ModelClass, propertyName?: string) => ValidationResult
+  direction: string
+  types?: string[]
+  inverse?: IRelationshipInverseDefinition
+}
+
+export interface IModelInitOptions {
+  skipInitialization?: boolean
+}
+
+export interface IModel {
+  id?: string
+  errors: { [key: string]: IErrorMessage[] }
+  isInFlight: boolean
+  relationships: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null }
+  _snapshots: ISnapshot[]
+  attributeDefinitions: { [key: string]: IAttributeDefinition }
+  attributeNames: string[]
+  attributes: Record<string, any>
+  defaultAttributes: { [key: string]: any }
+  dirtyAttributes: Set<string|undefined>
+  dirtyRelationships: Set<string>
+  hasErrors: boolean
+  hasUnpersistedChanges: boolean
+  isDirty: boolean
+  isNew: boolean
+  previousSnapshot: ISnapshot
+  persistedOrFirstSnapshot: ISnapshot
+  relationshipDefinitions: { [key: string]: IRelationshipDefinition }
+  type: string
+  relationshipNames: string[]
+  destroy(options: { params?: {} | undefined; skipRemove?: boolean }): Promise<this|void>
+  clearSnapshots: () => void
+  errorForKey: (key: string) => IErrorMessage[]
+  initializeAttributes: (attributes: { [key: string]: any }) => void
+  initializeRelationships: () => void
+  isSame: (model: IModel) => boolean
+  jsonapi(options?: IRequestParamsOpts): JSONAPIDocument
+  reload: () => Promise<IModel>
+  rollback: () => void
+  save(options?: { skip_validations?: boolean, queryParams?: IQueryParams, relationships?: string[], attributes?: string[] }): Promise<ModelClass>
+  takeSnapshot: (options?: { persisted: boolean }) => void
+  validate: (options: { attributes: string[], relationships: string[] }) => boolean
+  undo: () => void
+  updateAttributes: (attributes: { [key: string]: any }) => void
+  
+  store?: StoreClass
+  [key: string]: any
+}
+
+export interface IInitialProperties {
+  id?: string
+  relationships?: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null }
+  attributes?: { [key: string]: any }
+  [key: string]: any
 }
 
 /**
  * The base class for data records
  */
-class Model {
+class Model implements IModel {
+  [x: string]: any
+  store: StoreClass
+
+  static attributeDefinitions: { [key: string]: IAttributeDefinition } = {}
+  static relationshipDefinitions: { [key: string]: IRelationshipDefinition } = {}
+
+
   /**
    * - Sets the store and id.
    * - Sets jsonapi reference to relationships as a hash.
@@ -113,16 +174,18 @@ class Model {
    * - Initializes relationships and sets attributes
    * - Takes a snapshot of the initial state
    *
-   * @param {object} initialProperties attributes and relationships that will be set
+   * @param {IInitialProperties} initialProperties attributes and relationships that will be set
    * @param {object} store the store that will define relationships
    * @param {object} options supports `skipInitialization`
+   * @param {boolean} options.skipInitialization if true, will skip initializing attributes and relationships
    */
-  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] }), options = {}) {
+  constructor (initialProperties: IInitialProperties = {}, store: StoreClass | void = undefined, options: IModelInitOptions = {}) {
     const { id, relationships } = initialProperties
+    if(!store) { store = new Store({ models: [this.constructor as typeof Model] }) }
 
     this.store = store
     this.id = id != null ? String(id) : id
-    this.relationships = relationships
+    if (relationships) { this.relationships = relationships }
 
     if (!options.skipInitialization) {
       this.initialize(initialProperties)
@@ -161,7 +224,7 @@ class Model {
    *
    * @type {string}
    */
-  id
+  id?: string
 
   /**
    * The reference to relationships. Is observed and used to provide references to the objects themselves
@@ -173,7 +236,7 @@ class Model {
    *
    * @type {object}
    */
-  relationships = {}
+  relationships: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null } = {}
 
   /**
    * True if the instance has been modified from its persisted state
@@ -227,9 +290,9 @@ class Model {
    * @readonly
    */
   get dirtyAttributes () {
-    if (this._snapshots.length === 0) { return [] }
+    if (this._snapshots.length === 0) { return <Set<string>> new Set() }
 
-    return Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
+    return Object.keys(this.attributes).reduce((dirtyAccumulator: Set<string>, attr: string) => {
       const currentValue = this.attributes[attr]
       const previousValue = this.previousSnapshot.attributes[attr]
 
@@ -261,30 +324,38 @@ class Model {
    *
    * @type {Set}
    */
-  get dirtyRelationships () {
-    if (this._snapshots.length === 0 || !this.relationshipDefinitions) { return new Set() }
+  get dirtyRelationships (): Set<string> {
+    const dirtySet: Set<string> = new Set()
+    if (this._snapshots.length === 0 || !this.relationshipDefinitions) { return dirtySet }
 
-    const { previousSnapshot, persistedOrFirstSnapshot, relationshipDefinitions } = this
+    const { previousSnapshot, persistedOrFirstSnapshot, toOneDefinitions, toManyDefinitions } = this
 
-    return Object.entries(relationshipDefinitions || {}).reduce((relationshipSet, [relationshipName, definition]) => {
-      const { direction } = definition
-      let firstData = persistedOrFirstSnapshot.relationships?.[relationshipName]?.data
-      let currentData = previousSnapshot.relationships?.[relationshipName]?.data
-      let isDifferent
+    toManyDefinitions.reduce((relationshipSet: Set<string>, [relationshipName]) => {
+      const firstData = (persistedOrFirstSnapshot.relationships?.[relationshipName]?.data || []) as JSONAPIDocumentReference[]
+      const currentData = (previousSnapshot.relationships?.[relationshipName]?.data || []) as JSONAPIDocumentReference[]
 
-      if (direction === 'toMany') {
-        firstData = firstData || []
-        currentData = currentData || []
-        isDifferent = firstData.length !== currentData?.length || firstData.some(({ id, type }, i) => currentData[i].id !== id || currentData[i].type !== type)
-      } else {
-        isDifferent = firstData?.id !== currentData?.id || firstData?.type !== currentData?.type
-      }
+      const isDifferent = firstData.length !== currentData?.length || firstData.some(({ id, type }, i) => currentData[i].id !== id || currentData[i].type !== type)
 
       if (isDifferent) {
         relationshipSet.add(relationshipName)
       }
       return relationshipSet
-    }, new Set())
+    }, dirtySet)
+
+    toOneDefinitions.reduce((relationshipSet: Set<string>, [relationshipName]) => {
+      let firstData = persistedOrFirstSnapshot.relationships?.[relationshipName]?.data as JSONAPIDocumentReference
+      let currentData = previousSnapshot.relationships?.[relationshipName]?.data as JSONAPIDocumentReference
+
+      const isDifferent = firstData?.id !== currentData?.id || firstData?.type !== currentData?.type
+
+      if (isDifferent) {
+        relationshipSet.add(relationshipName)
+      }
+
+      return relationshipSet
+    }, dirtySet)
+
+    return dirtySet
   }
 
   /**
@@ -292,7 +363,7 @@ class Model {
    *
    * @type {boolean}
    */
-  get hasUnpersistedChanges () {
+  get hasUnpersistedChanges (): boolean {
     return this.isDirty || !this.previousSnapshot.persisted
   }
 
@@ -301,7 +372,7 @@ class Model {
    *
    * @type {boolean}
    */
-  get isNew () {
+  get isNew (): boolean {
     const { id } = this
     if (!id) return true
     if (String(id).indexOf('tmp') === -1) return false
@@ -323,7 +394,7 @@ class Model {
    * @type {boolean}
    * @default false
    */
-  isInFlight = false
+  isInFlight: boolean = false
 
   /**
    * A hash of errors from the server
@@ -336,22 +407,23 @@ class Model {
    * @type {object}
    * @default {}
    */
-  errors = {}
+  errors: { [key: string]: IErrorMessage[] } = {}
 
   /**
    * a list of snapshots that have been taken since the record was either last persisted or since it was instantiated
    *
-   * @type {Array}
+   * @property _snapshots
+   * @type {Array<Snapshot>}
    * @default []
    */
-  _snapshots = []
+  _snapshots: ISnapshot[] = []
 
   /**
    * Initializes observable attributes and relationships
    *
    * @param {object} initialProperties attributes
    */
-   initialize (initialProperties) {
+   initialize (initialProperties: IInitialProperties) {
     const { ...attributes } = initialProperties
 
     makeObservable(this, mobxAnnotations)
@@ -368,10 +440,10 @@ class Model {
    *
    * @param {object} overrides data that will be set over defaults
    */
-  initializeAttributes (overrides) {
+  initializeAttributes (overrides: { [key: string]: any }) {
     const { attributeDefinitions } = this
 
-    const attributes = Object.keys(attributeDefinitions).reduce((object, attributeName) => {
+    const attributes = Object.keys(attributeDefinitions).reduce((object: { [key: string]: any }, attributeName: string) => {
       object[attributeName] = overrides[attributeName] === undefined ? attributeDefinitions[attributeName].defaultValue : overrides[attributeName]
       return object
     }, {})
@@ -383,16 +455,21 @@ class Model {
    * Initializes relationships based on the `relationships` hash.
    */
   initializeRelationships () {
-    const { store } = this
+    const { store, toOneDefinitions, toManyDefinitions } = this
 
-    const toOneDefinitions = definitionsByDirection(this, 'toOne')
-    const toManyDefinitions = definitionsByDirection(this, 'toMany')
-
-    const toOneRelationships = defineToOneRelationships(this, store, toOneDefinitions)
-    const toManyRelationships = defineToManyRelationships(this, store, toManyDefinitions)
+    const toOneRelationships = defineToOneRelationships(this as ModelClass, store, toOneDefinitions)
+    const toManyRelationships = defineToManyRelationships(this as ModelClass, store, toManyDefinitions)
 
     extendObservable(this, toOneRelationships)
     extendObservable(this, toManyRelationships)
+  }
+
+  get toOneDefinitions (): [string, IRelationshipDefinition][] {
+    return definitionsByDirection(this as ModelClass, 'toOne')
+  }
+
+  get toManyDefinitions (): [string, IRelationshipDefinition][] {
+    return definitionsByDirection(this as ModelClass, 'toOne')
   }
 
   /**
@@ -427,10 +504,10 @@ class Model {
    * @param {object} options query params and sparse fields to use
    * @returns {Promise} the persisted record
    */
-  async save (options = {}) {
+  async save (options: { skip_validations?: boolean, queryParams?: IQueryParams, relationships?: string[], attributes?: string[] } = {}): Promise<ModelClass> {
     if (!options.skip_validations && !this.validate(options)) {
       const errorString = JSON.stringify(this.errors)
-      return Promise.reject(new Error(errorString))
+      throw new Error(errorString)
     }
 
     const {
@@ -440,7 +517,7 @@ class Model {
     } = options
 
     const {
-      constructor,
+      type,
       id,
       isNew,
       dirtyRelationships,
@@ -454,15 +531,10 @@ class Model {
       return Promise.resolve(this)
     }
 
-    let requestId = id
-    let method = 'PATCH'
+    const requestId = isNew ? undefined : id
+    const method = isNew ? 'POST' : 'PATCH'
 
-    if (isNew) {
-      method = 'POST'
-      requestId = null
-    }
-
-    const url = this.store.fetchUrl(constructor.type, queryParams, requestId)
+    const url = this.store.fetchUrl(type, queryParams, requestId)
 
     const body = JSON.stringify({
       data: this.jsonapi({ relationships, attributes })
@@ -471,7 +543,7 @@ class Model {
     if (relationships) {
       relationships.forEach((rel) => {
         if (Array.isArray(this[rel])) {
-          this[rel].forEach((item, i) => {
+          this[rel].forEach((item: ModelClass, i: number) => {
             if (item && item.isNew) {
               throw new Error(`Invariant violated: tried to save a relationship to an unpersisted record: "${rel}[${i}]"`)
             }
@@ -483,10 +555,10 @@ class Model {
     }
 
     const response = this.store.fetch(url, { method, body })
-    const result = await this.store.updateRecordsFromResponse(response, this)
+    const result = await this.store.updateRecordsFromResponse(response, [this])
     this.takeSnapshot({ persisted: true })
 
-    return result
+    return result[0]
   }
 
   /**
@@ -495,14 +567,19 @@ class Model {
    * @param {object} options props to use for the fetch
    * @returns {Promise} the refreshed record
    */
-  reload (options = {}) {
-    const { constructor, id, isNew } = this
+  async reload (options: IRequestParamsOpts = {}): Promise<ModelClass> {
+    const { type, id, isNew } = this
 
-    if (isNew) {
-      return this.rollback()
+    if (isNew || !id) {
+      this.rollback()
     } else {
-      return this.store.fetchOne(constructor.type, id, options)
+      this.store.fetchOne(type, id, options)
+        .catch((error) => {
+          console.error('Reload Failed', error)
+          return this
+        })
     }
+    return this
   }
 
   /**
@@ -514,17 +591,44 @@ class Model {
    * @param {object} options attributes and relationships to use for the validation
    * @returns {boolean} key / value of attributes and relationship validations
    */
-  validate (options = {}) {
+  validate (options: { attributes?: string[], relationships?: string[] } = {}): boolean {
     this.errors = {}
-    const { attributeDefinitions, relationshipDefinitions } = this
+    const { attributeDefinitions, relationshipDefinitions, _validateProperties } = this
 
     const attributeNames = options.attributes || Object.keys(attributeDefinitions)
     const relationshipNames = options.relationships || this.relationshipNames
 
-    const validAttributes = validateProperties(this, attributeNames, attributeDefinitions)
-    const validRelationships = validateProperties(this, relationshipNames, relationshipDefinitions)
+    const validAttributes = _validateProperties(attributeNames, attributeDefinitions)
+    const validRelationships = _validateProperties(relationshipNames, relationshipDefinitions)
 
-    return validAttributes.concat(validRelationships).every(value => value)
+    return validAttributes.concat(validRelationships).every((value) => value)
+  }
+
+  /**
+   * Maps the passed-in property names through and runs validations against those properties
+   *
+   * @param {object} model the model to check
+   * @param {Array} propertyNames the names of the model properties to check
+   * @param {object} propertyDefinitions a hash map containing validators by property
+   * @returns {Array} an array of booleans representing results of validations
+   * @private
+   */
+  _validateProperties (propertyNames: string[], propertyDefinitions: { [key: string]: IAttributeDefinition|IRelationshipDefinition }): boolean[] {
+    return propertyNames.map((propertyName) => {
+      if (propertyDefinitions) {
+        const { validator } = propertyDefinitions[propertyName]
+
+        if (!validator) return true
+
+        const validationResult: ValidationResult = validator(this[propertyName], this, propertyName)
+
+        if (!validationResult.isValid) {
+          this.errors[propertyName] = validationResult.errors
+        }
+
+        return validationResult.isValid
+      } else return true
+    })
   }
 
   /**
@@ -533,62 +637,62 @@ class Model {
    * @param {object} options params and option to skip removal from the store
    * @returns {Promise} an empty promise with any success/error status
    */
-  destroy (options = {}) {
-    const {
-      constructor: { type }, id, snapshot, isNew
-    } = this
+  destroy (options: { params?: {} | undefined; skipRemove?: boolean }): Promise<this|void> {
+    const { type, id, isNew, store } = this
 
-    if (isNew) {
-      this.store.remove(type, id)
-      return snapshot
+    if (isNew && id) {
+      store.remove(type, id)
+      return Promise.resolve(this)
     }
 
     const { params = {}, skipRemove = false } = options
 
-    const url = this.store.fetchUrl(type, params, id)
+    const url = store.fetchUrl(type, params, id)
     this.isInFlight = true
-    const promise = this.store.fetch(url, { method: 'DELETE' })
-    const record = this
-    record.errors = {}
+    const promise = store.fetch(url, { method: 'DELETE' })
+    this.errors = {}
 
     return promise.then(
-      async function (response) {
-        record.isInFlight = false
+      async (response: Response) => {
+        this.isInFlight = false
         if ([200, 202, 204].includes(response.status)) {
-          if (!skipRemove) {
-            record.store.remove(type, id)
+          if (!skipRemove && id) {
+            store.remove(type, id)
           }
 
-          let json
+          let json: JSONAPISingleDocument
+
           try {
             json = await response.json()
-            if (json.data?.attributes) {
-              runInAction(() => {
-                Object.entries(json.data.attributes).forEach(([key, value]) => {
-                  record[key] = value
+            
+            runInAction(() => {
+              const attributes: IObjectWithAny | void = json.data?.attributes
+              if (attributes) {
+                Object.entries(attributes).forEach(([key, value]) => {
+                  this[key] = value
                 })
-              })
-            }
+              }
+
+              // NOTE: If deleting a record changes other related model
+              // You can return then in the delete response
+              if (json?.included) {
+                store.createOrUpdateModelsFromData(json.included)
+              }
+            })
           } catch (err) {
             console.log(err)
             // It is text, do you text handling here
           }
 
-          // NOTE: If deleting a record changes other related model
-          // You can return then in the delete response
-          if (json && json.included) {
-            record.store.createOrUpdateModelsFromData(json.included)
-          }
-
-          return record
+          return this
         } else {
-          const errors = await parseErrors(response, record.store.errorMessages)
+          const errors = await parseErrors(response, store.errorMessages)
           throw new Error(JSON.stringify(errors))
         }
       },
-      function (error) {
+      (error: Error) => {
         // TODO: Handle error states correctly
-        record.isInFlight = false
+        this.isInFlight = false
         throw error
       }
     )
@@ -597,33 +701,11 @@ class Model {
    /* Private Methods */
 
   /**
-   * The current state of defined attributes and relationships of the instance
-   * Really just an alias for attributes
-   * ```
-   * todo = store.find('todos', 5)
-   * todo.title
-   * => "Buy the eggs"
-   * snapshot = todo.snapshot
-   * todo.title = "Buy the eggs and bacon"
-   * snapshot.title
-   * => "Buy the eggs and bacon"
-   * ```
-   *
-   * @type {object}
-   */
-  get snapshot () {
-    return {
-      attributes: this.attributes,
-      relationships: toJS(this.relationships)
-    }
-  }
-
-  /**
    * the latest snapshot
    *
    * @type {object}
    */
-  get previousSnapshot () {
+  get previousSnapshot (): ISnapshot {
     const length = this._snapshots.length
     // if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
@@ -634,8 +716,8 @@ class Model {
    *
    * @type {object}
    */
-  get persistedOrFirstSnapshot () {
-    return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
+  get persistedOrFirstSnapshot (): ISnapshot {
+    return findLast(this._snapshots, (ss: ISnapshot) => ss.persisted) || this._snapshots[0]
   }
 
   /**
@@ -645,14 +727,13 @@ class Model {
    *
    * @param {object} options options to use to set the persisted state
    */
-  takeSnapshot (options = {}) {
+  takeSnapshot (options: { persisted: boolean } = { persisted: false }): void {
     const { store, _snapshots } = this
     if (store.pauseSnapshots && _snapshots.length > 0) { return }
-    const persisted = options.persisted || false
     const properties = cloneDeep(pick(this, ['attributes', 'relationships']))
 
     _snapshots.push({
-      persisted,
+      persisted: options.persisted,
       ...properties
     })
   }
@@ -670,7 +751,7 @@ class Model {
    *
    * @param {object} snapshot the snapshot to apply
    */
-  _applySnapshot (snapshot) {
+  protected _applySnapshot (snapshot: ISnapshot): void {
     if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
     runInAction(() => {
       this.attributeNames.forEach((key) => {
@@ -686,8 +767,8 @@ class Model {
    *
    * @type {string}
    */
-  get type () {
-    return this.constructor.type
+  get type (): string {
+    return (this.constructor as typeof Model).type
   }
 
   /**
@@ -696,7 +777,7 @@ class Model {
    * @type {object}
    */
   get attributes () {
-    return this.attributeNames.reduce((attributes, key) => {
+    return this.attributeNames.reduce((attributes: { [key: string]: any }, key: string) => {
       const value = toJS(this[key])
       if (value != null) {
         attributes[key] = value
@@ -710,8 +791,8 @@ class Model {
    *
    * @type {object}
    */
-  get attributeDefinitions () {
-    return this.constructor.attributeDefinitions || {}
+  get attributeDefinitions (): { [key: string]: IAttributeDefinition } {
+    return (this.constructor as typeof Model).attributeDefinitions || {}
   }
 
   /**
@@ -719,8 +800,8 @@ class Model {
    *
    * @type {object}
    */
-  get relationshipDefinitions () {
-    return this.constructor.relationshipDefinitions || {}
+  get relationshipDefinitions (): { [key: string]: IRelationshipDefinition } {
+    return (this.constructor as typeof Model).relationshipDefinitions || {}
   }
 
   /**
@@ -738,7 +819,7 @@ class Model {
    * @param {string} key the key to check
    * @returns {string} the error text
    */
-  errorForKey (key) {
+  errorForKey (key: string): IErrorMessage[] {
     return this.errors[key]
   }
 
@@ -747,7 +828,7 @@ class Model {
    *
    * @returns {Array} the keys of the attribute definitions
    */
-  get attributeNames () {
+  get attributeNames (): string[] {
     return Object.keys(this.attributeDefinitions)
   }
 
@@ -756,7 +837,7 @@ class Model {
    *
    * @returns {Array} the keys of the relationship definitions
    */
-  get relationshipNames () {
+  get relationshipNames (): string[] {
     return Object.keys(this.relationshipDefinitions)
   }
 
@@ -767,13 +848,11 @@ class Model {
    */
   get defaultAttributes () {
     const { attributeDefinitions } = this
-    return this.attributeNames.reduce((defaults, key) => {
+    return this.attributeNames.reduce((defaults: { [key: string]: any }, key: string) => {
       const { defaultValue } = attributeDefinitions[key]
       defaults[key] = defaultValue
       return defaults
-    }, {
-      relationships: {}
-    })
+    }, {})
   }
 
   /**
@@ -783,13 +862,13 @@ class Model {
    * @param {object} options serialization options
    * @returns {object} data in JSON::API format
    */
-  jsonapi (options = {}) {
+  jsonapi (options: IRequestParamsOpts = {}): JSONAPIDocument {
     const {
       attributeDefinitions,
       attributeNames,
       meta,
       id,
-      constructor: { type }
+      type
     } = this
 
     let filteredAttributeNames = attributeNames
@@ -797,36 +876,33 @@ class Model {
 
     if (options.attributes) {
       filteredAttributeNames = attributeNames
-        .filter(name => options.attributes.includes(name))
+        .filter(name => options.attributes?.includes(name))
     }
 
-    const attributes = filteredAttributeNames.reduce((attrs, key) => {
-      let value = this[key]
-      if (value) {
-        if (attributeDefinitions[key].transformer) { value = attributeDefinitions[key].transformer(value) }
-      }
-      attrs[key] = value
+    const attributes = filteredAttributeNames.reduce((attrs: { [key: string]: any }, key) => {
+      const rawValue = this[key]
+      const needsTransformation = typeof rawValue !== 'undefined' && attributeDefinitions[key].transformer
+
+      attrs[key] = needsTransformation ? attributeDefinitions[key].transformer?.(rawValue) : rawValue
       return attrs
     }, {})
 
-    const data = {
+    const data: UnpersistedJSONAPIDataObject = {
       type,
       attributes,
-      id: String(id)
+      id,
+      relationships: {}
     }
 
-    if (options.relationships) {
-      filteredRelationshipNames = this.relationshipNames
-        .filter(name => options.relationships.includes(name) && this.relationships[name])
+    const validNames = this.relationshipNames
 
-      const relationships = filteredRelationshipNames.reduce((rels, key) => {
-        rels[key] = toJS(this.relationships[key])
-        stringifyIds(rels[key])
-        return rels
-      }, {})
-
-      data.relationships = relationships
-    }
+    options.relationships?.forEach((relationshipName) => {
+      if(validNames.includes(relationshipName) && data?.relationships != null) {
+        data.relationships[relationshipName] = toJS(this.relationships[relationshipName])
+      } else {
+        console.error(`Relationship ${relationshipName} does not exist`)
+      }
+    })
 
     if (meta) {
       data.meta = meta
@@ -844,7 +920,7 @@ class Model {
    *
    * @param {object} attributes the attributes to update
    */
-  updateAttributes (attributes) {
+  updateAttributes (attributes: { [x: string]: string }): void {
     const { attributeNames } = this
     const validAttributes = pick(attributes, attributeNames)
 
@@ -856,10 +932,10 @@ class Model {
    * returns `true` if this object has the same type and id as the
    * "other" object, ignores differences in attrs and relationships
    *
-   * @param {object} other other model object
+   * @param {IModel} other other model object
    * @returns {boolean} if this object has the same type and id
    */
-  isSame (other) {
+  isSame (other: IModel) {
     if (!other) return false
     return this.type === other.type && this.id === other.id
   }

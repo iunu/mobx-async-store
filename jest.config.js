@@ -1,12 +1,5 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  globals: {
-    'ts-jest': {
-      diagnostics: {
-        exclude: ['**'],
-      },
-    },
-  },
   preset: 'ts-jest',
   testEnvironment: 'jsdom', // 'node'
   automock: false,

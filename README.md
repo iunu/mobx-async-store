@@ -298,8 +298,8 @@ describe('it changes the zone name', () => {
     expect(wrapper.text()).toMatch('Zone 1')
     wrapper.find('button').simulate('click')
     expect(wrapper.text()).toMatch('Zone 2')
-    expect(fetch.mock.calls).toHaveLength(2)
-    const [fetchZone, patchZone] = fetch.mock.calls
+    expect(fetchMock.mock.calls).toHaveLength(2)
+    const [fetchZone, patchZone] = fetchMock.mock.calls
     expect(fetchZone[0].method).toEqual('GET')
     expect(fetchZone[0].body).toMatch('Zone 1')
     expect(fetchZone[0].method).toEqual('PATCH')
@@ -326,8 +326,8 @@ describe('fetchZone', () => {
   it('loads the zone', async (done) => {
     const zone = await fetchZone('1')
     expect(zone.name).toMatch('Zone 1')
-    expect(fetch.mock.calls).toHaveLength(1)
-    expect(fetch.mock.calls[0].method).toEqual('GET')
+    expect(fetchMock.mock.calls).toHaveLength(1)
+    expect(fetchMock.mock.calls[0].method).toEqual('GET')
   })
 })
 
@@ -356,12 +356,12 @@ Example - failure on specific call
     mockServer.start({ responseOverrides })
     
     window.alert = jest.fn()
-    expect(fetch.mock.calls).toHaveLength(1)
+    expect(fetchMock.mock.calls).toHaveLength(1)
     
     const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
     await submitBtn.simulate('click')
     
-    expect(fetch.mock.calls).toHaveLength(2)
+    expect(fetchMock.mock.calls).toHaveLength(2)
     setImmediate(() => {
       expect(window.alert).toHaveBeenCalledWith('There is an error!')
       done()
@@ -378,13 +378,13 @@ Example - failure on all calls
     const mockServer = new MockServer()
     mockServer.start({ status: 500 })
     
-    expect(fetch.mock.calls).toHaveLength(1)
+    expect(fetchMock.mock.calls).toHaveLength(1)
     const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
   
     try {
       await submitBtn.simulate('click')
     } catch (error) {
-      expect(fetch.mock.calls).toHaveLength(2)
+      expect(fetchMock.mock.calls).toHaveLength(2)
     }
   })
 
@@ -441,8 +441,8 @@ describe('it displays the zone name', () => {
 
   it('displays the zone name', () => {
     expect(wrapper.text()).toMatch('Fun Zone 1')
-    expect(fetch.mock.calls).toHaveLength(1)
-    expect(fetch.mock.calls[0].method).toEqual('GET')
+    expect(fetchMock.mock.calls).toHaveLength(1)
+    expect(fetchMock.mock.calls[0].method).toEqual('GET')
   })
 })
 
