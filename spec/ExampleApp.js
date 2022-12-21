@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import {
   action,
-  computed,
   makeObservable,
   observable
 } from 'mobx'
@@ -16,10 +15,12 @@ const todoCardPropTypes = {
 class TodoCard extends Component {
   constructor () {
     super()
-    makeObservable(this)
+    makeObservable(this, {
+      onChange: action
+    })
   }
 
-  @action onChange = ({ target }) => {
+  onChange = ({ target }) => {
     this.props.todo.title = target.value
   }
 
@@ -41,7 +42,7 @@ class TodoCard extends Component {
 
 TodoCard.propTypes = todoCardPropTypes
 
-function TodoList ({ todos }) {
+const TodoList = observer(function ({ todos }) {
   return (
     <ul>
       {
@@ -49,7 +50,7 @@ function TodoList ({ todos }) {
       }
     </ul>
   )
-}
+})
 
 TodoList.propTypes = {
   todos: PropTypes.array.isRequired
@@ -61,25 +62,30 @@ const exampleAppPropTypes = {
 
 @inject('store') @observer
 class ExampleApp extends Component {
-  constructor () {
-    super()
-    makeObservable(this)
+  constructor (props) {
+    super(props)
+    makeObservable(this, {
+      title: observable,
+      todos: observable,
+      onChange: action,
+      onClick: action
+    })
+
+    this.todos = props.store.getAll('todos')
   }
 
-  @observable title = ''
+  title = ''
 
-  @action onChange = ({ target }) => {
+  todos = []
+
+  onChange = ({ target }) => {
     this.title = target.value
   }
 
-  @action onClick = () => {
+  onClick = () => {
     const { title, props: { store } } = this
-    store.add('todos', { title })
-  }
-
-  @computed get todos () {
-    const { store } = this.props
-    return store.getAll('todos')
+    const todo = store.add('todos', { title })
+    this.todos.push(todo)
   }
 
   render () {

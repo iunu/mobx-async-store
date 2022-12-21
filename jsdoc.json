@@ -3,9 +3,15 @@
     "dictionaries": ["jsdoc", "closure"]
   },
   "source": {
-    "include": ["src/FactoryFarm.js", "src/MockServer.js", "src/Model.js", "src/Store.js", "src/utils.js", "src/testUtils.js"],
-    "includePattern": ".+\\.js(doc|x)?$",
-    "excludePattern": "(spec\\.js|deprecated)"
+    "include": [
+      "src/FactoryFarm.js",
+      "src/MockServer.js",
+      "src/Model.js",
+      "src/relationships.js",
+      "src/Store.js",
+      "src/testUtils.js",
+      "src/utils.js"
+    ]
   },
   "plugins": ["plugins/markdown"],
   "opts": {
