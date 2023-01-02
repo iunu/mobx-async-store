@@ -27,7 +27,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^12.1.5",
     "babel-core": "7.0.0-bridge.0",
-    "clean-jsdoc-theme": "^4.2.1",
+    "clean-jsdoc-theme": "^4.2.2",
     "eslint": "^8.30.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.26.0",
