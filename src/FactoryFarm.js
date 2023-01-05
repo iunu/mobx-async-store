@@ -8,12 +8,6 @@ import times from 'lodash/times'
  * @class FactoryFarm
  */
 class FactoryFarm {
-  /**
-   * Sets up the store, and a private property to make it apparent the store is used
-   * for a FactoryFarm
-   *
-   * @param {object} store the store to use under the hood
-   */
   constructor (store) {
     this.store = store || new Store()
     this.store.__usedForFactoryFarm__ = true
@@ -59,12 +53,6 @@ class FactoryFarm {
     const { type, ...properties } = factories[factoryName]
 
     const newModelProperties = {
-      /**
-       * Increments the id for the type based on ids already present
-       *
-       * @param {number} i the number that will be used to create an id
-       * @returns {number} an incremented number related to the latest id in the store
-       */
       id: (i) => String(store.getAll(type).length + i + 1),
       ...properties,
       ...overrideOptions

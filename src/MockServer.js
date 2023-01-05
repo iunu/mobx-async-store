@@ -2,14 +2,6 @@
 import FactoryFarm from './FactoryFarm'
 import { serverResponse } from './testUtils'
 
-/**
- * Interpret a `POST` request
- *
- * @param {object} store the store
- * @param {string} type the type
- * @param {string} body json encoded response body
- * @returns {object|Array} a model or array created from the response
- */
 const simulatePost = (store, type, body) => {
   const { data } = JSON.parse(body.toString())
 
@@ -33,34 +25,24 @@ const simulatePost = (store, type, body) => {
   }
 }
 
-/**
- * Interpret a `PATCH` request
- *
- * @param {object} store the store
- * @param {string} type the type
- * @param {string} body json encoded response body
- * @returns {object|Array} a model or array created from the response
- */
 const simulatePatch = (store, type, body) => {
   const { data } = JSON.parse(body.toString())
 
   if (Array.isArray(data)) {
-    return store.createOrUpdateModelsFromData(data)
+    const records = data.map((recordData) => {
+      const record = store.getOne(type, String(recordData.id))
+      record.updateAttributesFromResponse(recordData)
+      return record
+    })
+
+    return records
   } else {
-    return store.createOrUpdateModelFromData(data)
+    const record = store.getOne(type, String(data.id))
+    record.updateAttributesFromResponse(data)
+    return record
   }
 }
 
-/**
- * Finds or creates a model that will match an id. This is useful for
- * creating a response on the fly if no object already exists
- *
- * @param {object} _backendFactoryFarm the private factory farm
- * @param {object} factory the the factory to use
- * @param {string} type the model type
- * @param {string} id the id to find
- * @returns {object} a Model object
- */
 const getOneFromFactory = (_backendFactoryFarm, factory, type, id) => {
   factory =
     factory ||
@@ -118,11 +100,12 @@ const disallowFetches = (store) => {
  * resolved Promise. If no status is given then it will fill in a default based on
  * the method.
  *
- * @param {string} response JSON string
+ * @param {*} response JSON string
  * @param {string} method the http method
  * @param {number} status the http status
  * @returns {Promise} a promise wrapping the response
  */
+
 const wrapResponse = (response, method, status) => {
   if (!status) {
     status = method === 'POST' ? 201 : 200
@@ -161,7 +144,7 @@ class MockServer {
    *   - status: defaults to 200
    *   - response: a method that takes the server as an argument and returns the body of the response
    */
-  respond (options) {
+  respond = (options) => {
     this.responseOverrides.push(options)
   }
 
@@ -174,7 +157,7 @@ class MockServer {
    *
    * @param {object} options currently `responseOverrides` and `factoriesForTypes`
    */
-  start (options = {}) {
+  start = (options = {}) => {
     const { factoriesForTypes } = options
     const combinedOverrides = [...options.responseOverrides || [], ...this.responseOverrides || []]
 
@@ -200,7 +183,7 @@ class MockServer {
   /**
    * Clears mocks and the store
    */
-  stop () {
+  stop = () => {
     fetch.resetMocks()
     this._backendFactoryFarm.store.reset()
   }
@@ -213,9 +196,7 @@ class MockServer {
    * @param {number} numberOfRecords optional number of models to build
    * @returns {*} Object or Array
    */
-  build (factoryName, overrideOptions, numberOfRecords) {
-    return this._backendFactoryFarm.build(factoryName, overrideOptions, numberOfRecords)
-  }
+  build = (factoryName, overrideOptions, numberOfRecords) => this._backendFactoryFarm.build(factoryName, overrideOptions, numberOfRecords)
 
   /**
    * Alias for `this._backendFactoryFarm.define`
@@ -224,9 +205,7 @@ class MockServer {
    * @param {object} options options for defining a factory
    * @returns {*} Object or Array
    */
-  define (name, options) {
-    return this._backendFactoryFarm.define(name, options)
-  }
+  define = (name, options) => this._backendFactoryFarm.define(name, options)
 
   /**
    * Alias for `this._backendFactoryFarm.add`
@@ -235,9 +214,7 @@ class MockServer {
    * @param {object} options properties and other options for adding a model to the store
    * @returns {*} Object or Array
    */
-  add (name, options) {
-    return this._backendFactoryFarm.add(name, options)
-  }
+  add = (name, options) => this._backendFactoryFarm.add(name, options)
 
   /**
    * Based on a request, simulates building a response, either using found data
@@ -248,7 +225,7 @@ class MockServer {
    * @returns {object} the found or built store record(s)
    * @private
    */
-  _findFromStore (req, factoriesForTypes = {}) {
+  _findFromStore = (req, factoriesForTypes = {}) => {
     const { _backendFactoryFarm } = this
     const { method, url, body } = req
     const { store } = _backendFactoryFarm

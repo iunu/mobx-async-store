@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en" style="font-size:16px"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Source: Store.js</title><!--[if lt IE 9]>
       <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]--><script src="scripts/third-party/hljs.js" defer="defer"></script><script src="scripts/third-party/hljs-line-num.js" defer="defer"></script><script src="scripts/third-party/popper.js" defer="defer"></script><script src="scripts/third-party/tippy.js" defer="defer"></script><script src="scripts/third-party/tocbot.min.js"></script><script>var baseURL="/",locationPathname="",baseURL=(locationPathname=document.location.pathname).substr(0,locationPathname.lastIndexOf("/")+1)</script><link rel="stylesheet" href="styles/clean-jsdoc-theme.min.css"><svg aria-hidden="true" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none"><defs><symbol id="copy-icon" viewbox="0 0 488.3 488.3"><g><path d="M314.25,85.4h-227c-21.3,0-38.6,17.3-38.6,38.6v325.7c0,21.3,17.3,38.6,38.6,38.6h227c21.3,0,38.6-17.3,38.6-38.6V124    C352.75,102.7,335.45,85.4,314.25,85.4z M325.75,449.6c0,6.4-5.2,11.6-11.6,11.6h-227c-6.4,0-11.6-5.2-11.6-11.6V124    c0-6.4,5.2-11.6,11.6-11.6h227c6.4,0,11.6,5.2,11.6,11.6V449.6z"/><path d="M401.05,0h-227c-21.3,0-38.6,17.3-38.6,38.6c0,7.5,6,13.5,13.5,13.5s13.5-6,13.5-13.5c0-6.4,5.2-11.6,11.6-11.6h227    c6.4,0,11.6,5.2,11.6,11.6v325.7c0,6.4-5.2,11.6-11.6,11.6c-7.5,0-13.5,6-13.5,13.5s6,13.5,13.5,13.5c21.3,0,38.6-17.3,38.6-38.6    V38.6C439.65,17.3,422.35,0,401.05,0z"/></g></symbol><symbol id="search-icon" viewBox="0 0 512 512"><g><g><path d="M225.474,0C101.151,0,0,101.151,0,225.474c0,124.33,101.151,225.474,225.474,225.474    c124.33,0,225.474-101.144,225.474-225.474C450.948,101.151,349.804,0,225.474,0z M225.474,409.323    c-101.373,0-183.848-82.475-183.848-183.848S124.101,41.626,225.474,41.626s183.848,82.475,183.848,183.848    S326.847,409.323,225.474,409.323z"/></g></g><g><g><path d="M505.902,476.472L386.574,357.144c-8.131-8.131-21.299-8.131-29.43,0c-8.131,8.124-8.131,21.306,0,29.43l119.328,119.328    c4.065,4.065,9.387,6.098,14.715,6.098c5.321,0,10.649-2.033,14.715-6.098C514.033,497.778,514.033,484.596,505.902,476.472z"/></g></g></symbol><symbol id="font-size-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11.246 15H4.754l-2 5H.6L7 4h2l6.4 16h-2.154l-2-5zm-.8-2L8 6.885 5.554 13h4.892zM21 12.535V12h2v8h-2v-.535a4 4 0 1 1 0-6.93zM19 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol><symbol id="add-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></symbol><symbol id="minus-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M5 11h14v2H5z"/></symbol><symbol id="dark-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></symbol><symbol id="light-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></symbol><symbol id="reset-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M18.537 19.567A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 2.136-.67 4.116-1.81 5.74L17 12h3a8 8 0 1 0-2.46 5.772l.997 1.795z"/></symbol><symbol id="down-icon" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.7803 6.21967C13.0732 6.51256 13.0732 6.98744 12.7803 7.28033L8.53033 11.5303C8.23744 11.8232 7.76256 11.8232 7.46967 11.5303L3.21967 7.28033C2.92678 6.98744 2.92678 6.51256 3.21967 6.21967C3.51256 5.92678 3.98744 5.92678 4.28033 6.21967L8 9.93934L11.7197 6.21967C12.0126 5.92678 12.4874 5.92678 12.7803 6.21967Z"></path></symbol><symbol id="codepen-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M16.5 13.202L13 15.535v3.596L19.197 15 16.5 13.202zM14.697 12L12 10.202 9.303 12 12 13.798 14.697 12zM20 10.869L18.303 12 20 13.131V10.87zM19.197 9L13 4.869v3.596l3.5 2.333L19.197 9zM7.5 10.798L11 8.465V4.869L4.803 9 7.5 10.798zM4.803 15L11 19.131v-3.596l-3.5-2.333L4.803 15zM4 13.131L5.697 12 4 10.869v2.262zM2 9a1 1 0 0 1 .445-.832l9-6a1 1 0 0 1 1.11 0l9 6A1 1 0 0 1 22 9v6a1 1 0 0 1-.445.832l-9 6a1 1 0 0 1-1.11 0l-9-6A1 1 0 0 1 2 15V9z"/></symbol><symbol id="close-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/></symbol><symbol id="menu-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></symbol></defs></svg></head><body class="dark" data-theme="dark"><div class="sidebar-container"><div class="sidebar" id="sidebar"><a href="/" class="sidebar-title sidebar-title-anchor">Home</a><div class="sidebar-items-container"><div class="sidebar-section-title with-arrow" data-isopen="false" id="_Ve2jYuz-w2DIlt7Ff9ON"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="MockServer.html">MockServer</a></div><div class="sidebar-section-children"><a href="Model.html">Model</a></div><div class="sidebar-section-children"><a href="RelatedRecordsArray.html">RelatedRecordsArray</a></div><div class="sidebar-section-children"><a href="Store.html">Store</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="cSowbtzimR7q9fZm4EXDN"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#QueryString">QueryString</a></div><div class="sidebar-section-children"><a href="global.html#addIncluded">addIncluded</a></div><div class="sidebar-section-children"><a href="global.html#addRelatedRecord">addRelatedRecord</a></div><div class="sidebar-section-children"><a href="global.html#circularFetchError">circularFetchError</a></div><div class="sidebar-section-children"><a href="global.html#circularFindError">circularFindError</a></div><div class="sidebar-section-children"><a href="global.html#coerceDataToExistingRecord">coerceDataToExistingRecord</a></div><div class="sidebar-section-children"><a href="global.html#combineRacedRequests">combineRacedRequests</a></div><div class="sidebar-section-children"><a href="global.html#defineToManyRelationships">defineToManyRelationships</a></div><div class="sidebar-section-children"><a href="global.html#defineToOneRelationships">defineToOneRelationships</a></div><div class="sidebar-section-children"><a href="global.html#deriveIdQueryStrings">deriveIdQueryStrings</a></div><div class="sidebar-section-children"><a href="global.html#diff">diff</a></div><div class="sidebar-section-children"><a href="global.html#disallowFetches">disallowFetches</a></div><div class="sidebar-section-children"><a href="global.html#getOneFromFactory">getOneFromFactory</a></div><div class="sidebar-section-children"><a href="global.html#makeDate">makeDate</a></div><div class="sidebar-section-children"><a href="global.html#parseErrorPointer">parseErrorPointer</a></div><div class="sidebar-section-children"><a href="global.html#parseErrors">parseErrors</a></div><div class="sidebar-section-children"><a href="global.html#removeRelatedRecord">removeRelatedRecord</a></div><div class="sidebar-section-children"><a href="global.html#requestUrl">requestUrl</a></div><div class="sidebar-section-children"><a href="global.html#serverResponse">serverResponse</a></div><div class="sidebar-section-children"><a href="global.html#setRelatedRecord">setRelatedRecord</a></div><div class="sidebar-section-children"><a href="global.html#simulatePatch">simulatePatch</a></div><div class="sidebar-section-children"><a href="global.html#simulatePost">simulatePost</a></div><div class="sidebar-section-children"><a href="global.html#singularizeType">singularizeType</a></div><div class="sidebar-section-children"><a href="global.html#stringifyIds">stringifyIds</a></div><div class="sidebar-section-children"><a href="global.html#validatePresence">validatePresence</a></div><div class="sidebar-section-children"><a href="global.html#validateProperties">validateProperties</a></div><div class="sidebar-section-children"><a href="global.html#walk">walk</a></div><div class="sidebar-section-children"><a href="global.html#wrapResponse">wrapResponse</a></div></div></div></div></div><div class="navbar-container" id="VuAckcnZhf"><nav class="navbar"><div class="navbar-left-items"></div><div class="navbar-right-items"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#light-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div><nav></nav></nav></div><div class="toc-container"><div class="toc-content"><span class="bold">On this page</span><div id="eed4d2a0bfd64539bb9df78095dec881"></div></div></div><div class="body-wrapper"><div class="main-content"><div class="main-wrapper"><section id="source-page" class="source-page"><header><h1 id="title" class="has-anchor">Store.js</h1></header><article><pre class="prettyprint source lang-js"><code>import { makeObservable, observable, runInAction, toJS } from 'mobx'
+    <![endif]--><script src="scripts/third-party/hljs.js" defer="defer"></script><script src="scripts/third-party/hljs-line-num.js" defer="defer"></script><script src="scripts/third-party/popper.js" defer="defer"></script><script src="scripts/third-party/tippy.js" defer="defer"></script><script src="scripts/third-party/tocbot.min.js"></script><script>var baseURL="/",locationPathname="",baseURL=(locationPathname=document.location.pathname).substr(0,locationPathname.lastIndexOf("/")+1)</script><link rel="stylesheet" href="styles/clean-jsdoc-theme.min.css"><svg aria-hidden="true" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none"><defs><symbol id="copy-icon" viewbox="0 0 488.3 488.3"><g><path d="M314.25,85.4h-227c-21.3,0-38.6,17.3-38.6,38.6v325.7c0,21.3,17.3,38.6,38.6,38.6h227c21.3,0,38.6-17.3,38.6-38.6V124    C352.75,102.7,335.45,85.4,314.25,85.4z M325.75,449.6c0,6.4-5.2,11.6-11.6,11.6h-227c-6.4,0-11.6-5.2-11.6-11.6V124    c0-6.4,5.2-11.6,11.6-11.6h227c6.4,0,11.6,5.2,11.6,11.6V449.6z"/><path d="M401.05,0h-227c-21.3,0-38.6,17.3-38.6,38.6c0,7.5,6,13.5,13.5,13.5s13.5-6,13.5-13.5c0-6.4,5.2-11.6,11.6-11.6h227    c6.4,0,11.6,5.2,11.6,11.6v325.7c0,6.4-5.2,11.6-11.6,11.6c-7.5,0-13.5,6-13.5,13.5s6,13.5,13.5,13.5c21.3,0,38.6-17.3,38.6-38.6    V38.6C439.65,17.3,422.35,0,401.05,0z"/></g></symbol><symbol id="search-icon" viewBox="0 0 512 512"><g><g><path d="M225.474,0C101.151,0,0,101.151,0,225.474c0,124.33,101.151,225.474,225.474,225.474    c124.33,0,225.474-101.144,225.474-225.474C450.948,101.151,349.804,0,225.474,0z M225.474,409.323    c-101.373,0-183.848-82.475-183.848-183.848S124.101,41.626,225.474,41.626s183.848,82.475,183.848,183.848    S326.847,409.323,225.474,409.323z"/></g></g><g><g><path d="M505.902,476.472L386.574,357.144c-8.131-8.131-21.299-8.131-29.43,0c-8.131,8.124-8.131,21.306,0,29.43l119.328,119.328    c4.065,4.065,9.387,6.098,14.715,6.098c5.321,0,10.649-2.033,14.715-6.098C514.033,497.778,514.033,484.596,505.902,476.472z"/></g></g></symbol><symbol id="font-size-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11.246 15H4.754l-2 5H.6L7 4h2l6.4 16h-2.154l-2-5zm-.8-2L8 6.885 5.554 13h4.892zM21 12.535V12h2v8h-2v-.535a4 4 0 1 1 0-6.93zM19 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></symbol><symbol id="add-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/></symbol><symbol id="minus-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M5 11h14v2H5z"/></symbol><symbol id="dark-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></symbol><symbol id="light-theme-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></symbol><symbol id="reset-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M18.537 19.567A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 2.136-.67 4.116-1.81 5.74L17 12h3a8 8 0 1 0-2.46 5.772l.997 1.795z"/></symbol><symbol id="down-icon" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.7803 6.21967C13.0732 6.51256 13.0732 6.98744 12.7803 7.28033L8.53033 11.5303C8.23744 11.8232 7.76256 11.8232 7.46967 11.5303L3.21967 7.28033C2.92678 6.98744 2.92678 6.51256 3.21967 6.21967C3.51256 5.92678 3.98744 5.92678 4.28033 6.21967L8 9.93934L11.7197 6.21967C12.0126 5.92678 12.4874 5.92678 12.7803 6.21967Z"></path></symbol><symbol id="codepen-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M16.5 13.202L13 15.535v3.596L19.197 15 16.5 13.202zM14.697 12L12 10.202 9.303 12 12 13.798 14.697 12zM20 10.869L18.303 12 20 13.131V10.87zM19.197 9L13 4.869v3.596l3.5 2.333L19.197 9zM7.5 10.798L11 8.465V4.869L4.803 9 7.5 10.798zM4.803 15L11 19.131v-3.596l-3.5-2.333L4.803 15zM4 13.131L5.697 12 4 10.869v2.262zM2 9a1 1 0 0 1 .445-.832l9-6a1 1 0 0 1 1.11 0l9 6A1 1 0 0 1 22 9v6a1 1 0 0 1-.445.832l-9 6a1 1 0 0 1-1.11 0l-9-6A1 1 0 0 1 2 15V9z"/></symbol><symbol id="close-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/></symbol><symbol id="menu-icon" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0z"/><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></symbol></defs></svg></head><body class="dark" data-theme="dark"><div class="sidebar-container"><div class="sidebar" id="sidebar"><a href="/" class="sidebar-title sidebar-title-anchor">Home</a><div class="sidebar-items-container"><div class="sidebar-section-title with-arrow" data-isopen="false" id="FGy1l57fNk4UoJcJB640p"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="MockServer.html">MockServer</a></div><div class="sidebar-section-children"><a href="Model.html">Model</a></div><div class="sidebar-section-children"><a href="Store.html">Store</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="G8u7SHmMC2Ta12ZcKygGO"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#addIncluded">addIncluded</a></div><div class="sidebar-section-children"><a href="global.html#circularFetchError">circularFetchError</a></div><div class="sidebar-section-children"><a href="global.html#circularFindError">circularFindError</a></div><div class="sidebar-section-children"><a href="global.html#combineRacedRequests">combineRacedRequests</a></div><div class="sidebar-section-children"><a href="global.html#deriveIdQueryStrings">deriveIdQueryStrings</a></div><div class="sidebar-section-children"><a href="global.html#diff">diff</a></div><div class="sidebar-section-children"><a href="global.html#disallowFetches">disallowFetches</a></div><div class="sidebar-section-children"><a href="global.html#makeDate">makeDate</a></div><div class="sidebar-section-children"><a href="global.html#parseErrorPointer">parseErrorPointer</a></div><div class="sidebar-section-children"><a href="global.html#parseErrors">parseErrors</a></div><div class="sidebar-section-children"><a href="global.html#requestUrl">requestUrl</a></div><div class="sidebar-section-children"><a href="global.html#serverResponse">serverResponse</a></div><div class="sidebar-section-children"><a href="global.html#singularizeType">singularizeType</a></div><div class="sidebar-section-children"><a href="global.html#stringifyIds">stringifyIds</a></div><div class="sidebar-section-children"><a href="global.html#validateProperties">validateProperties</a></div><div class="sidebar-section-children"><a href="global.html#walk">walk</a></div><div class="sidebar-section-children"><a href="global.html#wrapResponse">wrapResponse</a></div></div></div></div></div><div class="navbar-container" id="VuAckcnZhf"><nav class="navbar"><div class="navbar-left-items"></div><div class="navbar-right-items"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#light-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div><nav></nav></nav></div><div class="toc-container"><div class="toc-content"><span class="bold">On this page</span><div id="eed4d2a0bfd64539bb9df78095dec881"></div></div></div><div class="body-wrapper"><div class="main-content"><div class="main-wrapper"><section id="source-page" class="source-page"><header><h1 id="title" class="has-anchor">Store.js</h1></header><article><pre class="prettyprint source lang-js"><code>import { action, makeObservable, observable, runInAction, toJS } from 'mobx'
 import pick from 'lodash/pick'
 import uniqBy from 'lodash/uniqBy'
 import {
@@ -11,6 +11,7 @@ import {
   parseErrorPointer,
   requestUrl
 } from './utils'
+import schema from './schema'
 import cloneDeep from 'lodash/cloneDeep'
 
 /**
@@ -18,50 +19,39 @@ import cloneDeep from 'lodash/cloneDeep'
  */
 class Store {
   /**
-   * Stores data by type.
-   * {
-   *   todos: {
-   *     records: observable.map(), // records by id
-   *     cache: observable.map(), // cached ids by url
-   *     meta: observable.map() // meta information by url
-   *   }
-   * }
+   * Observable property used to store data and
+   * handle changes to state
    *
    * @type {object}
    * @default {}
    */
-  data = {}
+  @observable data = {}
 
   /**
-   * The most recent response headers according to settings specified as `headersOfInterest`
+   * Observable property used to store values for most recent response headers
+   * according to settings specified as `headersOfInterest`
    *
    * @type {object}
    * @default {}
    */
-  lastResponseHeaders = {}
+  @observable lastResponseHeaders = {}
 
   /**
-   * Map of data that is in flight. This can be observed to know if a given type (or tag)
-   * is still processing.
-   * - Key is a tag that is either the model type or a custom value
-   * - Falue is a Set of JSON-encoded objects with unique urls and queryParams
-   *   Set[JSON.stringify({ url, type, queryParams, queryTag })]
+   * Data that is in flight
+   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
    *
    * @type {Map}
    */
-  loadingStates = new Map()
+  loadingStates = observable.map()
 
   /**
-   * Map of data that has been loaded into the store. This can be observed to know if a given
-   * type (or tag) has finished loading.
-   * - Key is a tag that is either the model type or a custom value
-   * - Falue is a Set of JSON-encoded objects with unique urls and queryParams
-   *   Set[JSON.stringify({ url, type, queryParams, queryTag })]
+   * Data that has been loaded
+   * Map(key: queryTag, value: Set([{ url, type, queryParams, queryTag }]))
    *
    * @type {Map}
    */
 
-  loadedStates = new Map()
+  loadedStates = observable.map()
 
   /**
    * Initializer for Store class
@@ -71,36 +61,33 @@ class Store {
   constructor (options) {
     makeObservable(this)
     this.init(options)
+    this.schema = schema
   }
 
   /**
    * Adds an instance or an array of instances to the store.
    * ```
-   * const todo = store.add('todos', { name: "A good thing to measure" })
-   * todo.name
+   * kpiHash = { name: "A good thing to measure" }
+   * kpi = store.add('kpis', kpiHash)
+   * kpi.name
    * => "A good thing to measure"
-   *
-   * const todoArray = [{ name: "Another good thing to measure" }]
-   * const [todo] = store.add('todos', [{ name: "Another good thing to measure" }])
-   * todo.name
-   * => "Another good thing to measure"
    * ```
    *
    * @param {string} type the model type
    * @param {object|Array} data the properties to use
-   * @returns {object|Array} the new record or records
+   * @returns {object} the new record
    */
   add = (type, data) => {
     if (data.constructor.name === 'Array') {
       return this.addModels(type, data)
     } else {
-      return this.addModel(type, cloneDeep(data))
+      return this.addModel(type, toJS(data))
     }
   }
 
   /**
    * Given a set of properties and type, returns an object with only the properties
-   * that are defined as attributes in the model for that type.
+   * that are defined as attributes in the schema for that type.
    * ```
    * properties = { title: 'Do laundry', unrelatedProperty: 'Do nothing' }
    * pickAttributes(properties, 'todos')
@@ -112,13 +99,14 @@ class Store {
    * @returns {object} the scrubbed attributes
    */
   pickAttributes = (properties, type) => {
-    const attributeNames = Object.keys(this.getKlass(type).attributeDefinitions)
+    const ModelKlass = this.getKlass(type)
+    const attributeNames = Object.keys(ModelKlass.attributeDefinitions)
     return pick(properties, attributeNames)
   }
 
   /**
    * Given a set of properties and type, returns an object with only the properties
-   * that are defined as relationships in the model for that type.
+   * that are defined as relationships in the schema for that type.
    * ```
    * properties = { notes: [note1, note2], category: cat1, title: 'Fold Laundry' }
    * pickRelationships(properties, 'todos')
@@ -137,8 +125,46 @@ class Store {
    * @returns {object} the scrubbed relationships
    */
   pickRelationships = (properties, type) => {
-    const definitions = this.getKlass(type).relationshipDefinitions
-    return definitions ? pick(properties, Object.keys(definitions)) : {}
+    const relationshipNames = Object.keys(this.schema.relations[type] || {})
+    const allRelationships = pick(properties, relationshipNames)
+
+    return Object.keys(allRelationships).reduce((references, key) => {
+      const relatedModel = allRelationships[key]
+      let data
+      if (Array.isArray(relatedModel)) {
+        data = relatedModel.map((model) => ({
+          id: model.id,
+          type: model.type
+        }))
+      } else {
+        data = { id: relatedModel.id, type: relatedModel.type }
+      }
+      references[key] = { data }
+      return references
+    }, {})
+  }
+
+  /**
+   * Builds an instance of a model that includes either an automatically or manually created temporary ID, but does not add it to the store.
+   * Does not support relationships, since they require references to objects in the store.
+   * ```
+   * kpiHash = { name: "A good thing to measure" }
+   * kpi = store.build('kpis', kpiHash)
+   * kpi.name
+   * => "A good thing to measure"
+   * ```
+   *
+   * @param {string} type the model type
+   * @param {object} properties the properties to use
+   * @returns {object} the new record
+   */
+  build = (type, properties) => {
+    const id = idOrNewId(properties.id)
+
+    const attributes = this.pickAttributes(properties, type)
+    const model = this.createModel(type, id, { attributes })
+
+    return model
   }
 
   /**
@@ -148,20 +174,14 @@ class Store {
    * @param {object} properties the attributes and relationships
    * @returns {object} Data record
    */
+  @action
   addModel = (type, properties) => {
     const id = idOrNewId(properties.id)
 
     const attributes = this.pickAttributes(properties, type)
     const relationships = this.pickRelationships(properties, type)
 
-    const serializedRelationships = Object.entries(relationships).reduce((relationshipsData, [relationshipName, data]) => {
-      relationshipsData[relationshipName] = {
-        data: Array.isArray(data) ? data.map((model) => pick(model, ['id', 'type'])) : pick(data, ['id', 'type'])
-      }
-      return relationshipsData
-    }, {})
-
-    const model = this.createModelFromData({ type, id, attributes, relationships: serializedRelationships })
+    const model = this.createModel(type, id, { attributes, relationships })
 
     // Add the model to the type records index
     this.data[type].records.set(String(model.id), model)
@@ -197,12 +217,6 @@ class Store {
   /**
    * Saves a collection of records via a bulk-supported JSONApi endpoint.
    * All records need to be of the same type.
-   * - gets url for record type
-   * - converts records to an appropriate jsonapi attribute/relationship format
-   * - builds a data payload
-   * - builds the json api extension string
-   * - sends request
-   * - update records based on response
    *
    * @private
    * @param {string} type the model type
@@ -214,14 +228,21 @@ class Store {
   _bulkSave = (type, records, options = {}, method) => {
     const { queryParams, extensions } = options
 
+    // get url for record type
     const url = this.fetchUrl(type, queryParams, null)
+
+    // convert records to an appropriate jsonapi attribute/relationship format
     const recordAttributes = records.map((record) => record.jsonapi(options))
+
+    // build a data payload
     const body = JSON.stringify({ data: recordAttributes })
 
+    // build the json api extension string
     const extensionStr = extensions?.length
       ? `ext="bulk,${extensions.join()}"`
       : 'ext="bulk"'
 
+    // send request
     const response = this.fetch(url, {
       headers: {
         ...this.defaultFetchOptions.headers,
@@ -231,7 +252,8 @@ class Store {
       body
     })
 
-    return this.updateRecordsFromResponse(response, records)
+    // update records based on response
+    return this.updateRecords(response, records)
   }
 
   /**
@@ -267,18 +289,20 @@ class Store {
   }
 
   /**
-   * Removes a record from the store by deleting it from the
-   * type's record map
+   * Adds a record from the store. We can't simply remove the record
+   * by deleting the records property/key via delete due to a bug
+   * in mobx.
    *
    * @param {string} type the model type
    * @param {string} id of record to remove
    */
+  @action
   remove = (type, id) => {
     this.data[type].records.delete(String(id))
   }
 
   /**
-   * Gets a record from the store. Will never fetch from the server.
+   * Gets a record from the store, will not fetch from the server if it doesn't exist in store.
    * If given queryParams, it will check the cache for the record.
    *
    * @param {string} type the type to find
@@ -306,7 +330,7 @@ class Store {
    * @param {string} type the record type to fetch
    * @param {string} id the id of the record to fetch
    * @param {object} options { queryParams }
-   * @returns {Promise} record result wrapped in a Promise
+   * @returns {object} record
    */
   async fetchOne (type, id, options = {}) {
     if (!id) {
@@ -321,13 +345,14 @@ class Store {
     const response = await this.fetch(url, { method: 'GET' })
 
     if (response.status === 200) {
-      const { data, included } = await response.json()
-
-      const record = this.createOrUpdateModelFromData(data)
+      const json = await response.json()
+      const { data, included } = json
 
       if (included) {
-        this.createOrUpdateModelsFromData(included)
+        this.createModelsFromData(included)
       }
+
+      const record = this.createOrUpdateModel(data)
 
       this.data[type].cache.set(url, [record.id])
       this.deleteLoadingState(state)
@@ -340,15 +365,15 @@ class Store {
   }
 
   /**
-   * Finds a record by `id`, always returning a Promise.
+   * Finds a record by `id`.
    * If available in the store, it returns that record. Otherwise, it fetches the record from the server.
    *
    *   store.findOne('todos', 5)
    *   // fetch triggered
-   *   => Promise(todo)
+   *   => event1
    *   store.findOne('todos', 5)
    *   // no fetch triggered
-   *   => Promise(todo)
+   *   => event1
    *
    * @param {string} type the type to find
    * @param {string} id the id of the record to find
@@ -456,7 +481,7 @@ class Store {
   }
 
   /**
-   * Builds fetch url based on type, queryParams, id, and options
+   * Builds fetch url based
    *
    * @param {string} type the type to find
    * @param {object} queryParams params to be used in the fetch
@@ -465,8 +490,8 @@ class Store {
    * @returns {string} a formatted url
    */
   fetchUrl (type, queryParams, id, options) {
-    const { baseUrl } = this
-    const { endpoint } = this.getKlass(type)
+    const { baseUrl, modelTypeIndex } = this
+    const { endpoint } = modelTypeIndex[type]
 
     return requestUrl(baseUrl, endpoint, queryParams, id, options)
   }
@@ -503,6 +528,7 @@ class Store {
    * @param {string} options.queryTag an optional tag to use in place of the type
    * @returns {object} the loading state that was added
    */
+  @action
   setLoadingState = ({ url, type, queryParams, queryTag }) => {
     queryTag = queryTag || type
 
@@ -522,6 +548,7 @@ class Store {
    *
    * @param {object} state the state to remove
    */
+  @action
   deleteLoadingState = (state) => {
     const { loadingStates, loadedStates } = this
     const { queryTag } = state
@@ -563,26 +590,27 @@ class Store {
 
     if (response.status === 200) {
       this.data[type].cache.set(url, [])
-      const { included, data, meta } = await response.json()
+      const json = await response.json()
 
       let records
       runInAction(() => {
-        if (included) {
-          this.createOrUpdateModelsFromData(included)
+        if (json.included) {
+          this.createModelsFromData(json.included)
         }
 
-        records = data.map((document) => {
-          const record = this.createModelFromData(document)
+        records = json.data.map((dataObject) => {
+          const { id, attributes = {}, relationships = {} } = dataObject
+          const record = this.createModel(type, id, { attributes, relationships })
           const cachedIds = this.data[type].cache.get(url)
-          this.data[type].cache.set(url, [...cachedIds, document.id])
-          this.data[type].records.set(String(document.id), record)
+          this.data[type].cache.set(url, [...cachedIds, id])
+          this.data[type].records.set(String(id), record)
           return record
         })
         this.deleteLoadingState(state)
       })
-      if (meta) {
-        records.meta = meta
-        this.getType(type).meta.set(url, meta)
+      if (json.meta) {
+        records.meta = json.meta
+        this.getType(type).meta.set(url, json.meta)
       }
       return records
     } else {
@@ -596,7 +624,7 @@ class Store {
 
   /**
    * Finds all records of the given `type`.
-   * If any records from the given type from url are in the store, it returns those.
+   * If all records are in the store, it returns those.
    * Otherwise, it fetches all records from the server.
    *
    *   store.findAll('todos')
@@ -621,6 +649,12 @@ class Store {
    *     }
    *   })
    *
+   *
+   * NOTE: A broader RFC is in development to improve how we keep data in sync
+   * with the server. We likely will want to getAll and getRecords
+   * to return null if nothing is found. However, this causes several regressions
+   * in portal we will need to address in a larger PR for mobx-async-store updates.
+   *
    * @param {string} type the type to find
    * @param {object} options { queryParams }
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
@@ -644,6 +678,7 @@ class Store {
    *
    * @param {string} type the model type
    */
+  @action
   reset (type) {
     if (type) {
       this.data[type] = {
@@ -656,14 +691,17 @@ class Store {
     }
   }
 
+  /* Private Methods */
+
   /**
    * Entry point for configuring the store
    *
    * @param {object} options passed to constructor
    */
-  init (options = {}) {
+  @action
+  init (options) {
     this.initializeNetworkConfiguration(options)
-    this.initializeModelIndex(options.models)
+    this.initializeModelTypeIndex()
     this.initializeObservableDataProperty()
     this.initializeErrorMessages(options)
   }
@@ -671,26 +709,26 @@ class Store {
   /**
    * Configures the store's network options
    *
-   * @param {string} options the parameters that will be used to set up network requests
-   * @param {string} options.baseUrl the API's root url
-   * @param {object} options.defaultFetchOptions options that will be used when fetching
-   * @param {Array} options.headersOfInterest an array of headers to watch
-   * @param {object} options.retryOptions options for re-fetch attempts and interval
+   * @param {object} options for network config
    */
-  initializeNetworkConfiguration ({ baseUrl = '', defaultFetchOptions = {}, headersOfInterest = [], retryOptions = { attempts: 1, delay: 0 } }) {
-    this.baseUrl = baseUrl
-    this.defaultFetchOptions = defaultFetchOptions
-    this.headersOfInterest = headersOfInterest
-    this.retryOptions = retryOptions
+  @action
+  initializeNetworkConfiguration (options = {}) {
+    this.baseUrl = options.baseUrl || ''
+    this.defaultFetchOptions = options.defaultFetchOptions || {}
+    this.headersOfInterest = options.headersOfInterest || []
+    this.retryOptions = options.retryOptions || { attempts: 1, delay: 0 } // do not retry by default
   }
 
   /**
    * Creates the key/value index of model types
-   *
-   * @param {object} models a fallback list of models
    */
-  initializeModelIndex (models) {
-    this.models = this.constructor.models || models
+  @action
+  initializeModelTypeIndex () {
+    const { types } = this.constructor
+    this.modelTypeIndex = types.reduce((modelTypeIndex, modelKlass) => {
+      modelTypeIndex[modelKlass.type] = modelKlass
+      return modelTypeIndex
+    }, {})
   }
 
   /**
@@ -700,13 +738,14 @@ class Store {
    * Observable({ todos: {} })
    *
    */
+  @action
   initializeObservableDataProperty () {
-    const { models } = this
+    const { types } = this.constructor
 
     // NOTE: Is there a performance cost to setting
     // each property individually?
     // Is Map the most efficient structure?
-    models.forEach((modelKlass) => {
+    types.forEach((modelKlass) => {
       this.data[modelKlass.type] = {
         records: observable.map(),
         cache: observable.map(),
@@ -721,6 +760,7 @@ class Store {
    * @param {object} options for initializing the store
    *   options for initializing error messages for different HTTP status codes
    */
+  @action
   initializeErrorMessages (options = {}) {
     const errorMessages = { ...options.errorMessages }
 
@@ -737,24 +777,27 @@ class Store {
    * @param {object} options override options to use for fetching
    * @returns {Promise} the data from the server
    */
-  async fetch (url, options = {}) {
+  fetch (url, options = {}) {
     const { defaultFetchOptions, headersOfInterest, retryOptions } = this
     const fetchOptions = { ...defaultFetchOptions, ...options }
     const { attempts, delay } = retryOptions
 
-    const response = await fetchWithRetry(url, fetchOptions, attempts, delay)
-
-    if (headersOfInterest) {
-      runInAction(() => {
-        headersOfInterest.forEach(header => {
-          const value = response.headers.get(header)
-          // Only set if it has changed, to minimize observable changes
-          if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+    const handleResponse = (response) => {
+      // Capture headers of interest
+      if (headersOfInterest) {
+        runInAction(() => {
+          headersOfInterest.forEach(header => {
+            const value = response.headers.get(header)
+            // Only set if it has changed, to minimize observable changes
+            if (this.lastResponseHeaders[header] !== value) this.lastResponseHeaders[header] = value
+          })
         })
-      })
+      }
+
+      return response
     }
 
-    return response
+    return fetchWithRetry(url, fetchOptions, attempts, delay).then(handleResponse)
   }
 
   /**
@@ -844,7 +887,7 @@ class Store {
   }
 
   /**
-   * Gets records from store based on cached query and any previously requested ids
+   * Gets records from store based on cached query
    *
    * @param {string} type type of records to get
    * @param {object} queryParams query params that were used for the query
@@ -852,10 +895,13 @@ class Store {
    * @returns {Array} array of records
    */
   getCachedRecords (type, queryParams, id) {
+    // Get the url the request would use
     const url = this.fetchUrl(type, queryParams, id)
+    // Get the matching ids from the response
     const ids = this.getCachedIds(type, url)
+    // get the meta for the request
     const meta = this.getType(type).meta.get(url)
-
+    // Get the records matching the ids
     const cachedRecords = this.getRecordsById(type, ids)
 
     if (meta) cachedRecords.meta = meta
@@ -895,24 +941,25 @@ class Store {
    * @returns {Function} model constructor
    */
   getKlass (type) {
-    return this.models.find((model) => model.type === type)
+    return this.modelTypeIndex[type]
   }
 
   /**
    * Creates or updates a model
    *
-   * @param {object} data the object will be used to update or create a model
+   * @param {object} dataObject the object will be used to update or create a model
    * @returns {object} the record
    */
-  createOrUpdateModelFromData (data) {
-    const { id, type } = data
+  @action
+  createOrUpdateModel (dataObject) {
+    const { attributes = {}, id, relationships = {}, type } = dataObject
 
     let record = this.getRecord(type, id)
 
     if (record) {
-      this.updateRecordFromData(record, data)
+      record.updateAttributesFromResponse({ attributes, id, relationships })
     } else {
-      record = this.createModelFromData(data)
+      record = this.createModel(type, id, { attributes, relationships })
     }
 
     this.data[type].records.set(String(record.id), record)
@@ -920,51 +967,19 @@ class Store {
   }
 
   /**
-   * Updates a record from a jsonapi hash
-   *
-   * @param {object} record a Model record
-   * @param {object} data jsonapi-formatted data
-   */
-  updateRecordFromData (record, data) {
-    const tmpId = record.id
-    const { id, type, attributes, relationships = {} } = data
-
-    runInAction(() => {
-      record.id = id
-
-      Object.entries(attributes).forEach(([key, value]) => {
-        record[key] = value
-      })
-
-      Object.keys(relationships).forEach((relationshipName) => {
-        if (relationships[relationshipName].included === false) {
-          delete relationships[relationshipName]
-        }
-      })
-
-      record.relationships = { ...record.relationships, ...relationships }
-    })
-
-    record.isInFlight = false
-    record.takeSnapshot({ persisted: true })
-
-    runInAction(() => {
-      this.data[type].records.set(String(tmpId), record)
-      this.data[type].records.set(String(id), record)
-    })
-  }
-
-  /**
-   * Create multiple models from an array of data. It will only build objects
-   * with defined models, and ignore everything else in the data.
+   * Create multiple models from an array of data
    *
    * @param {Array} data the array of jsonapi data
    * @returns {Array} an array of the models serialized
    */
-  createOrUpdateModelsFromData (data) {
+  @action
+  createModelsFromData (data) {
     return data.map((dataObject) => {
+      // Only build objects for which we have a type defined.
+      // And ignore silently anything else included in the JSON response.
+      // TODO: Put some console message in development mode
       if (this.getType(dataObject.type)) {
-        return this.createOrUpdateModelFromData(dataObject)
+        return this.createOrUpdateModel(dataObject)
       } else {
         console.warn(`no type defined for ${dataObject.type}`)
         return null
@@ -975,31 +990,33 @@ class Store {
   /**
    * Helper to create a new model
    *
-   * @param {object} data id, type, attributes and relationships
+   * @param {string} type the model type
+   * @param {string} id the model id
+   * @param {object} data attributes and relationships
    * @returns {object} model instance
    */
-  createModelFromData (data) {
-    const { id, type, attributes, relationships } = data
-
+  @action
+  createModel (type, id, data) {
+    const { attributes = {}, relationships = {} } = toJS(data)
     const store = this
     const ModelKlass = this.getKlass(type)
-
     if (!ModelKlass) {
       throw new Error(`Could not find a model for '${type}'`)
     }
 
-    return new ModelKlass({ id, relationships, ...attributes }, store)
+    return new ModelKlass({ id, store, relationships, ...attributes })
   }
 
   /**
    * Defines a resolution for an API call that will update a record or
    * set of records with the data returned from the API
    *
-   * @param {Promise} promise a response from the API
+   * @param {Promise} promise a request to the API
    * @param {object|Array} records to be updated
    * @returns {Promise} a resolved promise after operations have been performed
    */
-  updateRecordsFromResponse (promise, records) {
+  @action
+  updateRecords (promise, records) {
     // records may be a single record, if so wrap it in an array to make
     // iteration simpler
     const recordsArray = Array.isArray(records) ? records : [records]
@@ -1026,10 +1043,15 @@ class Store {
             )
           }
 
-          recordsArray.forEach((record, i) => this.updateRecordFromData(record, data[i]))
+          data.forEach((targetData, index) => {
+            recordsArray[index].updateAttributesFromResponse(
+              targetData,
+              included
+            )
+          })
 
-          if (included) {
-            this.createOrUpdateModelsFromData(included)
+          if (json.included) {
+            this.createModelsFromData(json.included)
           }
 
           // on success, return the original record(s).
@@ -1065,4 +1087,4 @@ class Store {
 }
 
 export default Store
-</code></pre></article></section></div></div></div><div class="search-container" id="PkfLWpAbet" style="display:none"><div class="wrapper" id="iCxFxjkHbP"><button class="icon-button search-close-button" id="VjLlGakifb" aria-label="close search"><svg><use xlink:href="#close-icon"></use></svg></button><div class="search-box-c"><svg><use xlink:href="#search-icon"></use></svg> <input type="text" id="vpcKVYIppa" class="search-input" placeholder="Search..." autofocus></div><div class="search-result-c" id="fWwVHRuDuN"><span class="search-result-c-text">Type anything to view search result</span></div></div></div><div class="mobile-menu-icon-container"><button class="icon-button" id="mobile-menu" data-isopen="false" aria-label="menu"><svg><use xlink:href="#menu-icon"></use></svg></button></div><div id="mobile-sidebar" class="mobile-sidebar-container"><div class="mobile-sidebar-wrapper"><a href="/" class="sidebar-title sidebar-title-anchor">Home</a><div class="mobile-nav-links"></div><div class="mobile-sidebar-items-c"><div class="sidebar-section-title with-arrow" data-isopen="false" id="_Ve2jYuz-w2DIlt7Ff9ON"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="MockServer.html">MockServer</a></div><div class="sidebar-section-children"><a href="Model.html">Model</a></div><div class="sidebar-section-children"><a href="RelatedRecordsArray.html">RelatedRecordsArray</a></div><div class="sidebar-section-children"><a href="Store.html">Store</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="cSowbtzimR7q9fZm4EXDN"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#QueryString">QueryString</a></div><div class="sidebar-section-children"><a href="global.html#addIncluded">addIncluded</a></div><div class="sidebar-section-children"><a href="global.html#addRelatedRecord">addRelatedRecord</a></div><div class="sidebar-section-children"><a href="global.html#circularFetchError">circularFetchError</a></div><div class="sidebar-section-children"><a href="global.html#circularFindError">circularFindError</a></div><div class="sidebar-section-children"><a href="global.html#coerceDataToExistingRecord">coerceDataToExistingRecord</a></div><div class="sidebar-section-children"><a href="global.html#combineRacedRequests">combineRacedRequests</a></div><div class="sidebar-section-children"><a href="global.html#defineToManyRelationships">defineToManyRelationships</a></div><div class="sidebar-section-children"><a href="global.html#defineToOneRelationships">defineToOneRelationships</a></div><div class="sidebar-section-children"><a href="global.html#deriveIdQueryStrings">deriveIdQueryStrings</a></div><div class="sidebar-section-children"><a href="global.html#diff">diff</a></div><div class="sidebar-section-children"><a href="global.html#disallowFetches">disallowFetches</a></div><div class="sidebar-section-children"><a href="global.html#getOneFromFactory">getOneFromFactory</a></div><div class="sidebar-section-children"><a href="global.html#makeDate">makeDate</a></div><div class="sidebar-section-children"><a href="global.html#parseErrorPointer">parseErrorPointer</a></div><div class="sidebar-section-children"><a href="global.html#parseErrors">parseErrors</a></div><div class="sidebar-section-children"><a href="global.html#removeRelatedRecord">removeRelatedRecord</a></div><div class="sidebar-section-children"><a href="global.html#requestUrl">requestUrl</a></div><div class="sidebar-section-children"><a href="global.html#serverResponse">serverResponse</a></div><div class="sidebar-section-children"><a href="global.html#setRelatedRecord">setRelatedRecord</a></div><div class="sidebar-section-children"><a href="global.html#simulatePatch">simulatePatch</a></div><div class="sidebar-section-children"><a href="global.html#simulatePost">simulatePost</a></div><div class="sidebar-section-children"><a href="global.html#singularizeType">singularizeType</a></div><div class="sidebar-section-children"><a href="global.html#stringifyIds">stringifyIds</a></div><div class="sidebar-section-children"><a href="global.html#validatePresence">validatePresence</a></div><div class="sidebar-section-children"><a href="global.html#validateProperties">validateProperties</a></div><div class="sidebar-section-children"><a href="global.html#walk">walk</a></div><div class="sidebar-section-children"><a href="global.html#wrapResponse">wrapResponse</a></div></div></div><div class="mobile-navbar-actions"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#light-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div></div></div><script type="text/javascript" src="scripts/core.min.js"></script><script src="scripts/search.min.js" defer="defer"></script><script src="scripts/third-party/fuse.js" defer="defer"></script><script type="text/javascript">var tocbotInstance=tocbot.init({tocSelector:"#eed4d2a0bfd64539bb9df78095dec881",contentSelector:".main-content",headingSelector:"h1, h2, h3",hasInnerContainers:!0,scrollContainer:".main-content",headingsOffset:130,onClick:bringLinkToView})</script></body></html>
+</code></pre></article></section></div></div></div><div class="search-container" id="PkfLWpAbet" style="display:none"><div class="wrapper" id="iCxFxjkHbP"><button class="icon-button search-close-button" id="VjLlGakifb" aria-label="close search"><svg><use xlink:href="#close-icon"></use></svg></button><div class="search-box-c"><svg><use xlink:href="#search-icon"></use></svg> <input type="text" id="vpcKVYIppa" class="search-input" placeholder="Search..." autofocus></div><div class="search-result-c" id="fWwVHRuDuN"><span class="search-result-c-text">Type anything to view search result</span></div></div></div><div class="mobile-menu-icon-container"><button class="icon-button" id="mobile-menu" data-isopen="false" aria-label="menu"><svg><use xlink:href="#menu-icon"></use></svg></button></div><div id="mobile-sidebar" class="mobile-sidebar-container"><div class="mobile-sidebar-wrapper"><a href="/" class="sidebar-title sidebar-title-anchor">Home</a><div class="mobile-nav-links"></div><div class="mobile-sidebar-items-c"><div class="sidebar-section-title with-arrow" data-isopen="false" id="FGy1l57fNk4UoJcJB640p"><div>Classes</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="FactoryFarm.html">FactoryFarm</a></div><div class="sidebar-section-children"><a href="MockServer.html">MockServer</a></div><div class="sidebar-section-children"><a href="Model.html">Model</a></div><div class="sidebar-section-children"><a href="Store.html">Store</a></div></div><div class="sidebar-section-title with-arrow" data-isopen="false" id="G8u7SHmMC2Ta12ZcKygGO"><div>Global</div><svg><use xlink:href="#down-icon"></use></svg></div><div class="sidebar-section-children-container"><div class="sidebar-section-children"><a href="global.html#addIncluded">addIncluded</a></div><div class="sidebar-section-children"><a href="global.html#circularFetchError">circularFetchError</a></div><div class="sidebar-section-children"><a href="global.html#circularFindError">circularFindError</a></div><div class="sidebar-section-children"><a href="global.html#combineRacedRequests">combineRacedRequests</a></div><div class="sidebar-section-children"><a href="global.html#deriveIdQueryStrings">deriveIdQueryStrings</a></div><div class="sidebar-section-children"><a href="global.html#diff">diff</a></div><div class="sidebar-section-children"><a href="global.html#disallowFetches">disallowFetches</a></div><div class="sidebar-section-children"><a href="global.html#makeDate">makeDate</a></div><div class="sidebar-section-children"><a href="global.html#parseErrorPointer">parseErrorPointer</a></div><div class="sidebar-section-children"><a href="global.html#parseErrors">parseErrors</a></div><div class="sidebar-section-children"><a href="global.html#requestUrl">requestUrl</a></div><div class="sidebar-section-children"><a href="global.html#serverResponse">serverResponse</a></div><div class="sidebar-section-children"><a href="global.html#singularizeType">singularizeType</a></div><div class="sidebar-section-children"><a href="global.html#stringifyIds">stringifyIds</a></div><div class="sidebar-section-children"><a href="global.html#validateProperties">validateProperties</a></div><div class="sidebar-section-children"><a href="global.html#walk">walk</a></div><div class="sidebar-section-children"><a href="global.html#wrapResponse">wrapResponse</a></div></div></div><div class="mobile-navbar-actions"><div class="navbar-right-item"><button class="icon-button search-button" aria-label="open-search"><svg><use xlink:href="#search-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button theme-toggle" aria-label="toggle-theme"><svg><use class="theme-svg-use" xlink:href="#light-theme-icon"></use></svg></button></div><div class="navbar-right-item"><button class="icon-button font-size" aria-label="change-font-size"><svg><use xlink:href="#font-size-icon"></use></svg></button></div></div></div></div><script type="text/javascript" src="scripts/core.min.js"></script><script src="scripts/search.min.js" defer="defer"></script><script src="scripts/third-party/fuse.js" defer="defer"></script><script type="text/javascript">var tocbotInstance=tocbot.init({tocSelector:"#eed4d2a0bfd64539bb9df78095dec881",contentSelector:".main-content",headingSelector:"h1, h2, h3",hasInnerContainers:!0,scrollContainer:".main-content",headingsOffset:130,onClick:bringLinkToView})</script></body></html>

@@ -2,9 +2,11 @@ import {
   FactoryFarm,
   Model,
   Store,
+  relatedToMany,
+  relatedToOne,
   serverResponse
 } from '../src/main'
-import { stringType, validatesArrayPresence } from '../src/utils'
+import { stringType } from '../src/utils'
 
 class Tag extends Model {
   static type = 'tags'
@@ -17,11 +19,7 @@ class Tag extends Model {
     }
   }
 
-  static relationshipDefinitions = {
-    todo: {
-      direction: 'toOne'
-    }
-  }
+  @relatedToOne todo
 }
 
 class Category extends Model {
@@ -35,11 +33,7 @@ class Category extends Model {
     }
   }
 
-  static relationshipDefinitions = {
-    todos: {
-      direction: 'toMany'
-    }
-  }
+  @relatedToMany todos
 }
 
 class Note extends Model {
@@ -53,15 +47,7 @@ class Note extends Model {
     }
   }
 
-  static relationshipDefinitions = {
-    todo: {
-      direction: 'toOne',
-      inverse: {
-        name: 'notes',
-        direction: 'toMany'
-      }
-    }
-  }
+  @relatedToOne todo
 }
 
 class Todo extends Model {
@@ -79,26 +65,13 @@ class Todo extends Model {
     }
   }
 
-  static relationshipDefinitions = {
-    notes: {
-      direction: 'toMany',
-      validator: validatesArrayPresence,
-      inverse: {
-        name: 'todo',
-        direction: 'toOne'
-      }
-    },
-    category: {
-      direction: 'toOne'
-    },
-    tags: {
-      direction: 'toMany'
-    }
-  }
+  @relatedToMany notes
+  @relatedToOne category
+  @relatedToMany tags
 }
 
 class AppStore extends Store {
-  static models = [Note, Todo, Tag, Category]
+  static types = [Note, Todo, Tag, Category]
 }
 
 describe('FactoryFarm', () => {
@@ -191,6 +164,12 @@ describe('FactoryFarm', () => {
             title: 'Plant Seeds'
           },
           relationships: {
+            categorie: {
+              data: {
+                id: '1',
+                type: 'categories'
+              }
+            },
             category: {
               data: {
                 id: '1',
@@ -219,6 +198,12 @@ describe('FactoryFarm', () => {
             title: 'Plant Seeds'
           },
           relationships: {
+            categorie: {
+              data: {
+                id: '2',
+                type: 'categories'
+              }
+            },
             category: {
               data: {
                 id: '2',
@@ -241,7 +226,7 @@ describe('FactoryFarm', () => {
         }
       ])
 
-      const [category1, tag1, tag2, category2, tag3] =
+      const [category1, tag1, tag2, category1a, category2, tag3] =
         servedObject.included
 
       expect(category1).toEqual({
@@ -262,6 +247,24 @@ describe('FactoryFarm', () => {
         }
       })
 
+      // TODO: why is this added twice?
+      expect(category1a).toEqual({
+        attributes: {
+          name: 'start'
+        },
+        id: '1',
+        type: 'categories',
+        relationships: {
+          todos: {
+            data: [
+              {
+                id: '1',
+                type: 'todos'
+              }
+            ]
+          }
+        }
+      })
       expect(tag1).toEqual({
         id: '1',
         type: 'tags',

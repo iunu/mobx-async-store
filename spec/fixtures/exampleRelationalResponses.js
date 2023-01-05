@@ -160,13 +160,13 @@ export const exampleRelatedToOneIncludedResponse = JSON.stringify({
   }
 })
 
-export const exampleRelatedToOneNoRelatedRecords = JSON.stringify({
+export const exampleRelatedToOneUnmatchedTypeResponse = JSON.stringify({
   data: {
     id: '1',
     type: 'todos',
     attributes: {
       id: 1,
-      title: 'Do laundry'
+      name: 'Do laundry'
     },
     relationships: {
       meeting_notes: {

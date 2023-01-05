@@ -1,11 +1,14 @@
 {
   "name": "@artemisag/mobx-async-store",
-  "version": "6.0.0-rc1",
+  "version": "5.1.0-rc2",
   "license": "MIT",
   "module": "dist/mobx-async-store.esm.js",
   "browser": "dist/mobx-async-store.cjs.js",
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
+    "clean-jsdoc-theme": "^4.1.12",
+    "eslint-plugin-jsdoc": "^39.6.4",
+    "jsdoc": "^4.0.0",
     "jsonapi-serializer": "^3.6.4",
     "lodash": "^4.17.21",
     "mobx": "6.3.5",
@@ -31,7 +34,6 @@
     "eslint": "^8.30.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^39.6.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.1",
     "eslint-plugin-react": "^7.31.11",

@@ -24,17 +24,17 @@ class Todo extends Model {
 }
 
 class AppStore extends Store {
-  static models = [
+  static types = [
     Todo
   ]
 }
 
-describe('Example React App', () => {
-  let store
+const store = new AppStore()
 
+describe('Example React App', () => {
   beforeEach(() => {
     fetch.resetMocks()
-    store = new AppStore()
+    store.reset()
   })
 
   it('has correct default text', () => {
@@ -46,7 +46,7 @@ describe('Example React App', () => {
     expect(screen.getByRole('heading')).toHaveTextContent('Todos')
   })
 
-  it('can create a new model', () => {
+  it('can create a new model', async () => {
     render(
       <Provider store={store}>
         <ExampleApp />
