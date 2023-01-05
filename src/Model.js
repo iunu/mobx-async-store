@@ -26,16 +26,16 @@ import union from 'lodash/union'
  * @returns {Array} an array of booleans representing results of validations
  */
 function validateProperties (model, propertyNames, propertyDefinitions) {
-  return propertyNames.map((property) => {
+  return propertyNames.map((propertyName) => {
     if (propertyDefinitions) {
-      const { validator } = propertyDefinitions[property]
+      const { validator } = propertyDefinitions[propertyName]
 
       if (!validator) return true
 
-      const validationResult = validator(model[property], model)
+      const validationResult = validator(model[propertyName], model, propertyName)
 
       if (!validationResult.isValid) {
-        model.errors[property] = validationResult.errors
+        model.errors[propertyName] = validationResult.errors
       }
 
       return validationResult.isValid
