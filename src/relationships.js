@@ -246,12 +246,6 @@ export class RelatedRecordsArray extends Array {
     this.record = record
     this.store = record.store
     this.inverse = record.relationshipDefinitions[this.property].inverse
-
-    makeObservable(this, {
-      add: action,
-      remove: action,
-      replace: action
-    })
   }
 
   /**
