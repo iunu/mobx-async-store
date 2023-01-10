@@ -300,47 +300,49 @@ describe('Model', () => {
       expect(note.todo).toEqual(todo)
     })
 
-    it('relatedToOne relationship can be unset', () => {
-      const note = store.add('notes', {
-        id: 1,
-        description: 'Example description'
-      })
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+    describe('relatedToOne', () => {
+      it('relatedToOne relationship can be unset', () => {
+        const note = store.add('notes', {
+          id: 1,
+          description: 'Example description'
+        })
+        const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
 
-      note.todo = todo
-      expect(note.todo).toEqual(todo)
+        note.todo = todo
+        expect(note.todo).toEqual(todo)
 
-      note.todo = null
-      expect(note.todo).toBeFalsy()
-    })
-
-    it('relatedToOne relationship adds to inverse', () => {
-      const note = store.add('notes', {
-        id: 1,
-        description: 'Example description'
-      })
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
-
-      note.todo = todo
-      expect(todo.notes).toContain(note)
-    })
-
-    it('relatedToOne relationship removes from inverse', () => {
-      const note = store.add('notes', {
-        id: 1,
-        description: 'Example description'
+        note.todo = null
+        expect(note.todo).toBeFalsy()
       })
 
-      const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+      it('relatedToOne relationship adds to inverse', () => {
+        const note = store.add('notes', {
+          id: 1,
+          description: 'Example description'
+        })
+        const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
 
-      note.todo = todo
-      expect(todo.notes).toContain(note)
+        note.todo = todo
+        expect(todo.notes).toContain(note)
+      })
 
-      note.todo = null
-      expect(note.todo).toBeFalsy()
+      it('relatedToOne relationship removes from inverse', () => {
+        const note = store.add('notes', {
+          id: 1,
+          description: 'Example description'
+        })
+
+        const todo = store.add('todos', { id: 1, title: 'Buy Milk' })
+
+        note.todo = todo
+        expect(todo.notes).toContain(note)
+
+        note.todo = null
+        expect(note.todo).toBeFalsy()
+      })
     })
 
-    it('builds relatedToMany relationship with existing models', async () => {
+    it('builds relationship with existing models', async () => {
       store.add('notes', { id: 1, description: 'Example description' })
 
       fetch.mockResponse(exampleRelatedToManyResponse)
@@ -349,40 +351,6 @@ describe('Model', () => {
       expect(todo.title).toEqual('Do laundry')
       expect(todo.notes).toHaveLength(1)
       expect(todo.notes[0].description).toEqual('Example description')
-    })
-
-    it('builds relatedToMany relationship with included data', async () => {
-      fetch.mockResponse(exampleRelatedToManyIncludedResponse)
-      const todo = await store.findOne('organizations', 1)
-
-      expect(todo.title).toEqual('Do laundry')
-      expect(todo.notes).toHaveLength(1)
-      expect(todo.notes[0].description).toEqual('Use fabric softener')
-    })
-
-    it('builds relatedToMany relationship without included data', async () => {
-      fetch.mockResponse(exampleRelatedToOneNoRelatedRecords)
-      const todo = await store.findOne('todos', 1)
-
-      expect(todo.title).toEqual('Do laundry')
-      expect(todo.awesome_notes).toHaveLength(0)
-      expect(todo.awesome_notes).toBeInstanceOf(Array)
-    })
-    it('ignores unexpected types in relationship data', async () => {
-      fetch.mockResponse(exampleRelatedToManyWithNoiseResponse)
-      const todo = await store.findOne('organizations', 1)
-
-      expect(todo.title).toEqual('Do laundry')
-      expect(todo.notes).toHaveLength(1)
-    })
-
-    it('ignores unexpected types in included data', async () => {
-      fetch.mockResponse(exampleRelatedToManyIncludedWithNoiseResponse)
-      const todo = await store.findOne('organizations', 1)
-
-      expect(todo.title).toEqual('Do laundry')
-      expect(todo.notes).toHaveLength(1)
-      expect(todo.notes[0].description).toEqual('Use fabric softener')
     })
   })
 
@@ -414,229 +382,307 @@ describe('Model', () => {
   })
 
   describe('relationships', () => {
-    it('relatedToMany models can be added', () => {
-      const note = store.add('notes', {
-        id: 10,
-        description: 'Example description'
-      })
-      const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-      const { notes } = todo
+    describe('toMany', () => {
+      it('builds relationship with included data', async () => {
+        fetch.mockResponse(exampleRelatedToManyIncludedResponse)
+        const todo = await store.findOne('organizations', 1)
 
-      notes.add(note)
-
-      expect(notes).toContain(note)
-      expect(todo.notes).toContain(note)
-    })
-
-    it('relatedToMany doesn\'t blow up on empty iteration', () => {
-      const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-      expect(todo.notes).toHaveLength(0)
-      expect(todo.notes.map(note => note)).toHaveLength(0)
-    })
-
-    it('relatedToMany doesn\'t blow up after adding to empty array', () => {
-      const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-      expect(todo.notes).toHaveLength(0)
-      expect(todo.notes.map(note => note)).toHaveLength(0)
-
-      const note = store.add('notes', {
-        id: 10,
-        description: 'Example description'
+        expect(todo.title).toEqual('Do laundry')
+        expect(todo.notes).toHaveLength(1)
+        expect(todo.notes[0].description).toEqual('Use fabric softener')
       })
 
-      todo.notes.add(note)
+      it('builds relationship without included data', async () => {
+        fetch.mockResponse(exampleRelatedToOneNoRelatedRecords)
+        const todo = await store.findOne('todos', 1)
 
-      expect(todo.notes.map(note => note)).toHaveLength(1)
-    })
-
-    it('relatedToMany models can be removed', () => {
-      const note1 = store.add('notes', {
-        description: 'Example description'
-      })
-      const note2 = store.add('notes', {
-        description: 'Another note'
-      })
-      const todo = store.add('todos', {
-        title: 'Buy Milk',
-        notes: [
-          {
-            id: '1001',
-            type: 'notes'
-          },
-          note1,
-          note2
-        ]
+        expect(todo.title).toEqual('Do laundry')
+        expect(todo.awesome_notes).toHaveLength(0)
+        expect(todo.awesome_notes).toBeInstanceOf(Array)
       })
 
-      todo.notes.remove(note1)
-      expect(todo.notes).not.toContain(note1)
-      expect(todo.notes).toContain(note2)
-    })
+      it('ignores unexpected types in relationship data', async () => {
+        fetch.mockResponse(exampleRelatedToManyWithNoiseResponse)
+        const todo = await store.findOne('organizations', 1)
 
-    it('relatedToMany models remove reference to record', () => {
-      const note1 = store.add('notes', {
-        description: 'Example description'
-      })
-      const note2 = store.add('notes', {
-        description: 'Another note'
-      })
-      const todo = store.add('todos', { title: 'Buy Milk' })
-
-      todo.notes.add(note1)
-      todo.notes.add(note2)
-      todo.notes.remove(note1)
-
-      expect(todo.notes).not.toContain(note1)
-      expect(todo.notes).toContain(note2)
-    })
-
-    it('relatedToMany models adds inverse relationships', () => {
-      const note = store.add('notes', {
-        id: 10,
-        description: 'Example description'
-      })
-      const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-
-      todo.notes.add(note)
-
-      expect(todo.notes).toContain(note)
-      expect(note.todo).toEqual(todo)
-    })
-
-    it('relatedToMany models remove inverse relationships', () => {
-      const note = store.add('notes', {
-        id: 10,
-        description: 'Example description'
-      })
-      const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-
-      todo.notes.add(note)
-
-      expect(note.todo).toEqual(todo)
-
-      todo.notes.remove(note)
-
-      expect(note.todo).toBeFalsy()
-    })
-
-    it('inverse relationships are used when the base model did not load the relationship', () => {
-      // For this test, we need to create seed data using JSON in order to simulate the results of API calls
-      // where Notes are loaded separately, and Organizations don't include notes directly.
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 10,
-        attributes: { description: 'Note 1 for Todo 1' },
-        relationships: { todo: { data: { type: 'todos', id: 1 } } }
+        expect(todo.title).toEqual('Do laundry')
+        expect(todo.notes).toHaveLength(1)
       })
 
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 11,
-        attributes: { description: 'Note 2 for Todo 1' },
-        relationships: { todo: { data: { type: 'todos', id: 1 } } }
+      it('ignores unexpected types in included data', async () => {
+        fetch.mockResponse(exampleRelatedToManyIncludedWithNoiseResponse)
+        const todo = await store.findOne('organizations', 1)
+
+        expect(todo.title).toEqual('Do laundry')
+        expect(todo.notes).toHaveLength(1)
+        expect(todo.notes[0].description).toEqual('Use fabric softener')
       })
 
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 12,
-        attributes: { description: 'Note 1 for Todo 2' },
-        relationships: { todo: { data: { type: 'todos', id: 2 } } }
+      it('can add models', () => {
+        const note = store.add('notes', {
+          id: 10,
+          description: 'Example description'
+        })
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+        const { notes } = todo
+
+        notes.add(note)
+
+        expect(notes).toContain(note)
+        expect(todo.notes).toContain(note)
       })
 
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 13,
-        attributes: { description: 'Orphaned note' },
-        relationships: { }
+      it('can replace models', () => {
+        const [note, note2, note3] = store.add('notes', [{
+          id: 10,
+          description: 'Quickly'
+        }, {
+          id: 20,
+          description: 'Cheaply'
+        }, {
+          id: 30,
+          description: 'Thoroughly'
+        }])
+
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+        const { notes } = todo
+
+        notes.replace([note])
+
+        expect(notes).toHaveLength(1)
+        expect(notes).toContain(note)
+        expect(todo.notes).toContain(note)
+
+        notes.replace([note2, note3])
+
+        expect(notes).toHaveLength(2)
+        expect(notes).toContain(note2)
+        expect(notes).toContain(note3)
+
+        notes.replace([note])
+        expect(notes).toHaveLength(1)
+        expect(notes).toContain(note)
+
+        notes.replace([note, note2])
+        expect(notes).toHaveLength(2)
+        expect(notes).toContain(note)
+        expect(notes).toContain(note2)
+
+        notes.replace([note])
+        expect(notes).toHaveLength(1)
+        expect(notes).toContain(note)
       })
 
-      const todo1 = store.createOrUpdateModelFromData({
-        type: 'todos',
-        id: 1,
-        attributes: { description: 'Todo 1' },
-        relationships: { notes: { included: false } }
+      it('doesn\'t blow up on empty iteration', () => {
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+        expect(todo.notes).toHaveLength(0)
+        expect(todo.notes.map(note => note)).toHaveLength(0)
       })
 
-      const todo2 = store.createOrUpdateModelFromData({
-        type: 'todos',
-        id: 2,
-        attributes: { description: 'Todo 2' },
-        relationships: { notes: { included: false } }
+      it('doesn\'t blow up after adding to empty array', () => {
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+        expect(todo.notes).toHaveLength(0)
+        expect(todo.notes.map(note => note)).toHaveLength(0)
+
+        const note = store.add('notes', {
+          id: 10,
+          description: 'Example description'
+        })
+
+        todo.notes.add(note)
+
+        expect(todo.notes.map(note => note)).toHaveLength(1)
       })
 
-      expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 1', 'Note 2 for Todo 1'])
-      expect(todo2.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 2'])
-    })
-
-    it('relationship data is cached when falling back to inverse relationships', () => {
-      // For this test, we need to create seed data using JSON in order to simulate the results of API calls
-      // where Notes are loaded separately, and Organizations don't include notes directly.
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 10,
-        attributes: { description: 'Note 1 for Todo 100' },
-        relationships: { todo: { data: { type: 'todos', id: 100 } } }
-      })
-
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 11,
-        attributes: { description: 'Note 2 for Todo 100' },
-        relationships: { todo: { data: { type: 'todos', id: 100 } } }
-      })
-
-      const todo1 = store.createOrUpdateModelFromData({
-        type: 'todos',
-        id: 100,
-        attributes: { description: 'Todo 100' },
-        relationships: { notes: { included: false } }
-      })
-
-      expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 100'])
-
-      store.createOrUpdateModelFromData({
-        type: 'notes',
-        id: 11,
-        attributes: { description: 'Note 2 for Todo 101' },
-        relationships: { organization: { data: { type: 'todos', id: 101 } } }
-      })
-
-      expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 101'])
-    })
-
-    it('relationship arrays provide regular arrays for derived objects', () => {
-      const note = store.add('notes', {
-        id: 10,
-        description: 'Example description'
-      })
-      const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-
-      todo.notes.add(note)
-
-      expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
-      expect(todo.notes.map((x) => x.id).constructor.name).toEqual('Array')
-      expect(todo.notes.map((x) => x.id)).toEqual([10])
-    })
-
-    describe('.snapshot', () => {
-      it('a snapshot of the current attributes and relationship', async () => {
-        const todo = new Todo({ title: 'Buy Milk' })
-        expect(todo.snapshot.attributes).toEqual({
-          due_at: timestamp,
-          tags: [],
+      it('models can be removed', () => {
+        const note1 = store.add('notes', {
+          description: 'Example description'
+        })
+        const note2 = store.add('notes', {
+          description: 'Another note'
+        })
+        const todo = store.add('todos', {
           title: 'Buy Milk',
-          options: {}
+          notes: [
+            {
+              id: '1001',
+              type: 'notes'
+            },
+            note1,
+            note2
+          ]
         })
+
+        todo.notes.remove(note1)
+        expect(todo.notes).not.toContain(note1)
+        expect(todo.notes).toContain(note2)
       })
 
-      it('doesn\'t exclude falsey values', async () => {
-        const todo = new Todo({ title: '' })
-        expect(todo.snapshot.attributes).toEqual({
-          due_at: timestamp,
-          tags: [],
-          title: '',
-          options: {}
+      it('models remove reference to record', () => {
+        const note1 = store.add('notes', {
+          description: 'Example description'
         })
+        const note2 = store.add('notes', {
+          description: 'Another note'
+        })
+        const todo = store.add('todos', { title: 'Buy Milk' })
+
+        todo.notes.add(note1)
+        todo.notes.add(note2)
+        todo.notes.remove(note1)
+
+        expect(todo.notes).not.toContain(note1)
+        expect(todo.notes).toContain(note2)
+      })
+
+      it('models adds inverse relationships', () => {
+        const note = store.add('notes', {
+          id: 10,
+          description: 'Example description'
+        })
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+
+        todo.notes.add(note)
+
+        expect(todo.notes).toContain(note)
+        expect(note.todo).toEqual(todo)
+      })
+
+      it('models remove inverse relationships', () => {
+        const note = store.add('notes', {
+          id: 10,
+          description: 'Example description'
+        })
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+
+        todo.notes.add(note)
+
+        expect(note.todo).toEqual(todo)
+
+        todo.notes.remove(note)
+
+        expect(note.todo).toBeFalsy()
+      })
+
+      it('inverse relationships are used when the base model did not load the relationship', () => {
+        // For this test, we need to create seed data using JSON in order to simulate the results of API calls
+        // where Notes are loaded separately, and Organizations don't include notes directly.
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 10,
+          attributes: { description: 'Note 1 for Todo 1' },
+          relationships: { todo: { data: { type: 'todos', id: 1 } } }
+        })
+
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 11,
+          attributes: { description: 'Note 2 for Todo 1' },
+          relationships: { todo: { data: { type: 'todos', id: 1 } } }
+        })
+
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 12,
+          attributes: { description: 'Note 1 for Todo 2' },
+          relationships: { todo: { data: { type: 'todos', id: 2 } } }
+        })
+
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 13,
+          attributes: { description: 'Orphaned note' },
+          relationships: { }
+        })
+
+        const todo1 = store.createOrUpdateModelFromData({
+          type: 'todos',
+          id: 1,
+          attributes: { description: 'Todo 1' },
+          relationships: { notes: { included: false } }
+        })
+
+        const todo2 = store.createOrUpdateModelFromData({
+          type: 'todos',
+          id: 2,
+          attributes: { description: 'Todo 2' },
+          relationships: { notes: { included: false } }
+        })
+
+        expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 1', 'Note 2 for Todo 1'])
+        expect(todo2.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 2'])
+      })
+
+      it('relationship data is cached when falling back to inverse relationships', () => {
+        // For this test, we need to create seed data using JSON in order to simulate the results of API calls
+        // where Notes are loaded separately, and Organizations don't include notes directly.
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 10,
+          attributes: { description: 'Note 1 for Todo 100' },
+          relationships: { todo: { data: { type: 'todos', id: 100 } } }
+        })
+
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 11,
+          attributes: { description: 'Note 2 for Todo 100' },
+          relationships: { todo: { data: { type: 'todos', id: 100 } } }
+        })
+
+        const todo1 = store.createOrUpdateModelFromData({
+          type: 'todos',
+          id: 100,
+          attributes: { description: 'Todo 100' },
+          relationships: { notes: { included: false } }
+        })
+
+        expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 100'])
+
+        store.createOrUpdateModelFromData({
+          type: 'notes',
+          id: 11,
+          attributes: { description: 'Note 2 for Todo 101' },
+          relationships: { organization: { data: { type: 'todos', id: 101 } } }
+        })
+
+        expect(todo1.notes.map(n => n.attributes.description)).toEqual(['Note 1 for Todo 100', 'Note 2 for Todo 101'])
+      })
+
+      it('relationship arrays provide regular arrays for derived objects', () => {
+        const note = store.add('notes', {
+          id: 10,
+          description: 'Example description'
+        })
+        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+
+        todo.notes.add(note)
+
+        expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
+        expect(todo.notes.map((x) => x.id).constructor.name).toEqual('Array')
+        expect(todo.notes.map((x) => x.id)).toEqual([10])
+      })
+    })
+  })
+
+  describe('.snapshot', () => {
+    it('a snapshot of the current attributes and relationship', async () => {
+      const todo = new Todo({ title: 'Buy Milk' })
+      expect(todo.snapshot.attributes).toEqual({
+        due_at: timestamp,
+        tags: [],
+        title: 'Buy Milk',
+        options: {}
+      })
+    })
+
+    it('doesn\'t exclude falsey values', async () => {
+      const todo = new Todo({ title: '' })
+      expect(todo.snapshot.attributes).toEqual({
+        due_at: timestamp,
+        tags: [],
+        title: '',
+        options: {}
       })
     })
   })
@@ -931,7 +977,7 @@ describe('Model', () => {
       })
     })
 
-    it('relatedToMany models can be added', () => {
+    it('models can be added', () => {
       const note = store.add('notes', {
         id: 11,
         description: 'Example description'

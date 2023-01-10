@@ -156,10 +156,6 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
 export const removeRelatedRecord = action((array, relationshipName, record, relatedRecord, inverse) => {
   if (array == null || relatedRecord == null) { return relatedRecord }
 
-if (Array.isArray(relatedRecord)) {
-    return relatedRecord.map(singleRecord => removeRelatedRecord(array, relationshipName, record, singleRecord, inverse))
-  }
-
   const existingData = (record.relationships[relationshipName]?.data || [])
 
   const recordIndexToRemove = existingData.findIndex(({ id: comparedId, type: comparedType }) => {
@@ -288,12 +284,19 @@ export class RelatedRecordsArray extends Array {
    * @returns {Array} this internal array
    */
   replace = (array = []) => {
-    const { inverse, record, property } = this
+    const { inverse, record, property, store } = this
     let newRecords
+    let relatedRecord
 
     transaction(() => {
-      this.forEach((relatedRecord) => removeRelatedRecord(this, property, record, relatedRecord, inverse))
-      newRecords = array.forEach((relatedRecord) => addRelatedRecord(this, property, record, relatedRecord, inverse))
+      while (this.length > 0) {
+        relatedRecord = this.pop()
+        if (inverse) {
+          setRelatedRecord(inverse.name, relatedRecord, null, store)
+        }
+      }
+
+      newRecords = array.map((relatedRecord) => addRelatedRecord(this, property, record, relatedRecord, inverse))
     })
 
     return newRecords
