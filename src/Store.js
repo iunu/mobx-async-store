@@ -979,7 +979,7 @@ class Store {
    */
   updateRecordFromData (record, data) {
     const tmpId = record.id
-    const { id, type, attributes, relationships = {} } = data
+    const { id, type, attributes = {}, relationships = {} } = data
 
     runInAction(() => {
       record.id = id
@@ -1031,7 +1031,7 @@ class Store {
    * @returns {object} model instance
    */
   createModelFromData (data) {
-    const { id, type, attributes, relationships } = data
+    const { id, type, attributes = {}, relationships = {} } = data
 
     const store = this
     const ModelKlass = this.getKlass(type)
