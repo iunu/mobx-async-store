@@ -289,6 +289,7 @@ export class RelatedRecordsArray extends Array {
           setRelatedRecord(inverse.name, relatedRecord, null, store)
         }
       }
+      record.relationships[property] = { data: [] }
 
       newRecords = array.map((relatedRecord) => addRelatedRecord(this, property, record, relatedRecord, inverse))
     })
