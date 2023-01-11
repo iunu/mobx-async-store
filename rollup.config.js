@@ -49,8 +49,6 @@ export default [
 			'mobx',
 			'moment',
 			'uuid/v1',
-			'crypto',
-			'util',
 			'@babel/runtime/helpers/assertThisInitialized',
 			'@babel/runtime/helpers/toConsumableArray',
 			'@babel/runtime/helpers/wrapNativeSuper'
