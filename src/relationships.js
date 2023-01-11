@@ -1,5 +1,17 @@
-import { action, makeObservable, transaction } from 'mobx'
+import { action, transaction } from 'mobx'
 import Model from './Model'
+
+/**
+ * Gets only the relationships from one direction, ie 'toOne' or 'toMany'
+ * @param {object} model the model with the relationship
+ * @param {string} direction the direction of the relationship
+ */
+export const definitionsByDirection = action((model, direction) => {
+  const { relationshipDefinitions = {} } = model
+
+  const definitionEntries = Object.entries(relationshipDefinitions)
+  return definitionEntries.filter(([_, definition]) => definition.direction === direction)
+})
 
 /**
  * Takes the `toOne` definitions from a document type and creates getters and setters.
@@ -192,23 +204,22 @@ export const addRelatedRecord = action((array, relationshipName, record, related
 
   if (array == null || relatedRecord == null || !record.store.getKlass(record.type)) { return relatedRecord }
 
+  const relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord)
+
   if (inverse) {
-    setRelatedRecord(inverse.name, relatedRecord, record, record.store)
-    relatedRecord.relationships[inverse.name] = { data: { id: record.id, type: record.type } }
+    setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store)
   }
 
   const existingData = (record.relationships[relationshipName]?.data || [])
-
-  const recordFromStore = coerceDataToExistingRecord(record.store, relatedRecord)
-  const alreadyThere = array.includes(recordFromStore)
+  const alreadyThere = array.includes(relatedRecordFromStore)
 
   if (!alreadyThere) {
     record.relationships[relationshipName] = { data: [...existingData, { id: relatedRecord.id, type: relatedRecord.type }] }
-    array.push(recordFromStore)
+    array.push(relatedRecordFromStore)
   }
 
   record.takeSnapshot()
-  return recordFromStore
+  return relatedRecordFromStore
 })
 
 /**

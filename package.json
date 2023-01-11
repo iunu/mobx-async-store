@@ -1,6 +1,6 @@
 {
   "name": "@artemisag/mobx-async-store",
-  "version": "7.0.0-rc6",
+  "version": "7.0.0-rc8",
   "license": "MIT",
   "module": "dist/mobx-async-store.esm.js",
   "browser": "dist/mobx-async-store.cjs.js",

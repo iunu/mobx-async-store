@@ -328,6 +328,18 @@ describe('Store', () => {
       expect(example.title).toEqual('Buy Milk')
     })
 
+    it('can add inverse relationships', () => {
+      const note = store.add('notes', {})
+      const note2 = store.add('notes', {})
+      const todo = store.add('todos', { notes: [note, { id: note2.id, type: 'notes' }] })
+      const note3 = store.add('notes', { todo })
+
+      expect(note.todo).toEqual(todo)
+      expect(todo.notes).toContain(note)
+      expect(todo.notes).toContain(note3)
+      expect(note3.todo).toEqual(todo)
+    })
+
     it('adds model with toOne relationship to store', () => {
       const category = store.add('categories', { name: 'Cat5' })
       const example = store.add('todos', { category })
@@ -519,7 +531,6 @@ describe('Store', () => {
     let factoryFarm
 
     beforeEach(() => {
-      store = new AppStore()
       const backendStore = new AppStore()
       factoryFarm = new FactoryFarm(backendStore)
     })
@@ -555,7 +566,6 @@ describe('Store', () => {
     let backendStore
 
     beforeEach(() => {
-      store = new AppStore()
       backendStore = new AppStore()
       factoryFarm = new FactoryFarm(backendStore)
     })

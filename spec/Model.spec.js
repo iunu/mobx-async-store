@@ -418,21 +418,7 @@ describe('Model', () => {
         expect(todo.notes[0].description).toEqual('Use fabric softener')
       })
 
-      it('can add models', () => {
-        const note = store.add('notes', {
-          id: 10,
-          description: 'Example description'
-        })
-        const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
-        const { notes } = todo
-
-        notes.add(note)
-
-        expect(notes).toContain(note)
-        expect(todo.notes).toContain(note)
-      })
-
-      it('can replace models', () => {
+      it('can replace relationships', () => {
         const [note, note2, note3] = store.add('notes', [{
           id: 10,
           description: 'Quickly'

@@ -16,7 +16,7 @@ import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 import union from 'lodash/union'
 import Store from './Store'
-import { defineToManyRelationships, defineToOneRelationships } from './relationships'
+import { defineToManyRelationships, defineToOneRelationships, definitionsByDirection } from './relationships'
 import pick from 'lodash/pick'
 
 /**
@@ -150,6 +150,8 @@ class Model {
    */
 
   static endpoint = ''
+
+  relationships = {}
 
   /**
    * True if the instance has been modified from its persisted state
@@ -339,11 +341,10 @@ class Model {
    * Initializes relationships based on the `relationships` hash.
    */
   initializeRelationships () {
-    const { store, relationshipDefinitions = {} } = this
-    const definitionEntries = Object.entries(relationshipDefinitions)
+    const { store } = this
 
-    const toOneDefinitions = definitionEntries.filter(([_, definition]) => definition.direction === 'toOne')
-    const toManyDefinitions = definitionEntries.filter(([_, definition]) => definition.direction === 'toMany')
+    const toOneDefinitions = definitionsByDirection(this, 'toOne')
+    const toManyDefinitions = definitionsByDirection(this, 'toMany')
 
     const toOneRelationships = defineToOneRelationships(this, store, toOneDefinitions)
     const toManyRelationships = defineToManyRelationships(this, store, toManyDefinitions)
@@ -520,7 +521,7 @@ class Model {
           // NOTE: If deleting a record changes other related model
           // You can return then in the delete response
           if (json && json.included) {
-            record.store.createModelsFromData(json.included)
+            record.store.createOrUpdateModelsFromData(json.included)
           }
 
           return record

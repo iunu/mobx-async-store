@@ -10,6 +10,7 @@ import {
   requestUrl
 } from './utils'
 import cloneDeep from 'lodash/cloneDeep'
+import { definitionsByDirection } from './relationships'
 
 /**
  * Annotations for mobx observability. We can't use `makeAutoObservable` because we have subclasses.
@@ -22,8 +23,6 @@ const mobxAnnotations = {
   add: action,
   pickAttributes: action,
   pickRelationships: action,
-  addModel: action,
-  addModels: action,
   bulkSave: action,
   _bulkSave: action,
   bulkCreate: action,
@@ -127,6 +126,10 @@ class Store {
 
   /**
    * Adds an instance or an array of instances to the store.
+   * Adds the model to the type records index
+   * Adds relationships explicitly. This is less efficient than adding via data if
+   * there are also inverse relationships.
+   *
    * ```
    * const todo = store.add('todos', { name: "A good thing to measure" })
    * todo.name
@@ -144,9 +147,33 @@ class Store {
    */
   add (type, data) {
     if (data.constructor.name === 'Array') {
-      return this.addModels(type, data)
+      return data.map((model) => this.add(type, model))
     } else {
-      return this.addModel(type, cloneDeep(data))
+      const id = idOrNewId(data.id)
+
+      const attributes = cloneDeep(this.pickAttributes(data, type))
+      const relationships = this.pickRelationships(data, type)
+
+      const model = this.createModelFromData({ type, id, attributes })
+
+      this.data[type].records.set(String(model.id), model)
+
+      const toOneDefinitions = definitionsByDirection(model, 'toOne')
+      const toManyDefinitions = definitionsByDirection(model, 'toMany')
+
+      toOneDefinitions.forEach(([relationshipName]) => {
+        if (relationships[relationshipName]) {
+          model[relationshipName] = relationships[relationshipName]
+        }
+      })
+
+      toManyDefinitions.forEach(([relationshipName]) => {
+        if (relationships[relationshipName]) {
+          model[relationshipName].add(relationships[relationshipName])
+        }
+      })
+
+      return model
     }
   }
 
@@ -191,45 +218,6 @@ class Store {
   pickRelationships (properties, type) {
     const definitions = this.getKlass(type).relationshipDefinitions
     return definitions ? pick(properties, Object.keys(definitions)) : {}
-  }
-
-  /**
-   * Adds a model of `type` with properties
-   *
-   * @param {string} type the model type
-   * @param {object} properties the attributes and relationships
-   * @returns {object} Data record
-   */
-  addModel (type, properties) {
-    const id = idOrNewId(properties.id)
-
-    const attributes = this.pickAttributes(properties, type)
-    const relationships = this.pickRelationships(properties, type)
-
-    const serializedRelationships = Object.entries(relationships).reduce((relationshipsData, [relationshipName, data]) => {
-      relationshipsData[relationshipName] = {
-        data: Array.isArray(data) ? data.map((model) => pick(model, ['id', 'type'])) : pick(data, ['id', 'type'])
-      }
-      return relationshipsData
-    }, {})
-
-    const model = this.createModelFromData({ type, id, attributes, relationships: serializedRelationships })
-
-    // Add the model to the type records index
-    this.data[type].records.set(String(model.id), model)
-
-    return model
-  }
-
-  /**
-   * Adds a number of models at once to the store.
-   *
-   * @param {string} type the model type
-   * @param {string} data array of data objects
-   * @returns {Array} array of records
-   */
-  addModels (type, data) {
-    return runInAction(() => data.map((obj) => this.addModel(type, obj)))
   }
 
   /**
