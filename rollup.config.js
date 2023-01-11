@@ -3,6 +3,7 @@ import babel from 'rollup-plugin-babel'
 import pkg from './package.json'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
+import resolve from '@rollup/plugin-node-resolve'
 
 export default [
 	// browser-friendly UMD build
@@ -14,16 +15,6 @@ export default [
 	// 		format: 'cjs'
 	// 	},
 	// 	plugins: [
-	// 		babel({
-	// 			exclude: ['node_modules/**'],
-	// 			runtimeHelpers: true,
-	// 			plugins: [
-	// 				['@babel/transform-runtime', { regenerator: false, useESModules: true }]
-	// 			]
-	// 		}),
-	// 		resolve({
-	// 			browser: true
-	// 		}), // so Rollup can find `ms`
 	// 		commonjs({
 	// 			include: 'node_modules/**',
 	// 			ignore: ['crypto', 'util', 'buffer']
@@ -80,7 +71,10 @@ export default [
 				declaration: true,
 				declarationDir: 'types',
 				outputToFilesystem: false
-			})
+			}),
+			resolve({
+				browser: true
+			}) // so Rollup can find `ms`
 		]
 	}
 ]
