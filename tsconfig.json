@@ -21,5 +21,8 @@
     "strictNullChecks": true
   },
   "exclude": ["**/*.config.js", "jsconfig.json", "node_modules", "coverage"],
-  "include": ["src"]
+  "include": ["src"],
+  "paths": {
+    "crypto": [ "node_modules/crypto-browserify" ]
+  }
 }
