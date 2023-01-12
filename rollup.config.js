@@ -53,11 +53,6 @@ export default [
 			'@babel/runtime/helpers/possibleConstructorReturn',
 			'@babel/runtime/helpers/typeof',
 			'@babel/runtime/regenerator',
-			'query-string',
-			'jsonapi-serializer',
-			'mobx',
-			'moment',
-			'uuid/v1',
 			'crypto',
 			'util',
 			'@babel/runtime/helpers/assertThisInitialized',
@@ -74,7 +69,9 @@ export default [
 				runtimeHelpers: true,
 				plugins: [['@babel/transform-runtime', { regenerator: true, useESModules: false }]]
 			}),
-			commonjs(),
+			commonjs({
+				ignore: ['crypto', 'util']
+			}),
 			typescript({
 				tsconfig: './tsconfig.build.json',
 				declaration: true,

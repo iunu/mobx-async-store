@@ -9,8 +9,6 @@ import _regeneratorRuntime from '@babel/runtime/regenerator';
 import { toJS, computed, observable, runInAction, set, makeObservable, extendObservable, action, transaction } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
-import require$$0 from 'crypto';
-import require$$0$1 from 'util';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
@@ -65,7 +63,7 @@ Object.defineProperty(rng$1, "__esModule", {
 });
 rng$1.default = rng;
 
-var _crypto$3 = _interopRequireDefault$c(require$$0);
+var _crypto$3 = _interopRequireDefault$c(require("crypto"));
 
 function _interopRequireDefault$c(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -397,7 +395,7 @@ Object.defineProperty(md5$1, "__esModule", {
 });
 md5$1.default = void 0;
 
-var _crypto$2 = _interopRequireDefault$6(require$$0);
+var _crypto$2 = _interopRequireDefault$6(require("crypto"));
 
 function _interopRequireDefault$6(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -438,7 +436,7 @@ Object.defineProperty(native, "__esModule", {
 });
 native.default = void 0;
 
-var _crypto$1 = _interopRequireDefault$4(require$$0);
+var _crypto$1 = _interopRequireDefault$4(require("crypto"));
 
 function _interopRequireDefault$4(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -498,7 +496,7 @@ Object.defineProperty(sha1$1, "__esModule", {
 });
 sha1$1.default = void 0;
 
-var _crypto = _interopRequireDefault$2(require$$0);
+var _crypto = _interopRequireDefault$2(require("crypto"));
 
 function _interopRequireDefault$2(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1152,7 +1150,7 @@ var callBound$1 = function callBoundIntrinsic(name, allowMissing) {
 	return intrinsic;
 };
 
-var util_inspect = require$$0$1.inspect;
+var util_inspect = require('util').inspect;
 
 var hasMap = typeof Map === 'function' && Map.prototype;
 var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, 'size') : null;
