@@ -4,11 +4,10 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _defineProperty$1 from '@babel/runtime/helpers/defineProperty';
 import _typeof from '@babel/runtime/helpers/typeof';
 import _regeneratorRuntime from '@babel/runtime/regenerator';
-import { toJS, runInAction, observable, makeObservable, action, transaction, extendObservable, computed } from 'mobx';
+import { toJS, action, transaction, runInAction, observable, makeObservable, extendObservable, computed } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
-import require$$0 from 'crypto';
-import require$$0$1 from 'util';
+import { v1 } from 'uuid';
 import _assertThisInitialized from '@babel/runtime/helpers/assertThisInitialized';
 import _possibleConstructorReturn from '@babel/runtime/helpers/possibleConstructorReturn';
 import _getPrototypeOf from '@babel/runtime/helpers/getPrototypeOf';
@@ -20,118 +19,137 @@ function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
 
-var slicedToArray = {exports: {}};
+var slicedToArrayExports = {};
+var slicedToArray = {
+  get exports(){ return slicedToArrayExports; },
+  set exports(v){ slicedToArrayExports = v; },
+};
 
-var arrayWithHoles = {exports: {}};
+var arrayWithHolesExports = {};
+var arrayWithHoles = {
+  get exports(){ return arrayWithHolesExports; },
+  set exports(v){ arrayWithHolesExports = v; },
+};
 
 (function (module) {
 	function _arrayWithHoles(arr) {
 	  if (Array.isArray(arr)) return arr;
 	}
-
 	module.exports = _arrayWithHoles, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (arrayWithHoles));
 
-var iterableToArrayLimit = {exports: {}};
+var iterableToArrayLimitExports = {};
+var iterableToArrayLimit = {
+  get exports(){ return iterableToArrayLimitExports; },
+  set exports(v){ iterableToArrayLimitExports = v; },
+};
 
 (function (module) {
 	function _iterableToArrayLimit(arr, i) {
-	  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
-
-	  if (_i == null) return;
-	  var _arr = [];
-	  var _n = true;
-	  var _d = false;
-
-	  var _s, _e;
-
-	  try {
-	    for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
-	      _arr.push(_s.value);
-
-	      if (i && _arr.length === i) break;
-	    }
-	  } catch (err) {
-	    _d = true;
-	    _e = err;
-	  } finally {
+	  var _i = null == arr ? null : "undefined" != typeof Symbol && arr[Symbol.iterator] || arr["@@iterator"];
+	  if (null != _i) {
+	    var _s,
+	      _e,
+	      _x,
+	      _r,
+	      _arr = [],
+	      _n = !0,
+	      _d = !1;
 	    try {
-	      if (!_n && _i["return"] != null) _i["return"]();
+	      if (_x = (_i = _i.call(arr)).next, 0 === i) {
+	        if (Object(_i) !== _i) return;
+	        _n = !1;
+	      } else for (; !(_n = (_s = _x.call(_i)).done) && (_arr.push(_s.value), _arr.length !== i); _n = !0) {
+	        ;
+	      }
+	    } catch (err) {
+	      _d = !0, _e = err;
 	    } finally {
-	      if (_d) throw _e;
+	      try {
+	        if (!_n && null != _i["return"] && (_r = _i["return"](), Object(_r) !== _r)) return;
+	      } finally {
+	        if (_d) throw _e;
+	      }
 	    }
+	    return _arr;
 	  }
-
-	  return _arr;
 	}
-
 	module.exports = _iterableToArrayLimit, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (iterableToArrayLimit));
 
-var unsupportedIterableToArray = {exports: {}};
+var unsupportedIterableToArrayExports = {};
+var unsupportedIterableToArray = {
+  get exports(){ return unsupportedIterableToArrayExports; },
+  set exports(v){ unsupportedIterableToArrayExports = v; },
+};
 
-var arrayLikeToArray = {exports: {}};
+var arrayLikeToArrayExports = {};
+var arrayLikeToArray = {
+  get exports(){ return arrayLikeToArrayExports; },
+  set exports(v){ arrayLikeToArrayExports = v; },
+};
 
 (function (module) {
 	function _arrayLikeToArray(arr, len) {
 	  if (len == null || len > arr.length) len = arr.length;
-
 	  for (var i = 0, arr2 = new Array(len); i < len; i++) {
 	    arr2[i] = arr[i];
 	  }
-
 	  return arr2;
 	}
-
 	module.exports = _arrayLikeToArray, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (arrayLikeToArray));
 
 (function (module) {
-	var arrayLikeToArray$1 = arrayLikeToArray.exports;
-
+	var arrayLikeToArray = arrayLikeToArrayExports;
 	function _unsupportedIterableToArray(o, minLen) {
 	  if (!o) return;
-	  if (typeof o === "string") return arrayLikeToArray$1(o, minLen);
+	  if (typeof o === "string") return arrayLikeToArray(o, minLen);
 	  var n = Object.prototype.toString.call(o).slice(8, -1);
 	  if (n === "Object" && o.constructor) n = o.constructor.name;
 	  if (n === "Map" || n === "Set") return Array.from(o);
-	  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray$1(o, minLen);
+	  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
 	}
-
 	module.exports = _unsupportedIterableToArray, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (unsupportedIterableToArray));
 
-var nonIterableRest = {exports: {}};
+var nonIterableRestExports = {};
+var nonIterableRest = {
+  get exports(){ return nonIterableRestExports; },
+  set exports(v){ nonIterableRestExports = v; },
+};
 
 (function (module) {
 	function _nonIterableRest() {
 	  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 	}
-
 	module.exports = _nonIterableRest, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (nonIterableRest));
 
 (function (module) {
-	var arrayWithHoles$1 = arrayWithHoles.exports;
-
-	var iterableToArrayLimit$1 = iterableToArrayLimit.exports;
-
-	var unsupportedIterableToArray$1 = unsupportedIterableToArray.exports;
-
-	var nonIterableRest$1 = nonIterableRest.exports;
-
+	var arrayWithHoles = arrayWithHolesExports;
+	var iterableToArrayLimit = iterableToArrayLimitExports;
+	var unsupportedIterableToArray = unsupportedIterableToArrayExports;
+	var nonIterableRest = nonIterableRestExports;
 	function _slicedToArray(arr, i) {
-	  return arrayWithHoles$1(arr) || iterableToArrayLimit$1(arr, i) || unsupportedIterableToArray$1(arr, i) || nonIterableRest$1();
+	  return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || unsupportedIterableToArray(arr, i) || nonIterableRest();
 	}
-
 	module.exports = _slicedToArray, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (slicedToArray));
 
-var _slicedToArray = /*@__PURE__*/getDefaultExportFromCjs(slicedToArray.exports);
+var _slicedToArray = /*@__PURE__*/getDefaultExportFromCjs(slicedToArrayExports);
 
-var objectWithoutProperties = {exports: {}};
+var objectWithoutPropertiesExports = {};
+var objectWithoutProperties = {
+  get exports(){ return objectWithoutPropertiesExports; },
+  set exports(v){ objectWithoutPropertiesExports = v; },
+};
 
-var objectWithoutPropertiesLoose = {exports: {}};
+var objectWithoutPropertiesLooseExports = {};
+var objectWithoutPropertiesLoose = {
+  get exports(){ return objectWithoutPropertiesLooseExports; },
+  set exports(v){ objectWithoutPropertiesLooseExports = v; },
+};
 
 (function (module) {
 	function _objectWithoutPropertiesLoose(source, excluded) {
@@ -139,30 +157,24 @@ var objectWithoutPropertiesLoose = {exports: {}};
 	  var target = {};
 	  var sourceKeys = Object.keys(source);
 	  var key, i;
-
 	  for (i = 0; i < sourceKeys.length; i++) {
 	    key = sourceKeys[i];
 	    if (excluded.indexOf(key) >= 0) continue;
 	    target[key] = source[key];
 	  }
-
 	  return target;
 	}
-
 	module.exports = _objectWithoutPropertiesLoose, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (objectWithoutPropertiesLoose));
 
 (function (module) {
-	var objectWithoutPropertiesLoose$1 = objectWithoutPropertiesLoose.exports;
-
+	var objectWithoutPropertiesLoose = objectWithoutPropertiesLooseExports;
 	function _objectWithoutProperties(source, excluded) {
 	  if (source == null) return {};
-	  var target = objectWithoutPropertiesLoose$1(source, excluded);
+	  var target = objectWithoutPropertiesLoose(source, excluded);
 	  var key, i;
-
 	  if (Object.getOwnPropertySymbols) {
 	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-
 	    for (i = 0; i < sourceSymbolKeys.length; i++) {
 	      key = sourceSymbolKeys[i];
 	      if (excluded.indexOf(key) >= 0) continue;
@@ -170,16 +182,18 @@ var objectWithoutPropertiesLoose = {exports: {}};
 	      target[key] = source[key];
 	    }
 	  }
-
 	  return target;
 	}
-
 	module.exports = _objectWithoutProperties, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (objectWithoutProperties));
 
-var _objectWithoutProperties = /*@__PURE__*/getDefaultExportFromCjs(objectWithoutProperties.exports);
+var _objectWithoutProperties = /*@__PURE__*/getDefaultExportFromCjs(objectWithoutPropertiesExports);
 
-var setPrototypeOf = {exports: {}};
+var setPrototypeOfExports = {};
+var setPrototypeOf = {
+  get exports(){ return setPrototypeOfExports; },
+  set exports(v){ setPrototypeOfExports = v; },
+};
 
 (function (module) {
 	function _setPrototypeOf(o, p) {
@@ -189,576 +203,20 @@ var setPrototypeOf = {exports: {}};
 	  }, module.exports.__esModule = true, module.exports["default"] = module.exports;
 	  return _setPrototypeOf(o, p);
 	}
-
 	module.exports = _setPrototypeOf, module.exports.__esModule = true, module.exports["default"] = module.exports;
 } (setPrototypeOf));
 
-var _setPrototypeOf = /*@__PURE__*/getDefaultExportFromCjs(setPrototypeOf.exports);
-
-var dist = {};
-
-var v1$1 = {};
-
-var rng$1 = {};
-
-Object.defineProperty(rng$1, "__esModule", {
-  value: true
-});
-rng$1.default = rng;
-
-var _crypto$2 = _interopRequireDefault$b(require$$0);
-
-function _interopRequireDefault$b(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const rnds8Pool = new Uint8Array(256); // # of random values to pre-allocate
-
-let poolPtr = rnds8Pool.length;
-
-function rng() {
-  if (poolPtr > rnds8Pool.length - 16) {
-    _crypto$2.default.randomFillSync(rnds8Pool);
-
-    poolPtr = 0;
-  }
-
-  return rnds8Pool.slice(poolPtr, poolPtr += 16);
-}
-
-var stringify$3 = {};
-
-var validate$1 = {};
-
-var regex = {};
-
-Object.defineProperty(regex, "__esModule", {
-  value: true
-});
-regex.default = void 0;
-var _default$c = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
-regex.default = _default$c;
-
-Object.defineProperty(validate$1, "__esModule", {
-  value: true
-});
-validate$1.default = void 0;
-
-var _regex = _interopRequireDefault$a(regex);
-
-function _interopRequireDefault$a(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function validate(uuid) {
-  return typeof uuid === 'string' && _regex.default.test(uuid);
-}
-
-var _default$b = validate;
-validate$1.default = _default$b;
-
-Object.defineProperty(stringify$3, "__esModule", {
-  value: true
-});
-stringify$3.default = void 0;
-
-var _validate$2 = _interopRequireDefault$9(validate$1);
-
-function _interopRequireDefault$9(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-const byteToHex = [];
-
-for (let i = 0; i < 256; ++i) {
-  byteToHex.push((i + 0x100).toString(16).substr(1));
-}
-
-function stringify$2(arr, offset = 0) {
-  // Note: Be careful editing this code!  It's been tuned for performance
-  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-  const uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
-  // of the following:
-  // - One or more input array values don't map to a hex octet (leading to
-  // "undefined" in the uuid)
-  // - Invalid input values for the RFC `version` or `variant` fields
-
-  if (!(0, _validate$2.default)(uuid)) {
-    throw TypeError('Stringified UUID is invalid');
-  }
-
-  return uuid;
-}
-
-var _default$a = stringify$2;
-stringify$3.default = _default$a;
-
-Object.defineProperty(v1$1, "__esModule", {
-  value: true
-});
-v1$1.default = void 0;
-
-var _rng$1 = _interopRequireDefault$8(rng$1);
-
-var _stringify$2 = _interopRequireDefault$8(stringify$3);
-
-function _interopRequireDefault$8(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// **`v1()` - Generate time-based UUID**
-//
-// Inspired by https://github.com/LiosK/UUID.js
-// and http://docs.python.org/library/uuid.html
-let _nodeId;
-
-let _clockseq; // Previous uuid creation time
-
-
-let _lastMSecs = 0;
-let _lastNSecs = 0; // See https://github.com/uuidjs/uuid for API details
-
-function v1(options, buf, offset) {
-  let i = buf && offset || 0;
-  const b = buf || new Array(16);
-  options = options || {};
-  let node = options.node || _nodeId;
-  let clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq; // node and clockseq need to be initialized to random values if they're not
-  // specified.  We do this lazily to minimize issues related to insufficient
-  // system entropy.  See #189
-
-  if (node == null || clockseq == null) {
-    const seedBytes = options.random || (options.rng || _rng$1.default)();
-
-    if (node == null) {
-      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-      node = _nodeId = [seedBytes[0] | 0x01, seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]];
-    }
-
-    if (clockseq == null) {
-      // Per 4.2.2, randomize (14 bit) clockseq
-      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
-    }
-  } // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-
-
-  let msecs = options.msecs !== undefined ? options.msecs : Date.now(); // Per 4.2.1.2, use count of uuid's generated during the current clock
-  // cycle to simulate higher resolution clock
-
-  let nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1; // Time since last uuid creation (in msecs)
-
-  const dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / 10000; // Per 4.2.1.2, Bump clockseq on clock regression
-
-  if (dt < 0 && options.clockseq === undefined) {
-    clockseq = clockseq + 1 & 0x3fff;
-  } // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-  // time interval
-
-
-  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-    nsecs = 0;
-  } // Per 4.2.1.2 Throw error if too many uuids are requested
-
-
-  if (nsecs >= 10000) {
-    throw new Error("uuid.v1(): Can't create more than 10M uuids/sec");
-  }
-
-  _lastMSecs = msecs;
-  _lastNSecs = nsecs;
-  _clockseq = clockseq; // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
-
-  msecs += 12219292800000; // `time_low`
-
-  const tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-  b[i++] = tl >>> 24 & 0xff;
-  b[i++] = tl >>> 16 & 0xff;
-  b[i++] = tl >>> 8 & 0xff;
-  b[i++] = tl & 0xff; // `time_mid`
-
-  const tmh = msecs / 0x100000000 * 10000 & 0xfffffff;
-  b[i++] = tmh >>> 8 & 0xff;
-  b[i++] = tmh & 0xff; // `time_high_and_version`
-
-  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-
-  b[i++] = tmh >>> 16 & 0xff; // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-
-  b[i++] = clockseq >>> 8 | 0x80; // `clock_seq_low`
-
-  b[i++] = clockseq & 0xff; // `node`
-
-  for (let n = 0; n < 6; ++n) {
-    b[i + n] = node[n];
-  }
-
-  return buf || (0, _stringify$2.default)(b);
-}
-
-var _default$9 = v1;
-v1$1.default = _default$9;
-
-var v3$1 = {};
-
-var v35 = {};
-
-var parse$3 = {};
-
-Object.defineProperty(parse$3, "__esModule", {
-  value: true
-});
-parse$3.default = void 0;
-
-var _validate$1 = _interopRequireDefault$7(validate$1);
-
-function _interopRequireDefault$7(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function parse$2(uuid) {
-  if (!(0, _validate$1.default)(uuid)) {
-    throw TypeError('Invalid UUID');
-  }
-
-  let v;
-  const arr = new Uint8Array(16); // Parse ########-....-....-....-............
-
-  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
-  arr[1] = v >>> 16 & 0xff;
-  arr[2] = v >>> 8 & 0xff;
-  arr[3] = v & 0xff; // Parse ........-####-....-....-............
-
-  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
-  arr[5] = v & 0xff; // Parse ........-....-####-....-............
-
-  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
-  arr[7] = v & 0xff; // Parse ........-....-....-####-............
-
-  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
-  arr[9] = v & 0xff; // Parse ........-....-....-....-############
-  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
-
-  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
-  arr[11] = v / 0x100000000 & 0xff;
-  arr[12] = v >>> 24 & 0xff;
-  arr[13] = v >>> 16 & 0xff;
-  arr[14] = v >>> 8 & 0xff;
-  arr[15] = v & 0xff;
-  return arr;
-}
-
-var _default$8 = parse$2;
-parse$3.default = _default$8;
-
-Object.defineProperty(v35, "__esModule", {
-  value: true
-});
-v35.default = _default$7;
-v35.URL = v35.DNS = void 0;
-
-var _stringify$1 = _interopRequireDefault$6(stringify$3);
-
-var _parse = _interopRequireDefault$6(parse$3);
-
-function _interopRequireDefault$6(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function stringToBytes(str) {
-  str = unescape(encodeURIComponent(str)); // UTF8 escape
-
-  const bytes = [];
-
-  for (let i = 0; i < str.length; ++i) {
-    bytes.push(str.charCodeAt(i));
-  }
-
-  return bytes;
-}
-
-const DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
-v35.DNS = DNS;
-const URL$1 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
-v35.URL = URL$1;
-
-function _default$7(name, version, hashfunc) {
-  function generateUUID(value, namespace, buf, offset) {
-    if (typeof value === 'string') {
-      value = stringToBytes(value);
-    }
-
-    if (typeof namespace === 'string') {
-      namespace = (0, _parse.default)(namespace);
-    }
-
-    if (namespace.length !== 16) {
-      throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
-    } // Compute hash of namespace and value, Per 4.3
-    // Future: Use spread syntax when supported on all platforms, e.g. `bytes =
-    // hashfunc([...namespace, ... value])`
-
-
-    let bytes = new Uint8Array(16 + value.length);
-    bytes.set(namespace);
-    bytes.set(value, namespace.length);
-    bytes = hashfunc(bytes);
-    bytes[6] = bytes[6] & 0x0f | version;
-    bytes[8] = bytes[8] & 0x3f | 0x80;
-
-    if (buf) {
-      offset = offset || 0;
-
-      for (let i = 0; i < 16; ++i) {
-        buf[offset + i] = bytes[i];
-      }
-
-      return buf;
-    }
-
-    return (0, _stringify$1.default)(bytes);
-  } // Function#name is not settable on some platforms (#270)
-
-
-  try {
-    generateUUID.name = name; // eslint-disable-next-line no-empty
-  } catch (err) {} // For CommonJS default export support
-
-
-  generateUUID.DNS = DNS;
-  generateUUID.URL = URL$1;
-  return generateUUID;
-}
-
-var md5$1 = {};
-
-Object.defineProperty(md5$1, "__esModule", {
-  value: true
-});
-md5$1.default = void 0;
-
-var _crypto$1 = _interopRequireDefault$5(require$$0);
-
-function _interopRequireDefault$5(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function md5(bytes) {
-  if (Array.isArray(bytes)) {
-    bytes = Buffer.from(bytes);
-  } else if (typeof bytes === 'string') {
-    bytes = Buffer.from(bytes, 'utf8');
-  }
-
-  return _crypto$1.default.createHash('md5').update(bytes).digest();
-}
-
-var _default$6 = md5;
-md5$1.default = _default$6;
-
-Object.defineProperty(v3$1, "__esModule", {
-  value: true
-});
-v3$1.default = void 0;
-
-var _v$1 = _interopRequireDefault$4(v35);
-
-var _md = _interopRequireDefault$4(md5$1);
-
-function _interopRequireDefault$4(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const v3 = (0, _v$1.default)('v3', 0x30, _md.default);
-var _default$5 = v3;
-v3$1.default = _default$5;
-
-var v4$1 = {};
-
-Object.defineProperty(v4$1, "__esModule", {
-  value: true
-});
-v4$1.default = void 0;
-
-var _rng = _interopRequireDefault$3(rng$1);
-
-var _stringify = _interopRequireDefault$3(stringify$3);
-
-function _interopRequireDefault$3(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function v4(options, buf, offset) {
-  options = options || {};
-
-  const rnds = options.random || (options.rng || _rng.default)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-
-
-  rnds[6] = rnds[6] & 0x0f | 0x40;
-  rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
-
-  if (buf) {
-    offset = offset || 0;
-
-    for (let i = 0; i < 16; ++i) {
-      buf[offset + i] = rnds[i];
-    }
-
-    return buf;
-  }
-
-  return (0, _stringify.default)(rnds);
-}
-
-var _default$4 = v4;
-v4$1.default = _default$4;
-
-var v5$1 = {};
-
-var sha1$1 = {};
-
-Object.defineProperty(sha1$1, "__esModule", {
-  value: true
-});
-sha1$1.default = void 0;
-
-var _crypto = _interopRequireDefault$2(require$$0);
-
-function _interopRequireDefault$2(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function sha1(bytes) {
-  if (Array.isArray(bytes)) {
-    bytes = Buffer.from(bytes);
-  } else if (typeof bytes === 'string') {
-    bytes = Buffer.from(bytes, 'utf8');
-  }
-
-  return _crypto.default.createHash('sha1').update(bytes).digest();
-}
-
-var _default$3 = sha1;
-sha1$1.default = _default$3;
-
-Object.defineProperty(v5$1, "__esModule", {
-  value: true
-});
-v5$1.default = void 0;
-
-var _v = _interopRequireDefault$1(v35);
-
-var _sha = _interopRequireDefault$1(sha1$1);
-
-function _interopRequireDefault$1(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const v5 = (0, _v.default)('v5', 0x50, _sha.default);
-var _default$2 = v5;
-v5$1.default = _default$2;
-
-var nil = {};
-
-Object.defineProperty(nil, "__esModule", {
-  value: true
-});
-nil.default = void 0;
-var _default$1 = '00000000-0000-0000-0000-000000000000';
-nil.default = _default$1;
-
-var version$1 = {};
-
-Object.defineProperty(version$1, "__esModule", {
-  value: true
-});
-version$1.default = void 0;
-
-var _validate = _interopRequireDefault(validate$1);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function version(uuid) {
-  if (!(0, _validate.default)(uuid)) {
-    throw TypeError('Invalid UUID');
-  }
-
-  return parseInt(uuid.substr(14, 1), 16);
-}
-
-var _default = version;
-version$1.default = _default;
-
-(function (exports) {
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	Object.defineProperty(exports, "v1", {
-	  enumerable: true,
-	  get: function () {
-	    return _v.default;
-	  }
-	});
-	Object.defineProperty(exports, "v3", {
-	  enumerable: true,
-	  get: function () {
-	    return _v2.default;
-	  }
-	});
-	Object.defineProperty(exports, "v4", {
-	  enumerable: true,
-	  get: function () {
-	    return _v3.default;
-	  }
-	});
-	Object.defineProperty(exports, "v5", {
-	  enumerable: true,
-	  get: function () {
-	    return _v4.default;
-	  }
-	});
-	Object.defineProperty(exports, "NIL", {
-	  enumerable: true,
-	  get: function () {
-	    return _nil.default;
-	  }
-	});
-	Object.defineProperty(exports, "version", {
-	  enumerable: true,
-	  get: function () {
-	    return _version.default;
-	  }
-	});
-	Object.defineProperty(exports, "validate", {
-	  enumerable: true,
-	  get: function () {
-	    return _validate.default;
-	  }
-	});
-	Object.defineProperty(exports, "stringify", {
-	  enumerable: true,
-	  get: function () {
-	    return _stringify.default;
-	  }
-	});
-	Object.defineProperty(exports, "parse", {
-	  enumerable: true,
-	  get: function () {
-	    return _parse.default;
-	  }
-	});
-
-	var _v = _interopRequireDefault(v1$1);
-
-	var _v2 = _interopRequireDefault(v3$1);
-
-	var _v3 = _interopRequireDefault(v4$1);
-
-	var _v4 = _interopRequireDefault(v5$1);
-
-	var _nil = _interopRequireDefault(nil);
-
-	var _version = _interopRequireDefault(version$1);
-
-	var _validate = _interopRequireDefault(validate$1);
-
-	var _stringify = _interopRequireDefault(stringify$3);
-
-	var _parse = _interopRequireDefault(parse$3);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-} (dist));
+var _setPrototypeOf = /*@__PURE__*/getDefaultExportFromCjs(setPrototypeOfExports);
 
 function commonjsRequire(path) {
 	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
 }
 
-var pluralize = {exports: {}};
+var pluralizeExports = {};
+var pluralize = {
+  get exports(){ return pluralizeExports; },
+  set exports(v){ pluralizeExports = v; },
+};
 
 /* global define */
 
@@ -3176,7 +2634,11 @@ var getIntrinsic = function GetIntrinsic(name, allowMissing) {
 	return value;
 };
 
-var callBind$1 = {exports: {}};
+var callBindExports = {};
+var callBind$1 = {
+  get exports(){ return callBindExports; },
+  set exports(v){ callBindExports = v; },
+};
 
 (function (module) {
 
@@ -3229,7 +2691,7 @@ var callBind$1 = {exports: {}};
 
 var GetIntrinsic$1 = getIntrinsic;
 
-var callBind = callBind$1.exports;
+var callBind = callBindExports;
 
 var $indexOf = callBind(GetIntrinsic$1('String.prototype.indexOf'));
 
@@ -3241,7 +2703,7 @@ var callBound$1 = function callBoundIntrinsic(name, allowMissing) {
 	return intrinsic;
 };
 
-var util_inspect = require$$0$1.inspect;
+var util_inspect = require('util').inspect;
 
 var hasMap = typeof Map === 'function' && Map.prototype;
 var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, 'size') : null;
@@ -4705,7 +4167,7 @@ var lib = {
     stringify: stringify
 };
 
-function _wrapRegExp() { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, void 0, groups); }; var _super = RegExp.prototype, _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = new RegExp(re, flags); return _groups.set(_this, groups || _groups.get(re)), _setPrototypeOf(_this, BabelRegExp.prototype); } function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { return groups[name] = result[g[name]], groups; }, Object.create(null)); } return _inherits(BabelRegExp, RegExp), BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); return result && (result.groups = buildGroups(result, this)), result; }, BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if ("string" == typeof substitution) { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { return "$" + groups[name]; })); } if ("function" == typeof substitution) { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = arguments; return "object" != _typeof(args[args.length - 1]) && (args = [].slice.call(args)).push(buildGroups(args, _this)), substitution.apply(this, args); }); } return _super[Symbol.replace].call(this, str, substitution); }, _wrapRegExp.apply(this, arguments); }
+function _wrapRegExp() { _wrapRegExp = function _wrapRegExp(re, groups) { return new BabelRegExp(re, void 0, groups); }; var _super = RegExp.prototype, _groups = new WeakMap(); function BabelRegExp(re, flags, groups) { var _this = new RegExp(re, flags); return _groups.set(_this, groups || _groups.get(re)), _setPrototypeOf(_this, BabelRegExp.prototype); } function buildGroups(result, re) { var g = _groups.get(re); return Object.keys(g).reduce(function (groups, name) { var i = g[name]; if ("number" == typeof i) groups[name] = result[i];else { for (var k = 0; void 0 === result[i[k]] && k + 1 < i.length;) { k++; } groups[name] = result[i[k]]; } return groups; }, Object.create(null)); } return _inherits(BabelRegExp, RegExp), BabelRegExp.prototype.exec = function (str) { var result = _super.exec.call(this, str); if (result) { result.groups = buildGroups(result, this); var indices = result.indices; indices && (indices.groups = buildGroups(indices, this)); } return result; }, BabelRegExp.prototype[Symbol.replace] = function (str, substitution) { if ("string" == typeof substitution) { var groups = _groups.get(this); return _super[Symbol.replace].call(this, str, substitution.replace(/\$<([^>]+)>/g, function (_, name) { var group = groups[name]; return "$" + (Array.isArray(group) ? group.join("$") : group); })); } if ("function" == typeof substitution) { var _this = this; return _super[Symbol.replace].call(this, str, function () { var args = arguments; return "object" != _typeof(args[args.length - 1]) && (args = [].slice.call(args)).push(buildGroups(args, _this)), substitution.apply(this, args); }); } return _super[Symbol.replace].call(this, str, substitution); }, _wrapRegExp.apply(this, arguments); }
 var pending = {};
 var counter = {};
 var URL_MAX_LENGTH = 1024;
@@ -4725,7 +4187,6 @@ var stringType = function stringType(value) {
 var numberType = function numberType(value) {
   return Number(value);
 };
-
 var incrementor = function incrementor(key) {
   return function () {
     var count = (counter[key] || 0) + 1;
@@ -4733,7 +4194,6 @@ var incrementor = function incrementor(key) {
     return count;
   };
 };
-
 var decrementor = function decrementor(key) {
   return function () {
     var count = (counter[key] || 0) - 1;
@@ -4741,37 +4201,34 @@ var decrementor = function decrementor(key) {
     return count;
   };
 };
+
 /**
  * Build request url from base url, endpoint, query params, and ids.
  *
 
  * @returns {string} formatted url string
  */
-
 function requestUrl(baseUrl, endpoint) {
   var queryParams = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   var id = arguments.length > 3 ? arguments[3] : undefined;
   var queryParamString = '';
-
   if (Object.keys(queryParams).length > 0) {
     queryParamString = "?".concat(QueryString.stringify(queryParams));
   }
-
   var idForPath = '';
-
   if (id) {
     idForPath = "/".concat(id);
-  } // Return full url
-
-
+  }
+  // Return full url
   return "".concat(baseUrl, "/").concat(endpoint).concat(idForPath).concat(queryParamString);
 }
 function newId() {
-  return "tmp-".concat(dist.v1());
+  return "tmp-".concat(v1());
 }
 function idOrNewId(id) {
   return id || newId();
 }
+
 /**
  * Avoids making racing requests by blocking a request if an identical one is
  * already in-flight. Blocked requests will be resolved when the initial request
@@ -4782,30 +4239,32 @@ function idOrNewId(id) {
  * @param {Function} fn the function the generates the promise
  * @returns {Promise}
  */
-
 function combineRacedRequests(key, fn) {
   var incrementBlocked = incrementor(key);
-  var decrementBlocked = decrementor(key); // keep track of the number of callers waiting for this promise to resolve
+  var decrementBlocked = decrementor(key);
 
-  incrementBlocked(); // Add the current call to our pending list in case another request comes in
+  // keep track of the number of callers waiting for this promise to resolve
+  incrementBlocked();
+
+  // Add the current call to our pending list in case another request comes in
   // before it resolves. If there is a request already pending, we'll use the
   // existing one instead
-
   if (!pending[key]) {
     pending[key] = fn.call();
   }
-
   return pending[key].finally(function () {
-    var count = decrementBlocked(); // if there are no more callers waiting for this promise to resolve (i.e. if
+    var count = decrementBlocked();
+    // if there are no more callers waiting for this promise to resolve (i.e. if
     // this is the last one), we can remove the reference to the pending promise
     // allowing subsequent requests to proceed unblocked.
-
     if (count === 0) delete pending[key];
-  }).then( // if there are other callers waiting for this request to resolve, clone the
+  }).then(
+  // if there are other callers waiting for this request to resolve, clone the
   // response before returning so that we can re-use it for the remaining callers
   function (response) {
     return response.clone();
-  }, // Bubble the error up to be handled by the consuming code
+  },
+  // Bubble the error up to be handled by the consuming code
   function (error) {
     return Promise.reject(error);
   });
@@ -4819,11 +4278,9 @@ function fetchWithRetry(url, fetchOptions, attempts, delay) {
     return fetch(url, fetchOptions);
   }).catch(function (error) {
     var attemptsRemaining = attempts - 1;
-
     if (!attemptsRemaining) {
       throw error;
     }
-
     return new Promise(function (resolve) {
       return setTimeout(resolve, delay);
     }).then(function () {
@@ -4831,6 +4288,7 @@ function fetchWithRetry(url, fetchOptions, attempts, delay) {
     });
   });
 }
+
 /**
  * convert a value into a date, pass Date or Moment instances thru
  * untouched
@@ -4838,11 +4296,11 @@ function fetchWithRetry(url, fetchOptions, attempts, delay) {
  * @param {*} value
  * @return {Date|Moment}
  */
-
 function makeDate(value) {
   if (value instanceof Date || value._isAMomentObject) return value;
   return new Date(Date.parse(value));
 }
+
 /**
  * recursively walk an object and call the `iteratee` function for
  * each property. returns an array of results of calls to the iteratee.
@@ -4852,7 +4310,6 @@ function makeDate(value) {
  * @param {string} prefix
  * @return Array
  */
-
 function walk(obj, iteratee, prefix) {
   if (obj != null && _typeof(obj) === 'object') {
     return Object.keys(obj).map(function (prop) {
@@ -4861,9 +4318,9 @@ function walk(obj, iteratee, prefix) {
       }).join('.'));
     });
   }
-
   return iteratee(obj, prefix);
 }
+
 /**
  * deeply compare objects a and b and return object paths for attributes
  * which differ. it is important to note that this comparison is biased
@@ -4875,7 +4332,6 @@ function walk(obj, iteratee, prefix) {
  * @param {object} b
  * @return Array<String>
  */
-
 function diff() {
   var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -4886,6 +4342,7 @@ function diff() {
     return x;
   });
 }
+
 /**
  * Parses JSONAPI error objects from a fetch response.
  * If the response's body is undefined or is not formatted with a top-level `errors` key
@@ -4902,10 +4359,10 @@ function diff() {
  *   store configuration of error messages corresponding to HTTP status codes
  * @return Array<Object> An array of JSONAPI errors
  */
-
 function parseErrors(_x, _x2) {
   return _parseErrors.apply(this, arguments);
 }
+
 /**
  * Parses the pointer of the error to retrieve the index of the
  * record the error belongs to and the full path to the attribute
@@ -4931,11 +4388,9 @@ function parseErrors(_x, _x2) {
  * @param {object} error
  * @returns {object} the matching parts of the pointer
  */
-
 function _parseErrors() {
   _parseErrors = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(response, errorMessages) {
     var json, statusError, _statusError, _statusError2;
-
     return _regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
@@ -4944,12 +4399,10 @@ function _parseErrors() {
             _context.prev = 1;
             _context.next = 4;
             return response.json();
-
           case 4:
             json = _context.sent;
             _context.next = 11;
             break;
-
           case 7:
             _context.prev = 7;
             _context.t0 = _context["catch"](1);
@@ -4959,41 +4412,34 @@ function _parseErrors() {
               status: response.status
             };
             return _context.abrupt("return", [statusError]);
-
           case 11:
             if (json.errors) {
               _context.next = 14;
               break;
             }
-
             _statusError = {
               detail: errorMessages[response.status] || errorMessages.default,
               status: response.status
             };
             return _context.abrupt("return", [_statusError]);
-
           case 14:
             if (Array.isArray(json.errors)) {
               _context.next = 17;
               break;
             }
-
             _statusError2 = {
               detail: 'Top level errors in response are not an array.',
               status: response.status
             };
             return _context.abrupt("return", [_statusError2]);
-
           case 17:
             return _context.abrupt("return", json.errors.map(function (error) {
               // override or add the configured error message based on response status
               if (error.status && errorMessages[error.status]) {
                 error.detail = errorMessages[error.status];
               }
-
               return error;
             }));
-
           case 18:
           case "end":
             return _context.stop();
@@ -5003,27 +4449,23 @@ function _parseErrors() {
   }));
   return _parseErrors.apply(this, arguments);
 }
-
 function parseErrorPointer() {
   var error = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-  var regex = /*#__PURE__*/_wrapRegExp(/\/data\/([0-9]+)?\/?attributes\/(.*)$/, {
+  var regex = /*#__PURE__*/_wrapRegExp(/\/data\/(\d+)?\/?attributes\/(.*)$/, {
     index: 1,
     key: 2
   });
-
   var match = get_1(error, 'source.pointer', '').match(regex);
-
   var _ref = (match === null || match === void 0 ? void 0 : match.groups) || {},
-      _ref$index = _ref.index,
-      index = _ref$index === void 0 ? 0 : _ref$index,
-      key = _ref.key;
-
+    _ref$index = _ref.index,
+    index = _ref$index === void 0 ? 0 : _ref$index,
+    key = _ref.key;
   return {
     index: parseInt(index),
     key: key === null || key === void 0 ? void 0 : key.replace(/\//g, '.')
   };
 }
+
 /**
  * Splits an array of ids into a series of strings that can be used to form
  * queries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.
@@ -5040,21 +4482,19 @@ function deriveIdQueryStrings(ids) {
   var encodedIds = ids.reduce(function (nestedArray, id) {
     var workingString = nestedArray[nestedArray.length - 1];
     var longerString = "".concat(workingString).concat(ENCODED_COMMA).concat(id);
-
     if (longerString.length < maxLength) {
       nestedArray[nestedArray.length - 1] = longerString;
     } else {
       nestedArray.push(id);
     }
-
     return nestedArray;
   }, [firstId]);
   return encodedIds.map(decodeURIComponent);
 }
+
 /**
  * An object with default `parse` and `stringify` functions from qs
  */
-
 var QueryString = {
   parse: function parse(str) {
     return lib.parse(str, {
@@ -5353,7 +4793,11 @@ function baseTimes$2(n, iteratee) {
 
 var _baseTimes = baseTimes$2;
 
-var isBuffer$3 = {exports: {}};
+var isBufferExports = {};
+var isBuffer$3 = {
+  get exports(){ return isBufferExports; },
+  set exports(v){ isBufferExports = v; },
+};
 
 /**
  * This method returns `false`.
@@ -5414,7 +4858,7 @@ var stubFalse_1 = stubFalse;
 	var isBuffer = nativeIsBuffer || stubFalse;
 
 	module.exports = isBuffer;
-} (isBuffer$3, isBuffer$3.exports));
+} (isBuffer$3, isBufferExports));
 
 /** Used as references for various `Number` constants. */
 
@@ -5557,7 +5001,11 @@ function baseUnary$3(func) {
 
 var _baseUnary = baseUnary$3;
 
-var _nodeUtil = {exports: {}};
+var _nodeUtilExports = {};
+var _nodeUtil = {
+  get exports(){ return _nodeUtilExports; },
+  set exports(v){ _nodeUtilExports = v; },
+};
 
 (function (module, exports) {
 	var freeGlobal = _freeGlobal;
@@ -5590,11 +5038,11 @@ var _nodeUtil = {exports: {}};
 	}());
 
 	module.exports = nodeUtil;
-} (_nodeUtil, _nodeUtil.exports));
+} (_nodeUtil, _nodeUtilExports));
 
 var baseIsTypedArray = _baseIsTypedArray,
     baseUnary$2 = _baseUnary,
-    nodeUtil$2 = _nodeUtil.exports;
+    nodeUtil$2 = _nodeUtilExports;
 
 /* Node.js helper references. */
 var nodeIsTypedArray = nodeUtil$2 && nodeUtil$2.isTypedArray;
@@ -5623,7 +5071,7 @@ var isTypedArray_1 = isTypedArray$2;
 var baseTimes$1 = _baseTimes,
     isArguments$1 = isArguments_1,
     isArray$5 = isArray_1,
-    isBuffer$2 = isBuffer$3.exports,
+    isBuffer$2 = isBufferExports,
     isIndex$2 = _isIndex,
     isTypedArray$1 = isTypedArray_1;
 
@@ -5942,7 +5390,11 @@ function baseAssignIn$1(object, source) {
 
 var _baseAssignIn = baseAssignIn$1;
 
-var _cloneBuffer = {exports: {}};
+var _cloneBufferExports = {};
+var _cloneBuffer = {
+  get exports(){ return _cloneBufferExports; },
+  set exports(v){ _cloneBufferExports = v; },
+};
 
 (function (module, exports) {
 	var root = _root;
@@ -5980,7 +5432,7 @@ var _cloneBuffer = {exports: {}};
 	}
 
 	module.exports = cloneBuffer;
-} (_cloneBuffer, _cloneBuffer.exports));
+} (_cloneBuffer, _cloneBufferExports));
 
 /**
  * Copies the values of `source` to `array`.
@@ -6574,7 +6026,7 @@ var _baseIsMap = baseIsMap$1;
 
 var baseIsMap = _baseIsMap,
     baseUnary$1 = _baseUnary,
-    nodeUtil$1 = _nodeUtil.exports;
+    nodeUtil$1 = _nodeUtilExports;
 
 /* Node.js helper references. */
 var nodeIsMap = nodeUtil$1 && nodeUtil$1.isMap;
@@ -6621,7 +6073,7 @@ var _baseIsSet = baseIsSet$1;
 
 var baseIsSet = _baseIsSet,
     baseUnary = _baseUnary,
-    nodeUtil = _nodeUtil.exports;
+    nodeUtil = _nodeUtilExports;
 
 /* Node.js helper references. */
 var nodeIsSet = nodeUtil && nodeUtil.isSet;
@@ -6652,7 +6104,7 @@ var Stack$2 = _Stack,
     assignValue$1 = _assignValue,
     baseAssign = _baseAssign,
     baseAssignIn = _baseAssignIn,
-    cloneBuffer = _cloneBuffer.exports,
+    cloneBuffer = _cloneBufferExports,
     copyArray = _copyArray,
     copySymbols = _copySymbols,
     copySymbolsIn = _copySymbolsIn,
@@ -6663,7 +6115,7 @@ var Stack$2 = _Stack,
     initCloneByTag = _initCloneByTag,
     initCloneObject = _initCloneObject,
     isArray$3 = isArray_1,
-    isBuffer$1 = isBuffer$3.exports,
+    isBuffer$1 = isBufferExports,
     isMap = isMap_1,
     isObject$3 = isObject_1,
     isSet = isSet_1,
@@ -7284,7 +6736,7 @@ var Stack$1 = _Stack,
     equalObjects = _equalObjects,
     getTag = _getTag,
     isArray$2 = isArray_1,
-    isBuffer = isBuffer$3.exports,
+    isBuffer = isBufferExports,
     isTypedArray = isTypedArray_1;
 
 /** Used to compose bitmasks for value comparisons. */
@@ -8804,9 +8256,388 @@ function uniqBy(array, iteratee) {
 
 var uniqBy_1 = uniqBy;
 
-function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+var _Symbol$species;
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
+/**
+ * Gets only the relationships from one direction, ie 'toOne' or 'toMany'
+ * @param {object} model the model with the relationship
+ * @param {string} direction the direction of the relationship
+ */
+var definitionsByDirection = action(function (model, direction) {
+  var _model$relationshipDe = model.relationshipDefinitions,
+    relationshipDefinitions = _model$relationshipDe === void 0 ? {} : _model$relationshipDe;
+  var definitionEntries = Object.entries(relationshipDefinitions);
+  return definitionEntries.filter(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2);
+      _ref2[0];
+      var definition = _ref2[1];
+    return definition.direction === direction;
+  });
+});
+
+/**
+ * Takes the `toOne` definitions from a document type and creates getters and setters.
+ * A getter finds a record from the store. The setter calls `setRelatedRecord`, which will
+ * return an instance of a model and add it to the inverse relationship if necessary.
+ * A definition will look something like this:
+ *
+ *    todo: {
+ *      direction: 'toOne',
+ *      inverse: {
+ *        name: 'notes',
+ *        direction: 'toMany'
+ *      }
+ *    }
+ *
+ * @param {object} record the record that will have the relationship
+ * @param {object} store the data store
+ * @param {object} toOneDefinitions an object with formatted definitions
+ * @returns {object} an object with getters and setters based on the defintions
+ */
+var defineToOneRelationships = action(function (record, store, toOneDefinitions) {
+  return toOneDefinitions.reduce(function (object, _ref3) {
+    var _ref4 = _slicedToArray(_ref3, 2),
+      relationshipName = _ref4[0],
+      definition = _ref4[1];
+    var inverse = definition.inverse;
+    Object.defineProperty(object, relationshipName, {
+      get: function get() {
+        var _record$relationships;
+        var reference = (_record$relationships = record.relationships[relationshipName]) === null || _record$relationships === void 0 ? void 0 : _record$relationships.data;
+        if (reference) {
+          return coerceDataToExistingRecord(store, reference);
+        }
+      },
+      set: function set(relatedReference) {
+        return setRelatedRecord(relationshipName, record, relatedReference, store, inverse);
+      }
+    });
+    return object;
+  }, {});
+});
+
+/**
+ * Takes the `toMany` definitions from a document type and creates getters and setters.
+ * A getter finds records from the store, falling back to a lookup of the inverse records if
+ * none are defined in the `relationships` hash.
+ *
+ * The setter will unset the previous inverse and set the current inverse.
+ * Both return a `RelatedRecordsArray`, which is an array with added methods `add`, `remove`, and `replace`
+ *
+ * A definition will look like this:
+ *
+ *    categories: {
+ *      direction: 'toMany',
+ *      inverse: {
+ *        name: 'organization',
+ *        direction: 'toOne'
+ *      }
+ *    }
+ *
+ * @param {object} record the record that will have the relationship
+ * @param {object} store the data store
+ * @param {object} toManyDefinitions an object with formatted definitions
+ * @returns {object} an object with getters and setters based on the defintions
+ */
+var defineToManyRelationships = action(function (record, store, toManyDefinitions) {
+  return toManyDefinitions.reduce(function (object, _ref5) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+      relationshipName = _ref6[0],
+      definition = _ref6[1];
+    var inverse = definition.inverse,
+      relationshipTypes = definition.types;
+    Object.defineProperty(object, relationshipName, {
+      get: function get() {
+        var _record$relationships2;
+        var references = (_record$relationships2 = record.relationships[relationshipName]) === null || _record$relationships2 === void 0 ? void 0 : _record$relationships2.data;
+        var relatedRecords;
+        if (references) {
+          relatedRecords = references.filter(function (reference) {
+            return store.getKlass(reference.type);
+          }).map(function (reference) {
+            return coerceDataToExistingRecord(store, reference);
+          });
+        } else if (inverse) {
+          var types = relationshipTypes || [relationshipName];
+          relatedRecords = types.map(function (type) {
+            return record.store.getAll(type);
+          }).flat().filter(function (potentialRecord) {
+            var _potentialRecord$rela;
+            var reference = (_potentialRecord$rela = potentialRecord.relationships[inverse.name]) === null || _potentialRecord$rela === void 0 ? void 0 : _potentialRecord$rela.data;
+            return reference && reference.type === record.type && reference.id === record.id;
+          });
+        }
+        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
+      },
+      set: function set(relatedRecords) {
+        this.relationships[relationshipName] = {
+          data: relatedRecords.map(function (_ref7) {
+            var id = _ref7.id,
+              type = _ref7.type;
+            return {
+              id: id,
+              type: type
+            };
+          })
+        };
+        relatedRecords = relatedRecords.map(function (reference) {
+          return coerceDataToExistingRecord(store, reference);
+        });
+        if (inverse) {
+          var types = inverse.types,
+            inverseName = inverse.name;
+          var oldRelatedRecords = types.map(function (type) {
+            return record.store.getAll(type);
+          }).flat().filter(function (potentialRecord) {
+            var _potentialRecord$rela2;
+            var reference = (_potentialRecord$rela2 = potentialRecord.relationships[inverseName]) === null || _potentialRecord$rela2 === void 0 ? void 0 : _potentialRecord$rela2.data;
+            return reference && reference.type === record.type && reference.id === record.id;
+          });
+          oldRelatedRecords.forEach(function (oldRelatedRecord) {
+            oldRelatedRecord.relationships[inverseName] = null;
+          });
+          relatedRecords.forEach(function (relatedRecord) {
+            relatedRecord.relationships[inverseName] = {
+              data: {
+                id: record.id,
+                type: record.type
+              }
+            };
+          });
+        }
+        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
+      }
+    });
+    return object;
+  }, {});
+});
+
+/**
+ * Sets a related record, as well as the inverse. Can also remove the record from a relationship.
+ *
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the object being set with a related record
+ * @param {object} relatedRecord the related record
+ * @param {object} store the store
+ * @param {object} inverse the inverse object information
+ * @returns {object} the related record
+ */
+var setRelatedRecord = action(function (relationshipName, record, relatedRecord, store, inverse) {
+  if (relatedRecord != null) {
+    relatedRecord = coerceDataToExistingRecord(store, relatedRecord);
+    record.relationships[relationshipName] = {
+      data: {
+        id: relatedRecord.id,
+        type: relatedRecord.type
+      }
+    };
+  } else {
+    record.relationships[relationshipName] = null;
+  }
+  if (inverse) {
+    var _relatedRecord;
+    var relatedArray = (_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name];
+    if (relatedArray && !relatedArray.includes(record)) {
+      addRelatedRecord(relatedArray, inverse.name, relatedRecord, record);
+    }
+  }
+  record.takeSnapshot();
+  return relatedRecord;
+});
+
+/**
+ * Removes a record from an array of related records, removing both the object and the reference.
+ *
+ * @param {Array} array the related records array
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the related record being removed from the relationship
+ * @param {object} inverse the definition of the inverse relationship
+ * @returns {object} the removed record
+ */
+var removeRelatedRecord = action(function (array, relationshipName, record, relatedRecord, inverse) {
+  var _record$relationships3;
+  if (array == null || relatedRecord == null) {
+    return relatedRecord;
+  }
+  var existingData = ((_record$relationships3 = record.relationships[relationshipName]) === null || _record$relationships3 === void 0 ? void 0 : _record$relationships3.data) || [];
+  var recordIndexToRemove = existingData.findIndex(function (_ref8) {
+    var comparedId = _ref8.id,
+      comparedType = _ref8.type;
+    return comparedId === relatedRecord.id && comparedType === relatedRecord.type;
+  });
+  if (recordIndexToRemove > -1) {
+    if (inverse) {
+      setRelatedRecord(inverse.name, relatedRecord, null, record.store);
+    }
+    existingData.splice(recordIndexToRemove, 1);
+    array.splice(recordIndexToRemove, 1);
+  }
+  record.takeSnapshot();
+  return coerceDataToExistingRecord(record.store, relatedRecord);
+});
+
+/**
+ * Adds a record to a related array and updates the jsonapi reference in the relationships
+ *
+ * @param {Array} array the related records array
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the related record being added to the relationship
+ * @param {object} inverse the definition of the inverse relationship
+ * @returns {object} the added record
+ */
+var addRelatedRecord = action(function (array, relationshipName, record, relatedRecord, inverse) {
+  var _record$relationships4;
+  if (Array.isArray(relatedRecord)) {
+    return relatedRecord.map(function (singleRecord) {
+      return addRelatedRecord(array, relationshipName, record, singleRecord, inverse);
+    });
+  }
+  if (array == null || relatedRecord == null || !record.store.getKlass(record.type)) {
+    return relatedRecord;
+  }
+  var relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord);
+  if (inverse) {
+    setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store);
+  }
+  var existingData = ((_record$relationships4 = record.relationships[relationshipName]) === null || _record$relationships4 === void 0 ? void 0 : _record$relationships4.data) || [];
+  var alreadyThere = array.includes(relatedRecordFromStore);
+  if (!alreadyThere) {
+    record.relationships[relationshipName] = {
+      data: [].concat(_toConsumableArray(existingData), [{
+        id: relatedRecord.id,
+        type: relatedRecord.type
+      }])
+    };
+    array.push(relatedRecordFromStore);
+  }
+  record.takeSnapshot();
+  return relatedRecordFromStore;
+});
+
+/**
+ * Takes any object with { id, type } properties and gets an object from the store with that structure.
+ * Useful for allowing objects to be serialized in real time, saving overhead, while at the same time
+ * always returning an object of the same type.
+ *
+ * @param {object} store the store with the reference
+ * @param {object} record the potential record
+ * @returns {object} the store object
+ */
+var coerceDataToExistingRecord = action(function (store, record) {
+  if (!(store !== null && store !== void 0 && store.getType(record.type))) {
+    return null;
+  }
+  if (record && !(record instanceof Model$1)) {
+    var _record = record,
+      id = _record.id,
+      type = _record.type;
+    record = store.getOne(type, id) || store.add(type, {
+      id: id
+    });
+  }
+  return record;
+});
+
+/**
+ * An array that allows for updating store references and relationships
+ */
+_Symbol$species = Symbol.species;
+var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
+  _inherits(RelatedRecordsArray, _Array);
+  var _super = _createSuper(RelatedRecordsArray);
+  /**
+   * Extends an array to create an enhanced array.
+   *
+   * @param {object} record the record with the referenced array
+   * @param {string} property the property on the record that references the array
+   * @param {Array} array the array to extend
+   */
+  function RelatedRecordsArray(_record2, _property) {
+    var _this;
+    var _array = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    _classCallCheck(this, RelatedRecordsArray);
+    _this = _super.call.apply(_super, [this].concat(_toConsumableArray(_array)));
+    _defineProperty$1(_assertThisInitialized(_this), "add", function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized(_this),
+        inverse = _assertThisInitialize.inverse,
+        record = _assertThisInitialize.record,
+        property = _assertThisInitialize.property;
+      return addRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
+    });
+    _defineProperty$1(_assertThisInitialized(_this), "remove", function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized(_this),
+        inverse = _assertThisInitialize2.inverse,
+        record = _assertThisInitialize2.record,
+        property = _assertThisInitialize2.property;
+      return removeRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
+    });
+    _defineProperty$1(_assertThisInitialized(_this), "replace", function () {
+      var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var _assertThisInitialize3 = _assertThisInitialized(_this),
+        inverse = _assertThisInitialize3.inverse,
+        record = _assertThisInitialize3.record,
+        property = _assertThisInitialize3.property,
+        store = _assertThisInitialize3.store;
+      var newRecords;
+      var relatedRecord;
+      transaction(function () {
+        while (_this.length > 0) {
+          relatedRecord = _this.pop();
+          if (inverse) {
+            setRelatedRecord(inverse.name, relatedRecord, null, store);
+          }
+        }
+        record.relationships[property] = {
+          data: []
+        };
+        newRecords = array.map(function (relatedRecord) {
+          return addRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
+        });
+      });
+      return newRecords;
+    });
+    _this.property = _property;
+    _this.record = _record2;
+    _this.store = _record2.store;
+    _this.inverse = _record2.relationshipDefinitions[_this.property].inverse;
+    return _this;
+  }
+
+  /**
+   * Adds a record to the array, and updates references in the store, as well as inverse references
+   *
+   * @param {object} relatedRecord the record to add to the array
+   * @returns {object} a model record reflecting the original relatedRecord
+   */
+  _createClass(RelatedRecordsArray, null, [{
+    key: _Symbol$species,
+    get: /* eslint-disable */
+    /*
+     * This method is used by Array internals to decide
+     * which class to use for resulting derived objects from array manipulation methods
+     * such as `map` or `filter`
+     *
+     * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
+     * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
+     *
+     * For more details, see:
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
+     */
+    function get() {
+      return Array;
+    }
+    /* eslint-enable */
+  }]);
+  return RelatedRecordsArray;
+}( /*#__PURE__*/_wrapNativeSuper(Array));
+
+function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$3(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
 /**
  * Annotations for mobx observability. We can't use `makeAutoObservable` because we have subclasses.
  */
@@ -8818,8 +8649,6 @@ var mobxAnnotations$1 = {
   add: action,
   pickAttributes: action,
   pickRelationships: action,
-  addModel: action,
-  addModels: action,
   bulkSave: action,
   _bulkSave: action,
   bulkCreate: action,
@@ -8860,10 +8689,10 @@ var mobxAnnotations$1 = {
   createModelFromData: action,
   updateRecordsFromResponse: action
 };
+
 /**
  * Defines the Data Store class.
  */
-
 var Store = /*#__PURE__*/function () {
   /**
    * Stores data by type.
@@ -8913,20 +8742,20 @@ var Store = /*#__PURE__*/function () {
    */
   function Store(options) {
     _classCallCheck(this, Store);
-
     _defineProperty$1(this, "data", {});
-
     _defineProperty$1(this, "lastResponseHeaders", {});
-
     _defineProperty$1(this, "loadingStates", new Map());
-
     _defineProperty$1(this, "loadedStates", new Map());
-
     makeObservable(this, mobxAnnotations$1);
     this.init(options);
   }
+
   /**
    * Adds an instance or an array of instances to the store.
+   * Adds the model to the type records index
+   * Adds relationships explicitly. This is less efficient than adding via data if
+   * there are also inverse relationships.
+   *
    * ```
    * const todo = store.add('todos', { name: "A good thing to measure" })
    * todo.name
@@ -8942,17 +8771,44 @@ var Store = /*#__PURE__*/function () {
    * @param {object|Array} data the properties to use
    * @returns {object|Array} the new record or records
    */
-
-
   _createClass(Store, [{
     key: "add",
     value: function add(type, data) {
+      var _this = this;
       if (data.constructor.name === 'Array') {
-        return this.addModels(type, data);
+        return data.map(function (model) {
+          return _this.add(type, model);
+        });
       } else {
-        return this.addModel(type, cloneDeep_1(data));
+        var id = idOrNewId(data.id);
+        var attributes = cloneDeep_1(this.pickAttributes(data, type));
+        var relationships = this.pickRelationships(data, type);
+        var model = this.createModelFromData({
+          type: type,
+          id: id,
+          attributes: attributes
+        });
+        this.data[type].records.set(String(model.id), model);
+        var toOneDefinitions = definitionsByDirection(model, 'toOne');
+        var toManyDefinitions = definitionsByDirection(model, 'toMany');
+        toOneDefinitions.forEach(function (_ref) {
+          var _ref2 = _slicedToArray(_ref, 1),
+            relationshipName = _ref2[0];
+          if (relationships[relationshipName]) {
+            model[relationshipName] = relationships[relationshipName];
+          }
+        });
+        toManyDefinitions.forEach(function (_ref3) {
+          var _ref4 = _slicedToArray(_ref3, 1),
+            relationshipName = _ref4[0];
+          if (relationships[relationshipName]) {
+            model[relationshipName].add(relationships[relationshipName]);
+          }
+        });
+        return model;
       }
     }
+
     /**
      * Given a set of properties and type, returns an object with only the properties
      * that are defined as attributes in the model for that type.
@@ -8966,13 +8822,13 @@ var Store = /*#__PURE__*/function () {
      * @param {string} type the model type
      * @returns {object} the scrubbed attributes
      */
-
   }, {
     key: "pickAttributes",
     value: function pickAttributes(properties, type) {
       var attributeNames = Object.keys(this.getKlass(type).attributeDefinitions);
       return pick_1(properties, attributeNames);
     }
+
     /**
      * Given a set of properties and type, returns an object with only the properties
      * that are defined as relationships in the model for that type.
@@ -8993,68 +8849,13 @@ var Store = /*#__PURE__*/function () {
      * @param {string} type the model type
      * @returns {object} the scrubbed relationships
      */
-
   }, {
     key: "pickRelationships",
     value: function pickRelationships(properties, type) {
       var definitions = this.getKlass(type).relationshipDefinitions;
       return definitions ? pick_1(properties, Object.keys(definitions)) : {};
     }
-    /**
-     * Adds a model of `type` with properties
-     *
-     * @param {string} type the model type
-     * @param {object} properties the attributes and relationships
-     * @returns {object} Data record
-     */
 
-  }, {
-    key: "addModel",
-    value: function addModel(type, properties) {
-      var id = idOrNewId(properties.id);
-      var attributes = this.pickAttributes(properties, type);
-      var relationships = this.pickRelationships(properties, type);
-      var serializedRelationships = Object.entries(relationships).reduce(function (relationshipsData, _ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-            relationshipName = _ref2[0],
-            data = _ref2[1];
-
-        relationshipsData[relationshipName] = {
-          data: Array.isArray(data) ? data.map(function (model) {
-            return pick_1(model, ['id', 'type']);
-          }) : pick_1(data, ['id', 'type'])
-        };
-        return relationshipsData;
-      }, {});
-      var model = this.createModelFromData({
-        type: type,
-        id: id,
-        attributes: attributes,
-        relationships: serializedRelationships
-      }); // Add the model to the type records index
-
-      this.data[type].records.set(String(model.id), model);
-      return model;
-    }
-    /**
-     * Adds a number of models at once to the store.
-     *
-     * @param {string} type the model type
-     * @param {string} data array of data objects
-     * @returns {Array} array of records
-     */
-
-  }, {
-    key: "addModels",
-    value: function addModels(type, data) {
-      var _this = this;
-
-      return runInAction(function () {
-        return data.map(function (obj) {
-          return _this.addModel(type, obj);
-        });
-      });
-    }
     /**
      * Saves a collection of records via a bulk-supported JSONApi endpoint.
      * All records need to be of the same type.
@@ -9064,7 +8865,6 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options {queryParams, extensions}
      * @returns {Promise} the saved records
      */
-
   }, {
     key: "bulkSave",
     value: function bulkSave(type, records) {
@@ -9072,6 +8872,7 @@ var Store = /*#__PURE__*/function () {
       console.warn('bulkSave is deprecated. Please use either bulkCreate or bulkUpdate to be more precise about your request.');
       return this._bulkSave(type, records, options, 'POST');
     }
+
     /**
      * Saves a collection of records via a bulk-supported JSONApi endpoint.
      * All records need to be of the same type.
@@ -9089,14 +8890,13 @@ var Store = /*#__PURE__*/function () {
      * @param {string} method http method
      * @returns {Promise} the saved records
      */
-
   }, {
     key: "_bulkSave",
     value: function _bulkSave(type, records) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var method = arguments.length > 3 ? arguments[3] : undefined;
       var queryParams = options.queryParams,
-          extensions = options.extensions;
+        extensions = options.extensions;
       var url = this.fetchUrl(type, queryParams, null);
       var recordAttributes = records.map(function (record) {
         return record.jsonapi(options);
@@ -9114,6 +8914,7 @@ var Store = /*#__PURE__*/function () {
       });
       return this.updateRecordsFromResponse(response, records);
     }
+
     /**
      * Save a collection of new records via a bulk-supported JSONApi endpoint.
      * All records need to be of the same type and not have an existing id.
@@ -9123,20 +8924,18 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options {queryParams, extensions}
      * @returns {Promise} the created records
      */
-
   }, {
     key: "bulkCreate",
     value: function bulkCreate(type, records) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
       if (records.some(function (record) {
         return !record.isNew;
       })) {
         throw new Error('Invariant violated: all records must be new records to perform a create');
       }
-
       return this._bulkSave(type, records, options, 'POST');
     }
+
     /**
      * Updates a collection of records via a bulk-supported JSONApi endpoint.
      * All records need to be of the same type and have an existing id.
@@ -9146,20 +8945,18 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options {queryParams, extensions}
      * @returns {Promise} the saved records
      */
-
   }, {
     key: "bulkUpdate",
     value: function bulkUpdate(type, records) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
       if (records.some(function (record) {
         return record.isNew;
       })) {
         throw new Error('Invariant violated: all records must have a persisted id to perform an update');
       }
-
       return this._bulkSave(type, records, options, 'PATCH');
     }
+
     /**
      * Removes a record from the store by deleting it from the
      * type's record map
@@ -9167,12 +8964,12 @@ var Store = /*#__PURE__*/function () {
      * @param {string} type the model type
      * @param {string} id of record to remove
      */
-
   }, {
     key: "remove",
     value: function remove(type, id) {
       this.data[type].records.delete(String(id));
     }
+
     /**
      * Gets a record from the store. Will never fetch from the server.
      * If given queryParams, it will check the cache for the record.
@@ -9182,25 +8979,22 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {object} record
      */
-
   }, {
     key: "getOne",
     value: function getOne(type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
       if (!id) {
         console.error("No id given while calling 'getOne' on ".concat(type));
         return undefined;
       }
-
       var queryParams = options.queryParams;
-
       if (queryParams) {
         return this.getCachedRecord(type, id, queryParams);
       } else {
         return this.getRecord(type, id);
       }
     }
+
     /**
      * Fetches record by `id` from the server and returns a Promise.
      *
@@ -9210,37 +9004,32 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {Promise} record result wrapped in a Promise
      */
-
   }, {
     key: "fetchOne",
     value: function () {
       var _fetchOne = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(type, id) {
         var options,
-            queryParams,
-            url,
-            state,
-            response,
-            _yield$response$json,
-            data,
-            included,
-            record,
-            errors,
-            _args = arguments;
-
+          queryParams,
+          url,
+          state,
+          response,
+          _yield$response$json,
+          data,
+          included,
+          record,
+          errors,
+          _args = arguments;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 options = _args.length > 2 && _args[2] !== undefined ? _args[2] : {};
-
                 if (id) {
                   _context.next = 4;
                   break;
                 }
-
                 console.error("No id given while calling 'fetchOne' on ".concat(type));
                 return _context.abrupt("return", undefined);
-
               case 4:
                 queryParams = options.queryParams;
                 url = this.fetchUrl(type, queryParams, id);
@@ -9253,41 +9042,32 @@ var Store = /*#__PURE__*/function () {
                 return this.fetch(url, {
                   method: 'GET'
                 });
-
               case 9:
                 response = _context.sent;
-
                 if (!(response.status === 200)) {
                   _context.next = 23;
                   break;
                 }
-
                 _context.next = 13;
                 return response.json();
-
               case 13:
                 _yield$response$json = _context.sent;
                 data = _yield$response$json.data;
                 included = _yield$response$json.included;
                 record = this.createOrUpdateModelFromData(data);
-
                 if (included) {
                   this.createOrUpdateModelsFromData(included);
                 }
-
                 this.data[type].cache.set(url, [record.id]);
                 this.deleteLoadingState(state);
                 return _context.abrupt("return", record);
-
               case 23:
                 this.deleteLoadingState(state);
                 _context.next = 26;
                 return parseErrors(response, this.errorMessages);
-
               case 26:
                 errors = _context.sent;
                 throw new Error(JSON.stringify(errors));
-
               case 28:
               case "end":
                 return _context.stop();
@@ -9295,11 +9075,9 @@ var Store = /*#__PURE__*/function () {
           }
         }, _callee, this);
       }));
-
       function fetchOne(_x, _x2) {
         return _fetchOne.apply(this, arguments);
       }
-
       return fetchOne;
     }()
     /**
@@ -9318,20 +9096,18 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {Promise} a promise that will resolve to the record
      */
-
   }, {
     key: "findOne",
     value: function findOne(type, id) {
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
       if (!id) {
         console.error("No id given while calling 'findOne' on ".concat(type));
         return undefined;
       }
-
       var record = this.getOne(type, id, options);
       return record !== null && record !== void 0 && record.id ? record : this.fetchOne(type, id, options);
     }
+
     /**
      * Get all records with the given `type` and `ids` from the store. This will never fetch from the server.
      *
@@ -9340,7 +9116,6 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {Array} array of records
      */
-
   }, {
     key: "getMany",
     value: function getMany(type, ids) {
@@ -9351,6 +9126,7 @@ var Store = /*#__PURE__*/function () {
         return idsToQuery.includes(record.id);
       });
     }
+
     /**
      * Fetch all records with the given `type` and `ids` from the server.
      *
@@ -9359,17 +9135,15 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
      */
-
   }, {
     key: "fetchMany",
     value: function fetchMany(type, ids) {
       var _this2 = this;
-
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
       var idsToQuery = ids.slice().map(String);
       var _options$queryParams = options.queryParams,
-          queryParams = _options$queryParams === void 0 ? {} : _options$queryParams,
-          queryTag = options.queryTag;
+        queryParams = _options$queryParams === void 0 ? {} : _options$queryParams,
+        queryTag = options.queryTag;
       queryParams.filter = queryParams.filter || {};
       var baseUrl = this.fetchUrl(type, queryParams);
       var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
@@ -9382,13 +9156,13 @@ var Store = /*#__PURE__*/function () {
         });
       });
       return Promise.all(queries).then(function (records) {
-        var _ref3;
-
-        return (_ref3 = []).concat.apply(_ref3, _toConsumableArray(records));
+        var _ref5;
+        return (_ref5 = []).concat.apply(_ref5, _toConsumableArray(records));
       }).catch(function (err) {
         return Promise.reject(err);
       });
     }
+
     /**
      * Finds multiple records of the given `type` with the given `ids` and returns them wrapped in a Promise.
      * If all records are in the store, it returns those.
@@ -9408,34 +9182,28 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {Promise} a promise that will resolve an array of records
      */
-
   }, {
     key: "findMany",
     value: function findMany(type, ids) {
       var _this3 = this;
-
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
       var idsToQuery = _toConsumableArray(new Set(ids)).map(String);
-
       var recordsInStore = this.getAll(type, options).filter(function (record) {
         return idsToQuery.includes(String(record.id));
       });
-
       if (recordsInStore.length === idsToQuery.length) {
         return recordsInStore;
       }
-
-      var recordIdsInStore = recordsInStore.map(function (_ref4) {
-        var id = _ref4.id;
+      var recordIdsInStore = recordsInStore.map(function (_ref6) {
+        var id = _ref6.id;
         return String(id);
       });
       idsToQuery = idsToQuery.filter(function (id) {
         return !recordIdsInStore.includes(id);
       });
       var _options$queryParams2 = options.queryParams,
-          queryParams = _options$queryParams2 === void 0 ? {} : _options$queryParams2,
-          queryTag = options.queryTag;
+        queryParams = _options$queryParams2 === void 0 ? {} : _options$queryParams2,
+        queryTag = options.queryTag;
       queryParams.filter = queryParams.filter || {};
       var baseUrl = this.fetchUrl(type, queryParams);
       var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
@@ -9450,6 +9218,7 @@ var Store = /*#__PURE__*/function () {
         return recordsInStore.concat.apply(recordsInStore, _toConsumableArray(recordsFromServer));
       });
     }
+
     /**
      * Builds fetch url based on type, queryParams, id, and options
      *
@@ -9459,17 +9228,15 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options options for fetching
      * @returns {string} a formatted url
      */
-
   }, {
     key: "fetchUrl",
     value: function fetchUrl(type, queryParams, id, options) {
       var baseUrl = this.baseUrl;
-
       var _this$getKlass = this.getKlass(type),
-          endpoint = _this$getKlass.endpoint;
-
+        endpoint = _this$getKlass.endpoint;
       return requestUrl(baseUrl, endpoint, queryParams, id, options);
     }
+
     /**
      * Gets all records with the given `type` from the store. This will never fetch from the server.
      *
@@ -9477,19 +9244,18 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options options for fetching queryParams
      * @returns {Array} array of records
      */
-
   }, {
     key: "getAll",
     value: function getAll(type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var queryParams = options.queryParams;
-
       if (queryParams) {
         return this.getCachedRecords(type, queryParams);
       } else {
         return this.getRecords(type);
       }
     }
+
     /**
      * Sets a loading state when a fetch / deserialization is in flight. Loading states
      * are Sets inside of the `loadingStates` Map, so multiple loading states can be in flight
@@ -9506,14 +9272,13 @@ var Store = /*#__PURE__*/function () {
      * @param {string} options.queryTag an optional tag to use in place of the type
      * @returns {object} the loading state that was added
      */
-
   }, {
     key: "setLoadingState",
-    value: function setLoadingState(_ref5) {
-      var url = _ref5.url,
-          type = _ref5.type,
-          queryParams = _ref5.queryParams,
-          queryTag = _ref5.queryTag;
+    value: function setLoadingState(_ref7) {
+      var url = _ref7.url,
+        type = _ref7.type,
+        queryParams = _ref7.queryParams,
+        queryTag = _ref7.queryTag;
       queryTag = queryTag || type;
       var loadingStateInfo = {
         url: url,
@@ -9521,38 +9286,32 @@ var Store = /*#__PURE__*/function () {
         queryParams: queryParams,
         queryTag: queryTag
       };
-
       if (!this.loadingStates.get(queryTag)) {
         this.loadingStates.set(queryTag, new Set());
       }
-
       this.loadingStates.get(queryTag).add(JSON.stringify(loadingStateInfo));
       return loadingStateInfo;
     }
+
     /**
      * Removes a loading state. If that leaves an empty array for the map key in `loadingStates`,
      * will also delete the set. Also adds to loadedStates.
      *
      * @param {object} state the state to remove
      */
-
   }, {
     key: "deleteLoadingState",
     value: function deleteLoadingState(state) {
       var loadingStates = this.loadingStates,
-          loadedStates = this.loadedStates;
+        loadedStates = this.loadedStates;
       var queryTag = state.queryTag;
       var encodedState = JSON.stringify(state);
-
       if (!loadedStates.get(queryTag)) {
         loadedStates.set(queryTag, new Set());
       }
-
       loadedStates.get(queryTag).add(encodedState);
-
       if (loadingStates.get(queryTag)) {
         loadingStates.get(queryTag).delete(encodedState);
-
         if (loadingStates.get(queryTag).size === 0) {
           loadingStates.delete(queryTag);
         }
@@ -9560,6 +9319,7 @@ var Store = /*#__PURE__*/function () {
         console.warn("no loadingState found for ".concat(encodedState));
       }
     }
+
     /**
      * Finds all records with the given `type`. Always fetches from the server.
      *
@@ -9568,26 +9328,23 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options query params and other options
      * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
      */
-
   }, {
     key: "fetchAll",
     value: function () {
       var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type) {
         var _this4 = this;
-
         var options,
-            queryParams,
-            url,
-            state,
-            response,
-            _yield$response$json2,
-            included,
-            data,
-            meta,
-            records,
-            errors,
-            _args2 = arguments;
-
+          queryParams,
+          url,
+          state,
+          response,
+          _yield$response$json2,
+          included,
+          data,
+          meta,
+          records,
+          errors,
+          _args2 = arguments;
         return _regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
@@ -9603,19 +9360,15 @@ var Store = /*#__PURE__*/function () {
                 return this.fetch(url, {
                   method: 'GET'
                 });
-
               case 6:
                 response = _context2.sent;
-
                 if (!(response.status === 200)) {
                   _context2.next = 20;
                   break;
                 }
-
                 this.data[type].cache.set(url, []);
                 _context2.next = 11;
                 return response.json();
-
               case 11:
                 _yield$response$json2 = _context2.sent;
                 included = _yield$response$json2.included;
@@ -9625,40 +9378,29 @@ var Store = /*#__PURE__*/function () {
                   if (included) {
                     _this4.createOrUpdateModelsFromData(included);
                   }
-
                   records = data.map(function (document) {
                     var record = _this4.createModelFromData(document);
-
                     var cachedIds = _this4.data[type].cache.get(url);
-
                     _this4.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [document.id]));
-
                     _this4.data[type].records.set(String(document.id), record);
-
                     return record;
                   });
-
                   _this4.deleteLoadingState(state);
                 });
-
                 if (meta) {
                   records.meta = meta;
                   this.getType(type).meta.set(url, meta);
                 }
-
                 return _context2.abrupt("return", records);
-
               case 20:
                 runInAction(function () {
                   _this4.deleteLoadingState(state);
                 });
                 _context2.next = 23;
                 return parseErrors(response, this.errorMessages);
-
               case 23:
                 errors = _context2.sent;
                 throw new Error(JSON.stringify(errors));
-
               case 25:
               case "end":
                 return _context2.stop();
@@ -9666,11 +9408,9 @@ var Store = /*#__PURE__*/function () {
           }
         }, _callee2, this);
       }));
-
       function fetchAll(_x3) {
         return _fetchAll.apply(this, arguments);
       }
-
       return fetchAll;
     }()
     /**
@@ -9704,19 +9444,18 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options { queryParams }
      * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
      */
-
   }, {
     key: "findAll",
     value: function findAll(type) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var records = this.getAll(type, options);
-
       if (records.length > 0) {
         return records;
       } else {
         return this.fetchAll(type, options);
       }
     }
+
     /**
      * Clears the store of a given type, or clears all if no type given
      *
@@ -9727,7 +9466,6 @@ var Store = /*#__PURE__*/function () {
      *
      * @param {string} type the model type
      */
-
   }, {
     key: "reset",
     value: function reset(type) {
@@ -9741,12 +9479,12 @@ var Store = /*#__PURE__*/function () {
         this.initializeObservableDataProperty();
       }
     }
+
     /**
      * Entry point for configuring the store
      *
      * @param {object} options passed to constructor
      */
-
   }, {
     key: "init",
     value: function init() {
@@ -9756,6 +9494,7 @@ var Store = /*#__PURE__*/function () {
       this.initializeObservableDataProperty();
       this.initializeErrorMessages(options);
     }
+
     /**
      * Configures the store's network options
      *
@@ -9765,37 +9504,37 @@ var Store = /*#__PURE__*/function () {
      * @param {Array} options.headersOfInterest an array of headers to watch
      * @param {object} options.retryOptions options for re-fetch attempts and interval
      */
-
   }, {
     key: "initializeNetworkConfiguration",
-    value: function initializeNetworkConfiguration(_ref6) {
-      var _ref6$baseUrl = _ref6.baseUrl,
-          baseUrl = _ref6$baseUrl === void 0 ? '' : _ref6$baseUrl,
-          _ref6$defaultFetchOpt = _ref6.defaultFetchOptions,
-          defaultFetchOptions = _ref6$defaultFetchOpt === void 0 ? {} : _ref6$defaultFetchOpt,
-          _ref6$headersOfIntere = _ref6.headersOfInterest,
-          headersOfInterest = _ref6$headersOfIntere === void 0 ? [] : _ref6$headersOfIntere,
-          _ref6$retryOptions = _ref6.retryOptions,
-          retryOptions = _ref6$retryOptions === void 0 ? {
-        attempts: 1,
-        delay: 0
-      } : _ref6$retryOptions;
+    value: function initializeNetworkConfiguration(_ref8) {
+      var _ref8$baseUrl = _ref8.baseUrl,
+        baseUrl = _ref8$baseUrl === void 0 ? '' : _ref8$baseUrl,
+        _ref8$defaultFetchOpt = _ref8.defaultFetchOptions,
+        defaultFetchOptions = _ref8$defaultFetchOpt === void 0 ? {} : _ref8$defaultFetchOpt,
+        _ref8$headersOfIntere = _ref8.headersOfInterest,
+        headersOfInterest = _ref8$headersOfIntere === void 0 ? [] : _ref8$headersOfIntere,
+        _ref8$retryOptions = _ref8.retryOptions,
+        retryOptions = _ref8$retryOptions === void 0 ? {
+          attempts: 1,
+          delay: 0
+        } : _ref8$retryOptions;
       this.baseUrl = baseUrl;
       this.defaultFetchOptions = defaultFetchOptions;
       this.headersOfInterest = headersOfInterest;
       this.retryOptions = retryOptions;
     }
+
     /**
      * Creates the key/value index of model types
      *
      * @param {object} models a fallback list of models
      */
-
   }, {
     key: "initializeModelIndex",
     value: function initializeModelIndex(models) {
       this.models = this.constructor.models || models;
     }
+
     /**
      * Creates an obserable index with model types
      * as the primary key
@@ -9803,16 +9542,15 @@ var Store = /*#__PURE__*/function () {
      * Observable({ todos: {} })
      *
      */
-
   }, {
     key: "initializeObservableDataProperty",
     value: function initializeObservableDataProperty() {
       var _this5 = this;
+      var models = this.models;
 
-      var models = this.models; // NOTE: Is there a performance cost to setting
+      // NOTE: Is there a performance cost to setting
       // each property individually?
       // Is Map the most efficient structure?
-
       models.forEach(function (modelKlass) {
         _this5.data[modelKlass.type] = {
           records: observable.map(),
@@ -9821,24 +9559,23 @@ var Store = /*#__PURE__*/function () {
         };
       });
     }
+
     /**
      * Configure the error messages returned from the store when API requests fail
      *
      * @param {object} options for initializing the store
      *   options for initializing error messages for different HTTP status codes
      */
-
   }, {
     key: "initializeErrorMessages",
     value: function initializeErrorMessages() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
       var errorMessages = _objectSpread$3({}, options.errorMessages);
-
       this.errorMessages = _objectSpread$3({
         default: 'Something went wrong.'
       }, errorMessages);
     }
+
     /**
      * Wrapper around fetch applies user defined fetch options
      *
@@ -9846,22 +9583,20 @@ var Store = /*#__PURE__*/function () {
      * @param {object} options override options to use for fetching
      * @returns {Promise} the data from the server
      */
-
   }, {
     key: "fetch",
     value: function () {
       var _fetch = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(url) {
         var _this6 = this;
-
         var options,
-            defaultFetchOptions,
-            headersOfInterest,
-            retryOptions,
-            fetchOptions,
-            attempts,
-            delay,
-            response,
-            _args3 = arguments;
+          defaultFetchOptions,
+          headersOfInterest,
+          retryOptions,
+          fetchOptions,
+          attempts,
+          delay,
+          response,
+          _args3 = arguments;
         return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
@@ -9872,22 +9607,18 @@ var Store = /*#__PURE__*/function () {
                 attempts = retryOptions.attempts, delay = retryOptions.delay;
                 _context3.next = 6;
                 return fetchWithRetry(url, fetchOptions, attempts, delay);
-
               case 6:
                 response = _context3.sent;
-
                 if (headersOfInterest) {
                   runInAction(function () {
                     headersOfInterest.forEach(function (header) {
-                      var value = response.headers.get(header); // Only set if it has changed, to minimize observable changes
-
+                      var value = response.headers.get(header);
+                      // Only set if it has changed, to minimize observable changes
                       if (_this6.lastResponseHeaders[header] !== value) _this6.lastResponseHeaders[header] = value;
                     });
                   });
                 }
-
                 return _context3.abrupt("return", response);
-
               case 9:
               case "end":
                 return _context3.stop();
@@ -9895,11 +9626,9 @@ var Store = /*#__PURE__*/function () {
           }
         }, _callee3, this);
       }));
-
       function fetch(_x4) {
         return _fetch.apply(this, arguments);
       }
-
       return fetch;
     }()
     /**
@@ -9908,12 +9637,12 @@ var Store = /*#__PURE__*/function () {
      * @param {string} type the model type
      * @returns {object} observable type object structure
      */
-
   }, {
     key: "getType",
     value: function getType(type) {
       return this.data[type];
     }
+
     /**
      * Gets individual record from store
      *
@@ -9921,17 +9650,16 @@ var Store = /*#__PURE__*/function () {
      * @param {number} id the model id
      * @returns {object} record
      */
-
   }, {
     key: "getRecord",
     value: function getRecord(type, id) {
       if (!this.getType(type)) {
         throw new Error("Could not find a collection for type '".concat(type, "'"));
       }
-
       var record = this.getType(type).records.get(String(id));
       return !record || record === 'undefined' ? undefined : record;
     }
+
     /**
      * Gets records for type of collection from observable
      *
@@ -9945,7 +9673,6 @@ var Store = /*#__PURE__*/function () {
      * @param {string} type the model type
      * @returns {Array} array of objects
      */
-
   }, {
     key: "getRecords",
     value: function getRecords(type) {
@@ -9954,6 +9681,7 @@ var Store = /*#__PURE__*/function () {
       });
       return uniqBy_1(records, 'id');
     }
+
     /**
      * Get multiple records by id
      *
@@ -9961,12 +9689,10 @@ var Store = /*#__PURE__*/function () {
      * @param {Array} ids the ids to find
      * @returns {Array} array or records
      */
-
   }, {
     key: "getRecordsById",
     value: function getRecordsById(type) {
       var _this7 = this;
-
       var ids = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
       // NOTE: Is there a better way to do this?
       return ids.map(function (id) {
@@ -9977,18 +9703,19 @@ var Store = /*#__PURE__*/function () {
         return typeof record !== 'undefined';
       });
     }
+
     /**
      * Clears the cache for provided record type
      *
      * @param {string} type the model type
      * @returns {Set} the cleared set
      */
-
   }, {
     key: "clearCache",
     value: function clearCache(type) {
       return this.getType(type).cache.clear();
     }
+
     /**
      * Gets single from store based on cached query
      *
@@ -9997,13 +9724,13 @@ var Store = /*#__PURE__*/function () {
      * @param {object} queryParams the params to be searched
      * @returns {object} record
      */
-
   }, {
     key: "getCachedRecord",
     value: function getCachedRecord(type, id, queryParams) {
       var cachedRecords = this.getCachedRecords(type, queryParams, id);
       return cachedRecords && cachedRecords[0];
     }
+
     /**
      * Gets records from store based on cached query and any previously requested ids
      *
@@ -10012,7 +9739,6 @@ var Store = /*#__PURE__*/function () {
      * @param {string} id optional param if only getting 1 cached record by id
      * @returns {Array} array of records
      */
-
   }, {
     key: "getCachedRecords",
     value: function getCachedRecords(type, queryParams, id) {
@@ -10023,6 +9749,7 @@ var Store = /*#__PURE__*/function () {
       if (meta) cachedRecords.meta = meta;
       return cachedRecords;
     }
+
     /**
      * Gets records from store based on cached query
      *
@@ -10030,7 +9757,6 @@ var Store = /*#__PURE__*/function () {
      * @param {string} url the url that was requested
      * @returns {Array} array of ids
      */
-
   }, {
     key: "getCachedIds",
     value: function getCachedIds(type, url) {
@@ -10039,6 +9765,7 @@ var Store = /*#__PURE__*/function () {
       var idsSet = new Set(toJS(ids));
       return Array.from(idsSet);
     }
+
     /**
      * Gets a record from store based on cached query
      *
@@ -10046,19 +9773,18 @@ var Store = /*#__PURE__*/function () {
      * @param {string} id the id to get
      * @returns {object} the cached object
      */
-
   }, {
     key: "getCachedId",
     value: function getCachedId(type, id) {
       return this.getType(type).cache.get(String(id));
     }
+
     /**
      * Helper to look up model class for type.
      *
      * @param {string} type the model type
      * @returns {Function} model constructor
      */
-
   }, {
     key: "getKlass",
     value: function getKlass(type) {
@@ -10066,54 +9792,51 @@ var Store = /*#__PURE__*/function () {
         return model.type === type;
       });
     }
+
     /**
      * Creates or updates a model
      *
      * @param {object} data the object will be used to update or create a model
      * @returns {object} the record
      */
-
   }, {
     key: "createOrUpdateModelFromData",
     value: function createOrUpdateModelFromData(data) {
       var id = data.id,
-          type = data.type;
+        type = data.type;
       var record = this.getRecord(type, id);
-
       if (record) {
         this.updateRecordFromData(record, data);
       } else {
         record = this.createModelFromData(data);
       }
-
       this.data[type].records.set(String(record.id), record);
       return record;
     }
+
     /**
      * Updates a record from a jsonapi hash
      *
      * @param {object} record a Model record
      * @param {object} data jsonapi-formatted data
      */
-
   }, {
     key: "updateRecordFromData",
     value: function updateRecordFromData(record, data) {
       var _this8 = this;
-
       var tmpId = record.id;
       var id = data.id,
-          type = data.type,
-          attributes = data.attributes,
-          _data$relationships = data.relationships,
-          relationships = _data$relationships === void 0 ? {} : _data$relationships;
+        type = data.type,
+        _data$attributes = data.attributes,
+        attributes = _data$attributes === void 0 ? {} : _data$attributes,
+        _data$relationships = data.relationships,
+        relationships = _data$relationships === void 0 ? {} : _data$relationships;
       runInAction(function () {
         record.id = id;
-        Object.entries(attributes).forEach(function (_ref7) {
-          var _ref8 = _slicedToArray(_ref7, 2),
-              key = _ref8[0],
-              value = _ref8[1];
-
+        Object.entries(attributes).forEach(function (_ref9) {
+          var _ref10 = _slicedToArray(_ref9, 2),
+            key = _ref10[0],
+            value = _ref10[1];
           record[key] = value;
         });
         Object.keys(relationships).forEach(function (relationshipName) {
@@ -10129,10 +9852,10 @@ var Store = /*#__PURE__*/function () {
       });
       runInAction(function () {
         _this8.data[type].records.set(String(tmpId), record);
-
         _this8.data[type].records.set(String(id), record);
       });
     }
+
     /**
      * Create multiple models from an array of data. It will only build objects
      * with defined models, and ignore everything else in the data.
@@ -10140,12 +9863,10 @@ var Store = /*#__PURE__*/function () {
      * @param {Array} data the array of jsonapi data
      * @returns {Array} an array of the models serialized
      */
-
   }, {
     key: "createOrUpdateModelsFromData",
     value: function createOrUpdateModelsFromData(data) {
       var _this9 = this;
-
       return data.map(function (dataObject) {
         if (_this9.getType(dataObject.type)) {
           return _this9.createOrUpdateModelFromData(dataObject);
@@ -10155,32 +9876,33 @@ var Store = /*#__PURE__*/function () {
         }
       });
     }
+
     /**
      * Helper to create a new model
      *
      * @param {object} data id, type, attributes and relationships
      * @returns {object} model instance
      */
-
   }, {
     key: "createModelFromData",
     value: function createModelFromData(data) {
       var id = data.id,
-          type = data.type,
-          attributes = data.attributes,
-          relationships = data.relationships;
+        type = data.type,
+        _data$attributes2 = data.attributes,
+        attributes = _data$attributes2 === void 0 ? {} : _data$attributes2,
+        _data$relationships2 = data.relationships,
+        relationships = _data$relationships2 === void 0 ? {} : _data$relationships2;
       var store = this;
       var ModelKlass = this.getKlass(type);
-
       if (!ModelKlass) {
         throw new Error("Could not find a model for '".concat(type, "'"));
       }
-
       return new ModelKlass(_objectSpread$3({
         id: id,
         relationships: relationships
       }, attributes), store);
     }
+
     /**
      * Defines a resolution for an API call that will update a record or
      * set of records with the data returned from the API
@@ -10189,12 +9911,10 @@ var Store = /*#__PURE__*/function () {
      * @param {object|Array} records to be updated
      * @returns {Promise} a resolved promise after operations have been performed
      */
-
   }, {
     key: "updateRecordsFromResponse",
     value: function updateRecordsFromResponse(promise, records) {
       var _this10 = this;
-
       // records may be a single record, if so wrap it in an array to make
       // iteration simpler
       var recordsArray = Array.isArray(records) ? records : [records];
@@ -10202,7 +9922,7 @@ var Store = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
+        var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, errors;
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
@@ -10212,64 +9932,51 @@ var Store = /*#__PURE__*/function () {
                   recordsArray.forEach(function (record) {
                     record.isInFlight = false;
                   });
-
                   if (!(status === 200 || status === 201)) {
                     _context4.next = 15;
                     break;
                   }
-
                   _context4.next = 5;
                   return response.json();
-
                 case 5:
                   json = _context4.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
-
                   if (!(data.length !== recordsArray.length)) {
                     _context4.next = 10;
                     break;
                   }
-
                   throw new Error('Invariant violated: API response data and records to update do not match');
-
                 case 10:
                   recordsArray.forEach(function (record, i) {
                     return _this10.updateRecordFromData(record, data[i]);
                   });
-
                   if (included) {
                     _this10.createOrUpdateModelsFromData(included);
-                  } // on success, return the original record(s).
+                  }
+
+                  // on success, return the original record(s).
                   // again - this may be a single record so preserve the structure
-
-
                   return _context4.abrupt("return", records);
-
                 case 15:
                   _context4.next = 17;
                   return parseErrors(response, _this10.errorMessages);
-
                 case 17:
                   errors = _context4.sent;
                   runInAction(function () {
                     errors.forEach(function (error) {
                       var _parseErrorPointer = parseErrorPointer(error),
-                          index = _parseErrorPointer.index,
-                          key = _parseErrorPointer.key;
-
+                        index = _parseErrorPointer.index,
+                        key = _parseErrorPointer.key;
                       if (key != null) {
                         // add the error to the record
                         var _errors = recordsArray[index].errors[key] || [];
-
                         _errors.push(error);
-
                         recordsArray[index].errors[key] = _errors;
                       }
                     });
                   });
                   throw new Error(JSON.stringify(errors));
-
                 case 20:
                 case "end":
                   return _context4.stop();
@@ -10277,9 +9984,8 @@ var Store = /*#__PURE__*/function () {
             }
           }, _callee4);
         }));
-
         return function (_x5) {
-          return _ref9.apply(this, arguments);
+          return _ref11.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -10291,435 +9997,13 @@ var Store = /*#__PURE__*/function () {
       });
     }
   }]);
-
   return Store;
 }();
 
-var _Symbol$species;
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-/**
- * Takes the `toOne` definitions from a document type and creates getters and setters.
- * A getter finds a record from the store. The setter calls `setRelatedRecord`, which will
- * return an instance of a model and add it to the inverse relationship if necessary.
- * A definition will look something like this:
- *
- *    todo: {
- *      direction: 'toOne',
- *      inverse: {
- *        name: 'notes',
- *        direction: 'toMany'
- *      }
- *    }
- *
- * @param {object} record the record that will have the relationship
- * @param {object} store the data store
- * @param {object} toOneDefinitions an object with formatted definitions
- * @returns {object} an object with getters and setters based on the defintions
- */
-
-var defineToOneRelationships = action(function (record, store, toOneDefinitions) {
-  return toOneDefinitions.reduce(function (object, _ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
-        relationshipName = _ref2[0],
-        definition = _ref2[1];
-
-    var inverse = definition.inverse;
-    Object.defineProperty(object, relationshipName, {
-      get: function get() {
-        var _record$relationships;
-
-        var reference = (_record$relationships = record.relationships[relationshipName]) === null || _record$relationships === void 0 ? void 0 : _record$relationships.data;
-
-        if (reference) {
-          return coerceDataToExistingRecord(store, reference);
-        }
-      },
-      set: function set(relatedReference) {
-        return setRelatedRecord(relationshipName, record, relatedReference, store, inverse);
-      }
-    });
-    return object;
-  }, {});
-});
-/**
- * Takes the `toMany` definitions from a document type and creates getters and setters.
- * A getter finds records from the store, falling back to a lookup of the inverse records if
- * none are defined in the `relationships` hash.
- *
- * The setter will unset the previous inverse and set the current inverse.
- * Both return a `RelatedRecordsArray`, which is an array with added methods `add`, `remove`, and `replace`
- *
- * A definition will look like this:
- *
- *    categories: {
- *      direction: 'toMany',
- *      inverse: {
- *        name: 'organization',
- *        direction: 'toOne'
- *      }
- *    }
- *
- * @param {object} record the record that will have the relationship
- * @param {object} store the data store
- * @param {object} toManyDefinitions an object with formatted definitions
- * @returns {object} an object with getters and setters based on the defintions
- */
-
-var defineToManyRelationships = action(function (record, store, toManyDefinitions) {
-  return toManyDefinitions.reduce(function (object, _ref3) {
-    var _ref4 = _slicedToArray(_ref3, 2),
-        relationshipName = _ref4[0],
-        definition = _ref4[1];
-
-    var inverse = definition.inverse,
-        relationshipTypes = definition.types;
-    Object.defineProperty(object, relationshipName, {
-      get: function get() {
-        var _record$relationships2;
-
-        var references = (_record$relationships2 = record.relationships[relationshipName]) === null || _record$relationships2 === void 0 ? void 0 : _record$relationships2.data;
-        var relatedRecords;
-
-        if (references) {
-          relatedRecords = references.filter(function (reference) {
-            return store.getKlass(reference.type);
-          }).map(function (reference) {
-            return coerceDataToExistingRecord(store, reference);
-          });
-        } else if (inverse) {
-          var types = relationshipTypes || [relationshipName];
-          relatedRecords = types.map(function (type) {
-            return record.store.getAll(type);
-          }).flat().filter(function (potentialRecord) {
-            var _potentialRecord$rela;
-
-            var reference = (_potentialRecord$rela = potentialRecord.relationships[inverse.name]) === null || _potentialRecord$rela === void 0 ? void 0 : _potentialRecord$rela.data;
-            return reference && reference.type === record.type && reference.id === record.id;
-          });
-        }
-
-        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
-      },
-      set: function set(relatedRecords) {
-        this.relationships[relationshipName] = {
-          data: relatedRecords.map(function (_ref5) {
-            var id = _ref5.id,
-                type = _ref5.type;
-            return {
-              id: id,
-              type: type
-            };
-          })
-        };
-        relatedRecords = relatedRecords.map(function (reference) {
-          return coerceDataToExistingRecord(store, reference);
-        });
-
-        if (inverse) {
-          var types = inverse.types,
-              inverseName = inverse.name;
-          var oldRelatedRecords = types.map(function (type) {
-            return record.store.getAll(type);
-          }).flat().filter(function (potentialRecord) {
-            var _potentialRecord$rela2;
-
-            var reference = (_potentialRecord$rela2 = potentialRecord.relationships[inverseName]) === null || _potentialRecord$rela2 === void 0 ? void 0 : _potentialRecord$rela2.data;
-            return reference && reference.type === record.type && reference.id === record.id;
-          });
-          oldRelatedRecords.forEach(function (oldRelatedRecord) {
-            oldRelatedRecord.relationships[inverseName] = null;
-          });
-          relatedRecords.forEach(function (relatedRecord) {
-            relatedRecord.relationships[inverseName] = {
-              data: {
-                id: record.id,
-                type: record.type
-              }
-            };
-          });
-        }
-
-        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
-      }
-    });
-    return object;
-  }, {});
-});
-/**
- * Sets a related record, as well as the inverse. Can also remove the record from a relationship.
- *
- * @param {string} relationshipName the name of the relationship
- * @param {object} record the object being set with a related record
- * @param {object} relatedRecord the related record
- * @param {object} store the store
- * @param {object} inverse the inverse object information
- * @returns {object} the related record
- */
-
-var setRelatedRecord = action(function (relationshipName, record, relatedRecord, store, inverse) {
-  if (relatedRecord != null) {
-    relatedRecord = coerceDataToExistingRecord(store, relatedRecord);
-    record.relationships[relationshipName] = {
-      data: {
-        id: relatedRecord.id,
-        type: relatedRecord.type
-      }
-    };
-  } else {
-    record.relationships[relationshipName] = null;
-  }
-
-  if (inverse) {
-    var _relatedRecord;
-
-    var relatedArray = (_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name];
-
-    if (relatedArray && !relatedArray.includes(record)) {
-      addRelatedRecord(relatedArray, inverse.name, relatedRecord, record);
-    }
-  }
-
-  record.takeSnapshot();
-  return relatedRecord;
-});
-/**
- * Removes a record from an array of related records, removing both the object and the reference.
- *
- * @param {Array} array the related records array
- * @param {string} relationshipName the name of the relationship
- * @param {object} record the record with the relationship
- * @param {object} relatedRecord the related record being removed from the relationship
- * @param {object} inverse the definition of the inverse relationship
- * @returns {object} the removed record
- */
-
-var removeRelatedRecord = action(function (array, relationshipName, record, relatedRecord, inverse) {
-  var _record$relationships3;
-
-  if (array == null || relatedRecord == null) {
-    return relatedRecord;
-  }
-
-  if (Array.isArray(relatedRecord)) {
-    return relatedRecord.map(function (singleRecord) {
-      return removeRelatedRecord(array, relationshipName, record, singleRecord, inverse);
-    });
-  }
-
-  var existingData = ((_record$relationships3 = record.relationships[relationshipName]) === null || _record$relationships3 === void 0 ? void 0 : _record$relationships3.data) || [];
-  var recordIndexToRemove = existingData.findIndex(function (_ref6) {
-    var comparedId = _ref6.id,
-        comparedType = _ref6.type;
-    return comparedId === relatedRecord.id && comparedType === relatedRecord.type;
-  });
-
-  if (recordIndexToRemove > -1) {
-    if (inverse) {
-      setRelatedRecord(inverse.name, relatedRecord, null, record.store);
-    }
-
-    existingData.splice(recordIndexToRemove, 1);
-    array.splice(recordIndexToRemove, 1);
-  }
-
-  record.takeSnapshot();
-  return coerceDataToExistingRecord(record.store, relatedRecord);
-});
-/**
- * Adds a record to a related array and updates the jsonapi reference in the relationships
- *
- * @param {Array} array the related records array
- * @param {string} relationshipName the name of the relationship
- * @param {object} record the record with the relationship
- * @param {object} relatedRecord the related record being added to the relationship
- * @param {object} inverse the definition of the inverse relationship
- * @returns {object} the added record
- */
-
-var addRelatedRecord = action(function (array, relationshipName, record, relatedRecord, inverse) {
-  var _record$relationships4;
-
-  if (Array.isArray(relatedRecord)) {
-    return relatedRecord.map(function (singleRecord) {
-      return addRelatedRecord(array, relationshipName, record, singleRecord, inverse);
-    });
-  }
-
-  if (array == null || relatedRecord == null || !record.store.getKlass(record.type)) {
-    return relatedRecord;
-  }
-
-  if (inverse) {
-    setRelatedRecord(inverse.name, relatedRecord, record, record.store);
-    relatedRecord.relationships[inverse.name] = {
-      data: {
-        id: record.id,
-        type: record.type
-      }
-    };
-  }
-
-  var existingData = ((_record$relationships4 = record.relationships[relationshipName]) === null || _record$relationships4 === void 0 ? void 0 : _record$relationships4.data) || [];
-  var recordFromStore = coerceDataToExistingRecord(record.store, relatedRecord);
-  var alreadyThere = array.includes(recordFromStore);
-
-  if (!alreadyThere) {
-    record.relationships[relationshipName] = {
-      data: [].concat(_toConsumableArray(existingData), [{
-        id: relatedRecord.id,
-        type: relatedRecord.type
-      }])
-    };
-    array.push(recordFromStore);
-  }
-
-  record.takeSnapshot();
-  return recordFromStore;
-});
-/**
- * Takes any object with { id, type } properties and gets an object from the store with that structure.
- * Useful for allowing objects to be serialized in real time, saving overhead, while at the same time
- * always returning an object of the same type.
- *
- * @param {object} store the store with the reference
- * @param {object} record the potential record
- * @returns {object} the store object
- */
-
-var coerceDataToExistingRecord = action(function (store, record) {
-  if (!(store !== null && store !== void 0 && store.getType(record.type))) {
-    return null;
-  }
-
-  if (record && !(record instanceof Model$1)) {
-    var _record = record,
-        id = _record.id,
-        type = _record.type;
-    record = store.getOne(type, id) || store.add(type, {
-      id: id
-    });
-  }
-
-  return record;
-});
-/**
- * An array that allows for updating store references and relationships
- */
-
-_Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
-  _inherits(RelatedRecordsArray, _Array);
-
-  var _super = _createSuper(RelatedRecordsArray);
-
-  /**
-   * Extends an array to create an enhanced array.
-   *
-   * @param {object} record the record with the referenced array
-   * @param {string} property the property on the record that references the array
-   * @param {Array} array the array to extend
-   */
-  function RelatedRecordsArray(_record2, _property) {
-    var _this;
-
-    var _array = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-
-    _classCallCheck(this, RelatedRecordsArray);
-
-    _this = _super.call.apply(_super, [this].concat(_toConsumableArray(_array)));
-
-    _defineProperty$1(_assertThisInitialized(_this), "add", function (relatedRecord) {
-      var _assertThisInitialize = _assertThisInitialized(_this),
-          inverse = _assertThisInitialize.inverse,
-          record = _assertThisInitialize.record,
-          property = _assertThisInitialize.property;
-
-      return addRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
-    });
-
-    _defineProperty$1(_assertThisInitialized(_this), "remove", function (relatedRecord) {
-      var _assertThisInitialize2 = _assertThisInitialized(_this),
-          inverse = _assertThisInitialize2.inverse,
-          record = _assertThisInitialize2.record,
-          property = _assertThisInitialize2.property;
-
-      return removeRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
-    });
-
-    _defineProperty$1(_assertThisInitialized(_this), "replace", function () {
-      var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-
-      var _assertThisInitialize3 = _assertThisInitialized(_this),
-          inverse = _assertThisInitialize3.inverse,
-          record = _assertThisInitialize3.record,
-          property = _assertThisInitialize3.property;
-
-      var newRecords;
-      transaction(function () {
-        _this.forEach(function (relatedRecord) {
-          return removeRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
-        });
-
-        newRecords = array.forEach(function (relatedRecord) {
-          return addRelatedRecord(_assertThisInitialized(_this), property, record, relatedRecord, inverse);
-        });
-      });
-      return newRecords;
-    });
-
-    _this.property = _property;
-    _this.record = _record2;
-    _this.store = _record2.store;
-    _this.inverse = _record2.relationshipDefinitions[_this.property].inverse;
-    makeObservable(_assertThisInitialized(_this), {
-      add: action,
-      remove: action,
-      replace: action
-    });
-    return _this;
-  }
-  /**
-   * Adds a record to the array, and updates references in the store, as well as inverse references
-   *
-   * @param {object} relatedRecord the record to add to the array
-   * @returns {object} a model record reflecting the original relatedRecord
-   */
-
-
-  _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species,
-    get:
-    /* eslint-disable */
-
-    /*
-     * This method is used by Array internals to decide
-     * which class to use for resulting derived objects from array manipulation methods
-     * such as `map` or `filter`
-     *
-     * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
-     * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
-     *
-     * For more details, see:
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
-     */
-    function get() {
-      return Array;
-    }
-    /* eslint-enable */
-
-  }]);
-
-  return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array));
-
 var _excluded$1 = ["id", "relationships"];
-
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
 function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$2(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
 /**
  * Maps the passed-in property names through and runs validations against those properties
  *
@@ -10728,47 +10012,40 @@ function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { 
  * @param {object} propertyDefinitions a hash map containing validators by property
  * @returns {Array} an array of booleans representing results of validations
  */
-
 function validateProperties(model, propertyNames, propertyDefinitions) {
-  return propertyNames.map(function (property) {
+  return propertyNames.map(function (propertyName) {
     if (propertyDefinitions) {
-      var validator = propertyDefinitions[property].validator;
+      var validator = propertyDefinitions[propertyName].validator;
       if (!validator) return true;
-      var validationResult = validator(model[property], model);
-
+      var validationResult = validator(model[propertyName], model, propertyName);
       if (!validationResult.isValid) {
-        model.errors[property] = validationResult.errors;
+        model.errors[propertyName] = validationResult.errors;
       }
-
       return validationResult.isValid;
     } else return true;
   });
 }
+
 /**
  * Coerces all ids to strings
  *
  * @param {object} object object to coerce
  */
-
-
 function stringifyIds(object) {
   Object.keys(object).forEach(function (key) {
     var property = object[key];
-
     if (_typeof(property) === 'object') {
       if (property.id) {
         property.id = String(property.id);
       }
-
       stringifyIds(property);
     }
   });
 }
+
 /**
  * Annotations for mobx observability. We can't use `makeAutoObservable` because we have subclasses.
  */
-
-
 var mobxAnnotations = {
   isDirty: computed,
   dirtyAttributes: computed,
@@ -10805,10 +10082,10 @@ var mobxAnnotations = {
   updateAttributes: action,
   isSame: action
 };
+
 /**
  * The base class for data records
  */
-
 var Model = /*#__PURE__*/function () {
   /**
    * - Sets the store and id.
@@ -10825,19 +10102,14 @@ var Model = /*#__PURE__*/function () {
     var store = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Store({
       models: [this.constructor]
     });
-
     _classCallCheck(this, Model);
-
+    _defineProperty$1(this, "relationships", {});
     _defineProperty$1(this, "isInFlight", false);
-
     _defineProperty$1(this, "errors", {});
-
     _defineProperty$1(this, "_snapshots", []);
-
     var id = initialProperties.id,
-        relationships = initialProperties.relationships,
-        attributes = _objectWithoutProperties(initialProperties, _excluded$1);
-
+      relationships = initialProperties.relationships,
+      attributes = _objectWithoutProperties(initialProperties, _excluded$1);
     this.store = store;
     this.id = id;
     this.relationships = relationships;
@@ -10848,6 +10120,7 @@ var Model = /*#__PURE__*/function () {
       persisted: !this.isNew
     });
   }
+
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
    * (eg 'calendar_events').
@@ -10855,8 +10128,6 @@ var Model = /*#__PURE__*/function () {
    * @type {string}
    * @static
    */
-
-
   _createClass(Model, [{
     key: "isDirty",
     get:
@@ -10894,6 +10165,7 @@ var Model = /*#__PURE__*/function () {
     function get() {
       return this.dirtyAttributes.length > 0 || this.dirtyRelationships.size > 0;
     }
+
     /**
      * A list of any attribute paths which have been changed since the previous snapshot
      *
@@ -10909,16 +10181,13 @@ var Model = /*#__PURE__*/function () {
      *
      * @type {Set}
      */
-
   }, {
     key: "dirtyAttributes",
     get: function get() {
       var _this = this;
-
       return Array.from(Object.keys(this.attributes).reduce(function (dirtyAccumulator, attr) {
         var currentValue = _this.attributes[attr];
         var previousValue = _this.previousSnapshot.attributes[attr];
-
         if (isObject_1(currentValue)) {
           var currentToPreviousDiff = diff(currentValue, previousValue);
           var previousToCurrentDiff = diff(previousValue, currentValue);
@@ -10928,10 +10197,10 @@ var Model = /*#__PURE__*/function () {
         } else if (!isEqual_1(previousValue, currentValue)) {
           dirtyAccumulator.add(attr);
         }
-
         return dirtyAccumulator;
       }, new Set()));
     }
+
     /**
      * A list of any relationship paths which have been changed since the previous snapshot
      * We check changes to both ids and types in case there are polymorphic relationships
@@ -10945,69 +10214,60 @@ var Model = /*#__PURE__*/function () {
      *
      * @type {Set}
      */
-
   }, {
     key: "dirtyRelationships",
     get: function get() {
       if (this._snapshots.length === 0 || !this.relationshipDefinitions) {
         return new Set();
       }
-
       var previousSnapshot = this.previousSnapshot,
-          persistedOrFirstSnapshot = this.persistedOrFirstSnapshot,
-          relationshipDefinitions = this.relationshipDefinitions;
+        persistedOrFirstSnapshot = this.persistedOrFirstSnapshot,
+        relationshipDefinitions = this.relationshipDefinitions;
       return Object.entries(relationshipDefinitions || {}).reduce(function (relationshipSet, _ref) {
         var _persistedOrFirstSnap, _persistedOrFirstSnap2, _previousSnapshot$rel, _previousSnapshot$rel2;
-
         var _ref2 = _slicedToArray(_ref, 2),
-            relationshipName = _ref2[0],
-            definition = _ref2[1];
-
+          relationshipName = _ref2[0],
+          definition = _ref2[1];
         var direction = definition.direction;
         var firstData = (_persistedOrFirstSnap = persistedOrFirstSnapshot.relationships) === null || _persistedOrFirstSnap === void 0 ? void 0 : (_persistedOrFirstSnap2 = _persistedOrFirstSnap[relationshipName]) === null || _persistedOrFirstSnap2 === void 0 ? void 0 : _persistedOrFirstSnap2.data;
         var currentData = (_previousSnapshot$rel = previousSnapshot.relationships) === null || _previousSnapshot$rel === void 0 ? void 0 : (_previousSnapshot$rel2 = _previousSnapshot$rel[relationshipName]) === null || _previousSnapshot$rel2 === void 0 ? void 0 : _previousSnapshot$rel2.data;
         var isDifferent;
-
         if (direction === 'toMany') {
           var _currentData;
-
           firstData = firstData || [];
           currentData = currentData || [];
           isDifferent = firstData.length !== ((_currentData = currentData) === null || _currentData === void 0 ? void 0 : _currentData.length) || firstData.some(function (_ref3, i) {
             var id = _ref3.id,
-                type = _ref3.type;
+              type = _ref3.type;
             return currentData[i].id !== id || currentData[i].type !== type;
           });
         } else {
           var _firstData, _currentData2, _firstData2, _currentData3;
-
           isDifferent = ((_firstData = firstData) === null || _firstData === void 0 ? void 0 : _firstData.id) !== ((_currentData2 = currentData) === null || _currentData2 === void 0 ? void 0 : _currentData2.id) || ((_firstData2 = firstData) === null || _firstData2 === void 0 ? void 0 : _firstData2.type) !== ((_currentData3 = currentData) === null || _currentData3 === void 0 ? void 0 : _currentData3.type);
         }
-
         if (isDifferent) {
           relationshipSet.add(relationshipName);
         }
-
         return relationshipSet;
       }, new Set());
     }
+
     /**
      * Have any changes been made since this record was last persisted?
      *
      * @type {boolean}
      */
-
   }, {
     key: "hasUnpersistedChanges",
     get: function get() {
       return this.isDirty || !this.previousSnapshot.persisted;
     }
+
     /**
      * True if the model has not been sent to the store
      *
      * @type {boolean}
      */
-
   }, {
     key: "isNew",
     get: function get() {
@@ -11016,6 +10276,7 @@ var Model = /*#__PURE__*/function () {
       if (String(id).indexOf('tmp') === -1) return false;
       return true;
     }
+
     /**
      * True if the instance is coming from / going to the server
      * ```
@@ -11031,7 +10292,6 @@ var Model = /*#__PURE__*/function () {
      * @type {boolean}
      * @default false
      */
-
   }, {
     key: "initializeAttributes",
     value:
@@ -11048,36 +10308,22 @@ var Model = /*#__PURE__*/function () {
       }, {});
       extendObservable(this, attributes);
     }
+
     /**
      * Initializes relationships based on the `relationships` hash.
      */
-
   }, {
     key: "initializeRelationships",
     value: function initializeRelationships() {
-      var store = this.store,
-          _this$relationshipDef = this.relationshipDefinitions,
-          relationshipDefinitions = _this$relationshipDef === void 0 ? {} : _this$relationshipDef;
-      var definitionEntries = Object.entries(relationshipDefinitions);
-      var toOneDefinitions = definitionEntries.filter(function (_ref4) {
-        var _ref5 = _slicedToArray(_ref4, 2);
-            _ref5[0];
-            var definition = _ref5[1];
-
-        return definition.direction === 'toOne';
-      });
-      var toManyDefinitions = definitionEntries.filter(function (_ref6) {
-        var _ref7 = _slicedToArray(_ref6, 2);
-            _ref7[0];
-            var definition = _ref7[1];
-
-        return definition.direction === 'toMany';
-      });
+      var store = this.store;
+      var toOneDefinitions = definitionsByDirection(this, 'toOne');
+      var toManyDefinitions = definitionsByDirection(this, 'toMany');
       var toOneRelationships = defineToOneRelationships(this, store, toOneDefinitions);
       var toManyRelationships = defineToManyRelationships(this, store, toManyDefinitions);
       extendObservable(this, toOneRelationships);
       extendObservable(this, toManyRelationships);
     }
+
     /**
      * restores data to its last snapshot state
      * ```
@@ -11090,79 +10336,71 @@ var Model = /*#__PURE__*/function () {
      * => "A good thing to measure"
      * ```
      */
-
   }, {
     key: "rollback",
     value: function rollback() {
       this._applySnapshot(this.previousSnapshot);
     }
+
     /**
      * restores data to its last persisted state or the oldest snapshot
      * state if the model was never persisted
      */
-
   }, {
     key: "rollbackToPersisted",
     value: function rollbackToPersisted() {
       this._applySnapshot(this.persistedOrFirstSnapshot);
-
       this.takeSnapshot({
         persisted: true
       });
     }
+
     /**
      * creates or updates a record.
      *
      * @param {object} options query params and sparse fields to use
      * @returns {Promise} the persisted record
      */
-
   }, {
     key: "save",
     value: function () {
       var _save = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
         var _this2 = this;
-
         var options,
-            errorString,
-            queryParams,
-            relationships,
-            attributes,
-            constructor,
-            id,
-            isNew,
-            requestId,
-            method,
-            url,
-            body,
-            response,
-            result,
-            _args = arguments;
+          errorString,
+          queryParams,
+          relationships,
+          attributes,
+          constructor,
+          id,
+          isNew,
+          requestId,
+          method,
+          url,
+          body,
+          response,
+          result,
+          _args = arguments;
         return _regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 options = _args.length > 0 && _args[0] !== undefined ? _args[0] : {};
-
                 if (!(!options.skip_validations && !this.validate(options))) {
                   _context.next = 4;
                   break;
                 }
-
                 errorString = JSON.stringify(this.errors);
                 return _context.abrupt("return", Promise.reject(new Error(errorString)));
-
               case 4:
                 queryParams = options.queryParams, relationships = options.relationships, attributes = options.attributes;
                 constructor = this.constructor, id = this.id, isNew = this.isNew;
                 requestId = id;
                 method = 'PATCH';
-
                 if (isNew) {
                   method = 'POST';
                   requestId = null;
                 }
-
                 url = this.store.fetchUrl(constructor.type, queryParams, requestId);
                 body = JSON.stringify({
                   data: this.jsonapi({
@@ -11170,7 +10408,6 @@ var Model = /*#__PURE__*/function () {
                     attributes: attributes
                   })
                 });
-
                 if (relationships) {
                   relationships.forEach(function (rel) {
                     if (Array.isArray(_this2[rel])) {
@@ -11184,21 +10421,18 @@ var Model = /*#__PURE__*/function () {
                     }
                   });
                 }
-
                 response = this.store.fetch(url, {
                   method: method,
                   body: body
                 });
                 _context.next = 15;
                 return this.store.updateRecordsFromResponse(response, this);
-
               case 15:
                 result = _context.sent;
                 this.takeSnapshot({
                   persisted: true
                 });
                 return _context.abrupt("return", result);
-
               case 18:
               case "end":
                 return _context.stop();
@@ -11206,11 +10440,9 @@ var Model = /*#__PURE__*/function () {
           }
         }, _callee, this);
       }));
-
       function save() {
         return _save.apply(this, arguments);
       }
-
       return save;
     }()
     /**
@@ -11219,21 +10451,20 @@ var Model = /*#__PURE__*/function () {
      * @param {object} options props to use for the fetch
      * @returns {Promise} the refreshed record
      */
-
   }, {
     key: "reload",
     value: function reload() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var constructor = this.constructor,
-          id = this.id,
-          isNew = this.isNew;
-
+        id = this.id,
+        isNew = this.isNew;
       if (isNew) {
         return this.rollback();
       } else {
         return this.store.fetchOne(constructor.type, id, options);
       }
     }
+
     /**
      * Checks all validations, adding errors where necessary and returning `false` if any are not valid
      * Default is to check all validations, but they can be selectively run via options:
@@ -11243,14 +10474,13 @@ var Model = /*#__PURE__*/function () {
      * @param {object} options attributes and relationships to use for the validation
      * @returns {boolean} key / value of attributes and relationship validations
      */
-
   }, {
     key: "validate",
     value: function validate() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       this.errors = {};
       var attributeDefinitions = this.attributeDefinitions,
-          relationshipDefinitions = this.relationshipDefinitions;
+        relationshipDefinitions = this.relationshipDefinitions;
       var attributeNames = options.attributes || Object.keys(attributeDefinitions);
       var relationshipNames = options.relationships || this.relationshipNames;
       var validAttributes = validateProperties(this, attributeNames, attributeDefinitions);
@@ -11259,31 +10489,29 @@ var Model = /*#__PURE__*/function () {
         return value;
       });
     }
+
     /**
      * deletes a record from the store and server
      *
      * @param {object} options params and option to skip removal from the store
      * @returns {Promise} an empty promise with any success/error status
      */
-
   }, {
     key: "destroy",
     value: function destroy() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var type = this.constructor.type,
-          id = this.id,
-          snapshot = this.snapshot,
-          isNew = this.isNew;
-
+        id = this.id,
+        snapshot = this.snapshot,
+        isNew = this.isNew;
       if (isNew) {
         this.store.remove(type, id);
         return snapshot;
       }
-
       var _options$params = options.params,
-          params = _options$params === void 0 ? {} : _options$params,
-          _options$skipRemove = options.skipRemove,
-          skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
+        params = _options$params === void 0 ? {} : _options$params,
+        _options$skipRemove = options.skipRemove,
+        skipRemove = _options$skipRemove === void 0 ? false : _options$skipRemove;
       var url = this.store.fetchUrl(type, params, id);
       this.isInFlight = true;
       var promise = this.store.fetch(url, {
@@ -11292,68 +10520,55 @@ var Model = /*#__PURE__*/function () {
       var record = this;
       record.errors = {};
       return promise.then( /*#__PURE__*/function () {
-        var _ref8 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(response) {
+        var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(response) {
           var json, _json$data, errors;
-
           return _regeneratorRuntime.wrap(function _callee2$(_context2) {
             while (1) {
               switch (_context2.prev = _context2.next) {
                 case 0:
                   record.isInFlight = false;
-
                   if (![200, 202, 204].includes(response.status)) {
                     _context2.next = 17;
                     break;
                   }
-
                   if (!skipRemove) {
                     record.store.remove(type, id);
                   }
-
                   _context2.prev = 3;
                   _context2.next = 6;
                   return response.json();
-
                 case 6:
                   json = _context2.sent;
-
                   if ((_json$data = json.data) !== null && _json$data !== void 0 && _json$data.attributes) {
                     runInAction(function () {
-                      Object.entries(json.data.attributes).forEach(function (_ref9) {
-                        var _ref10 = _slicedToArray(_ref9, 2),
-                            key = _ref10[0],
-                            value = _ref10[1];
-
+                      Object.entries(json.data.attributes).forEach(function (_ref5) {
+                        var _ref6 = _slicedToArray(_ref5, 2),
+                          key = _ref6[0],
+                          value = _ref6[1];
                         record[key] = value;
                       });
                     });
                   }
-
                   _context2.next = 13;
                   break;
-
                 case 10:
                   _context2.prev = 10;
                   _context2.t0 = _context2["catch"](3);
-                  console.log(_context2.t0); // It is text, do you text handling here
-
+                  console.log(_context2.t0);
+                  // It is text, do you text handling here
                 case 13:
                   // NOTE: If deleting a record changes other related model
                   // You can return then in the delete response
                   if (json && json.included) {
-                    record.store.createModelsFromData(json.included);
+                    record.store.createOrUpdateModelsFromData(json.included);
                   }
-
                   return _context2.abrupt("return", record);
-
                 case 17:
                   _context2.next = 19;
                   return parseErrors(response, record.store.errorMessages);
-
                 case 19:
                   errors = _context2.sent;
                   throw new Error(JSON.stringify(errors));
-
                 case 21:
                 case "end":
                   return _context2.stop();
@@ -11361,9 +10576,8 @@ var Model = /*#__PURE__*/function () {
             }
           }, _callee2, null, [[3, 10]]);
         }));
-
         return function (_x) {
-          return _ref8.apply(this, arguments);
+          return _ref4.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly
@@ -11371,6 +10585,7 @@ var Model = /*#__PURE__*/function () {
         throw error;
       });
     }
+
     /* Private Methods */
 
     /**
@@ -11388,7 +10603,6 @@ var Model = /*#__PURE__*/function () {
      *
      * @type {object}
      */
-
   }, {
     key: "snapshot",
     get: function get() {
@@ -11397,12 +10611,12 @@ var Model = /*#__PURE__*/function () {
         relationships: toJS(this.relationships)
       };
     }
+
     /**
      * the latest snapshot
      *
      * @type {object}
      */
-
   }, {
     key: "previousSnapshot",
     get: function get() {
@@ -11410,12 +10624,12 @@ var Model = /*#__PURE__*/function () {
       if (length === 0) throw new Error('Invariant violated: model has no snapshots');
       return this._snapshots[length - 1];
     }
+
     /**
      * the latest persisted snapshot or the first snapshot if the model was never persisted
      *
      * @type {object}
      */
-
   }, {
     key: "persistedOrFirstSnapshot",
     get: function get() {
@@ -11423,6 +10637,7 @@ var Model = /*#__PURE__*/function () {
         return ss.persisted;
       }) || this._snapshots[0];
     }
+
     /**
      * take a snapshot of the current model state.
      * if persisted, clear the stack and push this snapshot to the top
@@ -11430,154 +10645,147 @@ var Model = /*#__PURE__*/function () {
      *
      * @param {object} options options to use to set the persisted state
      */
-
   }, {
     key: "takeSnapshot",
     value: function takeSnapshot() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var persisted = options.persisted || false;
       var properties = cloneDeep_1(pick_1(this, ['attributes', 'relationships']));
-
       this._snapshots.push(_objectSpread$2({
         persisted: persisted
       }, properties));
     }
+
     /**
      * Sets `_snapshots` to an empty array
      */
-
   }, {
     key: "clearSnapshots",
     value: function clearSnapshots() {
       this._snapshots = [];
     }
+
     /**
      * set the current attributes and relationships to the attributes
      * and relationships of the snapshot to be applied. also reset errors
      *
      * @param {object} snapshot the snapshot to apply
      */
-
   }, {
     key: "_applySnapshot",
     value: function _applySnapshot(snapshot) {
       var _this3 = this;
-
       if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot');
       runInAction(function () {
         _this3.attributeNames.forEach(function (key) {
           _this3[key] = snapshot.attributes[key];
         });
-
         _this3.relationships = snapshot.relationships;
         _this3.errors = {};
       });
     }
+
     /**
      * shortcut to get the static
      *
      * @type {string}
      */
-
   }, {
     key: "type",
     get: function get() {
       return this.constructor.type;
     }
+
     /**
      * current attributes of record
      *
      * @type {object}
      */
-
   }, {
     key: "attributes",
     get: function get() {
       var _this4 = this;
-
       return this.attributeNames.reduce(function (attributes, key) {
         var value = toJS(_this4[key]);
-
         if (value != null) {
           attributes[key] = value;
         }
-
         return attributes;
       }, {});
     }
+
     /**
      * Getter find the attribute definition for the model type.
      *
      * @type {object}
      */
-
   }, {
     key: "attributeDefinitions",
     get: function get() {
       return this.constructor.attributeDefinitions || {};
     }
+
     /**
      * Getter find the relationship definitions for the model type.
      *
      * @type {object}
      */
-
   }, {
     key: "relationshipDefinitions",
     get: function get() {
       return this.constructor.relationshipDefinitions || {};
     }
+
     /**
      * Getter to check if the record has errors.
      *
      * @type {boolean}
      */
-
   }, {
     key: "hasErrors",
     get: function get() {
       return Object.keys(this.errors).length > 0;
     }
+
     /**
      * Getter to check if the record has errors.
      *
      * @param {string} key the key to check
      * @returns {string} the error text
      */
-
   }, {
     key: "errorForKey",
     value: function errorForKey(key) {
       return this.errors[key];
     }
+
     /**
      * Getter to just get the names of a records attributes.
      *
      * @returns {Array} the keys of the attribute definitions
      */
-
   }, {
     key: "attributeNames",
     get: function get() {
       return Object.keys(this.attributeDefinitions);
     }
+
     /**
      * Getter to just get the names of a records relationships.
      *
      * @returns {Array} the keys of the relationship definitions
      */
-
   }, {
     key: "relationshipNames",
     get: function get() {
       return Object.keys(this.relationshipDefinitions);
     }
+
     /**
      * getter method to get the default attributes
      *
      * @returns {object} key / value of attributes and defaults
      */
-
   }, {
     key: "defaultAttributes",
     get: function get() {
@@ -11590,6 +10798,7 @@ var Model = /*#__PURE__*/function () {
         relationships: {}
       });
     }
+
     /**
      * getter method to get data in api compliance format
      * TODO: Figure out how to handle unpersisted ids
@@ -11597,36 +10806,30 @@ var Model = /*#__PURE__*/function () {
      * @param {object} options serialization options
      * @returns {object} data in JSON::API format
      */
-
   }, {
     key: "jsonapi",
     value: function jsonapi() {
       var _this5 = this;
-
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var attributeDefinitions = this.attributeDefinitions,
-          attributeNames = this.attributeNames,
-          meta = this.meta,
-          id = this.id,
-          type = this.constructor.type;
+        attributeNames = this.attributeNames,
+        meta = this.meta,
+        id = this.id,
+        type = this.constructor.type;
       var filteredAttributeNames = attributeNames;
       var filteredRelationshipNames = [];
-
       if (options.attributes) {
         filteredAttributeNames = attributeNames.filter(function (name) {
           return options.attributes.includes(name);
         });
       }
-
       var attributes = filteredAttributeNames.reduce(function (attrs, key) {
         var value = _this5[key];
-
         if (value) {
           if (attributeDefinitions[key].transformer) {
             value = attributeDefinitions[key].transformer(value);
           }
         }
-
         attrs[key] = value;
         return attrs;
       }, {});
@@ -11635,7 +10838,6 @@ var Model = /*#__PURE__*/function () {
         attributes: attributes,
         id: String(id)
       };
-
       if (options.relationships) {
         filteredRelationshipNames = this.relationshipNames.filter(function (name) {
           return options.relationships.includes(name) && _this5.relationships[name];
@@ -11647,38 +10849,34 @@ var Model = /*#__PURE__*/function () {
         }, {});
         data.relationships = relationships;
       }
-
       if (meta) {
         data.meta = meta;
       }
-
       if (String(id).match(/tmp/)) {
         delete data.id;
       }
-
       return data;
     }
+
     /**
      * Updates attributes of this record via a key / value hash
      *
      * @param {object} attributes the attributes to update
      */
-
   }, {
     key: "updateAttributes",
     value: function updateAttributes(attributes) {
       var _this6 = this;
-
       var attributeNames = this.attributeNames;
       var validAttributes = pick_1(attributes, attributeNames);
-      Object.entries(validAttributes).forEach(function (_ref11) {
-        var _ref12 = _slicedToArray(_ref11, 2),
-            key = _ref12[0],
-            value = _ref12[1];
-
+      Object.entries(validAttributes).forEach(function (_ref7) {
+        var _ref8 = _slicedToArray(_ref7, 2),
+          key = _ref8[0],
+          value = _ref8[1];
         return _this6[key] = value;
       });
     }
+
     /**
      * Comparison by identity
      * returns `true` if this object has the same type and id as the
@@ -11687,7 +10885,6 @@ var Model = /*#__PURE__*/function () {
      * @param {object} other other model object
      * @returns {boolean} if this object has the same type and id
      */
-
   }, {
     key: "isSame",
     value: function isSame(other) {
@@ -11695,14 +10892,10 @@ var Model = /*#__PURE__*/function () {
       return this.type === other.type && this.id === other.id;
     }
   }]);
-
   return Model;
 }();
-
 _defineProperty$1(Model, "type", '');
-
 _defineProperty$1(Model, "endpoint", '');
-
 var Model$1 = Model;
 
 var baseClone = _baseClone;
@@ -11810,17 +11003,15 @@ function times(n, iteratee) {
 var times_1 = times;
 
 var _excluded = ["type"],
-    _excluded2 = ["type", "parent"];
-
+  _excluded2 = ["type", "parent"];
 function ownKeys$1(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
 function _objectSpread$1(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$1(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$1(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
 /**
  * A class to create and use factories
  *
  * @class FactoryFarm
  */
-
 var FactoryFarm = /*#__PURE__*/function () {
   /**
    * Sets up the store, and a private property to make it apparent the store is used
@@ -11830,27 +11021,19 @@ var FactoryFarm = /*#__PURE__*/function () {
    */
   function FactoryFarm(store) {
     var _this = this;
-
     _classCallCheck(this, FactoryFarm);
-
     _defineProperty$1(this, "factories", {});
-
     _defineProperty$1(this, "singletons", {});
-
     _defineProperty$1(this, "add", function () {
       var _this$store;
-
       return (_this$store = _this.store).add.apply(_this$store, arguments);
     });
-
     _defineProperty$1(this, "_verifyFactory", function (factoryName) {
       var factory = _this.factories[factoryName];
-
       if (!factory) {
         throw new Error("Factory ".concat(factoryName, " does not exist"));
       }
     });
-
     _defineProperty$1(this, "_buildModel", function (factoryName, properties) {
       var index = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
       properties = clone_1(properties);
@@ -11865,22 +11048,19 @@ var FactoryFarm = /*#__PURE__*/function () {
       });
       return properties;
     });
-
     _defineProperty$1(this, "_callPropertyDefinition", function (definition, index, factoryName, properties) {
       return typeof definition === 'function' ? definition.call(_this, index, factoryName, properties) : definition;
     });
-
     this.store = store || new Store();
     this.store.__usedForFactoryFarm__ = true;
   }
+
   /**
    * A hash of available factories. A factory is an object with a structure like:
    * { name, type, attributes, relationships }.
    *
    * @type {object}
    */
-
-
   _createClass(FactoryFarm, [{
     key: "build",
     value:
@@ -11907,17 +11087,14 @@ var FactoryFarm = /*#__PURE__*/function () {
       var overrideOptions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var numberOfRecords = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
       var store = this.store,
-          factories = this.factories,
-          singletons = this.singletons,
-          _verifyFactory = this._verifyFactory,
-          _buildModel = this._buildModel;
-
+        factories = this.factories,
+        singletons = this.singletons,
+        _verifyFactory = this._verifyFactory,
+        _buildModel = this._buildModel;
       _verifyFactory(factoryName);
-
       var _factories$factoryNam = factories[factoryName],
-          type = _factories$factoryNam.type,
-          properties = _objectWithoutProperties(_factories$factoryNam, _excluded);
-
+        type = _factories$factoryNam.type,
+        properties = _objectWithoutProperties(_factories$factoryNam, _excluded);
       var newModelProperties = _objectSpread$1(_objectSpread$1({
         /**
          * Increments the id for the type based on ids already present
@@ -11929,25 +11106,19 @@ var FactoryFarm = /*#__PURE__*/function () {
           return String(store.getAll(type).length + i + 1);
         }
       }, properties), overrideOptions);
-
       var identity = false;
-
       if (newModelProperties.identity) {
         if (typeof newModelProperties.identity === 'string') {
           identity = newModelProperties.identity;
         } else {
           identity = factoryName;
         }
-
         delete newModelProperties.identity;
-
         if (numberOfRecords === 1) {
           if (singletons[identity]) return singletons[identity];
         }
       }
-
       var addProperties;
-
       if (numberOfRecords > 1) {
         addProperties = times_1(numberOfRecords, function (i) {
           return _buildModel(factoryName, newModelProperties, i);
@@ -11955,15 +11126,13 @@ var FactoryFarm = /*#__PURE__*/function () {
       } else {
         addProperties = _buildModel(factoryName, newModelProperties);
       }
-
       var results = store.add(type, addProperties);
-
       if (identity) {
         singletons[identity] = results;
       }
-
       return results;
     }
+
     /**
      * Creates a factory with { name, type, parent, ...attributesAndRelationships }, which can be used for
      * building test data.
@@ -11977,43 +11146,35 @@ var FactoryFarm = /*#__PURE__*/function () {
      * @param {string} name the name to use for the factory
      * @param {object} options options that can be used to configure the factory
      */
-
   }, {
     key: "define",
     value: function define(name) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
       var type = options.type,
-          parent = options.parent,
-          properties = _objectWithoutProperties(options, _excluded2);
-
+        parent = options.parent,
+        properties = _objectWithoutProperties(options, _excluded2);
       var factory;
-
       if (parent) {
         var fromFactory = this.factories[parent];
-
         if (!fromFactory) {
           throw new Error("Factory ".concat(parent, " does not exist"));
         }
-
         factory = _objectSpread$1(_objectSpread$1({}, fromFactory), properties);
       } else {
         factory = _objectSpread$1({
           type: type
         }, properties);
       }
-
       this.factories[name] = factory;
     }
+
     /**
      * Alias for `this.store.add`
      *
      * @param  {...any} params attributes and relationships to be added to the store
      * @returns {*} object or array
      */
-
   }]);
-
   return FactoryFarm;
 }();
 
@@ -12032,14 +11193,12 @@ var addIncluded = function addIncluded(store, encodedModel, included) {
   var relationships = encodedModel.relationships;
   Object.keys(relationships).forEach(function (key) {
     var data = relationships[key].data;
-
     if (!Array.isArray(data)) {
       data = [data];
     }
-
     var notAlreadyIncluded = data.filter(function (_ref) {
       var id = _ref.id,
-          type = _ref.type;
+        type = _ref.type;
       return !allEncoded.some(function (encodedModel) {
         return encodedModel.type === type && encodedModel.id === id;
       });
@@ -12052,6 +11211,7 @@ var addIncluded = function addIncluded(store, encodedModel, included) {
     });
   });
 };
+
 /**
  * Encodes models into full compliant JSONAPI payload, as if it were being sent with all
  * relevant relationships and inclusions. The resulting payload will look like
@@ -12069,12 +11229,10 @@ var addIncluded = function addIncluded(store, encodedModel, included) {
  * @returns {string} JSON encoded data
  */
 
-
 var serverResponse = function serverResponse(modelOrArray) {
   var model;
   var array;
   var encodedData;
-
   if (modelOrArray == null) {
     throw new Error('Cannot encode a null reference');
   } else if (Array.isArray(modelOrArray)) {
@@ -12082,7 +11240,6 @@ var serverResponse = function serverResponse(modelOrArray) {
   } else {
     model = modelOrArray;
   }
-
   if (model) {
     encodedData = {
       data: toFullJsonapi(model),
@@ -12102,10 +11259,8 @@ var serverResponse = function serverResponse(modelOrArray) {
       data: []
     };
   }
-
   return JSON.stringify(encodedData);
 };
-
 var toFullJsonapi = function toFullJsonapi(model) {
   return model.jsonapi({
     relationships: Object.keys(model.relationships)
@@ -12113,8 +11268,8 @@ var toFullJsonapi = function toFullJsonapi(model) {
 };
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
 /**
  * Interpret a `POST` request
  *
@@ -12123,38 +11278,33 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  * @param {string} body json encoded response body
  * @returns {object|Array} a model or array created from the response
  */
-
 var simulatePost = function simulatePost(store, type, body) {
   var _JSON$parse = JSON.parse(body.toString()),
-      data = _JSON$parse.data;
-
+    data = _JSON$parse.data;
   if (Array.isArray(data)) {
     var records = data.map(function (record) {
       var attributes = record.attributes,
-          _record$relationships = record.relationships,
-          relationships = _record$relationships === void 0 ? {} : _record$relationships;
+        _record$relationships = record.relationships,
+        relationships = _record$relationships === void 0 ? {} : _record$relationships;
       var id = String(store.getAll(type).length + 1);
-
       var properties = _objectSpread(_objectSpread(_objectSpread({}, attributes), relationships.data), {}, {
         id: id
       });
-
       return store.add(type, properties);
     });
     return records;
   } else {
     var attributes = data.attributes,
-        _data$relationships = data.relationships,
-        relationships = _data$relationships === void 0 ? {} : _data$relationships;
+      _data$relationships = data.relationships,
+      relationships = _data$relationships === void 0 ? {} : _data$relationships;
     var id = String(store.getAll(type).length + 1);
-
     var properties = _objectSpread(_objectSpread(_objectSpread({}, attributes), relationships.data), {}, {
       id: id
     });
-
     return store.add(type, properties);
   }
 };
+
 /**
  * Interpret a `PATCH` request
  *
@@ -12163,18 +11313,16 @@ var simulatePost = function simulatePost(store, type, body) {
  * @param {string} body json encoded response body
  * @returns {object|Array} a model or array created from the response
  */
-
-
 var simulatePatch = function simulatePatch(store, type, body) {
   var _JSON$parse2 = JSON.parse(body.toString()),
-      data = _JSON$parse2.data;
-
+    data = _JSON$parse2.data;
   if (Array.isArray(data)) {
     return store.createOrUpdateModelsFromData(data);
   } else {
     return store.createOrUpdateModelFromData(data);
   }
 };
+
 /**
  * Finds or creates a model that will match an id. This is useful for
  * creating a response on the fly if no object already exists
@@ -12185,51 +11333,44 @@ var simulatePatch = function simulatePatch(store, type, body) {
  * @param {string} id the id to find
  * @returns {object} a Model object
  */
-
-
 var getOneFromFactory = function getOneFromFactory(_backendFactoryFarm, factory, type, id) {
   factory = factory || Object.keys(_backendFactoryFarm.factories).find(function (factoryName) {
     return _backendFactoryFarm.factories[factoryName].type === type;
   });
-
   if (!factory) {
     throw new Error("No default factory for ".concat(type, " exists"));
   }
-
   return _backendFactoryFarm.build(factory, {
     id: id
   });
 };
+
 /**
  * Will throw an error if `fetch` is called from the mockServer, usually due to a `POST` or `PATCH` called by a `save`
  *
  * @param {string} url the url that is attempted
  * @param {object} options options including the http method
  */
-
-
 var circularFetchError = function circularFetchError(url, options) {
   throw new Error("You tried to call fetch from MockServer with ".concat(options.method, " ").concat(url, ", which is circular and would call itself. This was caused by calling a method such as 'save' on a model that was created from MockServer. To fix the problem, use FactoryFarm without MockServer"));
 };
+
 /**
  * Throws an error if MockServer tries to `findOne` or `findAll` from itself.
  *
  * @param {string} type the model type
  * @param {string} id the model id
  */
-
-
 var circularFindError = function circularFindError(type, id) {
   var idText = id ? " with id ".concat(id) : '';
   throw new Error("You tried to find ".concat(type).concat(idText, " from MockServer which is circular and would call itself. To fix the problem, use FactoryFarm without MockServer"));
 };
+
 /**
  * Overrides store methods that could trigger a `fetch` to throw errors. MockServer should only provide data for fetches, never call a fetch itself.
  *
  * @param {object} store the internal store
  */
-
-
 var disallowFetches = function disallowFetches(store) {
   store.fetch = circularFetchError;
   store.findOne = circularFindError;
@@ -12239,6 +11380,7 @@ var disallowFetches = function disallowFetches(store) {
   store.fetchAll = circularFindError;
   store.fetchMany = circularFindError;
 };
+
 /**
  * Wraps response JSON or object in a Response object that is itself wrapped in a
  * resolved Promise. If no status is given then it will fill in a default based on
@@ -12249,22 +11391,18 @@ var disallowFetches = function disallowFetches(store) {
  * @param {number} status the http status
  * @returns {Promise} a promise wrapping the response
  */
-
-
 var wrapResponse = function wrapResponse(response, method, status) {
   if (!status) {
     status = method === 'POST' ? 201 : 200;
   }
-
   return Promise.resolve(new Response(response, {
     status: status
   }));
 };
+
 /**
  * A backend "server" to be used for creating jsonapi-compliant responses.
  */
-
-
 var MockServer = /*#__PURE__*/function () {
   /**
    * Sets properties needed internally
@@ -12276,15 +11414,14 @@ var MockServer = /*#__PURE__*/function () {
    */
   function MockServer() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
     _classCallCheck(this, MockServer);
-
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm();
     this._backendFactoryFarm.__usedForMockServer__ = true;
     this._backendFactoryFarm.store.__usedForMockServer__ = true;
     this.responseOverrides = options.responseOverrides || [];
     disallowFetches(this._backendFactoryFarm.store);
   }
+
   /**
    * Adds a response override to the server
    *
@@ -12294,13 +11431,12 @@ var MockServer = /*#__PURE__*/function () {
    *   - status: defaults to 200
    *   - response: a method that takes the server as an argument and returns the body of the response
    */
-
-
   _createClass(MockServer, [{
     key: "respond",
     value: function respond(options) {
       this.responseOverrides.push(options);
     }
+
     /**
      * Sets up fetch mocking to intercept requests. It will then either use overrides, or use its own
      * internal store to simulate serving JSON responses of new data.
@@ -12310,12 +11446,10 @@ var MockServer = /*#__PURE__*/function () {
      *
      * @param {object} options currently `responseOverrides` and `factoriesForTypes`
      */
-
   }, {
     key: "start",
     value: function start() {
       var _this = this;
-
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
       var factoriesForTypes = options.factoriesForTypes;
       var combinedOverrides = [].concat(_toConsumableArray(options.responseOverrides || []), _toConsumableArray(this.responseOverrides || []));
@@ -12325,7 +11459,6 @@ var MockServer = /*#__PURE__*/function () {
           if (!(definition !== null && definition !== void 0 && definition.path)) {
             throw new Error('No path defined for mock server override. Did you define a path?');
           }
-
           var method = definition.method || 'GET';
           return req.url.match(definition.path) && req.method.match(method);
         });
@@ -12333,17 +11466,17 @@ var MockServer = /*#__PURE__*/function () {
         return wrapResponse(response, req.method, foundQuery === null || foundQuery === void 0 ? void 0 : foundQuery.status);
       });
     }
+
     /**
      * Clears mocks and the store
      */
-
   }, {
     key: "stop",
     value: function stop() {
       fetch.resetMocks();
-
       this._backendFactoryFarm.store.reset();
     }
+
     /**
      * Alias for `this._backendFactoryFarm.build`
      *
@@ -12352,12 +11485,12 @@ var MockServer = /*#__PURE__*/function () {
      * @param {number} numberOfRecords optional number of models to build
      * @returns {*} Object or Array
      */
-
   }, {
     key: "build",
     value: function build(factoryName, overrideOptions, numberOfRecords) {
       return this._backendFactoryFarm.build(factoryName, overrideOptions, numberOfRecords);
     }
+
     /**
      * Alias for `this._backendFactoryFarm.define`
      *
@@ -12365,12 +11498,12 @@ var MockServer = /*#__PURE__*/function () {
      * @param {object} options options for defining a factory
      * @returns {*} Object or Array
      */
-
   }, {
     key: "define",
     value: function define(name, options) {
       return this._backendFactoryFarm.define(name, options);
     }
+
     /**
      * Alias for `this._backendFactoryFarm.add`
      *
@@ -12378,12 +11511,12 @@ var MockServer = /*#__PURE__*/function () {
      * @param {object} options properties and other options for adding a model to the store
      * @returns {*} Object or Array
      */
-
   }, {
     key: "add",
     value: function add(name, options) {
       return this._backendFactoryFarm.add(name, options);
     }
+
     /**
      * Based on a request, simulates building a response, either using found data
      * or a factory.
@@ -12393,26 +11526,22 @@ var MockServer = /*#__PURE__*/function () {
      * @returns {object} the found or built store record(s)
      * @private
      */
-
   }, {
     key: "_findFromStore",
     value: function _findFromStore(req) {
       var factoriesForTypes = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var _backendFactoryFarm = this._backendFactoryFarm;
       var method = req.method,
-          url = req.url,
-          body = req.body;
+        url = req.url,
+        body = req.body;
       var store = _backendFactoryFarm.store;
-
       var _URL = new URL(url, 'http://example.com'),
-          pathname = _URL.pathname;
-
+        pathname = _URL.pathname;
       var type = Object.keys(store.data).find(function (model_type) {
         return pathname.match(model_type);
       });
       var id = pathname.match(/\d+$/);
       id = id && String(id);
-
       if (method === 'POST') {
         return simulatePost(store, type, body);
       } else if (method === 'PATCH') {
@@ -12425,7 +11554,6 @@ var MockServer = /*#__PURE__*/function () {
       }
     }
   }]);
-
   return MockServer;
 }();
 
