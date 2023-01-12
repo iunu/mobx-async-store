@@ -3,7 +3,6 @@ import babel from 'rollup-plugin-babel'
 import pkg from './package.json'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
-import nodePolyfills from 'rollup-plugin-node-polyfills'
 
 export default [
 	// browser-friendly UMD build
@@ -56,7 +55,8 @@ export default [
 			'@babel/runtime/regenerator',
 			'@babel/runtime/helpers/assertThisInitialized',
 			'@babel/runtime/helpers/toConsumableArray',
-			'@babel/runtime/helpers/wrapNativeSuper'
+			'@babel/runtime/helpers/wrapNativeSuper',
+			'uuid'
 		],
 		output: [
 			{ file: pkg.main, format: 'cjs', sourcemap: true },
@@ -76,8 +76,7 @@ export default [
 				declaration: true,
 				declarationDir: 'types',
 				outputToFilesystem: false
-			}),
-			nodePolyfills()
+			})
 		]
 	}
 ]

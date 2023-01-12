@@ -1,11 +1,8 @@
 {
   "name": "@artemisag/mobx-async-store",
-  "version": "6.0.0-rc16",
+  "version": "6.0.0-rc17",
   "license": "MIT",
   "module": "dist/mobx-async-store.esm.js",
-  "browser": {
-    "crypto": false
-  },
   "main": "dist/mobx-async-store.cjs.js",
   "dependencies": {
     "clean-jsdoc-theme": "^4.1.12",
