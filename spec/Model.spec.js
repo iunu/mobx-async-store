@@ -151,6 +151,13 @@ class Category extends Model {
   static relationshipDefinitions = {
     targets: {
       direction: 'toMany'
+    },
+    organization: {
+      direction: 'toOne',
+      inverse: {
+        name: 'categories',
+        direction: 'toMany'
+      }
     }
   }
 }
@@ -175,37 +182,41 @@ const mockFetchOptions = {
   }
 }
 
-const store = new AppStore({
-  baseUrl: mockBaseUrl,
-  defaultFetchOptions: mockFetchOptions
-})
-
-const mockTodoData = {
-  data: {
-    id: '1',
-    type: 'todos',
-    attributes: {
-      title: 'Do taxes',
-      // YYYY-MM-DD
-      created_at: timestamp.toISOString().split('T')[0]
-    }
-  }
-}
-
-const mockTodoResponse = JSON.stringify(mockTodoData)
-
-const mockNoteDataWithErrors = {
-  errors: {
-    description: ["can't be blank"]
-  }
-}
-
-const mockNoteWithErrorResponse = JSON.stringify(mockNoteDataWithErrors)
-
 describe('Model', () => {
+  let store
+  let mockTodoResponse
+  let mockNoteWithErrorResponse
+  let mockTodoData
+
   beforeEach(() => {
+    store = new AppStore({
+      baseUrl: mockBaseUrl,
+      defaultFetchOptions: mockFetchOptions
+    })
+
+    mockTodoData = {
+      data: {
+        id: '1',
+        type: 'todos',
+        attributes: {
+          title: 'Do taxes',
+          // YYYY-MM-DD
+          created_at: timestamp.toISOString().split('T')[0]
+        }
+      }
+    }
+
+    mockTodoResponse = JSON.stringify(mockTodoData)
+
+    const mockNoteDataWithErrors = {
+      errors: {
+        description: ["can't be blank"]
+      }
+    }
+
+    mockNoteWithErrorResponse = JSON.stringify(mockNoteDataWithErrors)
+
     fetch.resetMocks()
-    store.reset()
   })
 
   describe('initialization', () => {
@@ -647,6 +658,48 @@ describe('Model', () => {
         expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
         expect(todo.notes.map((x) => x.id).constructor.name).toEqual('Array')
         expect(todo.notes.map((x) => x.id)).toEqual([10])
+      })
+    })
+    describe('toOne', () => {
+      let category
+      let organization
+      let organization2
+
+      beforeEach(() => {
+        category = store.add('categories', {})
+        organization = store.add('organizations', { id: '1' })
+        organization2 = store.add('organizations', { id: '2' })
+      })
+      it('sets a relationship object', () => {
+        expect(category.organization).toBeUndefined()
+        category.organization = organization
+        expect(category.organization).toEqual(organization)
+        category.organization = null
+        expect(category.organization).toBeUndefined()
+        category.organization = organization
+        expect(category.organization).toEqual(organization)
+      })
+
+      it('sets a relationship object via relationships hash', () => {
+        expect(category.organization).toBeUndefined()
+        category.relationships.organization = { data: { id: organization.id, type: 'organizations' } }
+        category.relationships.organization = { data: { id: organization2.id, type: 'organizations' } }
+        expect(category.organization).toEqual(organization2)
+        category.relationships.organization = null
+        expect(category.organization).toBeUndefined()
+        category.relationships.organization = { data: { id: organization.id, type: 'organizations' } }
+        expect(category.organization).toEqual(organization)
+      })
+
+      it('keeps a relationship after saving', async () => {
+        expect(category.organization).toBeUndefined()
+        category.relationships.organization = { data: { id: organization.id, type: 'organizations' } }
+
+        mockTodoResponse = JSON.stringify({ data: category.jsonapi({ relationships: ['organization'] }) })
+        fetch.mockResponseOnce(mockTodoResponse)
+        await category.save({ relationships: ['organization'] })
+
+        expect(category.organization).toEqual(organization)
       })
     })
   })

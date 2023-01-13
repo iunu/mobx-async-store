@@ -10065,6 +10065,7 @@ var mobxAnnotations = {
   defaultAttributes: computed,
   isInFlight: observable,
   errors: observable,
+  relationships: observable,
   _snapshots: observable,
   initializeAttributes: action,
   initializeRelationships: action,

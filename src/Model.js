@@ -84,6 +84,7 @@ const mobxAnnotations = {
   defaultAttributes: computed,
   isInFlight: observable,
   errors: observable,
+  relationships: observable,
   _snapshots: observable,
   initializeAttributes: action,
   initializeRelationships: action,
@@ -151,6 +152,16 @@ class Model {
 
   static endpoint = ''
 
+  /**
+   * The reference to relationships. Is observed and used to provide references to the objects themselves
+   *
+   * todo.relationships
+   * => { tag: { data: { type: 'tags', id: '1' } } }
+   * todo.tag
+   * => Tag with id: '1'
+   *
+   * @type {object}
+   */
   relationships = {}
 
   /**
