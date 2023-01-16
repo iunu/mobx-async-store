@@ -10079,6 +10079,7 @@ var mobxAnnotations = {
   attributeNames: computed,
   relationshipNames: computed,
   defaultAttributes: computed,
+  id: observable,
   isInFlight: observable,
   errors: observable,
   relationships: observable,
@@ -10120,6 +10121,7 @@ var Model = /*#__PURE__*/function () {
       models: [this.constructor]
     });
     _classCallCheck(this, Model);
+    _defineProperty$1(this, "id", void 0);
     _defineProperty$1(this, "relationships", {});
     _defineProperty$1(this, "isInFlight", false);
     _defineProperty$1(this, "errors", {});

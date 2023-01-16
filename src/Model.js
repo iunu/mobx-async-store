@@ -82,6 +82,7 @@ const mobxAnnotations = {
   attributeNames: computed,
   relationshipNames: computed,
   defaultAttributes: computed,
+  id: observable,
   isInFlight: observable,
   errors: observable,
   relationships: observable,
@@ -151,6 +152,13 @@ class Model {
    */
 
   static endpoint = ''
+
+  /**
+   * The unique document identifier. Should not change except when persisted.
+   *
+   * @type {String}
+   */
+  id
 
   /**
    * The reference to relationships. Is observed and used to provide references to the objects themselves
