@@ -8433,8 +8433,7 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
     if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
       setRelatedRecord(inverse.name, relatedRecord, record, store);
     } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
-      var _relatedRecord;
-      addRelatedRecord((_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name], inverse.name, relatedRecord, record);
+      addRelatedRecord(inverse.name, relatedRecord, record);
     }
     record.relationships[relationshipName] = {
       data: {

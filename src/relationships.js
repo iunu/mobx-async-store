@@ -144,7 +144,7 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
     if (inverse?.direction === 'toOne') {
       setRelatedRecord(inverse.name, relatedRecord, record, store)
     } else if (inverse?.direction === 'toMany') {
-      addRelatedRecord(relatedRecord?.[inverse.name], inverse.name, relatedRecord, record)
+      addRelatedRecord(inverse.name, relatedRecord, record)
     }
 
     record.relationships[relationshipName] = { data: { id: relatedRecord.id, type: relatedRecord.type } }
