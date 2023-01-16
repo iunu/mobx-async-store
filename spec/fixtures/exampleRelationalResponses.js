@@ -3,7 +3,7 @@ export const exampleRelatedToManyResponse = JSON.stringify({
     id: '1',
     type: 'todos',
     attributes: {
-      id: 1,
+      id: '2',
       title: 'Do laundry'
     },
     relationships: {

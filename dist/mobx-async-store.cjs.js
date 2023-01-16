@@ -8404,7 +8404,7 @@ var defineToManyRelationships = mobx.action(function (record, store, toManyDefin
         relatedRecords = relatedRecords.map(function (reference) {
           return coerceDataToExistingRecord(store, reference);
         });
-        if (inverse) {
+        if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne' && inverse !== null && inverse !== void 0 && inverse.types) {
           var types = inverse.types,
             inverseName = inverse.name;
           var oldRelatedRecords = types.map(function (type) {
@@ -8444,6 +8444,20 @@ var defineToManyRelationships = mobx.action(function (record, store, toManyDefin
  * @returns {object} the related record
  */
 var setRelatedRecord = mobx.action(function (relationshipName, record, relatedRecord, store, inverse) {
+  if (record == null) {
+    return null;
+  }
+  if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+    var previousRelatedRecord = record[relationshipName];
+    if (relatedRecord == null) {
+      setRelatedRecord(inverse.name, previousRelatedRecord, null, store);
+    } else {
+      setRelatedRecord(inverse.name, relatedRecord, record, store);
+    }
+  } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+    var _relatedRecord;
+    addRelatedRecord((_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name], inverse.name, relatedRecord, record);
+  }
   if (relatedRecord != null) {
     relatedRecord = coerceDataToExistingRecord(store, relatedRecord);
     record.relationships[relationshipName] = {
@@ -8454,13 +8468,6 @@ var setRelatedRecord = mobx.action(function (relationshipName, record, relatedRe
     };
   } else {
     record.relationships[relationshipName] = null;
-  }
-  if (inverse) {
-    var _relatedRecord;
-    var relatedArray = (_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name];
-    if (relatedArray && !relatedArray.includes(record)) {
-      addRelatedRecord(relatedArray, inverse.name, relatedRecord, record);
-    }
   }
   record.takeSnapshot();
   return relatedRecord;
@@ -8476,9 +8483,9 @@ var setRelatedRecord = mobx.action(function (relationshipName, record, relatedRe
  * @param {object} inverse the definition of the inverse relationship
  * @returns {object} the removed record
  */
-var removeRelatedRecord = mobx.action(function (array, relationshipName, record, relatedRecord, inverse) {
+var removeRelatedRecord = mobx.action(function (relationshipName, record, relatedRecord, inverse) {
   var _record$relationships3;
-  if (array == null || relatedRecord == null) {
+  if (relatedRecord == null) {
     return relatedRecord;
   }
   var existingData = ((_record$relationships3 = record.relationships[relationshipName]) === null || _record$relationships3 === void 0 ? void 0 : _record$relationships3.data) || [];
@@ -8488,14 +8495,15 @@ var removeRelatedRecord = mobx.action(function (array, relationshipName, record,
     return comparedId === relatedRecord.id && comparedType === relatedRecord.type;
   });
   if (recordIndexToRemove > -1) {
-    if (inverse) {
+    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
       setRelatedRecord(inverse.name, relatedRecord, null, record.store);
+    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+      removeRelatedRecord(inverse.name, relatedRecord, record);
     }
     existingData.splice(recordIndexToRemove, 1);
-    array.splice(recordIndexToRemove, 1);
   }
   record.takeSnapshot();
-  return coerceDataToExistingRecord(record.store, relatedRecord);
+  return relatedRecord;
 });
 
 /**
@@ -8508,30 +8516,37 @@ var removeRelatedRecord = mobx.action(function (array, relationshipName, record,
  * @param {object} inverse the definition of the inverse relationship
  * @returns {object} the added record
  */
-var addRelatedRecord = mobx.action(function (array, relationshipName, record, relatedRecord, inverse) {
-  var _record$relationships4;
+var addRelatedRecord = mobx.action(function (relationshipName, record, relatedRecord, inverse) {
+  var _record$store, _record$relationships4;
   if (Array.isArray(relatedRecord)) {
     return relatedRecord.map(function (singleRecord) {
-      return addRelatedRecord(array, relationshipName, record, singleRecord, inverse);
+      return addRelatedRecord(relationshipName, record, singleRecord, inverse);
     });
   }
-  if (array == null || relatedRecord == null || !record.store.getKlass(record.type)) {
+  if (relatedRecord == null || record == null || !((_record$store = record.store) !== null && _record$store !== void 0 && _record$store.getKlass(record.type))) {
     return relatedRecord;
   }
   var relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord);
-  if (inverse) {
+  if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
     setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store);
+  } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+    addRelatedRecord(inverse.name, relatedRecord, record);
   }
-  var existingData = ((_record$relationships4 = record.relationships[relationshipName]) === null || _record$relationships4 === void 0 ? void 0 : _record$relationships4.data) || [];
-  var alreadyThere = array.includes(relatedRecordFromStore);
-  if (!alreadyThere) {
+  if (!((_record$relationships4 = record.relationships[relationshipName]) !== null && _record$relationships4 !== void 0 && _record$relationships4.data)) {
     record.relationships[relationshipName] = {
-      data: [].concat(_toConsumableArray__default["default"](existingData), [{
-        id: relatedRecord.id,
-        type: relatedRecord.type
-      }])
+      data: []
     };
-    array.push(relatedRecordFromStore);
+  }
+  var alreadyThere = record.relationships[relationshipName].data.some(function (_ref9) {
+    var id = _ref9.id,
+      type = _ref9.type;
+    return id === relatedRecord.id && type === relatedRecord.type;
+  });
+  if (!alreadyThere) {
+    record.relationships[relationshipName].data.push({
+      id: relatedRecord.id,
+      type: relatedRecord.type
+    });
   }
   record.takeSnapshot();
   return relatedRecordFromStore;
@@ -8547,7 +8562,7 @@ var addRelatedRecord = mobx.action(function (array, relationshipName, record, re
  * @returns {object} the store object
  */
 var coerceDataToExistingRecord = mobx.action(function (store, record) {
-  if (!(store !== null && store !== void 0 && store.getType(record.type))) {
+  if (record == null || !(store !== null && store !== void 0 && store.getType(record.type))) {
     return null;
   }
   if (record && !(record instanceof Model$1)) {
@@ -8585,14 +8600,14 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
         inverse = _assertThisInitialize.inverse,
         record = _assertThisInitialize.record,
         property = _assertThisInitialize.property;
-      return addRelatedRecord(_assertThisInitialized__default["default"](_this), property, record, relatedRecord, inverse);
+      return addRelatedRecord(property, record, relatedRecord, inverse);
     });
     _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "remove", function (relatedRecord) {
       var _assertThisInitialize2 = _assertThisInitialized__default["default"](_this),
         inverse = _assertThisInitialize2.inverse,
         record = _assertThisInitialize2.record,
         property = _assertThisInitialize2.property;
-      return removeRelatedRecord(_assertThisInitialized__default["default"](_this), property, record, relatedRecord, inverse);
+      return removeRelatedRecord(property, record, relatedRecord, inverse);
     });
     _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "replace", function () {
       var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
@@ -8602,19 +8617,21 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
         property = _assertThisInitialize3.property,
         store = _assertThisInitialize3.store;
       var newRecords;
-      var relatedRecord;
       mobx.transaction(function () {
-        while (_this.length > 0) {
-          relatedRecord = _this.pop();
-          if (inverse) {
+        if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+          _this.forEach(function (relatedRecord) {
             setRelatedRecord(inverse.name, relatedRecord, null, store);
-          }
+          });
+        } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+          _this.forEach(function (relatedRecord) {
+            removeRelatedRecord(inverse.name, relatedRecord, record);
+          });
         }
         record.relationships[property] = {
           data: []
         };
         newRecords = array.map(function (relatedRecord) {
-          return addRelatedRecord(_assertThisInitialized__default["default"](_this), property, record, relatedRecord, inverse);
+          return addRelatedRecord(property, record, relatedRecord, inverse);
         });
       });
       return newRecords;
