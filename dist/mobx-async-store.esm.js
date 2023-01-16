@@ -8428,19 +8428,14 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
   if (record == null) {
     return null;
   }
-  if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-    var previousRelatedRecord = record[relationshipName];
-    if (relatedRecord == null) {
-      setRelatedRecord(inverse.name, previousRelatedRecord, null, store);
-    } else {
-      setRelatedRecord(inverse.name, relatedRecord, record, store);
-    }
-  } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
-    var _relatedRecord;
-    addRelatedRecord((_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name], inverse.name, relatedRecord, record);
-  }
   if (relatedRecord != null) {
     relatedRecord = coerceDataToExistingRecord(store, relatedRecord);
+    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+      setRelatedRecord(inverse.name, relatedRecord, record, store);
+    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+      var _relatedRecord;
+      addRelatedRecord((_relatedRecord = relatedRecord) === null || _relatedRecord === void 0 ? void 0 : _relatedRecord[inverse.name], inverse.name, relatedRecord, record);
+    }
     record.relationships[relationshipName] = {
       data: {
         id: relatedRecord.id,
@@ -8448,6 +8443,10 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
       }
     };
   } else {
+    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+      var previousRelatedRecord = record[relationshipName];
+      setRelatedRecord(inverse.name, previousRelatedRecord, null, store);
+    }
     record.relationships[relationshipName] = null;
   }
   record.takeSnapshot();

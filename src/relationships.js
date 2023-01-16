@@ -138,21 +138,22 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
 export const setRelatedRecord = action((relationshipName, record, relatedRecord, store, inverse) => {
   if (record == null) { return null }
 
-  if (inverse?.direction === 'toOne') {
-    const previousRelatedRecord = record[relationshipName]
-    if (relatedRecord == null) {
-      setRelatedRecord(inverse.name, previousRelatedRecord, null, store)
-    } else {
-      setRelatedRecord(inverse.name, relatedRecord, record, store)
-    }
-  } else if (inverse?.direction === 'toMany') {
-    addRelatedRecord(relatedRecord?.[inverse.name], inverse.name, relatedRecord, record)
-  }
-
   if (relatedRecord != null) {
     relatedRecord = coerceDataToExistingRecord(store, relatedRecord)
+
+    if (inverse?.direction === 'toOne') {
+      setRelatedRecord(inverse.name, relatedRecord, record, store)
+    } else if (inverse?.direction === 'toMany') {
+      addRelatedRecord(relatedRecord?.[inverse.name], inverse.name, relatedRecord, record)
+    }
+
     record.relationships[relationshipName] = { data: { id: relatedRecord.id, type: relatedRecord.type } }
   } else {
+    if (inverse?.direction === 'toOne') {
+      const previousRelatedRecord = record[relationshipName]
+      setRelatedRecord(inverse.name, previousRelatedRecord, null, store)
+    }
+
     record.relationships[relationshipName] = null
   }
 
