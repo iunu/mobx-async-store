@@ -69,7 +69,7 @@ export function newId () {
 }
 
 export function idOrNewId (id) {
-  return id || newId()
+  return id != null ? String(id) : newId()
 }
 
 /**

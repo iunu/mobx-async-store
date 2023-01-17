@@ -89,7 +89,7 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
           const types = relationshipTypes || [relationshipName]
           relatedRecords = types.map((type) => record.store.getAll(type)).flat().filter((potentialRecord) => {
             const reference = potentialRecord.relationships[inverse.name]?.data
-            return reference && (reference.type === record.type) && (reference.id === record.id)
+            return reference && (reference.type === record.type) && (String(reference.id) === record.id)
           })
         }
 

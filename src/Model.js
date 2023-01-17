@@ -120,7 +120,7 @@ class Model {
     const { id, relationships, ...attributes } = initialProperties
 
     this.store = store
-    this.id = id
+    this.id = id != null ? String(id) : id
     this.relationships = relationships
 
     makeObservable(this, mobxAnnotations)

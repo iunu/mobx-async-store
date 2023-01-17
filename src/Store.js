@@ -970,7 +970,7 @@ class Store {
     const { id, type, attributes = {}, relationships = {} } = data
 
     runInAction(() => {
-      record.id = id
+      record.id = String(id)
 
       Object.entries(attributes).forEach(([key, value]) => {
         record[key] = value

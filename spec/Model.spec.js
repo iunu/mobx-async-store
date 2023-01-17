@@ -327,8 +327,9 @@ describe('Model', () => {
   })
 
   describe('isNew', () => {
-    it('is true if id contains "tmp"', () => {
+    it('is true if id does not exist', () => {
       const todo = new Organization({ title: 'Buy Milk' })
+      expect(todo.id).toBeUndefined()
       expect(todo.isNew).toBe(true)
     })
 
@@ -630,7 +631,7 @@ describe('Model', () => {
 
           expect(todo.notes.constructor.name).toEqual('RelatedRecordsArray')
           expect(todo.notes.map((x) => x.id).constructor.name).toEqual('Array')
-          expect(todo.notes.map((x) => x.id)).toEqual([10])
+          expect(todo.notes.map((x) => x.id)).toEqual(['10'])
         })
       })
       describe('manyToMany', () => {

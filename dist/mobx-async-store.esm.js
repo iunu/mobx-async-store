@@ -4226,7 +4226,7 @@ function newId() {
   return "tmp-".concat(v1());
 }
 function idOrNewId(id) {
-  return id || newId();
+  return id != null ? String(id) : newId();
 }
 
 /**
@@ -8366,7 +8366,7 @@ var defineToManyRelationships = action(function (record, store, toManyDefinition
           }).flat().filter(function (potentialRecord) {
             var _potentialRecord$rela;
             var reference = (_potentialRecord$rela = potentialRecord.relationships[inverse.name]) === null || _potentialRecord$rela === void 0 ? void 0 : _potentialRecord$rela.data;
-            return reference && reference.type === record.type && reference.id === record.id;
+            return reference && reference.type === record.type && String(reference.id) === record.id;
           });
         }
         return new RelatedRecordsArray(record, relationshipName, relatedRecords);
@@ -9847,7 +9847,7 @@ var Store = /*#__PURE__*/function () {
         _data$relationships = data.relationships,
         relationships = _data$relationships === void 0 ? {} : _data$relationships;
       runInAction(function () {
-        record.id = id;
+        record.id = String(id);
         Object.entries(attributes).forEach(function (_ref9) {
           var _ref10 = _slicedToArray(_ref9, 2),
             key = _ref10[0],
@@ -10127,7 +10127,7 @@ var Model = /*#__PURE__*/function () {
       relationships = initialProperties.relationships,
       attributes = _objectWithoutProperties(initialProperties, _excluded$1);
     this.store = store;
-    this.id = id;
+    this.id = id != null ? String(id) : id;
     this.relationships = relationships;
     makeObservable(this, mobxAnnotations);
     this.initializeAttributes(attributes);
