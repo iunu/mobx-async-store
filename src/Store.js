@@ -20,6 +20,7 @@ const mobxAnnotations = {
   data: observable,
   lastResponseHeaders: observable,
   loadingStates: observable,
+  loadedStates: observable,
   add: action,
   pickAttributes: action,
   pickRelationships: action,

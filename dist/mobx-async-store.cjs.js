@@ -8680,6 +8680,7 @@ var mobxAnnotations$1 = {
   data: mobx.observable,
   lastResponseHeaders: mobx.observable,
   loadingStates: mobx.observable,
+  loadedStates: mobx.observable,
   add: mobx.action,
   pickAttributes: mobx.action,
   pickRelationships: mobx.action,

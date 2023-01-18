@@ -8661,6 +8661,7 @@ var mobxAnnotations$1 = {
   data: observable,
   lastResponseHeaders: observable,
   loadingStates: observable,
+  loadedStates: observable,
   add: action,
   pickAttributes: action,
   pickRelationships: action,
