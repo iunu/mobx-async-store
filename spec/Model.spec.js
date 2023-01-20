@@ -512,11 +512,16 @@ describe('Model', () => {
             description: 'Example description'
           })
           const todo = store.add('todos', { id: 10, title: 'Buy Milk' })
+          const todo2 = store.add('todos', { id: 11, title: 'Buy Milk' })
 
           todo.notes.add(note)
 
           expect(todo.notes).toContain(note)
           expect(note.todo).toEqual(todo)
+
+          todo2.notes.add(note)
+          expect(todo2.notes).toContain(note)
+          expect(todo.notes).not.toContain(note)
         })
 
         it('models remove inverse relationships', () => {
@@ -666,6 +671,7 @@ describe('Model', () => {
       let organization2
       let note
       let todo
+      let todo2
 
       beforeEach(() => {
         category = store.add('categories', {})
@@ -673,6 +679,7 @@ describe('Model', () => {
         organization2 = store.add('organizations', { id: '2' })
         note = store.add('notes', { id: '1', description: 'Example description' })
         todo = store.add('todos', { id: '1', title: 'Buy Milk' })
+        todo2 = store.add('todos', { id: '21', title: 'Do laundry' })
       })
       it('sets a relationship object', () => {
         expect(category.organization).toBeUndefined()
@@ -723,6 +730,10 @@ describe('Model', () => {
         it('adds to inverse', () => {
           note.todo = todo
           expect(todo.notes).toContain(note)
+
+          note.todo = todo2
+          expect(todo2.notes).toContain(note)
+          expect(todo.notes).not.toContain(note)
         })
 
         it('removes from inverse', () => {

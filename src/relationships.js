@@ -144,6 +144,8 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
     if (inverse?.direction === 'toOne') {
       setRelatedRecord(inverse.name, relatedRecord, record, store)
     } else if (inverse?.direction === 'toMany') {
+      const previousRelatedRecord = record[relationshipName]
+      removeRelatedRecord(inverse.name, previousRelatedRecord, record)
       addRelatedRecord(inverse.name, relatedRecord, record)
     }
 
@@ -172,7 +174,7 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
  * @returns {object} the removed record
  */
 export const removeRelatedRecord = action((relationshipName, record, relatedRecord, inverse) => {
-  if (relatedRecord == null) { return relatedRecord }
+  if (relatedRecord == null || record == null) { return relatedRecord }
 
   const existingData = (record.relationships[relationshipName]?.data || [])
 
@@ -214,6 +216,9 @@ export const addRelatedRecord = action((relationshipName, record, relatedRecord,
   const relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord)
 
   if (inverse?.direction === 'toOne') {
+    const previousRelatedRecord = relatedRecordFromStore[inverse.name]
+    removeRelatedRecord(relationshipName, previousRelatedRecord, relatedRecordFromStore)
+
     setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store)
   } else if (inverse?.direction === 'toMany') {
     addRelatedRecord(inverse.name, relatedRecord, record)

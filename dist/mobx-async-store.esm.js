@@ -8433,6 +8433,8 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
     if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
       setRelatedRecord(inverse.name, relatedRecord, record, store);
     } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+      var previousRelatedRecord = record[relationshipName];
+      removeRelatedRecord(inverse.name, previousRelatedRecord, record);
       addRelatedRecord(inverse.name, relatedRecord, record);
     }
     record.relationships[relationshipName] = {
@@ -8443,8 +8445,8 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
     };
   } else {
     if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-      var previousRelatedRecord = record[relationshipName];
-      setRelatedRecord(inverse.name, previousRelatedRecord, null, store);
+      var _previousRelatedRecord = record[relationshipName];
+      setRelatedRecord(inverse.name, _previousRelatedRecord, null, store);
     }
     record.relationships[relationshipName] = null;
   }
@@ -8464,7 +8466,7 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
  */
 var removeRelatedRecord = action(function (relationshipName, record, relatedRecord, inverse) {
   var _record$relationships3;
-  if (relatedRecord == null) {
+  if (relatedRecord == null || record == null) {
     return relatedRecord;
   }
   var existingData = ((_record$relationships3 = record.relationships[relationshipName]) === null || _record$relationships3 === void 0 ? void 0 : _record$relationships3.data) || [];
@@ -8507,6 +8509,8 @@ var addRelatedRecord = action(function (relationshipName, record, relatedRecord,
   }
   var relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord);
   if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+    var previousRelatedRecord = relatedRecordFromStore[inverse.name];
+    removeRelatedRecord(relationshipName, previousRelatedRecord, relatedRecordFromStore);
     setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store);
   } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
     addRelatedRecord(inverse.name, relatedRecord, record);
