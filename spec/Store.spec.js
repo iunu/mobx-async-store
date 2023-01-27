@@ -336,7 +336,9 @@ describe('Store', () => {
 
       expect(note.todo).toEqual(todo)
       expect(todo.notes).toContain(note)
+      expect(todo.notes).toContain(note2)
       expect(todo.notes).toContain(note3)
+      expect(note2.todo).toEqual(todo)
       expect(note3.todo).toEqual(todo)
     })
 

@@ -308,6 +308,7 @@ describe('MockServer', () => {
       ]
 
       const todo = store.add('todos', { id: '1', title: 'Spray Plants' })
+      todo.title = 'changed title'
       mockServer.start({ responseOverrides })
 
       try {
@@ -333,6 +334,7 @@ describe('MockServer', () => {
       mockServer.start({ responseOverrides })
 
       const todo = store.add('todos', { id: '1', title: 'Spray Plants' })
+      todo.title = 'Changed title'
 
       try {
         await todo.save()

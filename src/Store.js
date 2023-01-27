@@ -10,7 +10,6 @@ import {
   requestUrl
 } from './utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { definitionsByDirection } from './relationships'
 
 /**
  * Annotations for mobx observability. We can't use `makeAutoObservable` because we have subclasses.
@@ -116,6 +115,15 @@ class Store {
   loadedStates = new Map()
 
   /**
+   * True if models in the store should stop taking snapshots. This is
+   * useful when updating records without causing records to become
+   * 'dirty', for example when initializing records using `add`
+   *
+   * @type {boolean}
+   */
+  pauseSnapshots = false
+
+  /**
    * Initializer for Store class
    *
    * @param {object} options options to use for initialization
@@ -143,38 +151,29 @@ class Store {
    * ```
    *
    * @param {string} type the model type
-   * @param {object|Array} data the properties to use
+   * @param {object|Array} props the properties to use
    * @returns {object|Array} the new record or records
    */
-  add (type, data) {
-    if (data.constructor.name === 'Array') {
-      return data.map((model) => this.add(type, model))
+  add (type, props) {
+    if (props.constructor.name === 'Array') {
+      return props.map((model) => this.add(type, model))
     } else {
-      const id = idOrNewId(data.id)
+      const id = idOrNewId(props.id)
 
-      const attributes = cloneDeep(this.pickAttributes(data, type))
-      const relationships = this.pickRelationships(data, type)
+      const attributes = cloneDeep(this.pickAttributes(props, type))
 
-      const model = this.createModelFromData({ type, id, attributes })
+      const record = this.createModelFromData({ type, id, attributes })
 
-      this.data[type].records.set(String(model.id), model)
-
-      const toOneDefinitions = definitionsByDirection(model, 'toOne')
-      const toManyDefinitions = definitionsByDirection(model, 'toMany')
-
-      toOneDefinitions.forEach(([relationshipName]) => {
-        if (relationships[relationshipName]) {
-          model[relationshipName] = relationships[relationshipName]
-        }
+      // set separately to get inverses
+      this.pauseSnapshots = true
+      Object.entries(this.pickRelationships(props, type)).forEach(([key, value]) => {
+        record[key] = value
       })
+      this.pauseSnapshots = false
 
-      toManyDefinitions.forEach(([relationshipName]) => {
-        if (relationships[relationshipName]) {
-          model[relationshipName].add(relationships[relationshipName])
-        }
-      })
+      this.data[type].records.set(String(record.id), record)
 
-      return model
+      return record
     }
   }
 

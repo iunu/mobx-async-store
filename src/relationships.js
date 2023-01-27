@@ -3,6 +3,7 @@ import Model from './Model'
 
 /**
  * Gets only the relationships from one direction, ie 'toOne' or 'toMany'
+ *
  * @param {object} model the model with the relationship
  * @param {string} direction the direction of the relationship
  */
@@ -100,8 +101,9 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
 
         relatedRecords = relatedRecords.map((reference) => coerceDataToExistingRecord(store, reference))
 
-        if (inverse?.direction === 'toOne' && inverse?.types) {
-          const { types, name: inverseName } = inverse
+        if (inverse?.direction === 'toOne') {
+          const { name: inverseName } = inverse
+          const types = inverse.types || [relatedRecords[0].type]
 
           const oldRelatedRecords = types.map((type) => record.store.getAll(type)).flat().filter((potentialRecord) => {
             const reference = potentialRecord.relationships[inverseName]?.data
@@ -117,6 +119,7 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
           })
         }
 
+        record.dirtyRelationships.add(relationshipName)
         return new RelatedRecordsArray(record, relationshipName, relatedRecords)
       }
     })
@@ -159,6 +162,7 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
     record.relationships[relationshipName] = null
   }
 
+  record.dirtyRelationships.add(relationshipName)
   record.takeSnapshot()
   return relatedRecord
 })
@@ -193,6 +197,7 @@ export const removeRelatedRecord = action((relationshipName, record, relatedReco
   }
 
   record.takeSnapshot()
+  record.dirtyRelationships.add(relationshipName)
   return relatedRecord
 })
 
@@ -235,6 +240,7 @@ export const addRelatedRecord = action((relationshipName, record, relatedRecord,
   }
 
   record.takeSnapshot()
+  record.dirtyRelationships.add(relationshipName)
   return relatedRecordFromStore
 })
 

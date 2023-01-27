@@ -790,6 +790,17 @@ describe('Model', () => {
         options: {}
       })
     })
+
+    it("doesn't snapshot when paused", () => {
+      const todo = new Todo({ title: 'Buy Milk' })
+      expect(todo._snapshots).toHaveLength(1)
+      todo.store.pauseSnapshots = true
+      todo.takeSnapshot()
+      expect(todo._snapshots).toHaveLength(1)
+      todo.store.pauseSnapshots = false
+      todo.takeSnapshot()
+      expect(todo._snapshots).toHaveLength(2)
+    })
   })
 
   describe('.previousSnapshot', () => {
@@ -1407,6 +1418,68 @@ describe('Model', () => {
       expect(todo.hasUnpersistedChanges).toBe(true)
       await todo.save({ relationships: ['user'] })
       expect(todo.hasUnpersistedChanges).toBe(false)
+    })
+
+    it('saves when attributes are dirty', () => {
+      fetch.mockResponse(mockTodoResponse)
+
+      const note = store.add('notes', {
+        id: '10',
+        description: 'hello'
+      })
+
+      note.save()
+      expect(fetch).not.toHaveBeenCalled()
+
+      note.description = 'changed description'
+
+      note.save()
+      expect(fetch).toHaveBeenCalled()
+    })
+
+    it('saves with a new model', () => {
+      fetch.mockResponse(mockTodoResponse)
+
+      const note = store.add('notes', {
+        description: 'hello'
+      })
+
+      note.save()
+      expect(fetch).toHaveBeenCalled()
+    })
+
+    it('saves when relationships are dirty', () => {
+      fetch.mockResponse(mockTodoResponse)
+
+      const todo1 = store.add('todos', {
+        id: '10',
+        title: 'Buy Milk'
+      })
+
+      const todo2 = store.add('todos', {
+        id: '20',
+        title: 'Buy Milk'
+      })
+
+      const note = store.add('notes', {
+        id: '10',
+        description: 'hello',
+        todo: todo1
+      })
+
+      note.save({ relationships: ['todo'] })
+
+      expect(fetch).not.toHaveBeenCalled()
+
+      note.todo = todo2
+
+      note.save()
+
+      expect(fetch).not.toHaveBeenCalled()
+
+      note.save({ relationships: ['todo'] })
+
+      expect(fetch).toHaveBeenCalledTimes(1)
     })
   })
 

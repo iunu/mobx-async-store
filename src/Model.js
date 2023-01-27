@@ -154,7 +154,7 @@ class Model {
   /**
    * The unique document identifier. Should not change except when persisted.
    *
-   * @type {String}
+   * @type {string}
    */
   id
 
@@ -413,7 +413,20 @@ class Model {
       attributes
     } = options
 
-    const { constructor, id, isNew } = this
+    const {
+      constructor,
+      id,
+      isNew,
+      dirtyRelationships,
+      dirtyAttributes
+    } = this
+
+    const hasAttributesToSave = dirtyAttributes.length > 0
+    const hasRelationshipsToSave = relationships && dirtyRelationships.size > 0
+
+    if (!isNew && !hasAttributesToSave && !hasRelationshipsToSave) {
+      return Promise.resolve(this)
+    }
 
     let requestId = id
     let method = 'PATCH'
@@ -607,6 +620,7 @@ class Model {
    * @param {object} options options to use to set the persisted state
    */
   takeSnapshot (options = {}) {
+    if (this.store.pauseSnapshots) { return }
     const persisted = options.persisted || false
     const properties = cloneDeep(pick(this, ['attributes', 'relationships']))
 
