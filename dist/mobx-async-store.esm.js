@@ -4,7 +4,7 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _defineProperty$1 from '@babel/runtime/helpers/defineProperty';
 import _typeof from '@babel/runtime/helpers/typeof';
 import _regeneratorRuntime from '@babel/runtime/regenerator';
-import { toJS, action, transaction, runInAction, observable, makeObservable, extendObservable, computed } from 'mobx';
+import { toJS, runInAction, observable, makeObservable, action, transaction, extendObservable, computed } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import { v1 } from 'uuid';
@@ -8256,404 +8256,6 @@ function uniqBy(array, iteratee) {
 
 var uniqBy_1 = uniqBy;
 
-var _Symbol$species;
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-/**
- * Gets only the relationships from one direction, ie 'toOne' or 'toMany'
- * @param {object} model the model with the relationship
- * @param {string} direction the direction of the relationship
- */
-var definitionsByDirection = action(function (model, direction) {
-  var _model$relationshipDe = model.relationshipDefinitions,
-    relationshipDefinitions = _model$relationshipDe === void 0 ? {} : _model$relationshipDe;
-  var definitionEntries = Object.entries(relationshipDefinitions);
-  return definitionEntries.filter(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 2);
-      _ref2[0];
-      var definition = _ref2[1];
-    return definition.direction === direction;
-  });
-});
-
-/**
- * Takes the `toOne` definitions from a document type and creates getters and setters.
- * A getter finds a record from the store. The setter calls `setRelatedRecord`, which will
- * return an instance of a model and add it to the inverse relationship if necessary.
- * A definition will look something like this:
- *
- *    todo: {
- *      direction: 'toOne',
- *      inverse: {
- *        name: 'notes',
- *        direction: 'toMany'
- *      }
- *    }
- *
- * @param {object} record the record that will have the relationship
- * @param {object} store the data store
- * @param {object} toOneDefinitions an object with formatted definitions
- * @returns {object} an object with getters and setters based on the defintions
- */
-var defineToOneRelationships = action(function (record, store, toOneDefinitions) {
-  return toOneDefinitions.reduce(function (object, _ref3) {
-    var _ref4 = _slicedToArray(_ref3, 2),
-      relationshipName = _ref4[0],
-      definition = _ref4[1];
-    var inverse = definition.inverse;
-    Object.defineProperty(object, relationshipName, {
-      get: function get() {
-        var _record$relationships;
-        var reference = (_record$relationships = record.relationships[relationshipName]) === null || _record$relationships === void 0 ? void 0 : _record$relationships.data;
-        if (reference) {
-          return coerceDataToExistingRecord(store, reference);
-        }
-      },
-      set: function set(relatedReference) {
-        return setRelatedRecord(relationshipName, record, relatedReference, store, inverse);
-      }
-    });
-    return object;
-  }, {});
-});
-
-/**
- * Takes the `toMany` definitions from a document type and creates getters and setters.
- * A getter finds records from the store, falling back to a lookup of the inverse records if
- * none are defined in the `relationships` hash.
- *
- * The setter will unset the previous inverse and set the current inverse.
- * Both return a `RelatedRecordsArray`, which is an array with added methods `add`, `remove`, and `replace`
- *
- * A definition will look like this:
- *
- *    categories: {
- *      direction: 'toMany',
- *      inverse: {
- *        name: 'organization',
- *        direction: 'toOne'
- *      }
- *    }
- *
- * @param {object} record the record that will have the relationship
- * @param {object} store the data store
- * @param {object} toManyDefinitions an object with formatted definitions
- * @returns {object} an object with getters and setters based on the defintions
- */
-var defineToManyRelationships = action(function (record, store, toManyDefinitions) {
-  return toManyDefinitions.reduce(function (object, _ref5) {
-    var _ref6 = _slicedToArray(_ref5, 2),
-      relationshipName = _ref6[0],
-      definition = _ref6[1];
-    var inverse = definition.inverse,
-      relationshipTypes = definition.types;
-    Object.defineProperty(object, relationshipName, {
-      get: function get() {
-        var _record$relationships2;
-        var references = (_record$relationships2 = record.relationships[relationshipName]) === null || _record$relationships2 === void 0 ? void 0 : _record$relationships2.data;
-        var relatedRecords;
-        if (references) {
-          relatedRecords = references.filter(function (reference) {
-            return store.getKlass(reference.type);
-          }).map(function (reference) {
-            return coerceDataToExistingRecord(store, reference);
-          });
-        } else if (inverse) {
-          var types = relationshipTypes || [relationshipName];
-          relatedRecords = types.map(function (type) {
-            return record.store.getAll(type);
-          }).flat().filter(function (potentialRecord) {
-            var _potentialRecord$rela;
-            var reference = (_potentialRecord$rela = potentialRecord.relationships[inverse.name]) === null || _potentialRecord$rela === void 0 ? void 0 : _potentialRecord$rela.data;
-            return reference && reference.type === record.type && String(reference.id) === record.id;
-          });
-        }
-        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
-      },
-      set: function set(relatedRecords) {
-        this.relationships[relationshipName] = {
-          data: relatedRecords.map(function (_ref7) {
-            var id = _ref7.id,
-              type = _ref7.type;
-            return {
-              id: id,
-              type: type
-            };
-          })
-        };
-        relatedRecords = relatedRecords.map(function (reference) {
-          return coerceDataToExistingRecord(store, reference);
-        });
-        if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne' && inverse !== null && inverse !== void 0 && inverse.types) {
-          var types = inverse.types,
-            inverseName = inverse.name;
-          var oldRelatedRecords = types.map(function (type) {
-            return record.store.getAll(type);
-          }).flat().filter(function (potentialRecord) {
-            var _potentialRecord$rela2;
-            var reference = (_potentialRecord$rela2 = potentialRecord.relationships[inverseName]) === null || _potentialRecord$rela2 === void 0 ? void 0 : _potentialRecord$rela2.data;
-            return reference && reference.type === record.type && reference.id === record.id;
-          });
-          oldRelatedRecords.forEach(function (oldRelatedRecord) {
-            oldRelatedRecord.relationships[inverseName] = null;
-          });
-          relatedRecords.forEach(function (relatedRecord) {
-            relatedRecord.relationships[inverseName] = {
-              data: {
-                id: record.id,
-                type: record.type
-              }
-            };
-          });
-        }
-        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
-      }
-    });
-    return object;
-  }, {});
-});
-
-/**
- * Sets a related record, as well as the inverse. Can also remove the record from a relationship.
- *
- * @param {string} relationshipName the name of the relationship
- * @param {object} record the object being set with a related record
- * @param {object} relatedRecord the related record
- * @param {object} store the store
- * @param {object} inverse the inverse object information
- * @returns {object} the related record
- */
-var setRelatedRecord = action(function (relationshipName, record, relatedRecord, store, inverse) {
-  if (record == null) {
-    return null;
-  }
-  if (relatedRecord != null) {
-    relatedRecord = coerceDataToExistingRecord(store, relatedRecord);
-    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-      setRelatedRecord(inverse.name, relatedRecord, record, store);
-    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
-      var previousRelatedRecord = record[relationshipName];
-      removeRelatedRecord(inverse.name, previousRelatedRecord, record);
-      addRelatedRecord(inverse.name, relatedRecord, record);
-    }
-    record.relationships[relationshipName] = {
-      data: {
-        id: relatedRecord.id,
-        type: relatedRecord.type
-      }
-    };
-  } else {
-    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-      var _previousRelatedRecord = record[relationshipName];
-      setRelatedRecord(inverse.name, _previousRelatedRecord, null, store);
-    }
-    record.relationships[relationshipName] = null;
-  }
-  record.takeSnapshot();
-  return relatedRecord;
-});
-
-/**
- * Removes a record from an array of related records, removing both the object and the reference.
- *
- * @param {Array} array the related records array
- * @param {string} relationshipName the name of the relationship
- * @param {object} record the record with the relationship
- * @param {object} relatedRecord the related record being removed from the relationship
- * @param {object} inverse the definition of the inverse relationship
- * @returns {object} the removed record
- */
-var removeRelatedRecord = action(function (relationshipName, record, relatedRecord, inverse) {
-  var _record$relationships3;
-  if (relatedRecord == null || record == null) {
-    return relatedRecord;
-  }
-  var existingData = ((_record$relationships3 = record.relationships[relationshipName]) === null || _record$relationships3 === void 0 ? void 0 : _record$relationships3.data) || [];
-  var recordIndexToRemove = existingData.findIndex(function (_ref8) {
-    var comparedId = _ref8.id,
-      comparedType = _ref8.type;
-    return comparedId === relatedRecord.id && comparedType === relatedRecord.type;
-  });
-  if (recordIndexToRemove > -1) {
-    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-      setRelatedRecord(inverse.name, relatedRecord, null, record.store);
-    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
-      removeRelatedRecord(inverse.name, relatedRecord, record);
-    }
-    existingData.splice(recordIndexToRemove, 1);
-  }
-  record.takeSnapshot();
-  return relatedRecord;
-});
-
-/**
- * Adds a record to a related array and updates the jsonapi reference in the relationships
- *
- * @param {Array} array the related records array
- * @param {string} relationshipName the name of the relationship
- * @param {object} record the record with the relationship
- * @param {object} relatedRecord the related record being added to the relationship
- * @param {object} inverse the definition of the inverse relationship
- * @returns {object} the added record
- */
-var addRelatedRecord = action(function (relationshipName, record, relatedRecord, inverse) {
-  var _record$store, _record$relationships4;
-  if (Array.isArray(relatedRecord)) {
-    return relatedRecord.map(function (singleRecord) {
-      return addRelatedRecord(relationshipName, record, singleRecord, inverse);
-    });
-  }
-  if (relatedRecord == null || record == null || !((_record$store = record.store) !== null && _record$store !== void 0 && _record$store.getKlass(record.type))) {
-    return relatedRecord;
-  }
-  var relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord);
-  if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-    var previousRelatedRecord = relatedRecordFromStore[inverse.name];
-    removeRelatedRecord(relationshipName, previousRelatedRecord, relatedRecordFromStore);
-    setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store);
-  } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
-    addRelatedRecord(inverse.name, relatedRecord, record);
-  }
-  if (!((_record$relationships4 = record.relationships[relationshipName]) !== null && _record$relationships4 !== void 0 && _record$relationships4.data)) {
-    record.relationships[relationshipName] = {
-      data: []
-    };
-  }
-  var alreadyThere = record.relationships[relationshipName].data.some(function (_ref9) {
-    var id = _ref9.id,
-      type = _ref9.type;
-    return id === relatedRecord.id && type === relatedRecord.type;
-  });
-  if (!alreadyThere) {
-    record.relationships[relationshipName].data.push({
-      id: relatedRecord.id,
-      type: relatedRecord.type
-    });
-  }
-  record.takeSnapshot();
-  return relatedRecordFromStore;
-});
-
-/**
- * Takes any object with { id, type } properties and gets an object from the store with that structure.
- * Useful for allowing objects to be serialized in real time, saving overhead, while at the same time
- * always returning an object of the same type.
- *
- * @param {object} store the store with the reference
- * @param {object} record the potential record
- * @returns {object} the store object
- */
-var coerceDataToExistingRecord = action(function (store, record) {
-  if (record == null || !(store !== null && store !== void 0 && store.getType(record.type))) {
-    return null;
-  }
-  if (record && !(record instanceof Model$1)) {
-    var _record = record,
-      id = _record.id,
-      type = _record.type;
-    record = store.getOne(type, id) || store.add(type, {
-      id: id
-    });
-  }
-  return record;
-});
-
-/**
- * An array that allows for updating store references and relationships
- */
-_Symbol$species = Symbol.species;
-var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
-  _inherits(RelatedRecordsArray, _Array);
-  var _super = _createSuper(RelatedRecordsArray);
-  /**
-   * Extends an array to create an enhanced array.
-   *
-   * @param {object} record the record with the referenced array
-   * @param {string} property the property on the record that references the array
-   * @param {Array} array the array to extend
-   */
-  function RelatedRecordsArray(_record2, _property) {
-    var _this;
-    var _array = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-    _classCallCheck(this, RelatedRecordsArray);
-    _this = _super.call.apply(_super, [this].concat(_toConsumableArray(_array)));
-    _defineProperty$1(_assertThisInitialized(_this), "add", function (relatedRecord) {
-      var _assertThisInitialize = _assertThisInitialized(_this),
-        inverse = _assertThisInitialize.inverse,
-        record = _assertThisInitialize.record,
-        property = _assertThisInitialize.property;
-      return addRelatedRecord(property, record, relatedRecord, inverse);
-    });
-    _defineProperty$1(_assertThisInitialized(_this), "remove", function (relatedRecord) {
-      var _assertThisInitialize2 = _assertThisInitialized(_this),
-        inverse = _assertThisInitialize2.inverse,
-        record = _assertThisInitialize2.record,
-        property = _assertThisInitialize2.property;
-      return removeRelatedRecord(property, record, relatedRecord, inverse);
-    });
-    _defineProperty$1(_assertThisInitialized(_this), "replace", function () {
-      var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-      var _assertThisInitialize3 = _assertThisInitialized(_this),
-        inverse = _assertThisInitialize3.inverse,
-        record = _assertThisInitialize3.record,
-        property = _assertThisInitialize3.property,
-        store = _assertThisInitialize3.store;
-      var newRecords;
-      transaction(function () {
-        if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
-          _this.forEach(function (relatedRecord) {
-            setRelatedRecord(inverse.name, relatedRecord, null, store);
-          });
-        } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
-          _this.forEach(function (relatedRecord) {
-            removeRelatedRecord(inverse.name, relatedRecord, record);
-          });
-        }
-        record.relationships[property] = {
-          data: []
-        };
-        newRecords = array.map(function (relatedRecord) {
-          return addRelatedRecord(property, record, relatedRecord, inverse);
-        });
-      });
-      return newRecords;
-    });
-    _this.property = _property;
-    _this.record = _record2;
-    _this.store = _record2.store;
-    _this.inverse = _record2.relationshipDefinitions[_this.property].inverse;
-    return _this;
-  }
-
-  /**
-   * Adds a record to the array, and updates references in the store, as well as inverse references
-   *
-   * @param {object} relatedRecord the record to add to the array
-   * @returns {object} a model record reflecting the original relatedRecord
-   */
-  _createClass(RelatedRecordsArray, null, [{
-    key: _Symbol$species,
-    get: /* eslint-disable */
-    /*
-     * This method is used by Array internals to decide
-     * which class to use for resulting derived objects from array manipulation methods
-     * such as `map` or `filter`
-     *
-     * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
-     * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
-     *
-     * For more details, see:
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
-     */
-    function get() {
-      return Array;
-    }
-    /* eslint-enable */
-  }]);
-  return RelatedRecordsArray;
-}( /*#__PURE__*/_wrapNativeSuper(Array));
-
 function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$3(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
@@ -8756,6 +8358,14 @@ var Store = /*#__PURE__*/function () {
    */
 
   /**
+   * True if models in the store should stop taking snapshots. This is
+   * useful when updating records without causing records to become
+   * 'dirty', for example when initializing records using `add`
+   *
+   * @type {boolean}
+   */
+
+  /**
    * Initializer for Store class
    *
    * @param {object} options options to use for initialization
@@ -8766,6 +8376,7 @@ var Store = /*#__PURE__*/function () {
     _defineProperty$1(this, "lastResponseHeaders", {});
     _defineProperty$1(this, "loadingStates", new Map());
     _defineProperty$1(this, "loadedStates", new Map());
+    _defineProperty$1(this, "pauseSnapshots", false);
     makeObservable(this, mobxAnnotations$1);
     this.init(options);
   }
@@ -8788,44 +8399,37 @@ var Store = /*#__PURE__*/function () {
    * ```
    *
    * @param {string} type the model type
-   * @param {object|Array} data the properties to use
+   * @param {object|Array} props the properties to use
    * @returns {object|Array} the new record or records
    */
   _createClass(Store, [{
     key: "add",
-    value: function add(type, data) {
+    value: function add(type, props) {
       var _this = this;
-      if (data.constructor.name === 'Array') {
-        return data.map(function (model) {
+      if (props.constructor.name === 'Array') {
+        return props.map(function (model) {
           return _this.add(type, model);
         });
       } else {
-        var id = idOrNewId(data.id);
-        var attributes = cloneDeep_1(this.pickAttributes(data, type));
-        var relationships = this.pickRelationships(data, type);
-        var model = this.createModelFromData({
+        var id = idOrNewId(props.id);
+        var attributes = cloneDeep_1(this.pickAttributes(props, type));
+        var record = this.createModelFromData({
           type: type,
           id: id,
           attributes: attributes
         });
-        this.data[type].records.set(String(model.id), model);
-        var toOneDefinitions = definitionsByDirection(model, 'toOne');
-        var toManyDefinitions = definitionsByDirection(model, 'toMany');
-        toOneDefinitions.forEach(function (_ref) {
-          var _ref2 = _slicedToArray(_ref, 1),
-            relationshipName = _ref2[0];
-          if (relationships[relationshipName]) {
-            model[relationshipName] = relationships[relationshipName];
-          }
+
+        // set separately to get inverses
+        this.pauseSnapshots = true;
+        Object.entries(this.pickRelationships(props, type)).forEach(function (_ref) {
+          var _ref2 = _slicedToArray(_ref, 2),
+            key = _ref2[0],
+            value = _ref2[1];
+          record[key] = value;
         });
-        toManyDefinitions.forEach(function (_ref3) {
-          var _ref4 = _slicedToArray(_ref3, 1),
-            relationshipName = _ref4[0];
-          if (relationships[relationshipName]) {
-            model[relationshipName].add(relationships[relationshipName]);
-          }
-        });
-        return model;
+        this.pauseSnapshots = false;
+        this.data[type].records.set(String(record.id), record);
+        return record;
       }
     }
 
@@ -9176,8 +8780,8 @@ var Store = /*#__PURE__*/function () {
         });
       });
       return Promise.all(queries).then(function (records) {
-        var _ref5;
-        return (_ref5 = []).concat.apply(_ref5, _toConsumableArray(records));
+        var _ref3;
+        return (_ref3 = []).concat.apply(_ref3, _toConsumableArray(records));
       }).catch(function (err) {
         return Promise.reject(err);
       });
@@ -9214,8 +8818,8 @@ var Store = /*#__PURE__*/function () {
       if (recordsInStore.length === idsToQuery.length) {
         return recordsInStore;
       }
-      var recordIdsInStore = recordsInStore.map(function (_ref6) {
-        var id = _ref6.id;
+      var recordIdsInStore = recordsInStore.map(function (_ref4) {
+        var id = _ref4.id;
         return String(id);
       });
       idsToQuery = idsToQuery.filter(function (id) {
@@ -9294,11 +8898,11 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "setLoadingState",
-    value: function setLoadingState(_ref7) {
-      var url = _ref7.url,
-        type = _ref7.type,
-        queryParams = _ref7.queryParams,
-        queryTag = _ref7.queryTag;
+    value: function setLoadingState(_ref5) {
+      var url = _ref5.url,
+        type = _ref5.type,
+        queryParams = _ref5.queryParams,
+        queryTag = _ref5.queryTag;
       queryTag = queryTag || type;
       var loadingStateInfo = {
         url: url,
@@ -9526,18 +9130,18 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "initializeNetworkConfiguration",
-    value: function initializeNetworkConfiguration(_ref8) {
-      var _ref8$baseUrl = _ref8.baseUrl,
-        baseUrl = _ref8$baseUrl === void 0 ? '' : _ref8$baseUrl,
-        _ref8$defaultFetchOpt = _ref8.defaultFetchOptions,
-        defaultFetchOptions = _ref8$defaultFetchOpt === void 0 ? {} : _ref8$defaultFetchOpt,
-        _ref8$headersOfIntere = _ref8.headersOfInterest,
-        headersOfInterest = _ref8$headersOfIntere === void 0 ? [] : _ref8$headersOfIntere,
-        _ref8$retryOptions = _ref8.retryOptions,
-        retryOptions = _ref8$retryOptions === void 0 ? {
+    value: function initializeNetworkConfiguration(_ref6) {
+      var _ref6$baseUrl = _ref6.baseUrl,
+        baseUrl = _ref6$baseUrl === void 0 ? '' : _ref6$baseUrl,
+        _ref6$defaultFetchOpt = _ref6.defaultFetchOptions,
+        defaultFetchOptions = _ref6$defaultFetchOpt === void 0 ? {} : _ref6$defaultFetchOpt,
+        _ref6$headersOfIntere = _ref6.headersOfInterest,
+        headersOfInterest = _ref6$headersOfIntere === void 0 ? [] : _ref6$headersOfIntere,
+        _ref6$retryOptions = _ref6.retryOptions,
+        retryOptions = _ref6$retryOptions === void 0 ? {
           attempts: 1,
           delay: 0
-        } : _ref8$retryOptions;
+        } : _ref6$retryOptions;
       this.baseUrl = baseUrl;
       this.defaultFetchOptions = defaultFetchOptions;
       this.headersOfInterest = headersOfInterest;
@@ -9853,10 +9457,10 @@ var Store = /*#__PURE__*/function () {
         relationships = _data$relationships === void 0 ? {} : _data$relationships;
       runInAction(function () {
         record.id = String(id);
-        Object.entries(attributes).forEach(function (_ref9) {
-          var _ref10 = _slicedToArray(_ref9, 2),
-            key = _ref10[0],
-            value = _ref10[1];
+        Object.entries(attributes).forEach(function (_ref7) {
+          var _ref8 = _slicedToArray(_ref7, 2),
+            key = _ref8[0],
+            value = _ref8[1];
           record[key] = value;
         });
         Object.keys(relationships).forEach(function (relationshipName) {
@@ -9942,7 +9546,7 @@ var Store = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref11 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
+        var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
           var status, json, data, included, errors;
           return _regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
@@ -10005,7 +9609,7 @@ var Store = /*#__PURE__*/function () {
           }, _callee4);
         }));
         return function (_x5) {
-          return _ref11.apply(this, arguments);
+          return _ref9.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -10019,6 +9623,409 @@ var Store = /*#__PURE__*/function () {
   }]);
   return Store;
 }();
+
+var _Symbol$species;
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+/**
+ * Gets only the relationships from one direction, ie 'toOne' or 'toMany'
+ *
+ * @param {object} model the model with the relationship
+ * @param {string} direction the direction of the relationship
+ */
+var definitionsByDirection = action(function (model, direction) {
+  var _model$relationshipDe = model.relationshipDefinitions,
+    relationshipDefinitions = _model$relationshipDe === void 0 ? {} : _model$relationshipDe;
+  var definitionEntries = Object.entries(relationshipDefinitions);
+  return definitionEntries.filter(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2);
+      _ref2[0];
+      var definition = _ref2[1];
+    return definition.direction === direction;
+  });
+});
+
+/**
+ * Takes the `toOne` definitions from a document type and creates getters and setters.
+ * A getter finds a record from the store. The setter calls `setRelatedRecord`, which will
+ * return an instance of a model and add it to the inverse relationship if necessary.
+ * A definition will look something like this:
+ *
+ *    todo: {
+ *      direction: 'toOne',
+ *      inverse: {
+ *        name: 'notes',
+ *        direction: 'toMany'
+ *      }
+ *    }
+ *
+ * @param {object} record the record that will have the relationship
+ * @param {object} store the data store
+ * @param {object} toOneDefinitions an object with formatted definitions
+ * @returns {object} an object with getters and setters based on the defintions
+ */
+var defineToOneRelationships = action(function (record, store, toOneDefinitions) {
+  return toOneDefinitions.reduce(function (object, _ref3) {
+    var _ref4 = _slicedToArray(_ref3, 2),
+      relationshipName = _ref4[0],
+      definition = _ref4[1];
+    var inverse = definition.inverse;
+    Object.defineProperty(object, relationshipName, {
+      get: function get() {
+        var _record$relationships;
+        var reference = (_record$relationships = record.relationships[relationshipName]) === null || _record$relationships === void 0 ? void 0 : _record$relationships.data;
+        if (reference) {
+          return coerceDataToExistingRecord(store, reference);
+        }
+      },
+      set: function set(relatedReference) {
+        return setRelatedRecord(relationshipName, record, relatedReference, store, inverse);
+      }
+    });
+    return object;
+  }, {});
+});
+
+/**
+ * Takes the `toMany` definitions from a document type and creates getters and setters.
+ * A getter finds records from the store, falling back to a lookup of the inverse records if
+ * none are defined in the `relationships` hash.
+ *
+ * The setter will unset the previous inverse and set the current inverse.
+ * Both return a `RelatedRecordsArray`, which is an array with added methods `add`, `remove`, and `replace`
+ *
+ * A definition will look like this:
+ *
+ *    categories: {
+ *      direction: 'toMany',
+ *      inverse: {
+ *        name: 'organization',
+ *        direction: 'toOne'
+ *      }
+ *    }
+ *
+ * @param {object} record the record that will have the relationship
+ * @param {object} store the data store
+ * @param {object} toManyDefinitions an object with formatted definitions
+ * @returns {object} an object with getters and setters based on the defintions
+ */
+var defineToManyRelationships = action(function (record, store, toManyDefinitions) {
+  return toManyDefinitions.reduce(function (object, _ref5) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+      relationshipName = _ref6[0],
+      definition = _ref6[1];
+    var inverse = definition.inverse,
+      relationshipTypes = definition.types;
+    Object.defineProperty(object, relationshipName, {
+      get: function get() {
+        var _record$relationships2;
+        var references = (_record$relationships2 = record.relationships[relationshipName]) === null || _record$relationships2 === void 0 ? void 0 : _record$relationships2.data;
+        var relatedRecords;
+        if (references) {
+          relatedRecords = references.filter(function (reference) {
+            return store.getKlass(reference.type);
+          }).map(function (reference) {
+            return coerceDataToExistingRecord(store, reference);
+          });
+        } else if (inverse) {
+          var types = relationshipTypes || [relationshipName];
+          relatedRecords = types.map(function (type) {
+            return record.store.getAll(type);
+          }).flat().filter(function (potentialRecord) {
+            var _potentialRecord$rela;
+            var reference = (_potentialRecord$rela = potentialRecord.relationships[inverse.name]) === null || _potentialRecord$rela === void 0 ? void 0 : _potentialRecord$rela.data;
+            return reference && reference.type === record.type && String(reference.id) === record.id;
+          });
+        }
+        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
+      },
+      set: function set(relatedRecords) {
+        this.relationships[relationshipName] = {
+          data: relatedRecords.map(function (_ref7) {
+            var id = _ref7.id,
+              type = _ref7.type;
+            return {
+              id: id,
+              type: type
+            };
+          })
+        };
+        relatedRecords = relatedRecords.map(function (reference) {
+          return coerceDataToExistingRecord(store, reference);
+        });
+        if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+          var inverseName = inverse.name;
+          var types = inverse.types || [relatedRecords[0].type];
+          var oldRelatedRecords = types.map(function (type) {
+            return record.store.getAll(type);
+          }).flat().filter(function (potentialRecord) {
+            var _potentialRecord$rela2;
+            var reference = (_potentialRecord$rela2 = potentialRecord.relationships[inverseName]) === null || _potentialRecord$rela2 === void 0 ? void 0 : _potentialRecord$rela2.data;
+            return reference && reference.type === record.type && reference.id === record.id;
+          });
+          oldRelatedRecords.forEach(function (oldRelatedRecord) {
+            oldRelatedRecord.relationships[inverseName] = null;
+          });
+          relatedRecords.forEach(function (relatedRecord) {
+            relatedRecord.relationships[inverseName] = {
+              data: {
+                id: record.id,
+                type: record.type
+              }
+            };
+          });
+        }
+        record.dirtyRelationships.add(relationshipName);
+        return new RelatedRecordsArray(record, relationshipName, relatedRecords);
+      }
+    });
+    return object;
+  }, {});
+});
+
+/**
+ * Sets a related record, as well as the inverse. Can also remove the record from a relationship.
+ *
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the object being set with a related record
+ * @param {object} relatedRecord the related record
+ * @param {object} store the store
+ * @param {object} inverse the inverse object information
+ * @returns {object} the related record
+ */
+var setRelatedRecord = action(function (relationshipName, record, relatedRecord, store, inverse) {
+  if (record == null) {
+    return null;
+  }
+  if (relatedRecord != null) {
+    relatedRecord = coerceDataToExistingRecord(store, relatedRecord);
+    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+      setRelatedRecord(inverse.name, relatedRecord, record, store);
+    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+      var previousRelatedRecord = record[relationshipName];
+      removeRelatedRecord(inverse.name, previousRelatedRecord, record);
+      addRelatedRecord(inverse.name, relatedRecord, record);
+    }
+    record.relationships[relationshipName] = {
+      data: {
+        id: relatedRecord.id,
+        type: relatedRecord.type
+      }
+    };
+  } else {
+    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+      var _previousRelatedRecord = record[relationshipName];
+      setRelatedRecord(inverse.name, _previousRelatedRecord, null, store);
+    }
+    record.relationships[relationshipName] = null;
+  }
+  record.dirtyRelationships.add(relationshipName);
+  record.takeSnapshot();
+  return relatedRecord;
+});
+
+/**
+ * Removes a record from an array of related records, removing both the object and the reference.
+ *
+ * @param {Array} array the related records array
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the related record being removed from the relationship
+ * @param {object} inverse the definition of the inverse relationship
+ * @returns {object} the removed record
+ */
+var removeRelatedRecord = action(function (relationshipName, record, relatedRecord, inverse) {
+  var _record$relationships3;
+  if (relatedRecord == null || record == null) {
+    return relatedRecord;
+  }
+  var existingData = ((_record$relationships3 = record.relationships[relationshipName]) === null || _record$relationships3 === void 0 ? void 0 : _record$relationships3.data) || [];
+  var recordIndexToRemove = existingData.findIndex(function (_ref8) {
+    var comparedId = _ref8.id,
+      comparedType = _ref8.type;
+    return comparedId === relatedRecord.id && comparedType === relatedRecord.type;
+  });
+  if (recordIndexToRemove > -1) {
+    if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+      setRelatedRecord(inverse.name, relatedRecord, null, record.store);
+    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+      removeRelatedRecord(inverse.name, relatedRecord, record);
+    }
+    existingData.splice(recordIndexToRemove, 1);
+  }
+  record.takeSnapshot();
+  record.dirtyRelationships.add(relationshipName);
+  return relatedRecord;
+});
+
+/**
+ * Adds a record to a related array and updates the jsonapi reference in the relationships
+ *
+ * @param {Array} array the related records array
+ * @param {string} relationshipName the name of the relationship
+ * @param {object} record the record with the relationship
+ * @param {object} relatedRecord the related record being added to the relationship
+ * @param {object} inverse the definition of the inverse relationship
+ * @returns {object} the added record
+ */
+var addRelatedRecord = action(function (relationshipName, record, relatedRecord, inverse) {
+  var _record$store, _record$relationships4;
+  if (Array.isArray(relatedRecord)) {
+    return relatedRecord.map(function (singleRecord) {
+      return addRelatedRecord(relationshipName, record, singleRecord, inverse);
+    });
+  }
+  if (relatedRecord == null || record == null || !((_record$store = record.store) !== null && _record$store !== void 0 && _record$store.getKlass(record.type))) {
+    return relatedRecord;
+  }
+  var relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord);
+  if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+    var previousRelatedRecord = relatedRecordFromStore[inverse.name];
+    removeRelatedRecord(relationshipName, previousRelatedRecord, relatedRecordFromStore);
+    setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store);
+  } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+    addRelatedRecord(inverse.name, relatedRecord, record);
+  }
+  if (!((_record$relationships4 = record.relationships[relationshipName]) !== null && _record$relationships4 !== void 0 && _record$relationships4.data)) {
+    record.relationships[relationshipName] = {
+      data: []
+    };
+  }
+  var alreadyThere = record.relationships[relationshipName].data.some(function (_ref9) {
+    var id = _ref9.id,
+      type = _ref9.type;
+    return id === relatedRecord.id && type === relatedRecord.type;
+  });
+  if (!alreadyThere) {
+    record.relationships[relationshipName].data.push({
+      id: relatedRecord.id,
+      type: relatedRecord.type
+    });
+  }
+  record.takeSnapshot();
+  record.dirtyRelationships.add(relationshipName);
+  return relatedRecordFromStore;
+});
+
+/**
+ * Takes any object with { id, type } properties and gets an object from the store with that structure.
+ * Useful for allowing objects to be serialized in real time, saving overhead, while at the same time
+ * always returning an object of the same type.
+ *
+ * @param {object} store the store with the reference
+ * @param {object} record the potential record
+ * @returns {object} the store object
+ */
+var coerceDataToExistingRecord = action(function (store, record) {
+  if (record == null || !(store !== null && store !== void 0 && store.getType(record.type))) {
+    return null;
+  }
+  if (record && !(record instanceof Model$1)) {
+    var _record = record,
+      id = _record.id,
+      type = _record.type;
+    record = store.getOne(type, id) || store.add(type, {
+      id: id
+    });
+  }
+  return record;
+});
+
+/**
+ * An array that allows for updating store references and relationships
+ */
+_Symbol$species = Symbol.species;
+var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
+  _inherits(RelatedRecordsArray, _Array);
+  var _super = _createSuper(RelatedRecordsArray);
+  /**
+   * Extends an array to create an enhanced array.
+   *
+   * @param {object} record the record with the referenced array
+   * @param {string} property the property on the record that references the array
+   * @param {Array} array the array to extend
+   */
+  function RelatedRecordsArray(_record2, _property) {
+    var _this;
+    var _array = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    _classCallCheck(this, RelatedRecordsArray);
+    _this = _super.call.apply(_super, [this].concat(_toConsumableArray(_array)));
+    _defineProperty$1(_assertThisInitialized(_this), "add", function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized(_this),
+        inverse = _assertThisInitialize.inverse,
+        record = _assertThisInitialize.record,
+        property = _assertThisInitialize.property;
+      return addRelatedRecord(property, record, relatedRecord, inverse);
+    });
+    _defineProperty$1(_assertThisInitialized(_this), "remove", function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized(_this),
+        inverse = _assertThisInitialize2.inverse,
+        record = _assertThisInitialize2.record,
+        property = _assertThisInitialize2.property;
+      return removeRelatedRecord(property, record, relatedRecord, inverse);
+    });
+    _defineProperty$1(_assertThisInitialized(_this), "replace", function () {
+      var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var _assertThisInitialize3 = _assertThisInitialized(_this),
+        inverse = _assertThisInitialize3.inverse,
+        record = _assertThisInitialize3.record,
+        property = _assertThisInitialize3.property,
+        store = _assertThisInitialize3.store;
+      var newRecords;
+      transaction(function () {
+        if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+          _this.forEach(function (relatedRecord) {
+            setRelatedRecord(inverse.name, relatedRecord, null, store);
+          });
+        } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+          _this.forEach(function (relatedRecord) {
+            removeRelatedRecord(inverse.name, relatedRecord, record);
+          });
+        }
+        record.relationships[property] = {
+          data: []
+        };
+        newRecords = array.map(function (relatedRecord) {
+          return addRelatedRecord(property, record, relatedRecord, inverse);
+        });
+      });
+      return newRecords;
+    });
+    _this.property = _property;
+    _this.record = _record2;
+    _this.store = _record2.store;
+    _this.inverse = _record2.relationshipDefinitions[_this.property].inverse;
+    return _this;
+  }
+
+  /**
+   * Adds a record to the array, and updates references in the store, as well as inverse references
+   *
+   * @param {object} relatedRecord the record to add to the array
+   * @returns {object} a model record reflecting the original relatedRecord
+   */
+  _createClass(RelatedRecordsArray, null, [{
+    key: _Symbol$species,
+    get: /* eslint-disable */
+    /*
+     * This method is used by Array internals to decide
+     * which class to use for resulting derived objects from array manipulation methods
+     * such as `map` or `filter`
+     *
+     * Without this, `RelatedRecordsArray.map` would return a `RelatedRecordsArray` instance
+     * but such derived arrays should not maintain the behavior of the source `RelatedRecordsArray`
+     *
+     * For more details, see:
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/species
+     */
+    function get() {
+      return Array;
+    }
+    /* eslint-enable */
+  }]);
+  return RelatedRecordsArray;
+}( /*#__PURE__*/_wrapNativeSuper(Array));
 
 var _excluded$1 = ["id", "relationships"];
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
@@ -10395,6 +10402,10 @@ var Model = /*#__PURE__*/function () {
           constructor,
           id,
           isNew,
+          dirtyRelationships,
+          dirtyAttributes,
+          hasAttributesToSave,
+          hasRelationshipsToSave,
           requestId,
           method,
           url,
@@ -10415,7 +10426,15 @@ var Model = /*#__PURE__*/function () {
                 return _context.abrupt("return", Promise.reject(new Error(errorString)));
               case 4:
                 queryParams = options.queryParams, relationships = options.relationships, attributes = options.attributes;
-                constructor = this.constructor, id = this.id, isNew = this.isNew;
+                constructor = this.constructor, id = this.id, isNew = this.isNew, dirtyRelationships = this.dirtyRelationships, dirtyAttributes = this.dirtyAttributes;
+                hasAttributesToSave = dirtyAttributes.length > 0;
+                hasRelationshipsToSave = relationships && dirtyRelationships.size > 0;
+                if (!(!isNew && !hasAttributesToSave && !hasRelationshipsToSave)) {
+                  _context.next = 10;
+                  break;
+                }
+                return _context.abrupt("return", Promise.resolve(this));
+              case 10:
                 requestId = id;
                 method = 'PATCH';
                 if (isNew) {
@@ -10446,15 +10465,15 @@ var Model = /*#__PURE__*/function () {
                   method: method,
                   body: body
                 });
-                _context.next = 15;
+                _context.next = 19;
                 return this.store.updateRecordsFromResponse(response, this);
-              case 15:
+              case 19:
                 result = _context.sent;
                 this.takeSnapshot({
                   persisted: true
                 });
                 return _context.abrupt("return", result);
-              case 18:
+              case 22:
               case "end":
                 return _context.stop();
             }
@@ -10670,6 +10689,9 @@ var Model = /*#__PURE__*/function () {
     key: "takeSnapshot",
     value: function takeSnapshot() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      if (this.store.pauseSnapshots) {
+        return;
+      }
       var persisted = options.persisted || false;
       var properties = cloneDeep_1(pick_1(this, ['attributes', 'relationships']));
       this._snapshots.push(_objectSpread$2({
