@@ -9741,6 +9741,11 @@ var defineToManyRelationships = action(function (record, store, toManyDefinition
         return new RelatedRecordsArray(record, relationshipName, relatedRecords);
       },
       set: function set(relatedRecords) {
+        var _previousReferences$d;
+        var previousReferences = this.relationships[relationshipName];
+        if ((previousReferences === null || previousReferences === void 0 ? void 0 : (_previousReferences$d = previousReferences.data) === null || _previousReferences$d === void 0 ? void 0 : _previousReferences$d.length) === 0 && relatedRecords.length === 0) {
+          return this[relationshipName];
+        }
         this.relationships[relationshipName] = {
           data: relatedRecords.map(function (_ref7) {
             var id = _ref7.id,
@@ -9755,8 +9760,10 @@ var defineToManyRelationships = action(function (record, store, toManyDefinition
           return coerceDataToExistingRecord(store, reference);
         });
         if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
+          var _relatedRecords$, _previousReferences$d2;
           var inverseName = inverse.name;
-          var types = inverse.types || [relatedRecords[0].type];
+          var inferredType = ((_relatedRecords$ = relatedRecords[0]) === null || _relatedRecords$ === void 0 ? void 0 : _relatedRecords$.type) || (previousReferences === null || previousReferences === void 0 ? void 0 : (_previousReferences$d2 = previousReferences.data[0]) === null || _previousReferences$d2 === void 0 ? void 0 : _previousReferences$d2.type);
+          var types = inverse.types || [inferredType];
           var oldRelatedRecords = types.map(function (type) {
             return record.store.getAll(type);
           }).flat().filter(function (potentialRecord) {

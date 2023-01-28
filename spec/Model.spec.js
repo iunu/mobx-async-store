@@ -441,6 +441,10 @@ describe('Model', () => {
 
         expect(todo.notes).toHaveLength(1)
         expect(todo.notes).toContain(note)
+
+        todo.notes = []
+        todo.notes = []
+        expect(todo.notes).toHaveLength(0)
       })
 
       it('doesn\'t blow up on empty iteration', () => {

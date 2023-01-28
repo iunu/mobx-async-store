@@ -97,13 +97,17 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
         return new RelatedRecordsArray(record, relationshipName, relatedRecords)
       },
       set (relatedRecords) {
+        const previousReferences = this.relationships[relationshipName]
+        if (previousReferences?.data?.length === 0 && relatedRecords.length === 0) { return this[relationshipName] }
+
         this.relationships[relationshipName] = { data: relatedRecords.map(({ id, type }) => ({ id, type })) }
 
         relatedRecords = relatedRecords.map((reference) => coerceDataToExistingRecord(store, reference))
 
         if (inverse?.direction === 'toOne') {
           const { name: inverseName } = inverse
-          const types = inverse.types || [relatedRecords[0].type]
+          const inferredType = relatedRecords[0]?.type || previousReferences?.data[0]?.type
+          const types = inverse.types || [inferredType]
 
           const oldRelatedRecords = types.map((type) => record.store.getAll(type)).flat().filter((potentialRecord) => {
             const reference = potentialRecord.relationships[inverseName]?.data
