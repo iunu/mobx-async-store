@@ -1018,6 +1018,24 @@ describe('Model', () => {
       expect(note.dirtyRelationships).toContain('todo')
     })
 
+    it('tracks replaced toMany relationship', async () => {
+      const todo = store.add('todos', { title: 'Buy Milk' })
+      store.add('notes', {
+        id: 11,
+        description: 'Example description',
+        todo
+      })
+
+      const note2 = store.add('notes', {
+        id: 12,
+        description: 'Example description 2'
+      })
+
+      expect(todo.dirtyRelationships).toEqual(new Set())
+      todo.notes = [note2]
+      expect(todo.dirtyRelationships).toContain('notes')
+    })
+
     it('handles polymorphic relationships', () => {
       const category = store.add('categories', { id: 1, name: 'Very important' })
       const todo = store.add('todos', { id: 1 })

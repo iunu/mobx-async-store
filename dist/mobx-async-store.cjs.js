@@ -9802,7 +9802,7 @@ var defineToManyRelationships = mobx.action(function (record, store, toManyDefin
             };
           });
         }
-        record.dirtyRelationships.add(relationshipName);
+        record.takeSnapshot();
         return new RelatedRecordsArray(record, relationshipName, relatedRecords);
       }
     });
@@ -9846,7 +9846,6 @@ var setRelatedRecord = mobx.action(function (relationshipName, record, relatedRe
     }
     record.relationships[relationshipName] = null;
   }
-  record.dirtyRelationships.add(relationshipName);
   record.takeSnapshot();
   return relatedRecord;
 });
@@ -9881,7 +9880,6 @@ var removeRelatedRecord = mobx.action(function (relationshipName, record, relate
     existingData.splice(recordIndexToRemove, 1);
   }
   record.takeSnapshot();
-  record.dirtyRelationships.add(relationshipName);
   return relatedRecord;
 });
 
@@ -9930,7 +9928,6 @@ var addRelatedRecord = mobx.action(function (relationshipName, record, relatedRe
     });
   }
   record.takeSnapshot();
-  record.dirtyRelationships.add(relationshipName);
   return relatedRecordFromStore;
 });
 
@@ -10715,12 +10712,14 @@ var Model = /*#__PURE__*/function () {
     key: "takeSnapshot",
     value: function takeSnapshot() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-      if (this.store.pauseSnapshots) {
+      var store = this.store,
+        _snapshots = this._snapshots;
+      if (store.pauseSnapshots && _snapshots.length > 0) {
         return;
       }
       var persisted = options.persisted || false;
       var properties = cloneDeep_1(pick_1(this, ['attributes', 'relationships']));
-      this._snapshots.push(_objectSpread$2({
+      _snapshots.push(_objectSpread$2({
         persisted: persisted
       }, properties));
     }

@@ -123,7 +123,7 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
           })
         }
 
-        record.dirtyRelationships.add(relationshipName)
+        record.takeSnapshot()
         return new RelatedRecordsArray(record, relationshipName, relatedRecords)
       }
     })
@@ -166,7 +166,6 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
     record.relationships[relationshipName] = null
   }
 
-  record.dirtyRelationships.add(relationshipName)
   record.takeSnapshot()
   return relatedRecord
 })
@@ -201,7 +200,6 @@ export const removeRelatedRecord = action((relationshipName, record, relatedReco
   }
 
   record.takeSnapshot()
-  record.dirtyRelationships.add(relationshipName)
   return relatedRecord
 })
 
@@ -244,7 +242,6 @@ export const addRelatedRecord = action((relationshipName, record, relatedRecord,
   }
 
   record.takeSnapshot()
-  record.dirtyRelationships.add(relationshipName)
   return relatedRecordFromStore
 })
 

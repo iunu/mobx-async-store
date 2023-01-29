@@ -620,11 +620,12 @@ class Model {
    * @param {object} options options to use to set the persisted state
    */
   takeSnapshot (options = {}) {
-    if (this.store.pauseSnapshots) { return }
+    const { store, _snapshots } = this
+    if (store.pauseSnapshots && _snapshots.length > 0) { return }
     const persisted = options.persisted || false
     const properties = cloneDeep(pick(this, ['attributes', 'relationships']))
 
-    this._snapshots.push({
+    _snapshots.push({
       persisted,
       ...properties
     })
