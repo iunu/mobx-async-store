@@ -1231,18 +1231,18 @@ describe('Model', () => {
     })
   })
 
-  describe('.rollback', () => {
-    it('rollback restores data to last snapshot state ', async () => {
+  describe('.undo', () => {
+    it('undo restores data to last snapshot state ', async () => {
       const todo = new Todo({ title: 'Buy Milk' })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
       expect(todo.title).toEqual('Do Laundry')
-      todo.rollback()
+      todo.undo()
       expect(todo.title).toEqual('Buy Milk')
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
     })
 
-    it('rollbacks to state after save', async () => {
+    it('undos to state after save', async () => {
       // Add record to store
       const note = store.add('notes', {
         id: 10,
@@ -1258,21 +1258,24 @@ describe('Model', () => {
       expect(todo.title).toEqual(savedTitle)
       todo.title = 'Unsaved title'
       expect(todo.title).toEqual('Unsaved title')
-      todo.rollback()
+      todo.undo()
       expect(todo.title).toEqual(savedTitle)
     })
   })
 
-  describe('.rollbackToPersisted', () => {
+  describe('.rollback', () => {
     it('rollback restores data to last persisted state ', () => {
       const todo = new Todo({ title: 'Buy Milk', id: 10 })
       expect(todo.previousSnapshot.attributes.title).toEqual('Buy Milk')
       todo.title = 'Do Laundry'
-      expect(todo.title).toEqual('Do Laundry')
       todo.takeSnapshot()
       todo.title = 'Do something else'
-      expect(todo.title).toEqual('Do something else')
-      todo.rollbackToPersisted()
+      todo.takeSnapshot()
+
+      todo.due_at = new Date('Sun, 29 Jan 2023 21:44:08 GMT').toUTCString()
+
+      expect(todo.previousSnapshot.attributes.title).toEqual('Do something else')
+      todo.rollback()
       expect(todo.title).toEqual('Buy Milk')
     })
 
@@ -1282,7 +1285,7 @@ describe('Model', () => {
       todo.title = 'Do Laundry'
       todo.takeSnapshot()
       todo.title = 'Do something else'
-      todo.rollbackToPersisted()
+      todo.rollback()
       expect(todo.title).toEqual('Buy Milk')
     })
   })

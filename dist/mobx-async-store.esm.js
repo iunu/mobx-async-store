@@ -10100,7 +10100,7 @@ var mobxAnnotations = {
   initializeAttributes: action,
   initializeRelationships: action,
   rollback: action,
-  rollbackToPersisted: action,
+  undo: action,
   save: action,
   reload: action,
   validate: action,
@@ -10357,7 +10357,8 @@ var Model = /*#__PURE__*/function () {
     }
 
     /**
-     * restores data to its last snapshot state
+     * restores data to its last persisted state or the oldest snapshot
+     * state if the model was never persisted
      * ```
      * todo = store.find('todos', 5)
      * todo.name
@@ -10371,20 +10372,20 @@ var Model = /*#__PURE__*/function () {
   }, {
     key: "rollback",
     value: function rollback() {
-      this._applySnapshot(this.previousSnapshot);
-    }
-
-    /**
-     * restores data to its last persisted state or the oldest snapshot
-     * state if the model was never persisted
-     */
-  }, {
-    key: "rollbackToPersisted",
-    value: function rollbackToPersisted() {
       this._applySnapshot(this.persistedOrFirstSnapshot);
       this.takeSnapshot({
         persisted: true
       });
+    }
+
+    /**
+     * restores data to its last state
+     * state if the model was never persisted
+     */
+  }, {
+    key: "undo",
+    value: function undo() {
+      this._applySnapshot(this.previousSnapshot);
     }
 
     /**

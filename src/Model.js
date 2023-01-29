@@ -88,7 +88,7 @@ const mobxAnnotations = {
   initializeAttributes: action,
   initializeRelationships: action,
   rollback: action,
-  rollbackToPersisted: action,
+  undo: action,
   save: action,
   reload: action,
   validate: action,
@@ -371,7 +371,8 @@ class Model {
   }
 
   /**
-   * restores data to its last snapshot state
+   * restores data to its last persisted state or the oldest snapshot
+   * state if the model was never persisted
    * ```
    * todo = store.find('todos', 5)
    * todo.name
@@ -383,16 +384,16 @@ class Model {
    * ```
    */
   rollback () {
-    this._applySnapshot(this.previousSnapshot)
+    this._applySnapshot(this.persistedOrFirstSnapshot)
+    this.takeSnapshot({ persisted: true })
   }
 
   /**
-   * restores data to its last persisted state or the oldest snapshot
+   * restores data to its last state
    * state if the model was never persisted
    */
-  rollbackToPersisted () {
-    this._applySnapshot(this.persistedOrFirstSnapshot)
-    this.takeSnapshot({ persisted: true })
+  undo () {
+    this._applySnapshot(this.previousSnapshot)
   }
 
   /**
