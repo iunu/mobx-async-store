@@ -1605,12 +1605,20 @@ describe('Store', () => {
 
     describe('some records of the specified type and ids are the store', () => {
       it('uses multiple fetches to request the rest of the records from the server', async () => {
-        expect.assertions(7)
+        expect.assertions(8)
 
         fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
         fetch.mockResponseOnce(createMockTodosResponse(75, '1100'))
 
         store.add('todos', createMockTodosAttributes(150, '1175'))
+
+        // a Todo with id 1174 is added but with no attributes
+        store.add('notes', {
+          todo: {
+            id: '1174',
+            type: 'todos'
+          }
+        })
 
         const ids = createMockIds(300, '1000')
         const todos = await store.findMany('todos', ids)
@@ -1620,8 +1628,11 @@ describe('Store', () => {
 
         expect(fetch.mock.calls).toHaveLength(2)
         expect(
-          fetch.mock.calls.some((call) => call[0].match(/1174/))
+          fetch.mock.calls.some((call) => call[0].match(/1173/))
         ).toBeTruthy()
+        expect(
+          fetch.mock.calls.some((call) => call[0].match(/1174/))
+        ).toBeFalsy()
         expect(
           fetch.mock.calls.some((call) => call[0].match(/1175/))
         ).toBeFalsy()

@@ -7254,7 +7254,7 @@ var baseMatches = _baseMatches,
  * @param {*} [value=_.identity] The value to convert to an iteratee.
  * @returns {Function} Returns the iteratee.
  */
-function baseIteratee$3(value) {
+function baseIteratee$2(value) {
   // Don't store the `typeof` result in a variable to avoid a JIT bug in Safari 9.
   // See https://bugs.webkit.org/show_bug.cgi?id=156034 for more details.
   if (typeof value == 'function') {
@@ -7271,9 +7271,9 @@ function baseIteratee$3(value) {
   return property(value);
 }
 
-var _baseIteratee = baseIteratee$3;
+var _baseIteratee = baseIteratee$2;
 
-var baseIteratee$2 = _baseIteratee,
+var baseIteratee$1 = _baseIteratee,
     isArrayLike$1 = isArrayLike_1,
     keys = keys_1;
 
@@ -7288,7 +7288,7 @@ function createFind$1(findIndexFunc) {
   return function(collection, predicate, fromIndex) {
     var iterable = Object(collection);
     if (!isArrayLike$1(collection)) {
-      var iteratee = baseIteratee$2(predicate);
+      var iteratee = baseIteratee$1(predicate);
       collection = keys(collection);
       predicate = function(key) { return iteratee(iterable[key], key, iterable); };
     }
@@ -7512,7 +7512,7 @@ function toInteger$2(value) {
 var toInteger_1 = toInteger$2;
 
 var baseFindIndex$1 = _baseFindIndex,
-    baseIteratee$1 = _baseIteratee,
+    baseIteratee = _baseIteratee,
     toInteger$1 = toInteger_1;
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
@@ -7566,7 +7566,7 @@ function findLastIndex$1(array, predicate, fromIndex) {
       ? nativeMax$1(length + index, 0)
       : nativeMin$1(index, length - 1);
   }
-  return baseFindIndex$1(array, baseIteratee$1(predicate), index, true);
+  return baseFindIndex$1(array, baseIteratee(predicate), index, true);
 }
 
 var findLastIndex_1 = findLastIndex$1;
@@ -7940,7 +7940,7 @@ var LARGE_ARRAY_SIZE = 200;
  * @param {Function} [comparator] The comparator invoked per element.
  * @returns {Array} Returns the new duplicate free array.
  */
-function baseUniq$2(array, iteratee, comparator) {
+function baseUniq$1(array, iteratee, comparator) {
   var index = -1,
       includes = arrayIncludes,
       length = array.length,
@@ -7992,7 +7992,7 @@ function baseUniq$2(array, iteratee, comparator) {
   return result;
 }
 
-var _baseUniq = baseUniq$2;
+var _baseUniq = baseUniq$1;
 
 var isArrayLike = isArrayLike_1,
     isObjectLike = isObjectLike_1;
@@ -8030,7 +8030,7 @@ var isArrayLikeObject_1 = isArrayLikeObject$1;
 
 var baseFlatten$1 = _baseFlatten,
     baseRest = _baseRest,
-    baseUniq$1 = _baseUniq,
+    baseUniq = _baseUniq,
     isArrayLikeObject = isArrayLikeObject_1;
 
 /**
@@ -8050,7 +8050,7 @@ var baseFlatten$1 = _baseFlatten,
  * // => [2, 1]
  */
 var union = baseRest(function(arrays) {
-  return baseUniq$1(baseFlatten$1(arrays, 1, isArrayLikeObject, true));
+  return baseUniq(baseFlatten$1(arrays, 1, isArrayLikeObject, true));
 });
 
 var union_1 = union;
@@ -8223,38 +8223,6 @@ var pick = flatRest(function(object, paths) {
 });
 
 var pick_1 = pick;
-
-var baseIteratee = _baseIteratee,
-    baseUniq = _baseUniq;
-
-/**
- * This method is like `_.uniq` except that it accepts `iteratee` which is
- * invoked for each element in `array` to generate the criterion by which
- * uniqueness is computed. The order of result values is determined by the
- * order they occur in the array. The iteratee is invoked with one argument:
- * (value).
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Array
- * @param {Array} array The array to inspect.
- * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
- * @returns {Array} Returns the new duplicate free array.
- * @example
- *
- * _.uniqBy([2.1, 1.2, 2.3], Math.floor);
- * // => [2.1, 1.2]
- *
- * // The `_.property` iteratee shorthand.
- * _.uniqBy([{ 'x': 1 }, { 'x': 2 }, { 'x': 1 }], 'x');
- * // => [{ 'x': 1 }, { 'x': 2 }]
- */
-function uniqBy(array, iteratee) {
-  return (array && array.length) ? baseUniq(array, baseIteratee(iteratee)) : [];
-}
-
-var uniqBy_1 = uniqBy;
 
 function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$3(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
@@ -8808,41 +8776,61 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "findMany",
-    value: function findMany(type, ids) {
-      var _this3 = this;
-      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-      var idsToQuery = _toConsumableArray(new Set(ids)).map(String);
-      var recordsInStore = this.getAll(type, options).filter(function (record) {
-        return idsToQuery.includes(String(record.id));
-      });
-      if (recordsInStore.length === idsToQuery.length) {
-        return recordsInStore;
-      }
-      var recordIdsInStore = recordsInStore.map(function (_ref4) {
-        var id = _ref4.id;
-        return String(id);
-      });
-      idsToQuery = idsToQuery.filter(function (id) {
-        return !recordIdsInStore.includes(id);
-      });
-      var _options$queryParams2 = options.queryParams,
-        queryParams = _options$queryParams2 === void 0 ? {} : _options$queryParams2,
-        queryTag = options.queryTag;
-      queryParams.filter = queryParams.filter || {};
-      var baseUrl = this.fetchUrl(type, queryParams);
-      var idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
-      var query = Promise.all(idQueries.map(function (queryIds) {
-        queryParams.filter.ids = queryIds;
-        return _this3.fetchAll(type, {
-          queryParams: queryParams,
-          queryTag: queryTag
-        });
+    value: function () {
+      var _findMany = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type, ids) {
+        var _this3 = this;
+        var options,
+          idsToQuery,
+          existingIds,
+          _options$queryParams2,
+          queryParams,
+          queryTag,
+          baseUrl,
+          idQueries,
+          _args2 = arguments;
+        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                options = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : {};
+                idsToQuery = _toConsumableArray(new Set(ids)).map(String); // TODO: There is a case where the record has been added from an inverse
+                // but we would like to re-query from the server for "real" data
+                existingIds = Array.from(this.getType(type).records.keys());
+                idsToQuery = idsToQuery.filter(function (id) {
+                  return !existingIds.includes(id);
+                });
+                if (!(idsToQuery.length === 0)) {
+                  _context2.next = 6;
+                  break;
+                }
+                return _context2.abrupt("return", this.getMany(type, ids));
+              case 6:
+                _options$queryParams2 = options.queryParams, queryParams = _options$queryParams2 === void 0 ? {} : _options$queryParams2, queryTag = options.queryTag;
+                queryParams.filter = queryParams.filter || {};
+                baseUrl = this.fetchUrl(type, queryParams);
+                idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
+                _context2.next = 12;
+                return Promise.all(idQueries.map(function (queryIds) {
+                  queryParams.filter.ids = queryIds;
+                  return _this3.fetchAll(type, {
+                    queryParams: queryParams,
+                    queryTag: queryTag
+                  });
+                }));
+              case 12:
+                return _context2.abrupt("return", this.getMany(type, ids));
+              case 13:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
       }));
-      return query.then(function (recordsFromServer) {
-        return recordsInStore.concat.apply(recordsInStore, _toConsumableArray(recordsFromServer));
-      });
-    }
-
+      function findMany(_x3, _x4) {
+        return _findMany.apply(this, arguments);
+      }
+      return findMany;
+    }()
     /**
      * Builds fetch url based on type, queryParams, id, and options
      *
@@ -8898,11 +8886,11 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "setLoadingState",
-    value: function setLoadingState(_ref5) {
-      var url = _ref5.url,
-        type = _ref5.type,
-        queryParams = _ref5.queryParams,
-        queryTag = _ref5.queryTag;
+    value: function setLoadingState(_ref4) {
+      var url = _ref4.url,
+        type = _ref4.type,
+        queryParams = _ref4.queryParams,
+        queryTag = _ref4.queryTag;
       queryTag = queryTag || type;
       var loadingStateInfo = {
         url: url,
@@ -8955,7 +8943,7 @@ var Store = /*#__PURE__*/function () {
   }, {
     key: "fetchAll",
     value: function () {
-      var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(type) {
+      var _fetchAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(type) {
         var _this4 = this;
         var options,
           queryParams,
@@ -8968,33 +8956,33 @@ var Store = /*#__PURE__*/function () {
           meta,
           records,
           errors,
-          _args2 = arguments;
-        return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+          _args3 = arguments;
+        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                options = _args2.length > 1 && _args2[1] !== undefined ? _args2[1] : {};
+                options = _args3.length > 1 && _args3[1] !== undefined ? _args3[1] : {};
                 queryParams = options.queryParams;
                 url = this.fetchUrl(type, queryParams);
                 state = this.setLoadingState(_objectSpread$3(_objectSpread$3({}, options), {}, {
                   type: type,
                   url: url
                 }));
-                _context2.next = 6;
+                _context3.next = 6;
                 return this.fetch(url, {
                   method: 'GET'
                 });
               case 6:
-                response = _context2.sent;
+                response = _context3.sent;
                 if (!(response.status === 200)) {
-                  _context2.next = 20;
+                  _context3.next = 20;
                   break;
                 }
                 this.data[type].cache.set(url, []);
-                _context2.next = 11;
+                _context3.next = 11;
                 return response.json();
               case 11:
-                _yield$response$json2 = _context2.sent;
+                _yield$response$json2 = _context3.sent;
                 included = _yield$response$json2.included;
                 data = _yield$response$json2.data;
                 meta = _yield$response$json2.meta;
@@ -9003,7 +8991,7 @@ var Store = /*#__PURE__*/function () {
                     _this4.createOrUpdateModelsFromData(included);
                   }
                   records = data.map(function (document) {
-                    var record = _this4.createModelFromData(document);
+                    var record = _this4.createOrUpdateModelFromData(document);
                     var cachedIds = _this4.data[type].cache.get(url);
                     _this4.data[type].cache.set(url, [].concat(_toConsumableArray(cachedIds), [document.id]));
                     _this4.data[type].records.set(String(document.id), record);
@@ -9015,24 +9003,24 @@ var Store = /*#__PURE__*/function () {
                   records.meta = meta;
                   this.getType(type).meta.set(url, meta);
                 }
-                return _context2.abrupt("return", records);
+                return _context3.abrupt("return", records);
               case 20:
                 runInAction(function () {
                   _this4.deleteLoadingState(state);
                 });
-                _context2.next = 23;
+                _context3.next = 23;
                 return parseErrors(response, this.errorMessages);
               case 23:
-                errors = _context2.sent;
+                errors = _context3.sent;
                 throw new Error(JSON.stringify(errors));
               case 25:
               case "end":
-                return _context2.stop();
+                return _context3.stop();
             }
           }
-        }, _callee2, this);
+        }, _callee3, this);
       }));
-      function fetchAll(_x3) {
+      function fetchAll(_x5) {
         return _fetchAll.apply(this, arguments);
       }
       return fetchAll;
@@ -9130,18 +9118,18 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "initializeNetworkConfiguration",
-    value: function initializeNetworkConfiguration(_ref6) {
-      var _ref6$baseUrl = _ref6.baseUrl,
-        baseUrl = _ref6$baseUrl === void 0 ? '' : _ref6$baseUrl,
-        _ref6$defaultFetchOpt = _ref6.defaultFetchOptions,
-        defaultFetchOptions = _ref6$defaultFetchOpt === void 0 ? {} : _ref6$defaultFetchOpt,
-        _ref6$headersOfIntere = _ref6.headersOfInterest,
-        headersOfInterest = _ref6$headersOfIntere === void 0 ? [] : _ref6$headersOfIntere,
-        _ref6$retryOptions = _ref6.retryOptions,
-        retryOptions = _ref6$retryOptions === void 0 ? {
+    value: function initializeNetworkConfiguration(_ref5) {
+      var _ref5$baseUrl = _ref5.baseUrl,
+        baseUrl = _ref5$baseUrl === void 0 ? '' : _ref5$baseUrl,
+        _ref5$defaultFetchOpt = _ref5.defaultFetchOptions,
+        defaultFetchOptions = _ref5$defaultFetchOpt === void 0 ? {} : _ref5$defaultFetchOpt,
+        _ref5$headersOfIntere = _ref5.headersOfInterest,
+        headersOfInterest = _ref5$headersOfIntere === void 0 ? [] : _ref5$headersOfIntere,
+        _ref5$retryOptions = _ref5.retryOptions,
+        retryOptions = _ref5$retryOptions === void 0 ? {
           attempts: 1,
           delay: 0
-        } : _ref6$retryOptions;
+        } : _ref5$retryOptions;
       this.baseUrl = baseUrl;
       this.defaultFetchOptions = defaultFetchOptions;
       this.headersOfInterest = headersOfInterest;
@@ -9210,7 +9198,7 @@ var Store = /*#__PURE__*/function () {
   }, {
     key: "fetch",
     value: function () {
-      var _fetch = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(url) {
+      var _fetch = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(url) {
         var _this6 = this;
         var options,
           defaultFetchOptions,
@@ -9220,19 +9208,19 @@ var Store = /*#__PURE__*/function () {
           attempts,
           delay,
           response,
-          _args3 = arguments;
-        return _regeneratorRuntime.wrap(function _callee3$(_context3) {
+          _args4 = arguments;
+        return _regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
-                options = _args3.length > 1 && _args3[1] !== undefined ? _args3[1] : {};
+                options = _args4.length > 1 && _args4[1] !== undefined ? _args4[1] : {};
                 defaultFetchOptions = this.defaultFetchOptions, headersOfInterest = this.headersOfInterest, retryOptions = this.retryOptions;
                 fetchOptions = _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options);
                 attempts = retryOptions.attempts, delay = retryOptions.delay;
-                _context3.next = 6;
+                _context4.next = 6;
                 return fetchWithRetry(url, fetchOptions, attempts, delay);
               case 6:
-                response = _context3.sent;
+                response = _context4.sent;
                 if (headersOfInterest) {
                   runInAction(function () {
                     headersOfInterest.forEach(function (header) {
@@ -9242,15 +9230,15 @@ var Store = /*#__PURE__*/function () {
                     });
                   });
                 }
-                return _context3.abrupt("return", response);
+                return _context4.abrupt("return", response);
               case 9:
               case "end":
-                return _context3.stop();
+                return _context4.stop();
             }
           }
-        }, _callee3, this);
+        }, _callee4, this);
       }));
-      function fetch(_x4) {
+      function fetch(_x6) {
         return _fetch.apply(this, arguments);
       }
       return fetch;
@@ -9285,14 +9273,7 @@ var Store = /*#__PURE__*/function () {
     }
 
     /**
-     * Gets records for type of collection from observable
-     *
-     * NOTE: We only return records by unique id, this handles a scenario
-     * where the store keeps around a reference to a newly persisted record by its temp uuid.
-     * We can't simply remove the temp uuid reference because other
-     * related models may be still using the temp uuid in their relationships
-     * data object. However, when we are listing out records we want them
-     * to be unique by the persisted id (which is updated after a Model.save)
+     * Gets records for type of collection
      *
      * @param {string} type the model type
      * @returns {Array} array of objects
@@ -9300,10 +9281,7 @@ var Store = /*#__PURE__*/function () {
   }, {
     key: "getRecords",
     value: function getRecords(type) {
-      var records = Array.from(this.getType(type).records.values()).filter(function (value) {
-        return value && value !== 'undefined';
-      });
-      return uniqBy_1(records, 'id');
+      return Array.from(this.getType(type).records.values());
     }
 
     /**
@@ -9457,10 +9435,10 @@ var Store = /*#__PURE__*/function () {
         relationships = _data$relationships === void 0 ? {} : _data$relationships;
       runInAction(function () {
         record.id = String(id);
-        Object.entries(attributes).forEach(function (_ref7) {
-          var _ref8 = _slicedToArray(_ref7, 2),
-            key = _ref8[0],
-            value = _ref8[1];
+        Object.entries(attributes).forEach(function (_ref6) {
+          var _ref7 = _slicedToArray(_ref6, 2),
+            key = _ref7[0],
+            value = _ref7[1];
           record[key] = value;
         });
         Object.keys(relationships).forEach(function (relationshipName) {
@@ -9546,28 +9524,28 @@ var Store = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref9 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(response) {
+        var _ref8 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee5(response) {
           var status, json, data, included, errors;
-          return _regeneratorRuntime.wrap(function _callee4$(_context4) {
+          return _regeneratorRuntime.wrap(function _callee5$(_context5) {
             while (1) {
-              switch (_context4.prev = _context4.next) {
+              switch (_context5.prev = _context5.next) {
                 case 0:
                   status = response.status;
                   recordsArray.forEach(function (record) {
                     record.isInFlight = false;
                   });
                   if (!(status === 200 || status === 201)) {
-                    _context4.next = 15;
+                    _context5.next = 15;
                     break;
                   }
-                  _context4.next = 5;
+                  _context5.next = 5;
                   return response.json();
                 case 5:
-                  json = _context4.sent;
+                  json = _context5.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
                   if (!(data.length !== recordsArray.length)) {
-                    _context4.next = 10;
+                    _context5.next = 10;
                     break;
                   }
                   throw new Error('Invariant violated: API response data and records to update do not match');
@@ -9581,12 +9559,12 @@ var Store = /*#__PURE__*/function () {
 
                   // on success, return the original record(s).
                   // again - this may be a single record so preserve the structure
-                  return _context4.abrupt("return", records);
+                  return _context5.abrupt("return", records);
                 case 15:
-                  _context4.next = 17;
+                  _context5.next = 17;
                   return parseErrors(response, _this10.errorMessages);
                 case 17:
-                  errors = _context4.sent;
+                  errors = _context5.sent;
                   runInAction(function () {
                     errors.forEach(function (error) {
                       var _parseErrorPointer = parseErrorPointer(error),
@@ -9603,13 +9581,13 @@ var Store = /*#__PURE__*/function () {
                   throw new Error(JSON.stringify(errors));
                 case 20:
                 case "end":
-                  return _context4.stop();
+                  return _context5.stop();
               }
             }
-          }, _callee4);
+          }, _callee5);
         }));
-        return function (_x5) {
-          return _ref9.apply(this, arguments);
+        return function (_x7) {
+          return _ref8.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -9929,8 +9907,9 @@ var coerceDataToExistingRecord = action(function (store, record) {
     var _record = record,
       id = _record.id,
       type = _record.type;
-    record = store.getOne(type, id) || store.add(type, {
-      id: id
+    record = store.getOne(type, id) || store.createOrUpdateModelFromData({
+      id: id,
+      type: type
     });
   }
   return record;

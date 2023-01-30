@@ -465,34 +465,31 @@ class Store {
   * @param {object} options { queryParams }
   * @returns {Promise} a promise that will resolve an array of records
   */
-  findMany (type, ids, options = {}) {
+  async findMany (type, ids, options = {}) {
     let idsToQuery = [...new Set(ids)].map(String)
-    const recordsInStore = this.getAll(type, options).filter((record) =>
-      idsToQuery.includes(String(record.id))
-    )
 
-    if (recordsInStore.length === idsToQuery.length) {
-      return recordsInStore
+    // TODO: There is a case where the record has been added from an inverse
+    // but we would like to re-query from the server for "real" data
+    const existingIds = Array.from(this.getType(type).records.keys())
+    idsToQuery = idsToQuery.filter((id) => !existingIds.includes(id))
+
+    if (idsToQuery.length === 0) {
+      return this.getMany(type, ids)
     }
-
-    const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
-    idsToQuery = idsToQuery.filter((id) => !recordIdsInStore.includes(id))
 
     const { queryParams = {}, queryTag } = options
     queryParams.filter = queryParams.filter || {}
     const baseUrl = this.fetchUrl(type, queryParams)
     const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
 
-    const query = Promise.all(
+    await Promise.all(
       idQueries.map((queryIds) => {
         queryParams.filter.ids = queryIds
         return this.fetchAll(type, { queryParams, queryTag })
       })
     )
 
-    return query.then((recordsFromServer) =>
-      recordsInStore.concat(...recordsFromServer)
-    )
+    return this.getMany(type, ids)
   }
 
   /**
@@ -612,7 +609,7 @@ class Store {
         }
 
         records = data.map((document) => {
-          const record = this.createModelFromData(document)
+          const record = this.createOrUpdateModelFromData(document)
           const cachedIds = this.data[type].cache.get(url)
           this.data[type].cache.set(url, [...cachedIds, document.id])
           this.data[type].records.set(String(document.id), record)
@@ -825,23 +822,13 @@ class Store {
   }
 
   /**
-   * Gets records for type of collection from observable
-   *
-   * NOTE: We only return records by unique id, this handles a scenario
-   * where the store keeps around a reference to a newly persisted record by its temp uuid.
-   * We can't simply remove the temp uuid reference because other
-   * related models may be still using the temp uuid in their relationships
-   * data object. However, when we are listing out records we want them
-   * to be unique by the persisted id (which is updated after a Model.save)
+   * Gets records for type of collection
    *
    * @param {string} type the model type
    * @returns {Array} array of objects
    */
   getRecords (type) {
-    const records = Array.from(this.getType(type).records.values()).filter(
-      (value) => value && value !== 'undefined'
-    )
-    return uniqBy(records, 'id')
+    return Array.from(this.getType(type).records.values())
   }
 
   /**

@@ -258,7 +258,7 @@ export const coerceDataToExistingRecord = action((store, record) => {
   if (record == null || !store?.getType(record.type)) { return null }
   if (record && !(record instanceof Model)) {
     const { id, type } = record
-    record = store.getOne(type, id) || store.add(type, { id })
+    record = store.getOne(type, id) || store.createOrUpdateModelFromData({ id, type })
   }
   return record
 })
