@@ -68,10 +68,6 @@ export function newId () {
   return `tmp-${uuidv1()}`
 }
 
-export function idOrNewId (id) {
-  return id != null ? String(id) : newId()
-}
-
 /**
  * Avoids making racing requests by blocking a request if an identical one is
  * already in-flight. Blocked requests will be resolved when the initial request

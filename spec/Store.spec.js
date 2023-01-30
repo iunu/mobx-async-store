@@ -299,11 +299,12 @@ describe('Store', () => {
 
   it('initializes data observable', () => {
     const map = new Map()
+    const set = new Set()
     expect(toJS(store.data)).toEqual({
-      todos: { cache: map, meta: map, records: map },
-      notes: { cache: map, meta: map, records: map },
-      categories: { cache: map, meta: map, records: map },
-      tags: { cache: map, meta: map, records: map }
+      todos: { cache: map, meta: map, records: map, persistedIds: set },
+      notes: { cache: map, meta: map, records: map, persistedIds: set },
+      categories: { cache: map, meta: map, records: map, persistedIds: set },
+      tags: { cache: map, meta: map, records: map, persistedIds: set }
     })
   })
 
@@ -1632,7 +1633,7 @@ describe('Store', () => {
         ).toBeTruthy()
         expect(
           fetch.mock.calls.some((call) => call[0].match(/1174/))
-        ).toBeFalsy()
+        ).toBeTruthy()
         expect(
           fetch.mock.calls.some((call) => call[0].match(/1175/))
         ).toBeFalsy()
