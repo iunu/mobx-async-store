@@ -27,7 +27,7 @@ export const exampleRelatedToManyWithNoiseResponse = JSON.stringify({
     id: '1',
     type: 'todos',
     attributes: {
-      id: 1,
+      id: '1',
       title: 'Do laundry'
     },
     relationships: {
@@ -55,7 +55,7 @@ export const exampleRelatedToManyIncludedResponse = JSON.stringify({
     id: '1',
     type: 'todos',
     attributes: {
-      id: 1,
+      id: '1',
       title: 'Do laundry'
     },
     relationships: {
@@ -88,7 +88,7 @@ export const exampleRelatedToManyIncludedWithNoiseResponse = JSON.stringify({
     id: '1',
     type: 'todos',
     attributes: {
-      id: 1,
+      id: '1',
       title: 'Do laundry'
     },
     relationships: {
@@ -150,7 +150,7 @@ export const exampleRelatedToOneIncludedResponse = JSON.stringify({
       id: '1',
       type: 'todos',
       attributes: {
-        id: 1,
+        id: '1',
         title: 'Do laundry'
       }
     }
@@ -165,7 +165,7 @@ export const exampleRelatedToOneNoRelatedRecords = JSON.stringify({
     id: '1',
     type: 'todos',
     attributes: {
-      id: 1,
+      id: '1',
       title: 'Do laundry'
     },
     relationships: {

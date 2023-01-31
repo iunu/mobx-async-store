@@ -665,18 +665,12 @@ class Store {
    * @param {object} options { queryParams }
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
-  findAll (type, options = {}) {
-    let records
-
-    if (options || this.data[type].persistedIds.length > 0) {
-      records = this.getAll(type, options)
+  async findAll (type, options) {
+    if (!this.data[type].persistedIds.size > 0) {
+      await this.fetchAll(type, options)
     }
 
-    if (records?.length > 0) {
-      return records
-    } else {
-      return this.fetchAll(type, options)
-    }
+    return Promise.resolve(this.getAll(type, options))
   }
 
   /**

@@ -159,7 +159,7 @@ const store = new AppStore({
 The store uses variations of `get`, `find` and `fetch` to retrieve records from the store, with `All`, `Many`, and `One` determining how many records will be requested. An optional `options` hash provides further customization for requesting and caching.
 - `get` will only retrieve locally cached records, and will never request from the server
 - `find` will first look for records of a given type in the store, and then will go to the server
-- `fetch` will always requet from the server
+- `fetch` will always request from the server
 - `getAll`, `findAll`, and `fetchAll` retrieve all records that match the optional `options`
   - `store.getAll('todos', { queryParams: { recent: true } })`
 - `getOne`, `findOne`, and `fetchOne` retrieves one record. Usually used with just one id but can also use the `options` hash.
@@ -181,9 +181,7 @@ store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { ove
 ```
 
 ## Testing
-More on Factories
-
-We use FactoryFarm to quickly build data models that can be used for testing. An instance of FactoryFarm has factories defined that can be used to build models at runtime.
+`FactoryFarm`  to quickly build data models that can be used for testing. An instance of FactoryFarm has factories defined that can be used to build models at runtime.
 
 Defining a factory
 You can define a factory for any model in shared-js/store. Then, objects can be built using the predefined factory, which describes attributes and relationships.

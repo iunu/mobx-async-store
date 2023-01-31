@@ -9081,20 +9081,32 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "findAll",
-    value: function findAll(type) {
-      var _records;
-      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var records;
-      if (options || this.data[type].persistedIds.length > 0) {
-        records = this.getAll(type, options);
+    value: function () {
+      var _findAll = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee4(type, options) {
+        return _regeneratorRuntime__default["default"].wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                if (!(!this.data[type].persistedIds.size > 0)) {
+                  _context4.next = 3;
+                  break;
+                }
+                _context4.next = 3;
+                return this.fetchAll(type, options);
+              case 3:
+                return _context4.abrupt("return", Promise.resolve(this.getAll(type, options)));
+              case 4:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+      function findAll(_x6, _x7) {
+        return _findAll.apply(this, arguments);
       }
-      if (((_records = records) === null || _records === void 0 ? void 0 : _records.length) > 0) {
-        return records;
-      } else {
-        return this.fetchAll(type, options);
-      }
-    }
-
+      return findAll;
+    }()
     /**
      * Clears the store of a given type, or clears all if no type given
      *
@@ -9204,7 +9216,7 @@ var Store = /*#__PURE__*/function () {
   }, {
     key: "fetch",
     value: function () {
-      var _fetch = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee4(url) {
+      var _fetch = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee5(url) {
         var _this6 = this;
         var options,
           defaultFetchOptions,
@@ -9214,19 +9226,19 @@ var Store = /*#__PURE__*/function () {
           attempts,
           delay,
           response,
-          _args4 = arguments;
-        return _regeneratorRuntime__default["default"].wrap(function _callee4$(_context4) {
+          _args5 = arguments;
+        return _regeneratorRuntime__default["default"].wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
-                options = _args4.length > 1 && _args4[1] !== undefined ? _args4[1] : {};
+                options = _args5.length > 1 && _args5[1] !== undefined ? _args5[1] : {};
                 defaultFetchOptions = this.defaultFetchOptions, headersOfInterest = this.headersOfInterest, retryOptions = this.retryOptions;
                 fetchOptions = _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options);
                 attempts = retryOptions.attempts, delay = retryOptions.delay;
-                _context4.next = 6;
+                _context5.next = 6;
                 return fetchWithRetry(url, fetchOptions, attempts, delay);
               case 6:
-                response = _context4.sent;
+                response = _context5.sent;
                 if (headersOfInterest) {
                   mobx.runInAction(function () {
                     headersOfInterest.forEach(function (header) {
@@ -9236,15 +9248,15 @@ var Store = /*#__PURE__*/function () {
                     });
                   });
                 }
-                return _context4.abrupt("return", response);
+                return _context5.abrupt("return", response);
               case 9:
               case "end":
-                return _context4.stop();
+                return _context5.stop();
             }
           }
-        }, _callee4, this);
+        }, _callee5, this);
       }));
-      function fetch(_x6) {
+      function fetch(_x8) {
         return _fetch.apply(this, arguments);
       }
       return fetch;
@@ -9518,28 +9530,28 @@ var Store = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref10 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee5(response) {
+        var _ref10 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee6(response) {
           var status, json, data, included, errors;
-          return _regeneratorRuntime__default["default"].wrap(function _callee5$(_context5) {
+          return _regeneratorRuntime__default["default"].wrap(function _callee6$(_context6) {
             while (1) {
-              switch (_context5.prev = _context5.next) {
+              switch (_context6.prev = _context6.next) {
                 case 0:
                   status = response.status;
                   recordsArray.forEach(function (record) {
                     record.isInFlight = false;
                   });
                   if (!(status === 200 || status === 201)) {
-                    _context5.next = 15;
+                    _context6.next = 15;
                     break;
                   }
-                  _context5.next = 5;
+                  _context6.next = 5;
                   return response.json();
                 case 5:
-                  json = _context5.sent;
+                  json = _context6.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
                   if (!(data.length !== recordsArray.length)) {
-                    _context5.next = 10;
+                    _context6.next = 10;
                     break;
                   }
                   throw new Error('Invariant violated: API response data and records to update do not match');
@@ -9553,12 +9565,12 @@ var Store = /*#__PURE__*/function () {
 
                   // on success, return the original record(s).
                   // again - this may be a single record so preserve the structure
-                  return _context5.abrupt("return", records);
+                  return _context6.abrupt("return", records);
                 case 15:
-                  _context5.next = 17;
+                  _context6.next = 17;
                   return parseErrors(response, _this10.errorMessages);
                 case 17:
-                  errors = _context5.sent;
+                  errors = _context6.sent;
                   mobx.runInAction(function () {
                     errors.forEach(function (error) {
                       var _parseErrorPointer = parseErrorPointer(error),
@@ -9575,12 +9587,12 @@ var Store = /*#__PURE__*/function () {
                   throw new Error(JSON.stringify(errors));
                 case 20:
                 case "end":
-                  return _context5.stop();
+                  return _context6.stop();
               }
             }
-          }, _callee5);
+          }, _callee6);
         }));
-        return function (_x7) {
+        return function (_x9) {
           return _ref10.apply(this, arguments);
         };
       }(), function (error) {
@@ -9806,7 +9818,6 @@ var setRelatedRecord = mobx.action(function (relationshipName, record, relatedRe
 /**
  * Removes a record from an array of related records, removing both the object and the reference.
  *
- * @param {Array} array the related records array
  * @param {string} relationshipName the name of the relationship
  * @param {object} record the record with the relationship
  * @param {object} relatedRecord the related record being removed from the relationship
@@ -9839,7 +9850,6 @@ var removeRelatedRecord = mobx.action(function (relationshipName, record, relate
 /**
  * Adds a record to a related array and updates the jsonapi reference in the relationships
  *
- * @param {Array} array the related records array
  * @param {string} relationshipName the name of the relationship
  * @param {object} record the record with the relationship
  * @param {object} relatedRecord the related record being added to the relationship

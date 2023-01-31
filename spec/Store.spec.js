@@ -542,7 +542,7 @@ describe('Store', () => {
       expect.assertions(1)
 
       const newTodo = store.add('todos', { title: 'Pet Dog' })
-      const oldTodo = store.add('todos', { id: 1, title: 'Give Dog Treat' })
+      const oldTodo = store.add('todos', { id: '1', title: 'Give Dog Treat' })
 
       try {
         await store.bulkCreate('todos', [newTodo, oldTodo])
@@ -577,7 +577,7 @@ describe('Store', () => {
       expect.assertions(1)
 
       const newTodo = store.add('todos', { title: 'Pet Dog' })
-      const oldTodo = store.add('todos', { id: 1, title: 'Give Dog Treat' })
+      const oldTodo = store.add('todos', { id: '1', title: 'Give Dog Treat' })
 
       try {
         await store.bulkUpdate('todos', [newTodo, oldTodo])
@@ -590,10 +590,10 @@ describe('Store', () => {
       const mockServer = new MockServer({ factoryFarm })
       mockServer.start()
 
-      const todo1 = store.add('todos', { id: 1, title: 'Pet Dog' })
-      backendStore.add('todos', { id: 1, title: 'Pet Dog' })
-      const todo2 = store.add('todos', { id: 2, title: 'Give Dog Treat' })
-      backendStore.add('todos', { id: 2, title: 'Give Dog Treat' })
+      const todo1 = store.add('todos', { id: '1', title: 'Pet Dog' })
+      backendStore.add('todos', { id: '1', title: 'Pet Dog' })
+      const todo2 = store.add('todos', { id: '2', title: 'Give Dog Treat' })
+      backendStore.add('todos', { id: '2', title: 'Give Dog Treat' })
 
       await store.bulkUpdate('todos', [todo1, todo2])
 
@@ -603,7 +603,7 @@ describe('Store', () => {
 
   describe('updateRecordsFromResponse', () => {
     function mockRequest (errors, status = 422) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const body = JSON.stringify({ errors })
         process.nextTick(() => resolve(new Response(body, { status })))
       })
@@ -941,7 +941,7 @@ describe('Store', () => {
       fetch.mockResponse(mockTodoResponse)
       await store.fetchOne('todos', '1', {
         queryParams: {
-          user_id: 1,
+          user_id: '1',
           filter: {
             due_at: '2019-01-01'
           },
@@ -1053,7 +1053,7 @@ describe('Store', () => {
     })
 
     it('returns records with a unique id', () => {
-      store.add('todos', [{ id: 1, title: 'Buy Milk' }, { id: 1, title: 'Make milkshake' }, { id: 2, title: 'Guzzle milkshake' }])
+      store.add('todos', [{ id: '1', title: 'Buy Milk' }, { id: '1', title: 'Make milkshake' }, { id: '2', title: 'Guzzle milkshake' }])
       const foundRecords = store.getAll('todos')
       expect(foundRecords).toHaveLength(2)
       expect(foundRecords[0].title).toEqual('Make milkshake')
@@ -1081,11 +1081,29 @@ describe('Store', () => {
     })
 
     describe('records of the specified type exist in the store', () => {
-      it('does not fetch and returns records from the store', () => {
+      it('fetches and returns records from the store with only new records', async () => {
+        fetch.mockResponse(mockTodosResponse)
+
         store.add('todos', { title: 'Buy Milk' })
-        const todos = store.findAll('todos')
+
+        const query = store.findAll('todos')
+        expect(query).toBeInstanceOf(Promise)
+        const todos = await query
+
+        expect(fetch.mock.calls).toHaveLength(1)
+        expect(todos).toBeInstanceOf(Array)
+        expect(todos).toHaveLength(2)
+      })
+
+      it('does not fetch and returns records from the store', async () => {
+        store.add('todos', { id: '1', title: 'Buy Milk' })
+
+        const query = store.findAll('todos')
+        expect(query).toBeInstanceOf(Promise)
+        const todos = await query
+
         expect(fetch.mock.calls).toHaveLength(0)
-        expect(todos).toBeInstanceOf(Array) // TODO: will be changed to return Promise in the future
+        expect(todos).toBeInstanceOf(Array)
         expect(todos).toHaveLength(1)
       })
     })
@@ -1104,7 +1122,7 @@ describe('Store', () => {
         expect(fetch.mock.calls).toHaveLength(1)
         // Find todos a second time
         query = store.findAll('todos', { queryParams })
-        expect(query).toBeInstanceOf(Array) // TODO: will be changed to return Promise in the future
+        expect(query).toBeInstanceOf(Promise)
         todos = await query
         // Not fetch should be kicked off
         expect(todos).toHaveLength(1)
@@ -1609,7 +1627,7 @@ describe('Store', () => {
         expect.assertions(8)
 
         fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
-        fetch.mockResponseOnce(createMockTodosResponse(75, '1100'))
+        fetch.mockResponseOnce(createMockTodosResponse(74, '1100'))
 
         store.add('todos', createMockTodosAttributes(150, '1175'))
 
@@ -1768,7 +1786,7 @@ describe('Store', () => {
     })
 
     it('creates a model with relatedToMany property', () => {
-      const tag = store.add('tags', { id: 3, label: 'Tag #3' })
+      const tag = store.add('tags', { id: '3', label: 'Tag #3' })
       const todoData = {
         type: 'todos',
         id: '1',
@@ -1788,7 +1806,7 @@ describe('Store', () => {
     let record
 
     beforeEach(() => {
-      store.add('notes', { id: 3, text: 'hi' })
+      store.add('notes', { id: '3', text: 'hi' })
 
       record = store.createOrUpdateModelFromData({
         id: 3,
@@ -1812,13 +1830,13 @@ describe('Store', () => {
     it('creates a list of model objs from a list of data objs', () => {
       const dataObjs = [
         {
-          id: 1,
+          id: '1',
           type: 'todos',
           attributes: { title: 'hello!' },
           relationships: {}
         },
         {
-          id: 2,
+          id: '2',
           type: 'todos',
           attributes: { title: 'see ya!' },
           relationships: {}
@@ -1837,13 +1855,13 @@ describe('Store', () => {
     it('skips objs with an unknown type', () => {
       const dataObjs = [
         {
-          id: 1,
+          id: '1',
           type: 'todos',
           attributes: { title: 'hello!' },
           relationships: {}
         },
         {
-          id: 2,
+          id: '2',
           type: 'unknown',
           attributes: { title: 'see ya!' },
           relationships: {}

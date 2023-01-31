@@ -173,7 +173,6 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
 /**
  * Removes a record from an array of related records, removing both the object and the reference.
  *
- * @param {Array} array the related records array
  * @param {string} relationshipName the name of the relationship
  * @param {object} record the record with the relationship
  * @param {object} relatedRecord the related record being removed from the relationship
@@ -206,7 +205,6 @@ export const removeRelatedRecord = action((relationshipName, record, relatedReco
 /**
  * Adds a record to a related array and updates the jsonapi reference in the relationships
  *
- * @param {Array} array the related records array
  * @param {string} relationshipName the name of the relationship
  * @param {object} record the record with the relationship
  * @param {object} relatedRecord the related record being added to the relationship
