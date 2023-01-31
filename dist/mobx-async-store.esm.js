@@ -9064,19 +9064,23 @@ var Store = /*#__PURE__*/function () {
     key: "findAll",
     value: function () {
       var _findAll = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee4(type, options) {
+        var records;
         return _regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                if (!(!this.data[type].persistedIds.size > 0)) {
-                  _context4.next = 3;
+                records = (options || this.data[type].persistedIds.size > 0) && this.getAll(type, options);
+                if (!((records === null || records === void 0 ? void 0 : records.length) > 0)) {
+                  _context4.next = 5;
                   break;
                 }
-                _context4.next = 3;
+                return _context4.abrupt("return", records);
+              case 5:
+                _context4.next = 7;
                 return this.fetchAll(type, options);
-              case 3:
-                return _context4.abrupt("return", Promise.resolve(this.getAll(type, options)));
-              case 4:
+              case 7:
+                return _context4.abrupt("return", this.getAll(type, options));
+              case 8:
               case "end":
                 return _context4.stop();
             }

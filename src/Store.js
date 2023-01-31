@@ -666,11 +666,15 @@ class Store {
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
   async findAll (type, options) {
-    if (!this.data[type].persistedIds.size > 0) {
-      await this.fetchAll(type, options)
-    }
+    const records = (options || this.data[type].persistedIds.size > 0) && this.getAll(type, options)
 
-    return Promise.resolve(this.getAll(type, options))
+    if (records?.length > 0) {
+      return records
+    } else {
+      await this.fetchAll(type, options)
+      // return any isNew records as well
+      return this.getAll(type, options)
+    }
   }
 
   /**
