@@ -299,12 +299,11 @@ describe('Store', () => {
 
   it('initializes data observable', () => {
     const map = new Map()
-    const set = new Set()
     expect(toJS(store.data)).toEqual({
-      todos: { cache: map, meta: map, records: map, persistedIds: set },
-      notes: { cache: map, meta: map, records: map, persistedIds: set },
-      categories: { cache: map, meta: map, records: map, persistedIds: set },
-      tags: { cache: map, meta: map, records: map, persistedIds: set }
+      todos: { cache: map, meta: map, records: map },
+      notes: { cache: map, meta: map, records: map },
+      categories: { cache: map, meta: map, records: map },
+      tags: { cache: map, meta: map, records: map }
     })
   })
 
@@ -1090,9 +1089,9 @@ describe('Store', () => {
         expect(query).toBeInstanceOf(Promise)
         const todos = await query
 
-        expect(fetch.mock.calls).toHaveLength(1)
+        expect(fetch.mock.calls).toHaveLength(0)
         expect(todos).toBeInstanceOf(Array)
-        expect(todos).toHaveLength(2)
+        expect(todos).toHaveLength(1)
       })
 
       it('does not fetch and returns records from the store', async () => {
@@ -1627,7 +1626,7 @@ describe('Store', () => {
         expect.assertions(8)
 
         fetch.mockResponseOnce(createMockTodosResponse(100, '1000'))
-        fetch.mockResponseOnce(createMockTodosResponse(74, '1100'))
+        fetch.mockResponseOnce(createMockTodosResponse(75, '1100'))
 
         store.add('todos', createMockTodosAttributes(150, '1175'))
 

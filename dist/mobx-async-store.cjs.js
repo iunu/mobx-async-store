@@ -12,7 +12,6 @@ var mobx = require('mobx');
 var _inherits = require('@babel/runtime/helpers/inherits');
 var _toConsumableArray = require('@babel/runtime/helpers/toConsumableArray');
 var uuid = require('uuid');
-var _assertThisInitialized = require('@babel/runtime/helpers/assertThisInitialized');
 var _possibleConstructorReturn = require('@babel/runtime/helpers/possibleConstructorReturn');
 var _getPrototypeOf = require('@babel/runtime/helpers/getPrototypeOf');
 var _wrapNativeSuper = require('@babel/runtime/helpers/wrapNativeSuper');
@@ -27,7 +26,6 @@ var _typeof__default = /*#__PURE__*/_interopDefaultLegacy(_typeof);
 var _regeneratorRuntime__default = /*#__PURE__*/_interopDefaultLegacy(_regeneratorRuntime);
 var _inherits__default = /*#__PURE__*/_interopDefaultLegacy(_inherits);
 var _toConsumableArray__default = /*#__PURE__*/_interopDefaultLegacy(_toConsumableArray);
-var _assertThisInitialized__default = /*#__PURE__*/_interopDefaultLegacy(_assertThisInitialized);
 var _possibleConstructorReturn__default = /*#__PURE__*/_interopDefaultLegacy(_possibleConstructorReturn);
 var _getPrototypeOf__default = /*#__PURE__*/_interopDefaultLegacy(_getPrototypeOf);
 var _wrapNativeSuper__default = /*#__PURE__*/_interopDefaultLegacy(_wrapNativeSuper);
@@ -37,6 +35,47 @@ var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof win
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
+
+var objectDestructuringEmptyExports = {};
+var objectDestructuringEmpty = {
+  get exports(){ return objectDestructuringEmptyExports; },
+  set exports(v){ objectDestructuringEmptyExports = v; },
+};
+
+(function (module) {
+	function _objectDestructuringEmpty(obj) {
+	  if (obj == null) throw new TypeError("Cannot destructure " + obj);
+	}
+	module.exports = _objectDestructuringEmpty, module.exports.__esModule = true, module.exports["default"] = module.exports;
+} (objectDestructuringEmpty));
+
+var _objectDestructuringEmpty = /*@__PURE__*/getDefaultExportFromCjs(objectDestructuringEmptyExports);
+
+var _extendsExports = {};
+var _extends$1 = {
+  get exports(){ return _extendsExports; },
+  set exports(v){ _extendsExports = v; },
+};
+
+(function (module) {
+	function _extends() {
+	  module.exports = _extends = Object.assign ? Object.assign.bind() : function (target) {
+	    for (var i = 1; i < arguments.length; i++) {
+	      var source = arguments[i];
+	      for (var key in source) {
+	        if (Object.prototype.hasOwnProperty.call(source, key)) {
+	          target[key] = source[key];
+	        }
+	      }
+	    }
+	    return target;
+	  }, module.exports.__esModule = true, module.exports["default"] = module.exports;
+	  return _extends.apply(this, arguments);
+	}
+	module.exports = _extends, module.exports.__esModule = true, module.exports["default"] = module.exports;
+} (_extends$1));
+
+var _extends = /*@__PURE__*/getDefaultExportFromCjs(_extendsExports);
 
 var slicedToArrayExports = {};
 var slicedToArray = {
@@ -157,56 +196,6 @@ var nonIterableRest = {
 } (slicedToArray));
 
 var _slicedToArray = /*@__PURE__*/getDefaultExportFromCjs(slicedToArrayExports);
-
-var objectWithoutPropertiesExports = {};
-var objectWithoutProperties = {
-  get exports(){ return objectWithoutPropertiesExports; },
-  set exports(v){ objectWithoutPropertiesExports = v; },
-};
-
-var objectWithoutPropertiesLooseExports = {};
-var objectWithoutPropertiesLoose = {
-  get exports(){ return objectWithoutPropertiesLooseExports; },
-  set exports(v){ objectWithoutPropertiesLooseExports = v; },
-};
-
-(function (module) {
-	function _objectWithoutPropertiesLoose(source, excluded) {
-	  if (source == null) return {};
-	  var target = {};
-	  var sourceKeys = Object.keys(source);
-	  var key, i;
-	  for (i = 0; i < sourceKeys.length; i++) {
-	    key = sourceKeys[i];
-	    if (excluded.indexOf(key) >= 0) continue;
-	    target[key] = source[key];
-	  }
-	  return target;
-	}
-	module.exports = _objectWithoutPropertiesLoose, module.exports.__esModule = true, module.exports["default"] = module.exports;
-} (objectWithoutPropertiesLoose));
-
-(function (module) {
-	var objectWithoutPropertiesLoose = objectWithoutPropertiesLooseExports;
-	function _objectWithoutProperties(source, excluded) {
-	  if (source == null) return {};
-	  var target = objectWithoutPropertiesLoose(source, excluded);
-	  var key, i;
-	  if (Object.getOwnPropertySymbols) {
-	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
-	    for (i = 0; i < sourceSymbolKeys.length; i++) {
-	      key = sourceSymbolKeys[i];
-	      if (excluded.indexOf(key) >= 0) continue;
-	      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
-	      target[key] = source[key];
-	    }
-	  }
-	  return target;
-	}
-	module.exports = _objectWithoutProperties, module.exports.__esModule = true, module.exports["default"] = module.exports;
-} (objectWithoutProperties));
-
-var _objectWithoutProperties = /*@__PURE__*/getDefaultExportFromCjs(objectWithoutPropertiesExports);
 
 var setPrototypeOfExports = {};
 var setPrototypeOf = {
@@ -8382,7 +8371,7 @@ var Store = /*#__PURE__*/function () {
    *
    * @param {string} type the model type
    * @param {object|Array} props the properties to use
-   * @param {object} options currently supports `autoGenerated`
+   * @param {object} options currently supports `skipInitialization`
    * @returns {object|Array} the new record or records
    */
   _createClass__default["default"](Store, [{
@@ -8390,7 +8379,7 @@ var Store = /*#__PURE__*/function () {
     value: function add(type) {
       var _this = this;
       var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      var options = arguments.length > 2 ? arguments[2] : undefined;
       if (props.constructor.name === 'Array') {
         return props.map(function (model) {
           return _this.add(type, model);
@@ -8402,7 +8391,7 @@ var Store = /*#__PURE__*/function () {
           type: type,
           id: id,
           attributes: attributes
-        });
+        }, options);
 
         // set separately to get inverses
         this.pauseSnapshots = true;
@@ -8414,11 +8403,6 @@ var Store = /*#__PURE__*/function () {
         });
         this.pauseSnapshots = false;
         this.data[type].records.set(id, record);
-
-        // autogenerated if from an inverse relationship
-        if (!options.autoGenerated && !record.isNew) {
-          this.data[type].persistedIds.add(id);
-        }
         return record;
       }
     }
@@ -8582,7 +8566,6 @@ var Store = /*#__PURE__*/function () {
     key: "remove",
     value: function remove(type, id) {
       this.data[type].records.delete(String(id));
-      this.data[type].persistedIds.delete(String(id));
     }
 
     /**
@@ -8660,7 +8643,7 @@ var Store = /*#__PURE__*/function () {
               case 9:
                 response = _context.sent;
                 if (!(response.status === 200)) {
-                  _context.next = 24;
+                  _context.next = 23;
                   break;
                 }
                 _context.next = 13;
@@ -8674,17 +8657,16 @@ var Store = /*#__PURE__*/function () {
                   this.createOrUpdateModelsFromData(included);
                 }
                 this.data[type].cache.set(url, [record.id]);
-                this.data[type].persistedIds.add(record.id);
                 this.deleteLoadingState(state);
                 return _context.abrupt("return", record);
-              case 24:
+              case 23:
                 this.deleteLoadingState(state);
-                _context.next = 27;
+                _context.next = 26;
                 return parseErrors(response, this.errorMessages);
-              case 27:
+              case 26:
                 errors = _context.sent;
                 throw new Error(JSON.stringify(errors));
-              case 29:
+              case 28:
               case "end":
                 return _context.stop();
             }
@@ -8804,8 +8786,9 @@ var Store = /*#__PURE__*/function () {
       var _findMany = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee2(type, ids) {
         var _this3 = this;
         var options,
+          existingRecords,
+          existingIds,
           idsToQuery,
-          persistedIds,
           _options$queryParams2,
           queryParams,
           queryTag,
@@ -8817,23 +8800,26 @@ var Store = /*#__PURE__*/function () {
             switch (_context2.prev = _context2.next) {
               case 0:
                 options = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : {};
-                idsToQuery = _toConsumableArray__default["default"](new Set(ids)).map(String); // TODO: There is a case where the record has been added from an inverse
-                // but we would like to re-query from the server for "real" data
-                persistedIds = this.data[type].persistedIds;
-                idsToQuery = idsToQuery.filter(function (id) {
-                  return !persistedIds.has(id);
-                });
-                if (!(idsToQuery.length === 0)) {
-                  _context2.next = 6;
+                ids = _toConsumableArray__default["default"](new Set(ids)).map(String);
+                existingRecords = this.getMany(type, ids, options);
+                if (!(ids.length === existingRecords.length)) {
+                  _context2.next = 5;
                   break;
                 }
-                return _context2.abrupt("return", this.getMany(type, ids));
-              case 6:
+                return _context2.abrupt("return", existingRecords);
+              case 5:
+                existingIds = existingRecords.map(function (_ref4) {
+                  var id = _ref4.id;
+                  return id;
+                });
+                idsToQuery = ids.filter(function (id) {
+                  return !existingIds.includes(id);
+                });
                 _options$queryParams2 = options.queryParams, queryParams = _options$queryParams2 === void 0 ? {} : _options$queryParams2, queryTag = options.queryTag;
                 queryParams.filter = queryParams.filter || {};
                 baseUrl = this.fetchUrl(type, queryParams);
                 idQueries = deriveIdQueryStrings(idsToQuery, baseUrl);
-                _context2.next = 12;
+                _context2.next = 13;
                 return Promise.all(idQueries.map(function (queryIds) {
                   queryParams.filter.ids = queryIds;
                   return _this3.fetchAll(type, {
@@ -8841,9 +8827,9 @@ var Store = /*#__PURE__*/function () {
                     queryTag: queryTag
                   });
                 }));
-              case 12:
-                return _context2.abrupt("return", this.getMany(type, ids));
               case 13:
+                return _context2.abrupt("return", this.getMany(type, ids));
+              case 14:
               case "end":
                 return _context2.stop();
             }
@@ -8888,7 +8874,9 @@ var Store = /*#__PURE__*/function () {
       if (queryParams) {
         return this.getCachedRecords(type, queryParams);
       } else {
-        return this.getRecords(type);
+        return this.getRecords(type).filter(function (record) {
+          return record.initialized;
+        });
       }
     }
 
@@ -8910,11 +8898,11 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "setLoadingState",
-    value: function setLoadingState(_ref4) {
-      var url = _ref4.url,
-        type = _ref4.type,
-        queryParams = _ref4.queryParams,
-        queryTag = _ref4.queryTag;
+    value: function setLoadingState(_ref5) {
+      var url = _ref5.url,
+        type = _ref5.type,
+        queryParams = _ref5.queryParams,
+        queryTag = _ref5.queryTag;
       queryTag = queryTag || type;
       var loadingStateInfo = {
         url: url,
@@ -9014,12 +9002,11 @@ var Store = /*#__PURE__*/function () {
                     _this4.createOrUpdateModelsFromData(included);
                   }
                   records = _this4.createOrUpdateModelsFromData(data);
-                  var recordIds = records.map(function (_ref5) {
-                    var id = _ref5.id;
+                  var recordIds = records.map(function (_ref6) {
+                    var id = _ref6.id;
                     return id;
                   });
                   _this4.data[type].cache.set(url, recordIds);
-                  _this4.data[type].persistedIds = new Set([].concat(_toConsumableArray__default["default"](recordIds), _toConsumableArray__default["default"](_this4.data[type].persistedIds)));
                   _this4.deleteLoadingState(state);
                 });
                 if (meta) {
@@ -9081,36 +9068,15 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "findAll",
-    value: function () {
-      var _findAll = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee4(type, options) {
-        var records;
-        return _regeneratorRuntime__default["default"].wrap(function _callee4$(_context4) {
-          while (1) {
-            switch (_context4.prev = _context4.next) {
-              case 0:
-                records = (options || this.data[type].persistedIds.size > 0) && this.getAll(type, options);
-                if (!((records === null || records === void 0 ? void 0 : records.length) > 0)) {
-                  _context4.next = 5;
-                  break;
-                }
-                return _context4.abrupt("return", records);
-              case 5:
-                _context4.next = 7;
-                return this.fetchAll(type, options);
-              case 7:
-                return _context4.abrupt("return", this.getAll(type, options));
-              case 8:
-              case "end":
-                return _context4.stop();
-            }
-          }
-        }, _callee4, this);
-      }));
-      function findAll(_x6, _x7) {
-        return _findAll.apply(this, arguments);
+    value: function findAll(type, options) {
+      var records = this.getAll(type, options);
+      if ((records === null || records === void 0 ? void 0 : records.length) > 0) {
+        return Promise.resolve(records);
+      } else {
+        return this.fetchAll(type, options);
       }
-      return findAll;
-    }()
+    }
+
     /**
      * Clears the store of a given type, or clears all if no type given
      *
@@ -9125,14 +9091,13 @@ var Store = /*#__PURE__*/function () {
     key: "reset",
     value: function reset(type) {
       var _this5 = this;
-      var types = type ? [type] : this.models.map(function (_ref6) {
-        var type = _ref6.type;
+      var types = type ? [type] : this.models.map(function (_ref7) {
+        var type = _ref7.type;
         return type;
       });
       types.forEach(function (type) {
         _this5.data[type] = {
           records: mobx.observable.map(),
-          persistedIds: mobx.observable.set(),
           cache: mobx.observable.map(),
           meta: mobx.observable.map()
         };
@@ -9165,18 +9130,18 @@ var Store = /*#__PURE__*/function () {
      */
   }, {
     key: "initializeNetworkConfiguration",
-    value: function initializeNetworkConfiguration(_ref7) {
-      var _ref7$baseUrl = _ref7.baseUrl,
-        baseUrl = _ref7$baseUrl === void 0 ? '' : _ref7$baseUrl,
-        _ref7$defaultFetchOpt = _ref7.defaultFetchOptions,
-        defaultFetchOptions = _ref7$defaultFetchOpt === void 0 ? {} : _ref7$defaultFetchOpt,
-        _ref7$headersOfIntere = _ref7.headersOfInterest,
-        headersOfInterest = _ref7$headersOfIntere === void 0 ? [] : _ref7$headersOfIntere,
-        _ref7$retryOptions = _ref7.retryOptions,
-        retryOptions = _ref7$retryOptions === void 0 ? {
+    value: function initializeNetworkConfiguration(_ref8) {
+      var _ref8$baseUrl = _ref8.baseUrl,
+        baseUrl = _ref8$baseUrl === void 0 ? '' : _ref8$baseUrl,
+        _ref8$defaultFetchOpt = _ref8.defaultFetchOptions,
+        defaultFetchOptions = _ref8$defaultFetchOpt === void 0 ? {} : _ref8$defaultFetchOpt,
+        _ref8$headersOfIntere = _ref8.headersOfInterest,
+        headersOfInterest = _ref8$headersOfIntere === void 0 ? [] : _ref8$headersOfIntere,
+        _ref8$retryOptions = _ref8.retryOptions,
+        retryOptions = _ref8$retryOptions === void 0 ? {
           attempts: 1,
           delay: 0
-        } : _ref7$retryOptions;
+        } : _ref8$retryOptions;
       this.baseUrl = baseUrl;
       this.defaultFetchOptions = defaultFetchOptions;
       this.headersOfInterest = headersOfInterest;
@@ -9220,7 +9185,7 @@ var Store = /*#__PURE__*/function () {
   }, {
     key: "fetch",
     value: function () {
-      var _fetch = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee5(url) {
+      var _fetch = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee4(url) {
         var _this6 = this;
         var options,
           defaultFetchOptions,
@@ -9230,19 +9195,19 @@ var Store = /*#__PURE__*/function () {
           attempts,
           delay,
           response,
-          _args5 = arguments;
-        return _regeneratorRuntime__default["default"].wrap(function _callee5$(_context5) {
+          _args4 = arguments;
+        return _regeneratorRuntime__default["default"].wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
-                options = _args5.length > 1 && _args5[1] !== undefined ? _args5[1] : {};
+                options = _args4.length > 1 && _args4[1] !== undefined ? _args4[1] : {};
                 defaultFetchOptions = this.defaultFetchOptions, headersOfInterest = this.headersOfInterest, retryOptions = this.retryOptions;
                 fetchOptions = _objectSpread$3(_objectSpread$3({}, defaultFetchOptions), options);
                 attempts = retryOptions.attempts, delay = retryOptions.delay;
-                _context5.next = 6;
+                _context4.next = 6;
                 return fetchWithRetry(url, fetchOptions, attempts, delay);
               case 6:
-                response = _context5.sent;
+                response = _context4.sent;
                 if (headersOfInterest) {
                   mobx.runInAction(function () {
                     headersOfInterest.forEach(function (header) {
@@ -9252,15 +9217,15 @@ var Store = /*#__PURE__*/function () {
                     });
                   });
                 }
-                return _context5.abrupt("return", response);
+                return _context4.abrupt("return", response);
               case 9:
               case "end":
-                return _context5.stop();
+                return _context4.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee4, this);
       }));
-      function fetch(_x8) {
+      function fetch(_x6) {
         return _fetch.apply(this, arguments);
       }
       return fetch;
@@ -9445,10 +9410,15 @@ var Store = /*#__PURE__*/function () {
         relationships = _data$relationships === void 0 ? {} : _data$relationships;
       mobx.runInAction(function () {
         record.id = String(id);
-        Object.entries(attributes).forEach(function (_ref8) {
-          var _ref9 = _slicedToArray(_ref8, 2),
-            key = _ref9[0],
-            value = _ref9[1];
+
+        // records that are created as inverses are not initialized
+        if (!record.initialized) {
+          record.initialize(data);
+        }
+        Object.entries(attributes).forEach(function (_ref9) {
+          var _ref10 = _slicedToArray(_ref9, 2),
+            key = _ref10[0],
+            value = _ref10[1];
           record[key] = value;
         });
         Object.keys(relationships).forEach(function (relationshipName) {
@@ -9493,11 +9463,12 @@ var Store = /*#__PURE__*/function () {
      * Helper to create a new model
      *
      * @param {object} data id, type, attributes and relationships
+     * @param {object} options currently supports `skipInitialization`
      * @returns {object} model instance
      */
   }, {
     key: "createModelFromData",
-    value: function createModelFromData(data) {
+    value: function createModelFromData(data, options) {
       var id = data.id,
         type = data.type,
         _data$attributes2 = data.attributes,
@@ -9512,7 +9483,7 @@ var Store = /*#__PURE__*/function () {
       return new ModelKlass(_objectSpread$3({
         id: id,
         relationships: relationships
-      }, attributes), store);
+      }, attributes), store, options);
     }
 
     /**
@@ -9534,28 +9505,28 @@ var Store = /*#__PURE__*/function () {
         record.isInFlight = true;
       });
       return promise.then( /*#__PURE__*/function () {
-        var _ref10 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee6(response) {
+        var _ref11 = _asyncToGenerator__default["default"]( /*#__PURE__*/_regeneratorRuntime__default["default"].mark(function _callee5(response) {
           var status, json, data, included, errors;
-          return _regeneratorRuntime__default["default"].wrap(function _callee6$(_context6) {
+          return _regeneratorRuntime__default["default"].wrap(function _callee5$(_context5) {
             while (1) {
-              switch (_context6.prev = _context6.next) {
+              switch (_context5.prev = _context5.next) {
                 case 0:
                   status = response.status;
                   recordsArray.forEach(function (record) {
                     record.isInFlight = false;
                   });
                   if (!(status === 200 || status === 201)) {
-                    _context6.next = 15;
+                    _context5.next = 15;
                     break;
                   }
-                  _context6.next = 5;
+                  _context5.next = 5;
                   return response.json();
                 case 5:
-                  json = _context6.sent;
+                  json = _context5.sent;
                   data = Array.isArray(json.data) ? json.data : [json.data];
                   included = json.included;
                   if (!(data.length !== recordsArray.length)) {
-                    _context6.next = 10;
+                    _context5.next = 10;
                     break;
                   }
                   throw new Error('Invariant violated: API response data and records to update do not match');
@@ -9569,12 +9540,12 @@ var Store = /*#__PURE__*/function () {
 
                   // on success, return the original record(s).
                   // again - this may be a single record so preserve the structure
-                  return _context6.abrupt("return", records);
+                  return _context5.abrupt("return", records);
                 case 15:
-                  _context6.next = 17;
+                  _context5.next = 17;
                   return parseErrors(response, _this10.errorMessages);
                 case 17:
-                  errors = _context6.sent;
+                  errors = _context5.sent;
                   mobx.runInAction(function () {
                     errors.forEach(function (error) {
                       var _parseErrorPointer = parseErrorPointer(error),
@@ -9591,13 +9562,13 @@ var Store = /*#__PURE__*/function () {
                   throw new Error(JSON.stringify(errors));
                 case 20:
                 case "end":
-                  return _context6.stop();
+                  return _context5.stop();
               }
             }
-          }, _callee6);
+          }, _callee5);
         }));
-        return function (_x9) {
-          return _ref10.apply(this, arguments);
+        return function (_x7) {
+          return _ref11.apply(this, arguments);
         };
       }(), function (error) {
         // TODO: Handle error states correctly, including handling errors for multiple targets
@@ -9611,6 +9582,24 @@ var Store = /*#__PURE__*/function () {
   }]);
   return Store;
 }();
+
+var assertThisInitializedExports = {};
+var assertThisInitialized = {
+  get exports(){ return assertThisInitializedExports; },
+  set exports(v){ assertThisInitializedExports = v; },
+};
+
+(function (module) {
+	function _assertThisInitialized(self) {
+	  if (self === void 0) {
+	    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	  }
+	  return self;
+	}
+	module.exports = _assertThisInitialized, module.exports.__esModule = true, module.exports["default"] = module.exports;
+} (assertThisInitialized));
+
+var _assertThisInitialized = /*@__PURE__*/getDefaultExportFromCjs(assertThisInitializedExports);
 
 var _Symbol$species;
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf__default["default"](Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf__default["default"](this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn__default["default"](this, result); }; }
@@ -9919,7 +9908,7 @@ var coerceDataToExistingRecord = mobx.action(function (store, record) {
     record = store.getOne(type, id) || store.add(type, {
       id: id
     }, {
-      autoGenerated: true
+      skipInitialization: true
     });
   }
   return record;
@@ -9944,23 +9933,23 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
     var _array = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
     _classCallCheck__default["default"](this, RelatedRecordsArray);
     _this = _super.call.apply(_super, [this].concat(_toConsumableArray__default["default"](_array)));
-    _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "add", function (relatedRecord) {
-      var _assertThisInitialize = _assertThisInitialized__default["default"](_this),
+    _defineProperty__default["default"](_assertThisInitialized(_this), "add", function (relatedRecord) {
+      var _assertThisInitialize = _assertThisInitialized(_this),
         inverse = _assertThisInitialize.inverse,
         record = _assertThisInitialize.record,
         property = _assertThisInitialize.property;
       return addRelatedRecord(property, record, relatedRecord, inverse);
     });
-    _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "remove", function (relatedRecord) {
-      var _assertThisInitialize2 = _assertThisInitialized__default["default"](_this),
+    _defineProperty__default["default"](_assertThisInitialized(_this), "remove", function (relatedRecord) {
+      var _assertThisInitialize2 = _assertThisInitialized(_this),
         inverse = _assertThisInitialize2.inverse,
         record = _assertThisInitialize2.record,
         property = _assertThisInitialize2.property;
       return removeRelatedRecord(property, record, relatedRecord, inverse);
     });
-    _defineProperty__default["default"](_assertThisInitialized__default["default"](_this), "replace", function () {
+    _defineProperty__default["default"](_assertThisInitialized(_this), "replace", function () {
       var array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-      var _assertThisInitialize3 = _assertThisInitialized__default["default"](_this),
+      var _assertThisInitialize3 = _assertThisInitialized(_this),
         inverse = _assertThisInitialize3.inverse,
         record = _assertThisInitialize3.record,
         property = _assertThisInitialize3.property,
@@ -10020,7 +10009,6 @@ var RelatedRecordsArray = /*#__PURE__*/function (_Array) {
   return RelatedRecordsArray;
 }( /*#__PURE__*/_wrapNativeSuper__default["default"](Array));
 
-var _excluded$1 = ["id", "relationships"];
 function ownKeys$2(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread$2(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$2(Object(source), !0).forEach(function (key) { _defineProperty__default["default"](target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$2(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
@@ -10116,38 +10104,35 @@ var Model = /*#__PURE__*/function () {
    *
    * @param {object} initialProperties attributes and relationships that will be set
    * @param {object} store the store that will define relationships
+   * @param {object} options supports `skipInitialization`
    */
   function Model() {
     var initialProperties = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var store = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Store({
       models: [this.constructor]
     });
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
     _classCallCheck__default["default"](this, Model);
+    _defineProperty__default["default"](this, "initialized", false);
     _defineProperty__default["default"](this, "id", void 0);
     _defineProperty__default["default"](this, "relationships", {});
     _defineProperty__default["default"](this, "isInFlight", false);
     _defineProperty__default["default"](this, "errors", {});
     _defineProperty__default["default"](this, "_snapshots", []);
     var id = initialProperties.id,
-      relationships = initialProperties.relationships,
-      attributes = _objectWithoutProperties(initialProperties, _excluded$1);
+      relationships = initialProperties.relationships;
     this.store = store;
     this.id = id != null ? String(id) : id;
     this.relationships = relationships;
-    mobx.makeObservable(this, mobxAnnotations);
-    this.initializeAttributes(attributes);
-    this.initializeRelationships();
-    this.takeSnapshot({
-      persisted: !this.isNew
-    });
+    if (!options.skipInitialization) {
+      this.initialize(initialProperties);
+    }
   }
 
   /**
-   * The type of the model. Defined on the class. Defaults to the underscored version of the class name
-   * (eg 'calendar_events').
+   * True if model attributes and relationships have been initialized
    *
-   * @type {string}
-   * @static
+   * @type {boolean}
    */
   _createClass__default["default"](Model, [{
     key: "isDirty",
@@ -10184,7 +10169,7 @@ var Model = /*#__PURE__*/function () {
      * @type {boolean}
      */
     function get() {
-      return this.dirtyAttributes.length > 0 || this.dirtyRelationships.size > 0;
+      return this.dirtyAttributes.size > 0 || this.dirtyRelationships.size > 0;
     }
 
     /**
@@ -10201,12 +10186,16 @@ var Model = /*#__PURE__*/function () {
      * => Set('title', 'options.variety')
      *
      * @type {Set}
+     * @readonly
      */
   }, {
     key: "dirtyAttributes",
     get: function get() {
       var _this = this;
-      return Array.from(Object.keys(this.attributes).reduce(function (dirtyAccumulator, attr) {
+      if (this._snapshots.length === 0) {
+        return [];
+      }
+      return Object.keys(this.attributes).reduce(function (dirtyAccumulator, attr) {
         var currentValue = _this.attributes[attr];
         var previousValue = _this.previousSnapshot.attributes[attr];
         if (isObject_1(currentValue)) {
@@ -10219,7 +10208,7 @@ var Model = /*#__PURE__*/function () {
           dirtyAccumulator.add(attr);
         }
         return dirtyAccumulator;
-      }, new Set()));
+      }, new Set());
     }
 
     /**
@@ -10314,14 +10303,32 @@ var Model = /*#__PURE__*/function () {
      * @default false
      */
   }, {
-    key: "initializeAttributes",
+    key: "initialize",
     value:
+    /**
+     * Initializes observable attributes and relationships
+     *
+     * @param {object} initialProperties attributes
+     */
+    function initialize(initialProperties) {
+      var attributes = _extends({}, (_objectDestructuringEmpty(initialProperties), initialProperties));
+      mobx.makeObservable(this, mobxAnnotations);
+      this.initializeAttributes(attributes);
+      this.initializeRelationships();
+      this.takeSnapshot({
+        persisted: !this.isNew
+      });
+      this.initialized = true;
+    }
+
     /**
      * Sets initial attribute properties
      *
      * @param {object} overrides data that will be set over defaults
      */
-    function initializeAttributes(overrides) {
+  }, {
+    key: "initializeAttributes",
+    value: function initializeAttributes(overrides) {
       var attributeDefinitions = this.attributeDefinitions;
       var attributes = Object.keys(attributeDefinitions).reduce(function (object, attributeName) {
         object[attributeName] = overrides[attributeName] === undefined ? attributeDefinitions[attributeName].defaultValue : overrides[attributeName];
@@ -10421,7 +10428,7 @@ var Model = /*#__PURE__*/function () {
               case 4:
                 queryParams = options.queryParams, relationships = options.relationships, attributes = options.attributes;
                 constructor = this.constructor, id = this.id, isNew = this.isNew, dirtyRelationships = this.dirtyRelationships, dirtyAttributes = this.dirtyAttributes;
-                hasAttributesToSave = dirtyAttributes.length > 0;
+                hasAttributesToSave = dirtyAttributes.size > 0;
                 hasRelationshipsToSave = relationships && dirtyRelationships.size > 0;
                 if (!(!isNew && !hasAttributesToSave && !hasRelationshipsToSave)) {
                   _context.next = 10;
@@ -10655,7 +10662,7 @@ var Model = /*#__PURE__*/function () {
     key: "previousSnapshot",
     get: function get() {
       var length = this._snapshots.length;
-      if (length === 0) throw new Error('Invariant violated: model has no snapshots');
+      // if (length === 0) throw new Error('Invariant violated: model has no snapshots')
       return this._snapshots[length - 1];
     }
 
@@ -10936,6 +10943,56 @@ var Model = /*#__PURE__*/function () {
 _defineProperty__default["default"](Model, "type", '');
 _defineProperty__default["default"](Model, "endpoint", '');
 var Model$1 = Model;
+
+var objectWithoutPropertiesExports = {};
+var objectWithoutProperties = {
+  get exports(){ return objectWithoutPropertiesExports; },
+  set exports(v){ objectWithoutPropertiesExports = v; },
+};
+
+var objectWithoutPropertiesLooseExports = {};
+var objectWithoutPropertiesLoose = {
+  get exports(){ return objectWithoutPropertiesLooseExports; },
+  set exports(v){ objectWithoutPropertiesLooseExports = v; },
+};
+
+(function (module) {
+	function _objectWithoutPropertiesLoose(source, excluded) {
+	  if (source == null) return {};
+	  var target = {};
+	  var sourceKeys = Object.keys(source);
+	  var key, i;
+	  for (i = 0; i < sourceKeys.length; i++) {
+	    key = sourceKeys[i];
+	    if (excluded.indexOf(key) >= 0) continue;
+	    target[key] = source[key];
+	  }
+	  return target;
+	}
+	module.exports = _objectWithoutPropertiesLoose, module.exports.__esModule = true, module.exports["default"] = module.exports;
+} (objectWithoutPropertiesLoose));
+
+(function (module) {
+	var objectWithoutPropertiesLoose = objectWithoutPropertiesLooseExports;
+	function _objectWithoutProperties(source, excluded) {
+	  if (source == null) return {};
+	  var target = objectWithoutPropertiesLoose(source, excluded);
+	  var key, i;
+	  if (Object.getOwnPropertySymbols) {
+	    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+	    for (i = 0; i < sourceSymbolKeys.length; i++) {
+	      key = sourceSymbolKeys[i];
+	      if (excluded.indexOf(key) >= 0) continue;
+	      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+	      target[key] = source[key];
+	    }
+	  }
+	  return target;
+	}
+	module.exports = _objectWithoutProperties, module.exports.__esModule = true, module.exports["default"] = module.exports;
+} (objectWithoutProperties));
+
+var _objectWithoutProperties = /*@__PURE__*/getDefaultExportFromCjs(objectWithoutPropertiesExports);
 
 var baseClone = _baseClone;
 

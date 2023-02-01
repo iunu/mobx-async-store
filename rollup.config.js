@@ -53,7 +53,7 @@ export default [
 			'@babel/runtime/helpers/possibleConstructorReturn',
 			'@babel/runtime/helpers/typeof',
 			'@babel/runtime/regenerator',
-			'@babel/runtime/helpers/assertThisInitialized',
+			'@babel/runtime/helpers/assertThinitialized',
 			'@babel/runtime/helpers/toConsumableArray',
 			'@babel/runtime/helpers/wrapNativeSuper',
 			'uuid'

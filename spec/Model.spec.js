@@ -14,6 +14,7 @@ import {
 import { arrayType, dateType, objectType, stringType, validatesArray, validatesArrayPresence, validatesOptions, validatesPresence, validatesString } from '../src/utils'
 
 const timestamp = new Date(Date.now())
+const blankSet = new Set()
 
 class Note extends Model {
   static type = 'notes'
@@ -855,66 +856,67 @@ describe('Model', () => {
     it('returns an empty array on a new model', () => {
       const todo = store.add('todos', { title: 'Buy Milk' })
       expect(todo.isNew).toBeTruthy()
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyAttributes).toEqual(blankSet)
     })
 
     it('returns a list of paths for attributes that have been mutated since the last snapshot', async () => {
       const todo = new Todo({ title: 'Buy Milk' })
-      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.dirtyAttributes).toEqual(blankSet)
       todo.title = 'Buy Cheese'
-      expect(todo.dirtyAttributes).toHaveLength(1)
-      expect(todo.dirtyAttributes[0]).toEqual('title')
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('title')
     })
 
     it('works on nested attributes', async () => {
       const todo = new Todo({ title: 'Buy Milk', options: { variety: '2%' } })
-      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.dirtyAttributes).toEqual(blankSet)
       todo.options.variety = 'Skim'
-      expect(todo.dirtyAttributes).toHaveLength(1)
-      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('options.variety')
     })
 
     it('tracks sibling changes on nested attributes', async () => {
       const todo = new Todo({ id: '1', title: 'Buy Milk', options: { size: 'Quart', variety: '2%' } })
-      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.dirtyAttributes).toEqual(blankSet)
       todo.options.variety = 'Skim'
-      expect(todo.dirtyAttributes).toHaveLength(1)
-      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('options.variety')
       todo.options.size = 'Gallon'
-      expect(todo.dirtyAttributes).toHaveLength(2)
-      expect(todo.dirtyAttributes.includes('options.variety')).toBe(true)
-      expect(todo.dirtyAttributes.includes('options.size')).toBe(true)
+      expect(todo.dirtyAttributes.size).toEqual(2)
+      expect(todo.dirtyAttributes).toContain('options.variety')
+      expect(todo.dirtyAttributes).toContain('options.size')
       todo.options.variety = '2%'
-      expect(todo.dirtyAttributes).toHaveLength(1)
-      expect(todo.dirtyAttributes[0]).toEqual('options.size')
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('options.size')
     })
 
     it('dirties attributes that didnt exist in the previous snapshot', () => {
       const todo = store.add('todos', { title: 'Buy Milk' })
-      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.dirtyAttributes).toEqual(blankSet)
       expect(todo.previousSnapshot.attributes.options).toEqual({})
       todo.options.variety = 'Coconut'
-      expect(todo.dirtyAttributes).toHaveLength(1)
-      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('options.variety')
     })
 
     it('tracks attributes that dont exist in the current snapshot', () => {
       const todo = store.add('todos', { title: 'Buy Milk', options: { variety: 'Coconut' } })
-      expect(todo.dirtyAttributes).toHaveLength(0)
+      expect(todo.dirtyAttributes).toEqual(blankSet)
       expect(todo.previousSnapshot.attributes.options).toEqual({ variety: 'Coconut' })
       todo.options = {}
-      expect(todo.dirtyAttributes).toHaveLength(1)
-      expect(todo.dirtyAttributes[0]).toEqual('options.variety')
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('options.variety')
     })
 
     it('reverts to empty after changing and then reverting an attribute', async () => {
       const todo = store.add('todos', { id: '11', title: 'Buy Milk' })
 
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyAttributes).toEqual(blankSet)
       todo.title = 'Clean clothes'
-      expect(todo.dirtyAttributes).toEqual(['title'])
+      expect(todo.dirtyAttributes.size).toEqual(1)
+      expect(todo.dirtyAttributes).toContain('title')
       todo.title = 'Buy Milk'
-      expect(todo.dirtyAttributes).toEqual([])
+      expect(todo.dirtyAttributes).toEqual(blankSet)
     })
 
     it('does NOT track attribute changes to the related models', async () => {
@@ -926,8 +928,9 @@ describe('Model', () => {
 
       todo.notes.add(note)
       note.description = 'something different'
-      expect(todo.dirtyAttributes).toEqual([])
-      expect(note.dirtyAttributes).toEqual(['description'])
+      expect(todo.dirtyAttributes).toEqual(blankSet)
+      expect(note.dirtyAttributes.size).toEqual(1)
+      expect(note.dirtyAttributes).toContain('description')
     })
   })
 
@@ -935,13 +938,13 @@ describe('Model', () => {
     it('returns an empty array if no relationships are defined', () => {
       const relationshipless = store.add('relationshipless', { id: '1' })
       expect(relationshipless.relationships).toEqual({})
-      expect(relationshipless.dirtyRelationships).toEqual(new Set())
+      expect(relationshipless.dirtyRelationships).toEqual(blankSet)
     })
 
     it('returns an empty array if the model is new', () => {
       const todo = store.add('todos', { title: 'Buy Milk' })
       expect(todo.isNew).toBeTruthy()
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
     })
 
     it('tracks removed toMany relationships', async () => {
@@ -954,7 +957,7 @@ describe('Model', () => {
       todo.notes.add(note)
       todo.clearSnapshots()
       todo.takeSnapshot()
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
       todo.notes.remove(note)
       expect(todo.dirtyRelationships).toContain('notes')
     })
@@ -969,7 +972,7 @@ describe('Model', () => {
       note.todo = todo
       note.clearSnapshots()
       note.takeSnapshot()
-      expect(note.dirtyRelationships).toEqual(new Set())
+      expect(note.dirtyRelationships).toEqual(blankSet)
       note.todo = null
       expect(note.dirtyRelationships).toContain('todo')
     })
@@ -981,7 +984,7 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
       todo.notes.add(note)
       const { dirtyRelationships } = todo
       expect(dirtyRelationships).toContain('notes')
@@ -994,7 +997,7 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      expect(note.dirtyRelationships).toEqual(new Set())
+      expect(note.dirtyRelationships).toEqual(blankSet)
       note.todo = todo
       expect(note.dirtyRelationships).toContain('todo')
     })
@@ -1011,7 +1014,7 @@ describe('Model', () => {
       note.todo = todo1
 
       note.clearSnapshots()
-      expect(note.dirtyRelationships).toEqual(new Set())
+      expect(note.dirtyRelationships).toEqual(blankSet)
       note.takeSnapshot()
 
       note.todo = todo2
@@ -1031,7 +1034,7 @@ describe('Model', () => {
         description: 'Example description 2'
       })
 
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
       todo.notes = [note2]
       expect(todo.dirtyRelationships).toContain('notes')
     })
@@ -1044,7 +1047,7 @@ describe('Model', () => {
       category.targets.add(todo)
       category.clearSnapshots()
       category.takeSnapshot()
-      expect(category.dirtyRelationships).toEqual(new Set())
+      expect(category.dirtyRelationships).toEqual(blankSet)
 
       category.targets.remove(todo)
       category.targets.add(organization)
@@ -1061,11 +1064,11 @@ describe('Model', () => {
         description: 'Example description'
       })
 
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
       todo.notes.add(note)
       expect(todo.dirtyRelationships).toContain('notes')
       todo.notes.remove(note)
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
     })
 
     it('reverts to empty after removing and then adding back a relationship', async () => {
@@ -1078,11 +1081,11 @@ describe('Model', () => {
       todo.notes.add(note)
       todo.clearSnapshots()
       todo.takeSnapshot()
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
       todo.notes.remove(note)
       expect(todo.dirtyRelationships).toContain('notes')
       todo.notes.add(note)
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
     })
 
     it('does NOT track changes to the related objects themselves', async () => {
@@ -1096,7 +1099,7 @@ describe('Model', () => {
       todo.clearSnapshots()
       todo.takeSnapshot()
       note.description = "everything's changed"
-      expect(todo.dirtyRelationships).toEqual(new Set())
+      expect(todo.dirtyRelationships).toEqual(blankSet)
     })
   })
 

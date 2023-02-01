@@ -115,21 +115,26 @@ class Model {
    *
    * @param {object} initialProperties attributes and relationships that will be set
    * @param {object} store the store that will define relationships
+   * @param {object} options supports `skipInitialization`
    */
-  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] })) {
-    const { id, relationships, ...attributes } = initialProperties
+  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] }), options = {}) {
+    const { id, relationships } = initialProperties
 
     this.store = store
     this.id = id != null ? String(id) : id
     this.relationships = relationships
 
-    makeObservable(this, mobxAnnotations)
-
-    this.initializeAttributes(attributes)
-    this.initializeRelationships()
-
-    this.takeSnapshot({ persisted: !this.isNew })
+    if (!options.skipInitialization) {
+      this.initialize(initialProperties)
+    }
   }
+
+  /**
+   * True if model attributes and relationships have been initialized
+   *
+   * @type {boolean}
+   */
+  initialized = false
 
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -202,7 +207,7 @@ class Model {
    * @type {boolean}
    */
   get isDirty () {
-    return this.dirtyAttributes.length > 0 || this.dirtyRelationships.size > 0
+    return this.dirtyAttributes.size > 0 || this.dirtyRelationships.size > 0
   }
 
   /**
@@ -219,9 +224,12 @@ class Model {
    * => Set('title', 'options.variety')
    *
    * @type {Set}
+   * @readonly
    */
   get dirtyAttributes () {
-    return Array.from(Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
+    if (this._snapshots.length === 0) { return [] }
+
+    return Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
       const currentValue = this.attributes[attr]
       const previousValue = this.previousSnapshot.attributes[attr]
 
@@ -237,7 +245,7 @@ class Model {
       }
 
       return dirtyAccumulator
-    }, new Set()))
+    }, new Set())
   }
 
   /**
@@ -339,6 +347,23 @@ class Model {
   _snapshots = []
 
   /**
+   * Initializes observable attributes and relationships
+   *
+   * @param {object} initialProperties attributes
+   */
+   initialize (initialProperties) {
+    const { ...attributes } = initialProperties
+
+    makeObservable(this, mobxAnnotations)
+
+    this.initializeAttributes(attributes)
+    this.initializeRelationships()
+
+    this.takeSnapshot({ persisted: !this.isNew })
+    this.initialized = true
+  }
+
+  /**
    * Sets initial attribute properties
    *
    * @param {object} overrides data that will be set over defaults
@@ -422,7 +447,7 @@ class Model {
       dirtyAttributes
     } = this
 
-    const hasAttributesToSave = dirtyAttributes.length > 0
+    const hasAttributesToSave = dirtyAttributes.size > 0
     const hasRelationshipsToSave = relationships && dirtyRelationships.size > 0
 
     if (!isNew && !hasAttributesToSave && !hasRelationshipsToSave) {
@@ -600,7 +625,7 @@ class Model {
    */
   get previousSnapshot () {
     const length = this._snapshots.length
-    if (length === 0) throw new Error('Invariant violated: model has no snapshots')
+    // if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
   }
 
