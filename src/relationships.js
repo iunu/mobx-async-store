@@ -161,6 +161,9 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
     if (inverse?.direction === 'toOne') {
       const previousRelatedRecord = record[relationshipName]
       setRelatedRecord(inverse.name, previousRelatedRecord, null, store)
+    } else if (inverse?.direction === 'toMany') {
+      const previousRelatedRecord = record[relationshipName]
+      removeRelatedRecord(inverse.name, previousRelatedRecord, record)
     }
 
     record.relationships[relationshipName] = null

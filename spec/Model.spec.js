@@ -746,6 +746,7 @@ describe('Model', () => {
 
           note.todo = null
           expect(note.todo).toBeFalsy()
+          expect(todo.notes).not.toContain(note)
         })
       })
 

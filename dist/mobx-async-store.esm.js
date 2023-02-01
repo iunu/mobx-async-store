@@ -9783,6 +9783,9 @@ var setRelatedRecord = action(function (relationshipName, record, relatedRecord,
     if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toOne') {
       var _previousRelatedRecord = record[relationshipName];
       setRelatedRecord(inverse.name, _previousRelatedRecord, null, store);
+    } else if ((inverse === null || inverse === void 0 ? void 0 : inverse.direction) === 'toMany') {
+      var _previousRelatedRecord2 = record[relationshipName];
+      removeRelatedRecord(inverse.name, _previousRelatedRecord2, record);
     }
     record.relationships[relationshipName] = null;
   }
