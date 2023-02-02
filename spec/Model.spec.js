@@ -3,7 +3,7 @@ import {
   Store
 } from '../src/main'
 /* global fetch */
-import { autorun, isObservable, runInAction } from 'mobx'
+import { autorun, isObservable, isObservableProp, runInAction } from 'mobx'
 import {
   exampleRelatedToManyIncludedResponse,
   exampleRelatedToManyIncludedWithNoiseResponse,
@@ -294,6 +294,22 @@ describe('Model', () => {
       todo.tags.push('chore')
       expect(todo.tags).toHaveLength(1)
       expect(todo.tags[0]).toEqual('chore')
+    })
+
+    it('initializes observers after skipping', () => {
+      const todo = new Todo({ title: 'Buy Milk' }, new AppStore(), { skipInitialization: true })
+
+      expect(isObservableProp(todo, 'title')).toBe(false)
+      expect(isObservableProp(todo, 'due_at')).toBe(false)
+
+      todo.initialize({ title: 'Do laundry' })
+
+      expect(isObservableProp(todo, 'title')).toBe(true)
+      expect(isObservableProp(todo, 'due_at')).toBe(true)
+
+      todo.title = 'new title'
+
+      expect(todo.dirtyAttributes).toContain('title')
     })
 
     it('attributes are observable', (done) => {
