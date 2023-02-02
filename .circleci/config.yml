@@ -28,7 +28,7 @@ jobs:
           key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
       - run:
           name: Check to make sure documentation coverage has improved
-          command: npm run lint:docs
+          command: yarn lint:docs
 
   eslint:
     docker:
@@ -40,7 +40,7 @@ jobs:
           key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
       - run:
           name: Run Eslint
-          command: node_modules/.bin/eslint src spec
+          command: yarn lint
 
   jest:
     docker:
@@ -52,26 +52,7 @@ jobs:
           key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
       - run:
           name: Run Jest
-          command: node_modules/.bin/jest spec
-
-  verify_docs:
-    docker:
-      - image: cimg/node:16.13.1
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore node_modules from cache
-          key: yarn-dependencies-v1-{{ checksum "yarn.lock" }}
-      - run:
-          name: Check to make sure docs are in correct format
-          command: npm run lint:docs
-      - run:
-          name: Build docs
-          command: yarn docs
-      # TODO: Reenable when jsdoc doesn't change div ids
-      # - run:
-      #     name: Verify docs up-to-date
-      #     command: git diff --exit-code ./docs
+          command: yarn test
 
 workflows:
   version: 2
@@ -82,8 +63,5 @@ workflows:
           requires:
             - yarn_install
       - jest:
-          requires:
-            - yarn_install
-      - verify_docs:
           requires:
             - yarn_install

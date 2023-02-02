@@ -1,6 +1,5 @@
 /* global fetch */
 import { v1 as uuidv1 } from 'uuid'
-import pluralize from 'pluralize'
 import dig from 'lodash/get'
 import flattenDeep from 'lodash/flattenDeep'
 import { toJS } from 'mobx'
@@ -11,18 +10,64 @@ const counter = {}
 export const URL_MAX_LENGTH = 1024
 const ENCODED_COMMA = encodeURIComponent(',')
 
-export const arrayType = (value) => toJS(value)
-export const objectType = (value) => toJS(value)
-export const dateType = (value) => makeDate(value).toISOString()
+/**
+ * Strips observers and returns a plain JS array
+ *
+ * @param {Array} array the array to transform
+ * @returns {Array} the "clean array"
+ */
+export const arrayType = (array) => toJS(array)
+
+/**
+ * Strips observers and returns a plain JS object
+ *
+ * @param {object} object the object to transform
+ * @returns {object} the "clean object"
+ */
+export const objectType = (object) => toJS(object)
+
+/**
+ * Coerces a string or date to a date
+ *
+ * @param {Date|string} date the date to transform
+ * @returns {Date} a date
+ */
+export const dateType = (date) => makeDate(date).toISOString()
+
+/**
+ * Coerces a value to a string
+ *
+ * @param {number|string} value the value to transform
+ * @returns {string} a string
+ */
 export const stringType = (value) => value.toString()
+
+/**
+ * Coerces a value to a number
+ *
+ * @param {number|string} value the value to transform
+ * @returns {number} a number
+ */
 export const numberType = (value) => Number(value)
 
+/**
+ * Increments a counter by 1
+ *
+ * @param {string} key the counter to increment
+ * @returns {number} the current count
+ */
 const incrementor = (key) => () => {
   const count = (counter[key] || 0) + 1
   counter[key] = count
   return count
 }
 
+/**
+ * Decreases a counter by 1
+ *
+ * @param {string} key the counter to decreases
+ * @returns {number} the current count
+ */
 const decrementor = (key) => () => {
   const count = (counter[key] || 0) - 1
   counter[key] = count
@@ -30,25 +75,12 @@ const decrementor = (key) => () => {
 }
 
 /**
- * Singularizes record type
-
- * @param {string} recordType type of record
- * @returns {string}
- */
-export function singularizeType (recordType) {
-  let typeParts = recordType.split('_')
-  let endPart = typeParts[typeParts.length - 1]
-
-  typeParts = typeParts.slice(0, -1)
-  endPart = pluralize.singular(endPart)
-
-  return [...typeParts, endPart].join('_')
-}
-
-/**
  * Build request url from base url, endpoint, query params, and ids.
  *
-
+ * @param {string} baseUrl the base url
+ * @param {string} endpoint the endpoint of the url
+ * @param {object} queryParams query params to add
+ * @param {string} id the id of the the model
  * @returns {string} formatted url string
  */
 export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
@@ -64,6 +96,11 @@ export function requestUrl (baseUrl, endpoint, queryParams = {}, id) {
   return `${baseUrl}/${endpoint}${idForPath}${queryParamString}`
 }
 
+/**
+ * Generates a temporary id to be used for reference in the store
+ *
+ * @returns {string} a uuidv1 string prefixed with `tmp`
+ */
 export function newId () {
   return `tmp-${uuidv1()}`
 }
@@ -73,10 +110,10 @@ export function newId () {
  * already in-flight. Blocked requests will be resolved when the initial request
  * resolves by cloning the response.
  *
-
+ 
  * @param {string} key the unique key for the request
  * @param {Function} fn the function the generates the promise
- * @returns {Promise}
+ * @returns {Promise} the request
  */
 export function combineRacedRequests (key, fn) {
   const incrementBlocked = incrementor(key)
@@ -107,6 +144,15 @@ export function combineRacedRequests (key, fn) {
     )
 }
 
+/**
+ * Implements a retry in case a fetch fails
+ *
+ * @param {string} url the request url
+ * @param {object} fetchOptions headers etc to use for the request
+ * @param {number} attempts number of attempts to try
+ * @param {number} delay time between attempts
+ * @returns {Promise} the fetch
+ */
 export function fetchWithRetry (url, fetchOptions, attempts, delay) {
   const key = JSON.stringify({ url, fetchOptions })
 
@@ -122,9 +168,9 @@ export function fetchWithRetry (url, fetchOptions, attempts, delay) {
 /**
  * convert a value into a date, pass Date or Moment instances thru
  * untouched
-
- * @param {*} value
- * @return {Date|Moment}
+ 
+ * @param {Date|string} value a date-like object
+ * @returns {Date} a date object
  */
 export function makeDate (value) {
   if (value instanceof Date || value._isAMomentObject) return value
@@ -134,11 +180,11 @@ export function makeDate (value) {
 /**
  * recursively walk an object and call the `iteratee` function for
  * each property. returns an array of results of calls to the iteratee.
-
- * @param {*} obj
- * @param {Function} iteratee
- * @param {string} prefix
- * @return Array
+ 
+ * @param {object} obj the object to analyze
+ * @param {Function} iteratee the iterator to use
+ * @param {string} prefix the prefix
+ * @returns {Array} the result of iteratee calls
  */
 export function walk (obj, iteratee, prefix) {
   if (obj != null && typeof obj === 'object') {
@@ -155,10 +201,10 @@ export function walk (obj, iteratee, prefix) {
  * toward object a. object a is walked and compared against values in
  * object b. if a property exists in object b, but not in object a, it
  * will not be counted as a difference.
-
- * @param {object} a
- * @param {object} b
- * @return Array<String>
+ 
+ * @param {object} a the first object
+ * @param {object} b the second object
+ * @returns {string[]} the path to differences
  */
 export function diff (a = {}, b = {}) {
   return flattenDeep(walk(a, (prevValue, path) => {
@@ -176,12 +222,9 @@ export function diff (a = {}, b = {}) {
  * Errors that are returned which contain a status also have their `detail` overridden with
  * values from this configuration.
  *
-
- * @param {object} response
- *   a fetch response
- * @param {object} errorMessages
- *   store configuration of error messages corresponding to HTTP status codes
- * @return Array<Object> An array of JSONAPI errors
+ * @param {object} response  a fetch response
+ * @param {object} errorMessages store configuration of error messages corresponding to HTTP status codes
+ * @returns {object[]} An array of JSONAPI errors
  */
 export async function parseErrors (response, errorMessages) {
   let json = {}
@@ -242,8 +285,7 @@ export async function parseErrors (response, errorMessages) {
  *     key: 'options.foo'
  *   }
  *
-
- * @param {object} error
+ * @param {object} error the error object to parse
  * @returns {object} the matching parts of the pointer
  */
 export function parseErrorPointer (error = {}) {
@@ -260,11 +302,11 @@ export function parseErrorPointer (error = {}) {
 /**
  * Splits an array of ids into a series of strings that can be used to form
  * queries that conform to a max length of URL_MAX_LENGTH. This is to prevent 414 errors.
-
+ *
  * @param {Array} ids an array of ids that will be used in the string
  * @param {string} restOfUrl the additional text URL that will be passed to the server
+ * @returns {string[]} an array of strings of ids
  */
-
 export function deriveIdQueryStrings (ids, restOfUrl = '') {
   const maxLength = URL_MAX_LENGTH - restOfUrl.length - encodeURIComponent('filter[ids]=,,').length
 
@@ -287,15 +329,28 @@ export function deriveIdQueryStrings (ids, restOfUrl = '') {
   return encodedIds.map(decodeURIComponent)
 }
 
-export const isEmptyString = (data) => typeof data === 'string' && data.trim().length === 0
+/**
+ * Returns true if the value is an empty string
+ *
+ * @param {any} value the value to check
+ * @returns {boolean} true if the value is an empty string
+ */
+export const isEmptyString = (value) => typeof value === 'string' && value.trim().length === 0
 
 /**
  * returns `true` as long as the `value` is not `null`, `undefined`, or `''`
- * @method validatePresence
- * @param value
+ *
+ * @function validatePresence
+ * @returns {object} a validation object
  */
-export const validatesPresence = (value) => {
+export const validatesPresence = () => {
   return {
+    /**
+     * Returns `true` if the value is truthy
+     *
+     * @param {any} value the value to check
+     * @returns {boolean} true if the value is present
+     */
     isValid: (value) => value != null && value !== '',
     errors: [{
       key: 'blank',
@@ -304,9 +359,15 @@ export const validatesPresence = (value) => {
   }
 }
 
-export const validatesString = (property) => {
+/**
+ * Is valid if the value is not an empty string
+ *
+ * @param {string} value the value to check
+ * @returns {object} a validation object
+ */
+export const validatesString = (value) => {
   return {
-    isValid: !isEmptyString(property),
+    isValid: !isEmptyString(value),
     errors: [{
       key: 'blank',
       message: "can't be blank"
@@ -314,9 +375,15 @@ export const validatesString = (property) => {
   }
 }
 
-export const validatesArray = (property) => {
+/**
+ * Returns valid if the value is an array
+ *
+ * @param {any} value the value to check
+ * @returns {object} a validation object
+ */
+export const validatesArray = (value) => {
   return {
-    isValid: Array.isArray(property),
+    isValid: Array.isArray(value),
     errors: [{
       key: 'must_be_an_array',
       message: 'must be an array'
@@ -324,9 +391,15 @@ export const validatesArray = (property) => {
   }
 }
 
-export const validatesArrayPresence = (property) => {
+/**
+ * Is valid if the array has at least one object
+ *
+ * @param {Array} array the array to check
+ * @returns {object} a validation object
+ */
+export const validatesArrayPresence = (array) => {
   return {
-    isValid: Array.isArray(property) && property.length > 0,
+    isValid: Array.isArray(array) && array.length > 0,
     errors: [{
       key: 'empty',
       message: 'must have at least one record'
@@ -334,6 +407,13 @@ export const validatesArrayPresence = (property) => {
   }
 }
 
+/**
+ * Valid if target options are not blank
+ *
+ * @param {string} property the options key to check
+ * @param {object} target the object
+ * @returns {object} a validation object
+ */
 export const validatesOptions = (property, target) => {
   const errors = []
 
@@ -359,6 +439,18 @@ export const validatesOptions = (property, target) => {
  * An object with default `parse` and `stringify` functions from qs
  */
 export const QueryString = {
+  /**
+   * Parses a string and returns query params
+   *
+   * @param {string} str the url to parse
+   * @returns {object} a query object
+   */
   parse: (str) => qs.parse(str, { ignoreQueryPrefix: true }),
-  stringify: (str) => qs.stringify(str, { arrayFormat: 'brackets' })
+  /**
+   * Changes an object to a string of query params
+   *
+   * @param {object} params object to stringify
+   * @returns {string} the encoded params
+   */
+  stringify: (params) => qs.stringify(params, { arrayFormat: 'brackets' })
 }

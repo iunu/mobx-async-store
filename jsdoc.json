@@ -3,15 +3,8 @@
     "dictionaries": ["jsdoc", "closure"]
   },
   "source": {
-    "include": [
-      "src/FactoryFarm.js",
-      "src/MockServer.js",
-      "src/Model.js",
-      "src/relationships.js",
-      "src/Store.js",
-      "src/testUtils.js",
-      "src/utils.js"
-    ]
+    "include": ["./src"],
+    "includePattern": ".+\\.ts$"
   },
   "plugins": ["plugins/markdown"],
   "opts": {

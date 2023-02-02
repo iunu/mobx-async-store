@@ -7,3 +7,4 @@ package-lock.json
 /coverage/lcov.info
 .DS_Store
 .idea
+.rollup.cache

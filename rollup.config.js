@@ -1,5 +1,5 @@
 /* eslint-disable no-tabs */
-import babel from 'rollup-plugin-babel'
+import babel from '@rollup/plugin-babel'
 import pkg from './package.json'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
@@ -7,7 +7,7 @@ import commonjs from '@rollup/plugin-commonjs'
 export default [
 	// browser-friendly UMD build
 	// {
-	// 	input: 'src/main.js',
+	// 	input: 'src/main.ts',
 	// 	output: {
 	// 		name: 'artemisData',
 	// 		file: pkg.browser,
@@ -38,7 +38,7 @@ export default [
 	// an array for the `output` option, where we can specify
 	// `file` and `format` for each target)
 	{
-		input: 'src/main.js',
+		input: 'src/main.ts',
 		external: [
 			'@babel/runtime/helpers/applyDecoratedDescriptor',
 			'@babel/runtime/helpers/asyncToGenerator',
@@ -75,7 +75,7 @@ export default [
 				tsconfig: './tsconfig.build.json',
 				declaration: true,
 				declarationDir: 'types',
-				outputToFilesystem: false
+				outputToFilesystem: true
 			})
 		]
 	}

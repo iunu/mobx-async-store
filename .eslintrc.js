@@ -1,20 +1,47 @@
 module.exports = {
-  parser: '@babel/eslint-parser',
+  parser: '@typescript-eslint/parser',
   extends: [
-    'standard',
-    'plugin:react/recommended'
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:import/typescript',
+    'plugin:jsdoc/recommended'
   ],
   rules: {
     'camelcase': 0,
     'indent': 0,
-    'quote-props': [2, 'consistent-as-needed']
+    'quote-props': [2, 'consistent-as-needed'],
+    'jsdoc/require-jsdoc': ['error', {
+      checkGetters: 'no-setter',
+      require: {
+        ArrowFunctionExpression: true,
+        MethodDefinition: true
+      }
+    }],
+    'jsdoc/require-description': 'error',
+    'jsdoc/require-param': 'error',
+    'jsdoc/require-returns-check': 'error'
+    // '@typescript-eslint/explicit-function-return-type': 'warn',
+    // '@typescript-eslint/no-explicit-any': 'error'
   },
+  plugins: [
+    '@typescript-eslint',
+    '@babel',
+    'import',
+    'prettier'
+  ],
   env: {
-    jest: true
+    jest: true,
+    node: true,
+    es6: true,
+    browser: true
   },
   settings: {
-    react: {
-      version: 'detect'
+    'import/resolver': {
+      typescript: {
+        alwaysTryTypes: true,
+        project: './tsconfig.json'
+      }
     }
   }
 }

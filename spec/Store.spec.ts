@@ -1,3 +1,6 @@
+/* eslint-disable jsdoc/require-jsdoc */
+/* global Response */
+
 import {
   MockServer,
   FactoryFarm,
@@ -7,8 +10,6 @@ import {
 import { computed, isObservable, toJS } from 'mobx'
 
 import { stringType, URL_MAX_LENGTH, validatesArrayPresence } from '../src/utils'
-
-/* global fetch Response */
 
 class Tag extends Model {
   static type = 'tags'

@@ -14,5 +14,6 @@
     "jest",
     "**/*.spec.*",
     "**/*.test.*"
-  ]
+  ],
+  "include": ["src/**/*.js", "src/**/*.ts"]
 }

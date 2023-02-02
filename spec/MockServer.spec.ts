@@ -1,4 +1,4 @@
-/* global fetch */
+/* eslint-disable jsdoc/require-jsdoc */
 
 import {
   MockServer,
