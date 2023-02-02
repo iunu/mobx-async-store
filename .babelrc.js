@@ -6,7 +6,8 @@ module.exports = {
         browsers: "ie >= 11"
       }
     }],
-    "@babel/preset-react"
+    "@babel/preset-react",
+    "@babel/preset-typescript"
   ],
   env: {
     test: {

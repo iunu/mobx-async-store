@@ -3,10 +3,11 @@
  * we preserve the top-level object and pass it in to the next round
  * Because objects can have multiple relationships, we do a check of the array to make sure
  * it's not already there.
-
- * @param {object} store
- * @param {object} encodedData the jsonapi document
- * @param {object} topLevel the object with `inlcluded` array
+ *
+ * @param {object} store the data store
+ * @param {object} encodedModel the the model
+ * @param {Array} included data
+ * @param {Array} allEncoded the previously encoded models
  */
 const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel]) => {
   const { relationships } = encodedModel
@@ -42,8 +43,8 @@ const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel])
  *   },
  *   included: []
  * }
-
- * @param {*} modelOrArray the data being encoded
+ *
+ * @param {object|Array} modelOrArray the data being encoded
  * @returns {string} JSON encoded data
  */
 
@@ -82,6 +83,12 @@ export const serverResponse = function (modelOrArray) {
   return JSON.stringify(encodedData)
 }
 
+/**
+ * Encodes a model to a jsonapi document with all relationships
+ *
+ * @param {object} model the model to convert
+ * @returns {object} the jsonapi encoded document
+ */
 const toFullJsonapi = (model) => {
   return model.jsonapi({ relationships: Object.keys(model.relationships) })
 }

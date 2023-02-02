@@ -10,8 +10,8 @@ import Model from './Model'
 export const definitionsByDirection = action((model, direction) => {
   const { relationshipDefinitions = {} } = model
 
-  const definitionEntries = Object.entries(relationshipDefinitions)
-  return definitionEntries.filter(([_, definition]) => definition.direction === direction)
+  const definitionValues = Object.entries(relationshipDefinitions)
+  return definitionValues.filter((definition) => definition[1].direction === direction)
 })
 
 /**

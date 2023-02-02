@@ -63,7 +63,7 @@ describe('fetchWithRetry', () => {
     expect.assertions(1)
 
     fetch.mockReject('network error')
-    await fetchWithRetry(url, fetchOptions, 5, 0).catch((_error) => {
+    await fetchWithRetry(url, fetchOptions, 5, 0).catch(() => {
       expect(fetch.mock.calls.length).toEqual(5)
     })
   })
