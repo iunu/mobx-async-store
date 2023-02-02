@@ -16,7 +16,7 @@ import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 import union from 'lodash/union'
 import Store from './Store'
-import { defineToManyRelationships, defineToOneRelationships } from './relationships'
+import { defineToManyRelationships, defineToOneRelationships, definitionsByDirection } from './relationships'
 import pick from 'lodash/pick'
 
 /**
@@ -28,16 +28,16 @@ import pick from 'lodash/pick'
  * @returns {Array} an array of booleans representing results of validations
  */
 function validateProperties (model, propertyNames, propertyDefinitions) {
-  return propertyNames.map((property) => {
+  return propertyNames.map((propertyName) => {
     if (propertyDefinitions) {
-      const { validator } = propertyDefinitions[property]
+      const { validator } = propertyDefinitions[propertyName]
 
       if (!validator) return true
 
-      const validationResult = validator(model[property], model)
+      const validationResult = validator(model[propertyName], model, propertyName)
 
       if (!validationResult.isValid) {
-        model.errors[property] = validationResult.errors
+        model.errors[propertyName] = validationResult.errors
       }
 
       return validationResult.isValid
@@ -70,7 +70,6 @@ const mobxAnnotations = {
   dirtyAttributes: computed,
   dirtyRelationships: computed,
   hasUnpersistedChanges: computed,
-  isNew: computed,
   snapshot: computed,
   previousSnapshot: computed,
   persistedOrFirstSnapshot: computed,
@@ -84,11 +83,12 @@ const mobxAnnotations = {
   defaultAttributes: computed,
   isInFlight: observable,
   errors: observable,
+  relationships: observable,
   _snapshots: observable,
   initializeAttributes: action,
   initializeRelationships: action,
   rollback: action,
-  rollbackToPersisted: action,
+  undo: action,
   save: action,
   reload: action,
   validate: action,
@@ -115,21 +115,26 @@ class Model {
    *
    * @param {object} initialProperties attributes and relationships that will be set
    * @param {object} store the store that will define relationships
+   * @param {object} options supports `skipInitialization`
    */
-  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] })) {
-    const { id, relationships, ...attributes } = initialProperties
+  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] }), options = {}) {
+    const { id, relationships } = initialProperties
 
     this.store = store
-    this.id = id
+    this.id = id != null ? String(id) : id
     this.relationships = relationships
 
-    makeObservable(this, mobxAnnotations)
-
-    this.initializeAttributes(attributes)
-    this.initializeRelationships()
-
-    this.takeSnapshot({ persisted: !this.isNew })
+    if (!options.skipInitialization) {
+      this.initialize(initialProperties)
+    }
   }
+
+  /**
+   * True if model attributes and relationships have been initialized
+   *
+   * @type {boolean}
+   */
+  initialized = false
 
   /**
    * The type of the model. Defined on the class. Defaults to the underscored version of the class name
@@ -150,6 +155,25 @@ class Model {
    */
 
   static endpoint = ''
+
+  /**
+   * The unique document identifier. Should not change except when persisted.
+   *
+   * @type {string}
+   */
+  id
+
+  /**
+   * The reference to relationships. Is observed and used to provide references to the objects themselves
+   *
+   * todo.relationships
+   * => { tag: { data: { type: 'tags', id: '1' } } }
+   * todo.tag
+   * => Tag with id: '1'
+   *
+   * @type {object}
+   */
+  relationships = {}
 
   /**
    * True if the instance has been modified from its persisted state
@@ -183,7 +207,7 @@ class Model {
    * @type {boolean}
    */
   get isDirty () {
-    return this.dirtyAttributes.length > 0 || this.dirtyRelationships.size > 0
+    return this.dirtyAttributes.size > 0 || this.dirtyRelationships.size > 0
   }
 
   /**
@@ -200,9 +224,12 @@ class Model {
    * => Set('title', 'options.variety')
    *
    * @type {Set}
+   * @readonly
    */
   get dirtyAttributes () {
-    return Array.from(Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
+    if (this._snapshots.length === 0) { return [] }
+
+    return Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
       const currentValue = this.attributes[attr]
       const previousValue = this.previousSnapshot.attributes[attr]
 
@@ -218,7 +245,7 @@ class Model {
       }
 
       return dirtyAccumulator
-    }, new Set()))
+    }, new Set())
   }
 
   /**
@@ -320,6 +347,23 @@ class Model {
   _snapshots = []
 
   /**
+   * Initializes observable attributes and relationships
+   *
+   * @param {object} initialProperties attributes
+   */
+   initialize (initialProperties) {
+    const { ...attributes } = initialProperties
+
+    makeObservable(this, mobxAnnotations)
+
+    this.initializeAttributes(attributes)
+    this.initializeRelationships()
+
+    this.takeSnapshot({ persisted: !this.isNew })
+    this.initialized = true
+  }
+
+  /**
    * Sets initial attribute properties
    *
    * @param {object} overrides data that will be set over defaults
@@ -339,11 +383,10 @@ class Model {
    * Initializes relationships based on the `relationships` hash.
    */
   initializeRelationships () {
-    const { store, relationshipDefinitions = {} } = this
-    const definitionEntries = Object.entries(relationshipDefinitions)
+    const { store } = this
 
-    const toOneDefinitions = definitionEntries.filter(([_, definition]) => definition.direction === 'toOne')
-    const toManyDefinitions = definitionEntries.filter(([_, definition]) => definition.direction === 'toMany')
+    const toOneDefinitions = definitionsByDirection(this, 'toOne')
+    const toManyDefinitions = definitionsByDirection(this, 'toMany')
 
     const toOneRelationships = defineToOneRelationships(this, store, toOneDefinitions)
     const toManyRelationships = defineToManyRelationships(this, store, toManyDefinitions)
@@ -353,7 +396,8 @@ class Model {
   }
 
   /**
-   * restores data to its last snapshot state
+   * restores data to its last persisted state or the oldest snapshot
+   * state if the model was never persisted
    * ```
    * todo = store.find('todos', 5)
    * todo.name
@@ -365,16 +409,16 @@ class Model {
    * ```
    */
   rollback () {
-    this._applySnapshot(this.previousSnapshot)
+    this._applySnapshot(this.persistedOrFirstSnapshot)
+    this.takeSnapshot({ persisted: true })
   }
 
   /**
-   * restores data to its last persisted state or the oldest snapshot
+   * restores data to its last state
    * state if the model was never persisted
    */
-  rollbackToPersisted () {
-    this._applySnapshot(this.persistedOrFirstSnapshot)
-    this.takeSnapshot({ persisted: true })
+  undo () {
+    this._applySnapshot(this.previousSnapshot)
   }
 
   /**
@@ -395,7 +439,20 @@ class Model {
       attributes
     } = options
 
-    const { constructor, id, isNew } = this
+    const {
+      constructor,
+      id,
+      isNew,
+      dirtyRelationships,
+      dirtyAttributes
+    } = this
+
+    const hasAttributesToSave = dirtyAttributes.size > 0
+    const hasRelationshipsToSave = relationships && dirtyRelationships.size > 0
+
+    if (!isNew && !hasAttributesToSave && !hasRelationshipsToSave) {
+      return Promise.resolve(this)
+    }
 
     let requestId = id
     let method = 'PATCH'
@@ -520,7 +577,7 @@ class Model {
           // NOTE: If deleting a record changes other related model
           // You can return then in the delete response
           if (json && json.included) {
-            record.store.createModelsFromData(json.included)
+            record.store.createOrUpdateModelsFromData(json.included)
           }
 
           return record
@@ -568,7 +625,7 @@ class Model {
    */
   get previousSnapshot () {
     const length = this._snapshots.length
-    if (length === 0) throw new Error('Invariant violated: model has no snapshots')
+    // if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
   }
 
@@ -589,10 +646,12 @@ class Model {
    * @param {object} options options to use to set the persisted state
    */
   takeSnapshot (options = {}) {
+    const { store, _snapshots } = this
+    if (store.pauseSnapshots && _snapshots.length > 0) { return }
     const persisted = options.persisted || false
     const properties = cloneDeep(pick(this, ['attributes', 'relationships']))
 
-    this._snapshots.push({
+    _snapshots.push({
       persisted,
       ...properties
     })

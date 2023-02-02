@@ -1,13 +1,12 @@
 import { action, makeObservable, observable, runInAction, toJS } from 'mobx'
 import pick from 'lodash/pick'
-import uniqBy from 'lodash/uniqBy'
 import {
   fetchWithRetry,
-  idOrNewId,
   deriveIdQueryStrings,
   parseErrors,
   parseErrorPointer,
-  requestUrl
+  requestUrl,
+  newId
 } from './utils'
 import cloneDeep from 'lodash/cloneDeep'
 
@@ -19,11 +18,10 @@ const mobxAnnotations = {
   data: observable,
   lastResponseHeaders: observable,
   loadingStates: observable,
+  loadedStates: observable,
   add: action,
   pickAttributes: action,
   pickRelationships: action,
-  addModel: action,
-  addModels: action,
   bulkSave: action,
   _bulkSave: action,
   bulkCreate: action,
@@ -45,10 +43,8 @@ const mobxAnnotations = {
   init: action,
   initializeNetworkConfiguration: action,
   initializeModelIndex: action,
-  initializeObservableDataProperty: action,
   initializeErrorMessages: action,
   fetch: action,
-  getType: action,
   getRecord: action,
   getRecords: action,
   getRecordsById: action,
@@ -116,6 +112,15 @@ class Store {
   loadedStates = new Map()
 
   /**
+   * True if models in the store should stop taking snapshots. This is
+   * useful when updating records without causing records to become
+   * 'dirty', for example when initializing records using `add`
+   *
+   * @type {boolean}
+   */
+  pauseSnapshots = false
+
+  /**
    * Initializer for Store class
    *
    * @param {object} options options to use for initialization
@@ -127,6 +132,10 @@ class Store {
 
   /**
    * Adds an instance or an array of instances to the store.
+   * Adds the model to the type records index
+   * Adds relationships explicitly. This is less efficient than adding via data if
+   * there are also inverse relationships.
+   *
    * ```
    * const todo = store.add('todos', { name: "A good thing to measure" })
    * todo.name
@@ -139,14 +148,30 @@ class Store {
    * ```
    *
    * @param {string} type the model type
-   * @param {object|Array} data the properties to use
+   * @param {object|Array} props the properties to use
+   * @param {object} options currently supports `skipInitialization`
    * @returns {object|Array} the new record or records
    */
-  add (type, data) {
-    if (data.constructor.name === 'Array') {
-      return this.addModels(type, data)
+  add (type, props = {}, options) {
+    if (props.constructor.name === 'Array') {
+      return props.map((model) => this.add(type, model))
     } else {
-      return this.addModel(type, cloneDeep(data))
+      const id = String(props.id || newId())
+
+      const attributes = cloneDeep(this.pickAttributes(props, type))
+
+      const record = this.createModelFromData({ type, id, attributes }, options)
+
+      // set separately to get inverses
+      this.pauseSnapshots = true
+      Object.entries(this.pickRelationships(props, type)).forEach(([key, value]) => {
+        record[key] = value
+      })
+      this.pauseSnapshots = false
+
+      this.data[type].records.set(id, record)
+
+      return record
     }
   }
 
@@ -191,45 +216,6 @@ class Store {
   pickRelationships (properties, type) {
     const definitions = this.getKlass(type).relationshipDefinitions
     return definitions ? pick(properties, Object.keys(definitions)) : {}
-  }
-
-  /**
-   * Adds a model of `type` with properties
-   *
-   * @param {string} type the model type
-   * @param {object} properties the attributes and relationships
-   * @returns {object} Data record
-   */
-  addModel (type, properties) {
-    const id = idOrNewId(properties.id)
-
-    const attributes = this.pickAttributes(properties, type)
-    const relationships = this.pickRelationships(properties, type)
-
-    const serializedRelationships = Object.entries(relationships).reduce((relationshipsData, [relationshipName, data]) => {
-      relationshipsData[relationshipName] = {
-        data: Array.isArray(data) ? data.map((model) => pick(model, ['id', 'type'])) : pick(data, ['id', 'type'])
-      }
-      return relationshipsData
-    }, {})
-
-    const model = this.createModelFromData({ type, id, attributes, relationships: serializedRelationships })
-
-    // Add the model to the type records index
-    this.data[type].records.set(String(model.id), model)
-
-    return model
-  }
-
-  /**
-   * Adds a number of models at once to the store.
-   *
-   * @param {string} type the model type
-   * @param {string} data array of data objects
-   * @returns {Array} array of records
-   */
-  addModels (type, data) {
-    return runInAction(() => data.map((obj) => this.addModel(type, obj)))
   }
 
   /**
@@ -382,6 +368,7 @@ class Store {
       }
 
       this.data[type].cache.set(url, [record.id])
+
       this.deleteLoadingState(state)
       return record
     } else {
@@ -477,34 +464,30 @@ class Store {
   * @param {object} options { queryParams }
   * @returns {Promise} a promise that will resolve an array of records
   */
-  findMany (type, ids, options = {}) {
-    let idsToQuery = [...new Set(ids)].map(String)
-    const recordsInStore = this.getAll(type, options).filter((record) =>
-      idsToQuery.includes(String(record.id))
-    )
+  async findMany (type, ids, options = {}) {
+    ids = [...new Set(ids)].map(String)
+    const existingRecords = this.getMany(type, ids, options)
 
-    if (recordsInStore.length === idsToQuery.length) {
-      return recordsInStore
+    if (ids.length === existingRecords.length) {
+      return existingRecords
     }
 
-    const recordIdsInStore = recordsInStore.map(({ id }) => String(id))
-    idsToQuery = idsToQuery.filter((id) => !recordIdsInStore.includes(id))
+    const existingIds = existingRecords.map(({ id }) => id)
+    const idsToQuery = ids.filter((id) => !existingIds.includes(id))
 
     const { queryParams = {}, queryTag } = options
     queryParams.filter = queryParams.filter || {}
     const baseUrl = this.fetchUrl(type, queryParams)
     const idQueries = deriveIdQueryStrings(idsToQuery, baseUrl)
 
-    const query = Promise.all(
+    await Promise.all(
       idQueries.map((queryIds) => {
         queryParams.filter.ids = queryIds
         return this.fetchAll(type, { queryParams, queryTag })
       })
     )
 
-    return query.then((recordsFromServer) =>
-      recordsInStore.concat(...recordsFromServer)
-    )
+    return this.getMany(type, ids)
   }
 
   /**
@@ -535,7 +518,7 @@ class Store {
     if (queryParams) {
       return this.getCachedRecords(type, queryParams)
     } else {
-      return this.getRecords(type)
+      return this.getRecords(type).filter((record) => record.initialized)
     }
   }
 
@@ -614,7 +597,6 @@ class Store {
     const response = await this.fetch(url, { method: 'GET' })
 
     if (response.status === 200) {
-      this.data[type].cache.set(url, [])
       const { included, data, meta } = await response.json()
 
       let records
@@ -623,18 +605,15 @@ class Store {
           this.createOrUpdateModelsFromData(included)
         }
 
-        records = data.map((document) => {
-          const record = this.createModelFromData(document)
-          const cachedIds = this.data[type].cache.get(url)
-          this.data[type].cache.set(url, [...cachedIds, document.id])
-          this.data[type].records.set(String(document.id), record)
-          return record
-        })
+        records = this.createOrUpdateModelsFromData(data)
+        const recordIds = records.map(({ id }) => id)
+        this.data[type].cache.set(url, recordIds)
+
         this.deleteLoadingState(state)
       })
       if (meta) {
         records.meta = meta
-        this.getType(type).meta.set(url, meta)
+        this.data[type].meta.set(url, meta)
       }
       return records
     } else {
@@ -677,10 +656,11 @@ class Store {
    * @param {object} options { queryParams }
    * @returns {Promise} Promise.resolve(records) or Promise.reject([Error: [{ detail, status }])
    */
-  findAll (type, options = {}) {
+  findAll (type, options) {
     const records = this.getAll(type, options)
-    if (records.length > 0) {
-      return records
+
+    if (records?.length > 0) {
+      return Promise.resolve(records)
     } else {
       return this.fetchAll(type, options)
     }
@@ -697,15 +677,14 @@ class Store {
    * @param {string} type the model type
    */
   reset (type) {
-    if (type) {
+    const types = type ? [type] : this.models.map(({ type }) => type)
+    types.forEach((type) => {
       this.data[type] = {
         records: observable.map(),
         cache: observable.map(),
         meta: observable.map()
       }
-    } else {
-      this.initializeObservableDataProperty()
-    }
+    })
   }
 
   /**
@@ -716,7 +695,7 @@ class Store {
   init (options = {}) {
     this.initializeNetworkConfiguration(options)
     this.initializeModelIndex(options.models)
-    this.initializeObservableDataProperty()
+    this.reset()
     this.initializeErrorMessages(options)
   }
 
@@ -743,28 +722,6 @@ class Store {
    */
   initializeModelIndex (models) {
     this.models = this.constructor.models || models
-  }
-
-  /**
-   * Creates an obserable index with model types
-   * as the primary key
-   *
-   * Observable({ todos: {} })
-   *
-   */
-  initializeObservableDataProperty () {
-    const { models } = this
-
-    // NOTE: Is there a performance cost to setting
-    // each property individually?
-    // Is Map the most efficient structure?
-    models.forEach((modelKlass) => {
-      this.data[modelKlass.type] = {
-        records: observable.map(),
-        cache: observable.map(),
-        meta: observable.map()
-      }
-    })
   }
 
   /**
@@ -810,16 +767,6 @@ class Store {
   }
 
   /**
-   * Gets type of collection from data observable
-   *
-   * @param {string} type the model type
-   * @returns {object} observable type object structure
-   */
-  getType (type) {
-    return this.data[type]
-  }
-
-  /**
    * Gets individual record from store
    *
    * @param {string} type the model type
@@ -827,33 +774,23 @@ class Store {
    * @returns {object} record
    */
   getRecord (type, id) {
-    if (!this.getType(type)) {
+    if (!this.data[type]) {
       throw new Error(`Could not find a collection for type '${type}'`)
     }
 
-    const record = this.getType(type).records.get(String(id))
+    const record = this.data[type].records.get(String(id))
 
     return (!record || record === 'undefined') ? undefined : record
   }
 
   /**
-   * Gets records for type of collection from observable
-   *
-   * NOTE: We only return records by unique id, this handles a scenario
-   * where the store keeps around a reference to a newly persisted record by its temp uuid.
-   * We can't simply remove the temp uuid reference because other
-   * related models may be still using the temp uuid in their relationships
-   * data object. However, when we are listing out records we want them
-   * to be unique by the persisted id (which is updated after a Model.save)
+   * Gets records for type of collection
    *
    * @param {string} type the model type
    * @returns {Array} array of objects
    */
   getRecords (type) {
-    const records = Array.from(this.getType(type).records.values()).filter(
-      (value) => value && value !== 'undefined'
-    )
-    return uniqBy(records, 'id')
+    return Array.from(this.data[type].records.values())
   }
 
   /**
@@ -878,7 +815,7 @@ class Store {
    * @returns {Set} the cleared set
    */
   clearCache (type) {
-    return this.getType(type).cache.clear()
+    return this.data[type].cache.clear()
   }
 
   /**
@@ -906,7 +843,7 @@ class Store {
   getCachedRecords (type, queryParams, id) {
     const url = this.fetchUrl(type, queryParams, id)
     const ids = this.getCachedIds(type, url)
-    const meta = this.getType(type).meta.get(url)
+    const meta = this.data[type].meta.get(url)
 
     const cachedRecords = this.getRecordsById(type, ids)
 
@@ -923,7 +860,7 @@ class Store {
    * @returns {Array} array of ids
    */
   getCachedIds (type, url) {
-    const ids = this.getType(type).cache.get(url)
+    const ids = this.data[type].cache.get(url)
     if (!ids) return []
     const idsSet = new Set(toJS(ids))
     return Array.from(idsSet)
@@ -937,7 +874,7 @@ class Store {
    * @returns {object} the cached object
    */
   getCachedId (type, id) {
-    return this.getType(type).cache.get(String(id))
+    return this.data[type].cache.get(String(id))
   }
 
   /**
@@ -979,10 +916,15 @@ class Store {
    */
   updateRecordFromData (record, data) {
     const tmpId = record.id
-    const { id, type, attributes, relationships = {} } = data
+    const { id, type, attributes = {}, relationships = {} } = data
 
     runInAction(() => {
-      record.id = id
+      record.id = String(id)
+
+      // records that are created as inverses are not initialized
+      if (!record.initialized) {
+        record.initialize(data)
+      }
 
       Object.entries(attributes).forEach(([key, value]) => {
         record[key] = value
@@ -1015,7 +957,7 @@ class Store {
    */
   createOrUpdateModelsFromData (data) {
     return data.map((dataObject) => {
-      if (this.getType(dataObject.type)) {
+      if (this.data[dataObject.type]) {
         return this.createOrUpdateModelFromData(dataObject)
       } else {
         console.warn(`no type defined for ${dataObject.type}`)
@@ -1028,10 +970,11 @@ class Store {
    * Helper to create a new model
    *
    * @param {object} data id, type, attributes and relationships
+   * @param {object} options currently supports `skipInitialization`
    * @returns {object} model instance
    */
-  createModelFromData (data) {
-    const { id, type, attributes, relationships } = data
+  createModelFromData (data, options) {
+    const { id, type, attributes = {}, relationships = {} } = data
 
     const store = this
     const ModelKlass = this.getKlass(type)
@@ -1040,7 +983,7 @@ class Store {
       throw new Error(`Could not find a model for '${type}'`)
     }
 
-    return new ModelKlass({ id, relationships, ...attributes }, store)
+    return new ModelKlass({ id, relationships, ...attributes }, store, options)
   }
 
   /**

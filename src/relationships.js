@@ -1,5 +1,18 @@
-import { action, makeObservable, transaction } from 'mobx'
+import { action, transaction } from 'mobx'
 import Model from './Model'
+
+/**
+ * Gets only the relationships from one direction, ie 'toOne' or 'toMany'
+ *
+ * @param {object} model the model with the relationship
+ * @param {string} direction the direction of the relationship
+ */
+export const definitionsByDirection = action((model, direction) => {
+  const { relationshipDefinitions = {} } = model
+
+  const definitionEntries = Object.entries(relationshipDefinitions)
+  return definitionEntries.filter(([_, definition]) => definition.direction === direction)
+})
 
 /**
  * Takes the `toOne` definitions from a document type and creates getters and setters.
@@ -77,19 +90,24 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
           const types = relationshipTypes || [relationshipName]
           relatedRecords = types.map((type) => record.store.getAll(type)).flat().filter((potentialRecord) => {
             const reference = potentialRecord.relationships[inverse.name]?.data
-            return reference && (reference.type === record.type) && (reference.id === record.id)
+            return reference && (reference.type === record.type) && (String(reference.id) === record.id)
           })
         }
 
         return new RelatedRecordsArray(record, relationshipName, relatedRecords)
       },
       set (relatedRecords) {
+        const previousReferences = this.relationships[relationshipName]
+        if (previousReferences?.data?.length === 0 && relatedRecords.length === 0) { return this[relationshipName] }
+
         this.relationships[relationshipName] = { data: relatedRecords.map(({ id, type }) => ({ id, type })) }
 
         relatedRecords = relatedRecords.map((reference) => coerceDataToExistingRecord(store, reference))
 
-        if (inverse) {
-          const { types, name: inverseName } = inverse
+        if (inverse?.direction === 'toOne') {
+          const { name: inverseName } = inverse
+          const inferredType = relatedRecords[0]?.type || previousReferences?.data[0]?.type
+          const types = inverse.types || [inferredType]
 
           const oldRelatedRecords = types.map((type) => record.store.getAll(type)).flat().filter((potentialRecord) => {
             const reference = potentialRecord.relationships[inverseName]?.data
@@ -105,6 +123,7 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
           })
         }
 
+        record.takeSnapshot()
         return new RelatedRecordsArray(record, relationshipName, relatedRecords)
       }
     })
@@ -124,19 +143,30 @@ export const defineToManyRelationships = action((record, store, toManyDefinition
  * @returns {object} the related record
  */
 export const setRelatedRecord = action((relationshipName, record, relatedRecord, store, inverse) => {
+  if (record == null) { return null }
+
   if (relatedRecord != null) {
     relatedRecord = coerceDataToExistingRecord(store, relatedRecord)
+
+    if (inverse?.direction === 'toOne') {
+      setRelatedRecord(inverse.name, relatedRecord, record, store)
+    } else if (inverse?.direction === 'toMany') {
+      const previousRelatedRecord = record[relationshipName]
+      removeRelatedRecord(inverse.name, previousRelatedRecord, record)
+      addRelatedRecord(inverse.name, relatedRecord, record)
+    }
+
     record.relationships[relationshipName] = { data: { id: relatedRecord.id, type: relatedRecord.type } }
   } else {
-    record.relationships[relationshipName] = null
-  }
-
-  if (inverse) {
-    const relatedArray = relatedRecord?.[inverse.name]
-
-    if (relatedArray && !relatedArray.includes(record)) {
-      addRelatedRecord(relatedArray, inverse.name, relatedRecord, record)
+    if (inverse?.direction === 'toOne') {
+      const previousRelatedRecord = record[relationshipName]
+      setRelatedRecord(inverse.name, previousRelatedRecord, null, store)
+    } else if (inverse?.direction === 'toMany') {
+      const previousRelatedRecord = record[relationshipName]
+      removeRelatedRecord(inverse.name, previousRelatedRecord, record)
     }
+
+    record.relationships[relationshipName] = null
   }
 
   record.takeSnapshot()
@@ -146,19 +176,14 @@ export const setRelatedRecord = action((relationshipName, record, relatedRecord,
 /**
  * Removes a record from an array of related records, removing both the object and the reference.
  *
- * @param {Array} array the related records array
  * @param {string} relationshipName the name of the relationship
  * @param {object} record the record with the relationship
  * @param {object} relatedRecord the related record being removed from the relationship
  * @param {object} inverse the definition of the inverse relationship
  * @returns {object} the removed record
  */
-export const removeRelatedRecord = action((array, relationshipName, record, relatedRecord, inverse) => {
-  if (array == null || relatedRecord == null) { return relatedRecord }
-
-if (Array.isArray(relatedRecord)) {
-    return relatedRecord.map(singleRecord => removeRelatedRecord(array, relationshipName, record, singleRecord, inverse))
-  }
+export const removeRelatedRecord = action((relationshipName, record, relatedRecord, inverse) => {
+  if (relatedRecord == null || record == null) { return relatedRecord }
 
   const existingData = (record.relationships[relationshipName]?.data || [])
 
@@ -167,52 +192,58 @@ if (Array.isArray(relatedRecord)) {
   })
 
   if (recordIndexToRemove > -1) {
-    if (inverse) {
+    if (inverse?.direction === 'toOne') {
       setRelatedRecord(inverse.name, relatedRecord, null, record.store)
+    } else if (inverse?.direction === 'toMany') {
+      removeRelatedRecord(inverse.name, relatedRecord, record)
     }
 
     existingData.splice(recordIndexToRemove, 1)
-    array.splice(recordIndexToRemove, 1)
   }
 
   record.takeSnapshot()
-  return coerceDataToExistingRecord(record.store, relatedRecord)
+  return relatedRecord
 })
 
 /**
  * Adds a record to a related array and updates the jsonapi reference in the relationships
  *
- * @param {Array} array the related records array
  * @param {string} relationshipName the name of the relationship
  * @param {object} record the record with the relationship
  * @param {object} relatedRecord the related record being added to the relationship
  * @param {object} inverse the definition of the inverse relationship
  * @returns {object} the added record
  */
-export const addRelatedRecord = action((array, relationshipName, record, relatedRecord, inverse) => {
+export const addRelatedRecord = action((relationshipName, record, relatedRecord, inverse) => {
   if (Array.isArray(relatedRecord)) {
-    return relatedRecord.map(singleRecord => addRelatedRecord(array, relationshipName, record, singleRecord, inverse))
+    return relatedRecord.map(singleRecord => addRelatedRecord(relationshipName, record, singleRecord, inverse))
   }
 
-  if (array == null || relatedRecord == null || !record.store.getKlass(record.type)) { return relatedRecord }
+  if (relatedRecord == null || record == null || !record.store?.getKlass(record.type)) { return relatedRecord }
 
-  if (inverse) {
-    setRelatedRecord(inverse.name, relatedRecord, record, record.store)
-    relatedRecord.relationships[inverse.name] = { data: { id: record.id, type: record.type } }
+  const relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord)
+
+  if (inverse?.direction === 'toOne') {
+    const previousRelatedRecord = relatedRecordFromStore[inverse.name]
+    removeRelatedRecord(relationshipName, previousRelatedRecord, relatedRecordFromStore)
+
+    setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store)
+  } else if (inverse?.direction === 'toMany') {
+    addRelatedRecord(inverse.name, relatedRecord, record)
   }
 
-  const existingData = (record.relationships[relationshipName]?.data || [])
+  if (!record.relationships[relationshipName]?.data) {
+    record.relationships[relationshipName] = { data: [] }
+  }
 
-  const recordFromStore = coerceDataToExistingRecord(record.store, relatedRecord)
-  const alreadyThere = array.includes(recordFromStore)
+  const alreadyThere = record.relationships[relationshipName].data.some(({ id, type }) => id === relatedRecord.id && type === relatedRecord.type)
 
   if (!alreadyThere) {
-    record.relationships[relationshipName] = { data: [...existingData, { id: relatedRecord.id, type: relatedRecord.type }] }
-    array.push(recordFromStore)
+    record.relationships[relationshipName].data.push({ id: relatedRecord.id, type: relatedRecord.type })
   }
 
   record.takeSnapshot()
-  return recordFromStore
+  return relatedRecordFromStore
 })
 
 /**
@@ -225,10 +256,10 @@ export const addRelatedRecord = action((array, relationshipName, record, related
  * @returns {object} the store object
  */
 export const coerceDataToExistingRecord = action((store, record) => {
-  if (!store?.getType(record.type)) { return null }
+  if (record == null || !store?.data?.[record.type]) { return null }
   if (record && !(record instanceof Model)) {
     const { id, type } = record
-    record = store.getOne(type, id) || store.add(type, { id })
+    record = store.getOne(type, id) || store.add(type, { id }, { skipInitialization: true })
   }
   return record
 })
@@ -250,12 +281,6 @@ export class RelatedRecordsArray extends Array {
     this.record = record
     this.store = record.store
     this.inverse = record.relationshipDefinitions[this.property].inverse
-
-    makeObservable(this, {
-      add: action,
-      remove: action,
-      replace: action
-    })
   }
 
   /**
@@ -267,7 +292,7 @@ export class RelatedRecordsArray extends Array {
   add = (relatedRecord) => {
     const { inverse, record, property } = this
 
-    return addRelatedRecord(this, property, record, relatedRecord, inverse)
+    return addRelatedRecord(property, record, relatedRecord, inverse)
   }
 
   /**
@@ -278,7 +303,7 @@ export class RelatedRecordsArray extends Array {
    */
   remove = (relatedRecord) => {
     const { inverse, record, property } = this
-    return removeRelatedRecord(this, property, record, relatedRecord, inverse)
+    return removeRelatedRecord(property, record, relatedRecord, inverse)
   }
 
   /**
@@ -288,12 +313,22 @@ export class RelatedRecordsArray extends Array {
    * @returns {Array} this internal array
    */
   replace = (array = []) => {
-    const { inverse, record, property } = this
+    const { inverse, record, property, store } = this
     let newRecords
 
     transaction(() => {
-      this.forEach((relatedRecord) => removeRelatedRecord(this, property, record, relatedRecord, inverse))
-      newRecords = array.forEach((relatedRecord) => addRelatedRecord(this, property, record, relatedRecord, inverse))
+      if (inverse?.direction === 'toOne') {
+        this.forEach((relatedRecord) => {
+          setRelatedRecord(inverse.name, relatedRecord, null, store)
+        })
+      } else if (inverse?.direction === 'toMany') {
+        this.forEach((relatedRecord) => {
+          removeRelatedRecord(inverse.name, relatedRecord, record)
+        })
+      }
+
+      record.relationships[property] = { data: [] }
+      newRecords = array.map((relatedRecord) => addRelatedRecord(property, record, relatedRecord, inverse))
     })
 
     return newRecords

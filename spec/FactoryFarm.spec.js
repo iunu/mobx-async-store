@@ -19,7 +19,11 @@ class Tag extends Model {
 
   static relationshipDefinitions = {
     todo: {
-      direction: 'toOne'
+      direction: 'toOne',
+      inverse: {
+        name: 'tags',
+        direction: 'toMany'
+      }
     }
   }
 }
@@ -92,7 +96,11 @@ class Todo extends Model {
       direction: 'toOne'
     },
     tags: {
-      direction: 'toMany'
+      direction: 'toMany',
+      inverse: {
+        name: 'todo',
+        direction: 'toOne'
+      }
     }
   }
 }
@@ -155,15 +163,36 @@ describe('FactoryFarm', () => {
     })
 
     it('applies relationships', () => {
+      const category = factoryFarm.build('startCategory')
+      const tags = factoryFarm.build('color', {}, 2)
+
       const todo = factoryFarm.build('planting', {
-        category: () => factoryFarm.build('startCategory'),
-        tags: () => factoryFarm.build('color', {}, 2)
+        tags, category
       })
 
       expect(todo.tags).toHaveLength(2)
       expect(todo.tags[0].label).toEqual('#a141e')
       expect(todo.tags[1].label).toEqual('#b151f')
       expect(todo.category.name).toEqual('start')
+
+      expect(todo.tags[1].todo).toEqual(todo)
+      expect(todo.relationships).toEqual({
+        category: {
+          data: {
+            id: '1',
+            type: 'categories'
+          }
+        },
+        tags: {
+          data: [{
+            id: '1',
+            type: 'tags'
+          }, {
+            id: '2',
+            type: 'tags'
+          }]
+        }
+      })
     })
 
     it('exports a model array to jsonapi', () => {
@@ -268,14 +297,28 @@ describe('FactoryFarm', () => {
         attributes: {
           label: '#a141e'
         },
-        relationships: {}
+        relationships: {
+          todo: {
+            data: {
+              id: '1',
+              type: 'todos'
+            }
+          }
+        }
       })
       expect(tag2).toEqual({
         attributes: {
           label: '#b151f'
         },
         id: '2',
-        relationships: {},
+        relationships: {
+          todo: {
+            data: {
+              id: '1',
+              type: 'todos'
+            }
+          }
+        },
         type: 'tags'
       })
       expect(category2).toEqual({
@@ -300,7 +343,14 @@ describe('FactoryFarm', () => {
           label: '#c1620'
         },
         id: '3',
-        relationships: {},
+        relationships: {
+          todo: {
+            data: {
+              id: '2',
+              type: 'todos'
+            }
+          }
+        },
         type: 'tags'
       })
     })
@@ -356,7 +406,14 @@ describe('FactoryFarm', () => {
               label: '#a141e'
             },
             id: '1',
-            relationships: {},
+            relationships: {
+              todo: {
+                data: {
+                  id: '1',
+                  type: 'todos'
+                }
+              }
+            },
             type: 'tags'
           },
           {
@@ -364,7 +421,14 @@ describe('FactoryFarm', () => {
               label: '#b151f'
             },
             id: '2',
-            relationships: {},
+            relationships: {
+              todo: {
+                data: {
+                  id: '1',
+                  type: 'todos'
+                }
+              }
+            },
             type: 'tags'
           }
         ]

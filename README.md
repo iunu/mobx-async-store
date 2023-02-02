@@ -27,7 +27,7 @@ Mobx-based store for async data fetching and state management. https://iunu.gith
 
 ## Introduction
 
-`mobx-async-store` was designed to consume [JSON::API specification](https://jsonapi.org) compliant REST APIs and provide a state management system for conveniently manipulating client-side data and keeping it in sync with the server-side. In the future, `mobx-async-store` may add support for other APIs types like GraphQL or custom REST APIs.
+`mobx-async-store` was designed to consume [JSON::API specification](https://jsonapi.org) compliant REST APIs and provide a state management system for conveniently manipulating client-side data and keeping it in sync with the server-side.
 
 The library uses `mobx` internally to provide reactivity and observability; i.e when you fetch data from the server or make changes to client-side records then the UI should update accordingly. This system has only be tested in combination with `mobx-react`, but should hypothetically work with libraries like `mobx-vue` or `mobx-angular`.
 
@@ -36,78 +36,98 @@ The library uses `mobx` internally to provide reactivity and observability; i.e 
 Clone this repository and install its dependencies:
 
 ```bash
-git clone git@github.com:artemis-ag/mobx-async-store.git
+git clone git@github.com:iunu/mobx-async-store.git
 cd mobx-async-store
 yarn install
 ```
 
 ## Testing
 
-`yarn test` builds the library, then tests it.
+`yarn test` will run all tests.
 
 ## Distribution
 
 ### Step 1 - Build the dist files
 
-`yarn build` builds the library to `dist`, generating three files:
+`yarn build` builds the library to `dist`, generating two files:
 
 - `dist/mobx-async-store.cjs.js`
   A CommonJS bundle, suitable for use in Node.js, that `require`s the external dependency. This corresponds to the `"main"` field in package.json
 - `dist/mobx-async-store.esm.js`
   an ES module bundle, suitable for use in other people's libraries and applications, that `import`s the external dependency. This corresponds to the `"module"` field in package.json
-- `dist/mobx-async-store.umd.js`
-  a UMD build, suitable for use in any environment (including the browser, as a `<script>` tag), that includes the external dependency. This corresponds to the `"browser"` field in package.json
 
 ### Step 2 - Update the documentation
 
-`yarn run docs` updates the documentation, located in `docs`.
+`yarn docs` updates the documentation, located in `docs`.
 
 ### Step 3 - Publish
 
 `npm login` to authenticate yourself as someone authorized to publish this package
-`npm publish`
+`npm publish` (or `npm publish =tag=develop` for development releases)
 
 ## Installation
 
 ```
-yarn add git+ssh://git@github.com:artemis-ag/mobx-async-store.git
+yarn add mobx-async-store
 ```
 
-## Usage
+# Usage
+`mobx-async-store` uses two main classes, `Store` and `Model`. Subclasses of `Model` are used to instantiate data objects, and `Store` provides an interface to add and manipulate those objects.
 
-### Create models
+## Models
+You can define models by extending them and adding your own property definitions. The static property `type` determines how the store and other objects will refer to the class (corresponds to `type` in a jsonapi document), and `endpoint` defines the path the model will use to the server. Definitions are stored in two hashes that are static properties on the model, `attributeDefinitions` and `relationshipDefinitions`. These definitions determine how data will be parsed and implemented as it is returned from the server.
+
 
 ```JavaScript
-import { Model, attribute } from 'mobx-async-store'
+import { Model } from 'mobx-async-store'
 
 class Todo extends Model {
   static type = 'todos'
   static endpoint = 'todos'
 
-  @attribute(String) title = ''
-  @attribute(Boolean) completed = false
-  @attribute(String) category = 'uncategorized'
-}
+  static attributeDefinitions = {
+    title: {
+      transformer: stringType,
+      validator: validatesString,
+      defaultValue: 'NEW TODO'
+    }
+  }
 
-export default Todo
+  static relationshipDefinitions = {
+    notes: {
+      direction: 'toMany',
+      validator: validatesArrayPresence,
+      types: ['notes', 'awesome_notes'],
+      inverse: {
+        name: 'todo',
+        direction: 'toOne'
+      }
+    }
+  }
+}
 ```
 
-### Create stores
+### Attributes
+The `attributeDefinitions` hash corresponds to the `attributes` hash of a jsonapi document. It is defined by keys representing the names of the properties, and objects with definitions of those properties.
+- `transformer` - a function used to coerce the value to a given type or format
+- `validator` - a function used to determine whether a key is allowed or not
+- `defaultValue` - the value that is used on a new instance if none is defined
 
-```JavaScript
-import { Store } from 'mobx-async-store'
-import Todo from './Todo'
+### Relationships
+The `relationshipDefinitions` hash corresponds to `relationships` in a jsonapi document. It is defined by keys representing the names of the relationships, and objects with defintions of those properties.
+- `direction` - can be `toOne` or `toMany`
+- `validator` - a function used for validating a relationship
+- `types` - an array of polymorphic model `types` that can be used for this relationship
+- `inverse` - the other direction of a relationship. Not required, but allows models to be related both directions without explicitly defining both directions
+  - `name` - the name the relationship uses to refer to this model. This is automatically inferred if it matches the model `type` (usually for `toMany` relationships)
+  - `direction` - the inverse direction, `toOne` or `toMany`
 
-class AppStore extends Store {
-  static types = [
-    Todo
-  ]
-}
+### Model methods and properties
 
-export default AppStore
-```
+[See jsdoc documentation](https://iunu.github.io/mobx-async-store/Model.html)
 
-### Initializing stores
+## Store
+The store is used to collect, retrieve and refer to documents.
 
 ```JavaScript
 import AppStore from './AppStore'
@@ -115,12 +135,16 @@ import AppStore from './AppStore'
 const store = new AppStore({
   baseUrl: 'https//api.example.com',
   defaultFetchOptions: {
-    credentials: 'include',
     headers: {
       'Accepts': 'application/json',
       'Content-Type': 'application/vnd.api+json',
       'X-CSRF-Token': 'EXAMPLE-CSRF-TOKEN'
     }
+  },
+  headersOfInterest: ['X-Iunu-Roots'],
+  retryOptions: {
+    attempts: 3,
+    delay: 1000,
   },
   errorMessages: {
     400: 'Bad request.',
@@ -131,92 +155,17 @@ const store = new AppStore({
 })
 ```
 
-`errorMessages`: These are optional error messages that can be configured to provide additional details
-when returning errors for various requests. Each property corresponds to an HTTP status code which can be
-customized, and any errors returned from the server that have a `status` matching this code will have their `detail` property overriden by this value. A `default` can also be set as a fallback.
+### Retrieving documents
+The store uses variations of `get`, `find` and `fetch` to retrieve records from the store, with `All`, `Many`, and `One` determining how many records will be requested. An optional `options` hash provides further customization for requesting and caching.
+- `get` will only retrieve locally cached records, and will never request from the server
+- `find` will first look for records of a given type in the store, and then will go to the server
+- `fetch` will always request from the server
+- `getAll`, `findAll`, and `fetchAll` retrieve all records that match the optional `options`
+  - `store.getAll('todos', { queryParams: { recent: true } })`
+- `getOne`, `findOne`, and `fetchOne` retrieves one record. Usually used with just one id but can also use the `options` hash.
+  - `store.getOne('todos', '1')`
+- `getMany`, `findMany`, and `fetchMany` are like `One` but with an array of ids instead of a single id
 
-### Getting all records with `Store#getAll`
-
-Gets all records matching the type provided from the store. This never hits the server.
-
-```JavaScript
-// No request is made, return result from the store
-store.getAll('todos')
-```
-
-### Fetching all records with `Store#fetchAll`
-
-Fetches all records matching the given type from the server.
-This will always fetch from the server and return a promise.
-
-```JavaScript
-// GET /todos
-await store.fetchAll('todos')
-```
-
-### Finding all records with `Store#findAll`
-
-Finds all records first in the store, otherwise will fetch from the server.
-Subsequent calls to `.findAll` will hit a local cache instead of making another request.
-
-```JavaScript
-// GET /todos
-await store.findAll('todos')
-
-// No request is made, return result from the store
-await store.findAll('todos')
-```
-
-### Getting records by id with `Store#getMany`
-
-Gets records with the given ids and type provided from the store.
-This will never fetch from the server.
-
-```JavaScript
-// No request is made, return result from the store
-const ids = ['2', '3', '4']
-store.getMany('todos', ids)
-```
-
-### Fetching records by id with `Store#fetchMany`
-
-Fetches records with the given ids and type from the server.
-This will always fetch from the server and return a promise.
-
-```JavaScript
-// GET /todos with ids 4, 5
-const ids = ['4', '5']
-await store.fetchMany('todos', ids)
-```
-
-### Finding records by id with `Store#findMany`
-
-Finds records with the given ids and type first in the store, otherwise will fetch from the server.
-Subsequent calls to `.findMany` will hit a local cache instead of making another request.
-
-```JavaScript
-// GET /todos with ids 1, 4
-const ids = ['1', '4']
-await store.findMany('todos', ids)
-
-// No request is made, return result from the store
-await store.findMany('todos', ids)
-```
-
-### find/fetch options
-
-The `find` and `fetch` methods can take an options object as a second argument.
-
-```JavaScript
-await store.fetchOne(MODEL_TYPE, OPTIONS)
-await store.findOne(MODEL_TYPE, OPTIONS)
-
-await store.fetchAll(MODEL_TYPE, OPTIONS)
-await store.findAll(MODEL_TYPE, OPTIONS)
-
-await store.fetchMany(MODEL_TYPE, OPTIONS)
-await store.findMany(MODEL_TYPE, OPTIONS)
-```
 
 #### `queryParams` options
 
@@ -231,153 +180,280 @@ store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { ove
 // Returns result from the cache.
 ```
 
-##### `queryParams.filter`
+## Testing
+`FactoryFarm`  to quickly build data models that can be used for testing. An instance of FactoryFarm has factories defined that can be used to build models at runtime.
 
-To filter API results you can use the `filter` key. See the [JSON::API filter documentation](https://jsonapi.org/format/#fetching-filtering) for more information.
+Defining a factory
+You can define a factory for any model in shared-js/store. Then, objects can be built using the predefined factory, which describes attributes and relationships.
 
-```JavaScript
-store.findMany('todos', ['1', '2'], {
-  queryParams: {
-    filter: {
-      completed: true,
-      category: 'chores'
-    }
-  }
+const factoryFarm = new FactoryFarm()
+factoryFarm.define('funZone', { type: 'zones', name: 'Fun Zone' })
+
+const funZone = factoryFarm.build('funZone')
+funZone.name
+=> 'Fun Zone'
+
+Factories follow an inheritance tree which can be used to override some properties while keeping the other parent properties.
+
+const factoryFarm = new FactoryFarm()
+factoryFarm.define('funZone', { type: 'zones', name: 'Fun Zone' })
+factoryFarm.define('bigZone', { parent: 'funZone', seeding_unit_capacity: 1000 })
+
+const funZone = factoryFarm.build('bigZone')
+funZone.name
+=> 'Fun Zone'
+funZone.seeding_unit_capacity
+=> 1000
+
+FactoryFarm from utils/Testing comes pre-loaded with a number of factories. Most are singularized versions of the model name.
+
+Factories and relationships
+Factories can be used to build relationships just as you would with mobx-async-store.
+
+const factoryFarm = new FactoryFarm()
+const seeding_unit = factoryFarm.build('seeding_unit', { name: 'Seeding Unit 1')
+factoryFarm.define('bigZone', { parent: 'funZone', seeding_unit })
+
+const funZone = factoryFarm.build('funZone')
+funZone.seeding_unit.name
+=> 'Seeding Unit 1'
+
+Dynamic factories
+Attributes and relationships can be defined as functions. The function will be executed at build. Passing a third parameter while building will return an array of objects.
+
+const factoryFarm = new FactoryFarm()
+factoryFarm.define('dynamicZone', {
+  parent: 'funZone',
+  name: (index, properties) => `Fun Zone ${properties.id}`,
+  seeding_unit: () => factoryFarm.build('seeding_unit'),
 })
-```
 
-##### `queryParams.include`
+const facility = factoryFarm.build('facility', { name: 'Jay St' })
 
-If the record type you are fetching has related data you need to side-load you can provide the `include` key.
-See [JSON::API includes documentation](https://jsonapi.org/format/#fetching-includes) and the relationships section blow for details.
+const dynamicZones = factoryFarm.build('dynamicZone', { facility }, 2)
+const [zone1, zone2] = dynamicZones
 
-```JavaScript
-store.fetchAll('todos', {
-  queryParams: {
-    filter: {
-      include: 'todos.notes'
-    }
+zone1.name
+=> 'Fun Zone 1'
+zone1.seeding_unit.name
+=> 'Seeding Unit 1'
+zone1.facility.name
+=> 'Jay St'
+zone2.name
+=> 'Fun Zone 2'
+zone2.seeding_unit.name
+=> 'Seeding Unit 2'
+zone2.facility.name
+=> 'Jay St'
+
+More on Server Calls
+MockServer uses an internal factory and store to simulate data to return during a fetch. For GET requests, it will first try to return a defined object from the store. If that misses, it will return an object from the default factory. PATCH requests return the properties that were sent, and POST requests return a new object with the properties that were sent with a new id. Special cases such as defining specific routes (eg for external apis), delayed responses (for race conditions), and error states are described below.
+
+
+Example with a component
+
+// Component
+@inject('dataStore')
+class Button extends Component {
+  @observable zone 
+  changeZoneName = (name) => {
+    const { zone } = this
+    zone.name = name
+    zone.save()
   }
+  componentDidMount() {
+    this.loadData()
+  }
+
+  loadData = async () {
+    const { dataStore, zoneId } = this.props
+    this.zone = await dataStore.fetchOne('zones', zoneId)
+  }
+  render () {
+    const { name } = this.zone?.name
+    const { changeZoneName } = this
+    return <button onClick={() => changeZoneName('Zone 2')}>{name}</button>
+  }
+}
+
+// Test
+describe('it changes the zone name', () => {
+  let wrapper
+
+  beforeEach(() => {
+    mockServer.start()
+
+    wrapper = mount(
+      <TestContextWrapper>
+        <Button zoneId='1' />
+      </TestContextWrapper>
+    )
+    setImmediate((done) => {
+      wrapper.update()
+      done()
+    })
+  })
+
+  it('changes zone name when clicked', () => {
+    expect(wrapper.text()).toMatch('Zone 1')
+    wrapper.find('button').simulate('click')
+    expect(wrapper.text()).toMatch('Zone 2')
+    expect(fetch.mock.calls).toHaveLength(2)
+    const [fetchZone, patchZone] = fetch.mock.calls
+    expect(fetchZone[0].method).toEqual('GET')
+    expect(fetchZone[0].body).toMatch('Zone 1')
+    expect(fetchZone[0].method).toEqual('PATCH')
+    expect(fetchZone[0].body).toMatch('Zone 2')
+  })
 })
-```
 
-##### `queryParams` miscellaneous params
+Example with a helper
 
-If you do need to use a non JSON::API compliance param you can simply pass a key/value pair to queryParams.
+export const fetchZone = (zoneId) {
+  return dataStore.fetchOne('zones', zoneId)
+}
 
-```JavaScript
-store.findAll('todos', { queryParams: { foo: 'bar' } })
-```
+// Test
+describe('fetchZone', () => {
+  let factoryFarm
+  let wrapper
 
-#### `refresh` / `lazyLoad` / `load` options
+  beforeEach(() => {
+    const mockServer = new MockServer()
+    mockServer.start()
+  })
 
-`mobx-async-store` needs additional options for keeping the local store in sync with the server-side. These options are pending an RFC.
+  it('loads the zone', async (done) => {
+    const zone = await fetchZone('1')
+    expect(zone.name).toMatch('Zone 1')
+    expect(fetch.mock.calls).toHaveLength(1)
+    expect(fetch.mock.calls[0].method).toEqual('GET')
+  })
+})
 
-### Getting single records with `Store#getOne`
 
-You can get a single record from the store with the `getOne` method.
-This will never fetch from the server.
+Example - failure on specific call 
 
-```JavaScript
-const todo = store.add('todos', { title: 'Buy Milk' })
+// Testing a catch alerts with errors
+  it('returns errors if saving fails', async (done) => {
+    expect.assertions(3)
+    // Include non 200 status in response override (default is 200)
+    const responseOverrides = [
+      {
+        path: '/new/completions',
+        method: 'POST',
+        status: 500,
+        response: () => {
+          return {
+            errors: [{ title: 'Invalid options', detail: 'There is an error!', meta: { server: true } }],
+          }
+        },
+      },
+    ]
 
-// Returns record from the store, no request made.
-store.getOne('todos', todo.id)
+    // Pass in response overrides when starting the server
+    const mockServer = new MockServer()
+    mockServer.start({ responseOverrides })
+    
+    window.alert = jest.fn()
+    expect(fetch.mock.calls).toHaveLength(1)
+    
+    const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
+    await submitBtn.simulate('click')
+    
+    expect(fetch.mock.calls).toHaveLength(2)
+    setImmediate(() => {
+      expect(window.alert).toHaveBeenCalledWith('There is an error!')
+      done()
+    })
+  })
 
-// No record returned as it never fetches from the server.
-store.reset('todos')
-store.getOne('todos', todo.id)
-```
+Example - failure on all calls
 
-### Fetching single records with `Store#fetchOne`
+// Testing a catch alerts with errors
+  it('returns errors if saving fails', async (done) => {
+    expect.assertions(2)
 
-Fetches a single record with the given id from the server.
-This will always fetch from the server and return a promise that will resolve with the new record.
+    // Pass in non-200 status when starting the server (this will fail all responses)
+    const mockServer = new MockServer()
+    mockServer.start({ status: 500 })
+    
+    expect(fetch.mock.calls).toHaveLength(1)
+    const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
+  
+    try {
+      await submitBtn.simulate('click')
+    } catch (error) {
+      expect(fetch.mock.calls).toHaveLength(2)
+    }
+  })
 
-```JavaScript
-const todo = store.add('todos', { title: 'Pay bills' })
+Customizing Data
+You can pass in a factory or store to define data that will be returned by the server, using the factoryFarm and store in the constructor options. Passing factoriesForType  will allow you to use a defined factory for mocking data instead of the default factory.
 
-// Request made, record is always returned from the server.
-await store.fetchOne('todos', todo.id)
-```
+// Component
+@inject('dataStore')
+class Button extends Component {
+  @observable zone 
 
-If the server responds with any status other than 200, the promise will reject with an [error](#handling-errors)
+  componentDidMount() {
+    this.loadData()
+  }
 
-### Finding single records with `Store#findOne`
+  loadData = async () {
+    const { dataStore, zoneId } = this.props
+    this.zone = await dataStore.fetchOne('zones', zoneId)
+  }
 
-Finds a single record with the given id and type first in the store, otherwise will fetch from the server.
-Subsequent calls to `.findOne` will hit a local cache instead of making another request.
+  render () {
+    const { name } = this.zone?.name
+    const { changeZoneName } = this
+    return <button onClick={() => changeZoneName('Zone 2')}>{name}</button>
+  }
+}
 
-```JavaScript
-const todo = store.add('todos', { title: 'Buy Milk' })
+// Test
+describe('it displays the zone name', () => {
+  let factoryFarm
+  let wrapper
 
-// Returns record from the store, no request made.
-store.findOne('todos', todo.id)
+  beforeEach(() => {
+    const mockServer = new MockServer()
+    mockServer.define('funZone', {
+      name: (index) => `Fun Zone ${index}`
+    })
 
-// Returns record from the server if it's not in the store.
-store.reset('todos')
-store.findOne('todos', todo.id)
-```
+    mockServer.start({
+      factoriesForType: { zones: 'funZone' },
+    })
 
-### Clear the query cache
+    wrapper = mount(
+      <TestContextWrapper>
+        <Button zoneId='1'/>
+      </TestContextWrapper>
+    )
 
-Sometimes the query cache from `findAll` can cause weird frontend bugs, to fix this use the `clearCache` method.
-This will clear the query cache for the type you pass as a parameter.
+    setImmediate((done) => {
+      wrapper.update()
+      done()
+    })
+  })
 
-```Javascript
-store.clearCache('todos')
-```
+  it('displays the zone name', () => {
+    expect(wrapper.text()).toMatch('Fun Zone 1')
+    expect(fetch.mock.calls).toHaveLength(1)
+    expect(fetch.mock.calls[0].method).toEqual('GET')
+  })
+})
 
-The next time you use `findAll` after clearing the cache, it will pull a query directly from the server and repopulate
-the cache.
+Complex Setup
+responseOverrides will take a hash of responses and use those to match fetch calls, overriding the server’s calls to the store. delayedResponse, in conjunction with serverResponse, adds a timeout to the promise to simulate a delay in returning from the server.
 
-### Adding records with `Store#add`
 
-Records can be added to a store via the `add` method.
-
-```JavaScript
-const todo = store.add('todos', { title: 'Buy Milk', category: 'chores' })
-```
-
-Newly created client records with have a temporary id by default.
-
-```JavaScript
-const todo = store.add('todos', {})
-
-todo.id
-// => tmp-6b46fa20-db49-11e9-8256-1be9dad543b1
-```
-
-Multiple records can be added at the same time.
-
-```JavaScript
-const todos = store.add('todos', [
-  { title: 'Buy Milk', category: 'chores' },
-  { title: 'Do laundry', category: 'chores' }
-])
-```
-
-### Building without adding to the store
-
-Records can be built without being added to the store with `Store#build`
-
-```JavaScript
-const todo = store.build('todos', { title: 'Buy Milk', category: 'chores' })
-```
-
-Newly created client records with have a temporary id by default.
-
-```JavaScript
-todo.id
-// => tmp-6b46fa20-db49-11e9-8256-1be9dad543b1
-```
-
-The newly built record will be ephemeral and will not be added to the store
-
-```JavaScript
-store.findOne('todos', todo.id)
-// => undefined
-```
+### Errors
+`errorMessages`: These are optional error messages that can be configured to provide additional details
+when returning errors for various requests. Each property corresponds to an HTTP status code which can be
+customized, and any errors returned from the server that have a `status` matching this code will have their `detail` property overriden by this value. A `default` can also be set as a fallback.
 
 ### Persisting records with `Model#save`
 
@@ -424,5 +500,3 @@ This value will always be a stringified JSON array, so you can handle errors as 
     console.log(errors[0].status); // 500
   }
 ```
-
-### To Be Continued...
