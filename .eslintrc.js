@@ -20,7 +20,9 @@ module.exports = {
     }],
     'jsdoc/require-description': 'error',
     'jsdoc/require-param': 'error',
-    'jsdoc/require-returns-check': 'error'
+    'jsdoc/require-returns-check': 'error',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'error'
     // '@typescript-eslint/explicit-function-return-type': 'warn',
     // '@typescript-eslint/no-explicit-any': 'error'
   },

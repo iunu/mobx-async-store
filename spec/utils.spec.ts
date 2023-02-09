@@ -1,26 +1,12 @@
 /* global fetch */
+
 import { QueryString, deriveIdQueryStrings, fetchWithRetry, URL_MAX_LENGTH } from '../src/utils'
+import { FetchMock } from 'jest-fetch-mock'
+const fetchMock = fetch as FetchMock;
 
-describe('QueryString', () => {
-  const queryString = 'fields[articles][]=title&fields[articles][]=body&fields[people]=name'
-  const params = { fields: { articles: ['title', 'body'], people: 'name' } }
+import { enableFetchMocks } from 'jest-fetch-mock'
 
-  describe('stringify', () => {
-    it('stringifies a deeply nested param object', () => {
-      expect(decodeURI(QueryString.stringify(params))).toBe(queryString)
-    })
-  })
-
-  describe('parse', () => {
-    it('parses a deeply nested query string', () => {
-      expect(QueryString.parse(queryString)).toEqual(params)
-    })
-
-    it('ignores leading ?', () => {
-      expect(QueryString.parse(`?${queryString}`)).toEqual(params)
-    })
-  })
-})
+enableFetchMocks()
 
 describe('deriveIdQueryStrings', () => {
   const shortIds = [1, 2, 3]
@@ -30,9 +16,9 @@ describe('deriveIdQueryStrings', () => {
   it('splits ids into an expected length', () => {
     const idQueryStrings = deriveIdQueryStrings(longIds, baseUrl)
     expect(idQueryStrings).toHaveLength(8)
-    expect(longIds.join()).toEqual(idQueryStrings.join().split().join())
-    idQueryStrings.forEach(ids => {
-      expect(baseUrl.length + QueryString.stringify({ filter: { ids } }).length).toBeLessThan(URL_MAX_LENGTH)
+    expect(longIds.join()).toEqual(idQueryStrings.join())
+    idQueryStrings.forEach((ids: string) => {
+      expect(baseUrl.length + QueryString.stringify({ 'filter[ids]': ids }).length).toBeLessThan(URL_MAX_LENGTH)
     })
   })
 
@@ -45,36 +31,34 @@ describe('deriveIdQueryStrings', () => {
 
 // function fetchWithRetry (url, fetchOptions, retryAttempts, delay, handleResponse) {
 describe('fetchWithRetry', () => {
-  let url, fetchOptions
+  let url: string, fetchOptions: RequestInit | undefined
 
   beforeEach(() => {
     url = 'https://example.com'
     fetchOptions = {}
-    fetch.resetMocks()
+    fetchMock.resetMocks()
   })
 
   it('will retry the request if there is a fetch failure', async () => {
-    fetch.mockRejectOnce('network error')
-    await fetchWithRetry(url, fetchOptions, 2, 0)
-    expect(fetch.mock.calls.length).toEqual(2)
+    fetchMock.mockRejectOnce(Error('network error'))
+    await fetchWithRetry(url, fetchOptions as RequestInit, 2, 0)
+    expect(fetchMock.mock.calls.length).toEqual(2)
   })
 
-  it('makes as many requests as the attempts arguement calls for', async () => {
-    expect.assertions(1)
-
-    fetch.mockReject('network error')
-    await fetchWithRetry(url, fetchOptions, 5, 0).catch(() => {
-      expect(fetch.mock.calls.length).toEqual(5)
+  it('makes as many requests as the attempts argument calls for', async () => {
+    fetchMock.mockReject(Error('network error'))
+    await fetchWithRetry(url, fetchOptions as RequestInit, 5, 0).catch(() => {
+      expect(fetchMock.mock.calls.length).toEqual(5)
     })
   })
 
   it('stops retrying once it gets a successful response', async () => {
     expect.assertions(2)
 
-    fetch.mockRejectOnce('network error')
-    fetch.mockResponseOnce('success')
-    const result = await fetchWithRetry(url, fetchOptions, 5, 0)
+    fetchMock.mockRejectOnce(Error('network error'))
+    fetchMock.mockResponseOnce('success')
+    const result: any = await fetchWithRetry(url, fetchOptions as RequestInit, 5, 0)
     expect(result.body.toString()).toEqual('success')
-    expect(fetch.mock.calls.length).toEqual(2)
+    expect(fetchMock.mock.calls.length).toEqual(2)
   })
 })

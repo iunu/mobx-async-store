@@ -29,5 +29,5 @@
     "jsx": "react"
   },
   "exclude": ["**/*.config.js", "jsconfig.json", "node_modules", "coverage"],
-  "include": ["src/*", "spec/*"]
+  "include": ["src/**/*", "spec/*"]
 }

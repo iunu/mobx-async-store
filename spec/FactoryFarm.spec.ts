@@ -1,4 +1,5 @@
 /* eslint-disable jsdoc/require-jsdoc */
+import { IFactoryFarm } from 'FactoryFarm'
 import {
   FactoryFarm,
   Model,
@@ -112,7 +113,7 @@ class AppStore extends Store {
 
 describe('FactoryFarm', () => {
   describe('building a todo', () => {
-    let factoryFarm
+    let factoryFarm: IFactoryFarm
     beforeEach(() => {
       const store = new AppStore()
       factoryFarm = new FactoryFarm(store)
@@ -123,7 +124,7 @@ describe('FactoryFarm', () => {
       })
       factoryFarm.define('color', {
         type: 'tags',
-        label: (i) => {
+        label: (i: number) => {
           const hexBase = factoryFarm.store.getAll('tags').length + i
           return `#${(hexBase + 10).toString(16)}${(hexBase + 20).toString(16)}${(hexBase + 30).toString(16)}`
         }
@@ -438,7 +439,7 @@ describe('FactoryFarm', () => {
   })
 
   describe('Singletons', () => {
-    let factoryFarm
+    let factoryFarm: IFactoryFarm
     beforeEach(() => {
       const store = new AppStore()
       factoryFarm = new FactoryFarm(store)
