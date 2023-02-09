@@ -1,15 +1,15 @@
-import Store, { ModelClass, ModelClassArray } from './Store'
+import Store from './Store'
 import clone from 'lodash/clone'
 import times from 'lodash/times'
 import { IModelInitOptions, StoreClass } from 'Model'
-import { IObjectWithAny, IRecordObject } from 'interfaces/global'
+import { IObjectWithAny, IRecordObject, ModelClass, ModelClassArray } from 'interfaces/global'
 
 export interface IFactoryFarm {
   store?: StoreClass
   factories: { [key: string]: IFactory }
-  build(factoryName: string, overrideOptions: IRecordObject): ModelClass
+  build(factoryName: string, overrideOptions?: IRecordObject): ModelClass
   build(factoryName: string, overrideOptions: IRecordObject, numberOfRecords: number): ModelClass[]
-  build(factoryName: string, overrideOptions: IRecordObject, numberOfRecords?: number): ModelClass | ModelClass[]
+  build(factoryName: string, overrideOptions?: IRecordObject, numberOfRecords?: number): ModelClass | ModelClass[]
   add (type: string, props: IRecordObject, options?: IModelInitOptions): ModelClass
   add (type: string, props: IRecordObject[], options?: IModelInitOptions): ModelClassArray
   add (type: string, props: IRecordObject | IRecordObject[], options?: IModelInitOptions): ModelClass | ModelClassArray
@@ -25,6 +25,11 @@ export interface IDefineOptions {
 
 export interface IFactory {
   type: string
+  [key: string]: any
+}
+
+export interface IModelBuilder {
+  [key: string]: Function | any
 }
 
 /**
@@ -104,7 +109,7 @@ class FactoryFarm implements IFactoryFarm {
     _verifyFactory(factoryName)
     const { type, ...properties } = factories[factoryName]
 
-    const newModelProperties = {
+    const newModelProperties: IModelBuilder = {
       /**
        * Increments the id for the type based on ids already present
        *
@@ -159,8 +164,6 @@ class FactoryFarm implements IFactoryFarm {
   define (name: string, options: IDefineOptions = {}): void {
     const { type, parent, ...properties } = options
 
-    let factory
-
     if (parent) {
       const fromFactory = this.factories[parent]
 
@@ -168,18 +171,16 @@ class FactoryFarm implements IFactoryFarm {
         throw new Error(`Factory ${parent} does not exist`)
       }
 
-      factory = {
+      this.factories[name] = {
         ...fromFactory,
         ...properties
       }
-    } else {
-      factory = {
+    } else if (type) {
+      this.factories[name] = {
         type,
         ...properties
       }
     }
-
-    this.factories[name] = factory
   }
 
   /* eslint-disable jsdoc/require-jsdoc */

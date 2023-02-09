@@ -1,3 +1,6 @@
+import { IDOptionalJSONAPIDataObject, JSONAPIDataObject, JSONAPIDocument, ModelClass } from "interfaces/global"
+import { StoreClass } from "Model"
+
 /**
  * JSONAPI uses `included` only at the top level. To recursively add models to this array,
  * we preserve the top-level object and pass it in to the next round
@@ -9,25 +12,41 @@
  * @param {Array} included data
  * @param {Array} allEncoded the previously encoded models
  */
-const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel]) => {
-  const { relationships } = encodedModel
+const addIncluded = (store: StoreClass, encodedModel: JSONAPIDataObject, included: JSONAPIDataObject[], allEncoded: JSONAPIDataObject[] = []) => {
+  const relationships = encodedModel.relationships || {}
 
-  Object.keys(relationships).forEach((key) => {
-    let { data } = relationships[key]
-    if (!Array.isArray(data)) {
-      data = [data]
+  if (allEncoded.length === 0) {
+    allEncoded = [encodedModel]
+  }
+
+  Object.values(relationships).forEach((reference) => {
+    const data = reference?.data
+
+    if (Array.isArray(data)) {
+      const notAlreadyIncluded = data.filter(
+        ({ id, type }) => !allEncoded.some((encodedModel) => encodedModel.type === type && encodedModel.id === id)
+      )
+  
+      notAlreadyIncluded.forEach((relationship) => {
+        const relatedModel = store.getOne(relationship.type, relationship.id)
+        if (relatedModel) {
+          const encodedRelatedModel = toFullJsonapi(relatedModel) as JSONAPIDataObject
+          included.push(encodedRelatedModel)
+          addIncluded(store, encodedRelatedModel, included, [...allEncoded, ...included, encodedModel])
+        }
+      })
+    } else if (data?.type && data?.id) {
+      const notAlreadyIncluded = !allEncoded.some((singleEncoded) => singleEncoded.type === data.type && singleEncoded.id === data.id)
+
+      if (notAlreadyIncluded) {
+        const relatedModel = store.getOne(data.type, data.id)
+        if (relatedModel) {
+          const encodedRelatedModel = toFullJsonapi(relatedModel) as JSONAPIDataObject
+          included.push(encodedRelatedModel)
+          addIncluded(store, encodedRelatedModel, included, [...allEncoded, ...included, encodedModel])
+        }
+      }
     }
-
-    const notAlreadyIncluded = data.filter(
-      ({ id, type }) => !allEncoded.some((encodedModel) => encodedModel.type === type && encodedModel.id === id)
-    )
-
-    notAlreadyIncluded.forEach((relationship) => {
-      const relatedModel = store.getOne(relationship.type, relationship.id)
-      const encodedRelatedModel = toFullJsonapi(relatedModel)
-      included.push(encodedRelatedModel)
-      addIncluded(store, encodedRelatedModel, included, [...allEncoded, ...included, encodedModel])
-    })
   })
 }
 
@@ -48,39 +67,30 @@ const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel])
  * @returns {string} JSON encoded data
  */
 
-export const serverResponse = function (modelOrArray) {
-  let model
-  let array
-  let encodedData
-
+export const serverResponse = function (modelOrArray: ModelClass | ModelClass[] | void): string {
   if (modelOrArray == null) {
     throw new Error('Cannot encode a null reference')
-  } else if (Array.isArray(modelOrArray)) {
-    array = modelOrArray
-  } else {
-    model = modelOrArray
-  }
-
-  if (model) {
-    encodedData = {
-      data: toFullJsonapi(model),
+  } else if (!Array.isArray(modelOrArray) && modelOrArray.store && modelOrArray.id) {
+    const encodedData: { data: JSONAPIDocument, included: JSONAPIDocument[] } = {
+      data: toFullJsonapi(modelOrArray) as JSONAPIDataObject,
       included: []
     }
 
-    addIncluded(model.store, encodedData.data, encodedData.included)
-  } else if (array.length > 0) {
-    encodedData = {
-      data: array.map(toFullJsonapi),
+    addIncluded(modelOrArray.store, encodedData.data, encodedData.included)
+    return JSON.stringify(encodedData)
+  } else if (Array.isArray(modelOrArray) && modelOrArray[0]?.store) {
+    const encodedData = {
+      data: modelOrArray.map(toFullJsonapi) as JSONAPIDataObject[],
       included: []
     }
-    encodedData.data.forEach((encodedModel) => {
-      addIncluded(array[0].store, encodedModel, encodedData.included, [...encodedData.data, ...encodedData.included])
+    encodedData.data.forEach((encodedModel: JSONAPIDocument) => {
+      addIncluded(modelOrArray[0].store as StoreClass, encodedModel, encodedData.included, [...encodedData.data, ...encodedData.included])
     })
-  } else {
-    encodedData = { data: [] }
+    return JSON.stringify(encodedData)
+
   }
 
-  return JSON.stringify(encodedData)
+  return JSON.stringify({ data: [] })
 }
 
 /**
@@ -89,6 +99,6 @@ export const serverResponse = function (modelOrArray) {
  * @param {object} model the model to convert
  * @returns {object} the jsonapi encoded document
  */
-const toFullJsonapi = (model) => {
+const toFullJsonapi = (model: ModelClass): IDOptionalJSONAPIDataObject => {
   return model.jsonapi({ relationships: Object.keys(model.relationships) })
 }

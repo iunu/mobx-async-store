@@ -49,7 +49,7 @@ export interface JSONAPIDataObject extends BaseJSONAPIDataObject {
   id: string
 }
 
-export interface UnpersistedJSONAPIDataObject extends BaseJSONAPIDataObject {
+export interface IDOptionalJSONAPIDataObject extends BaseJSONAPIDataObject {
   id?: string
 }
 
@@ -72,7 +72,9 @@ export interface JSONAPIBaseDocument {
 }
 
 export interface JSONAPIDocument extends JSONAPIBaseDocument {
-  data?: JSONAPIDataObject | JSONAPIDataObject[]
+  id: string
+  type: string
+  data?: JSONAPIDataObject
 }
 
 export interface JSONAPISingleDocument extends JSONAPIBaseDocument {

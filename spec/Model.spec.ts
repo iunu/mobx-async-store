@@ -290,7 +290,7 @@ describe('Model', () => {
   })
 
   describe('initialization', () => {
-    it.only('attributes default to specified type', () => {
+    it('attributes default to specified type', () => {
       const todo: ITodo = new Todo()
       expect(todo.tags).toBeInstanceOf(Array)
       const note: INote = new Note()

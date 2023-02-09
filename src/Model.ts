@@ -18,7 +18,7 @@ import union from 'lodash/union'
 import Store, { IStore } from './Store'
 import { defineToManyRelationships, defineToOneRelationships, definitionsByDirection } from './relationships'
 import pick from 'lodash/pick'
-import { ValidationResult, JSONAPIRelationshipObject, JSONAPIDocument, IRequestParamsOpts, JSONAPISingleDocument, IObjectWithAny, JSONAPIRelationshipReference, IQueryParams, JSONAPIDocumentReference, ModelClass, UnpersistedJSONAPIDataObject, IErrorMessage } from 'interfaces/global'
+import { ValidationResult, JSONAPIRelationshipObject, JSONAPIDocument, IRequestParamsOpts, JSONAPISingleDocument, IObjectWithAny, JSONAPIRelationshipReference, IQueryParams, JSONAPIDocumentReference, ModelClass, IDOptionalJSONAPIDataObject, IErrorMessage } from 'interfaces/global'
 
 /**
  * Coerces all ids to strings
@@ -58,7 +58,6 @@ const mobxAnnotations = {
   previousSnapshot: computed,
   persistedOrFirstSnapshot: computed,
   relationshipDefinitions: computed,
-  snapshot: computed,
   type: computed,
   relationshipNames: computed,
   destroy: action,
@@ -81,7 +80,7 @@ const mobxAnnotations = {
 export type StoreClass = InstanceType<typeof Store> | IStore
 
 interface ISnapshot {
-  relationships: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null }
+  relationships: { [key: string]: { data: JSONAPIRelationshipReference } | null }
   attributes: { [key: string]: any }
   persisted: boolean
 }
@@ -136,7 +135,7 @@ export interface IModel {
   initializeAttributes: (attributes: { [key: string]: any }) => void
   initializeRelationships: () => void
   isSame(other: IModel | JSONAPIDocumentReference | null | void): boolean
-  jsonapi(options?: IRequestParamsOpts): JSONAPIDocument
+  jsonapi(options?: IRequestParamsOpts): IDOptionalJSONAPIDataObject
   reload: () => Promise<IModel>
   rollback: () => void
   save(options?: { skip_validations?: boolean, queryParams?: IQueryParams, relationships?: string[], attributes?: string[] }): Promise<ModelClass>
@@ -151,7 +150,7 @@ export interface IModel {
 
 export interface IInitialProperties {
   id?: string
-  relationships?: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null }
+  relationships?: { [key: string]: { data: JSONAPIRelationshipReference } | null }
   attributes?: { [key: string]: any }
   [key: string]: any
 }
@@ -236,7 +235,7 @@ class Model implements IModel {
    *
    * @type {object}
    */
-  relationships: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null } = {}
+  relationships: { [key: string]: { data: JSONAPIRelationshipReference } | null } = {}
 
   /**
    * True if the instance has been modified from its persisted state
@@ -469,7 +468,7 @@ class Model implements IModel {
   }
 
   get toManyDefinitions (): [string, IRelationshipDefinition][] {
-    return definitionsByDirection(this as ModelClass, 'toOne')
+    return definitionsByDirection(this as ModelClass, 'toMany')
   }
 
   /**
@@ -862,7 +861,7 @@ class Model implements IModel {
    * @param {object} options serialization options
    * @returns {object} data in JSON::API format
    */
-  jsonapi (options: IRequestParamsOpts = {}): JSONAPIDocument {
+  jsonapi (options: IRequestParamsOpts = {}): IDOptionalJSONAPIDataObject {
     const {
       attributeDefinitions,
       attributeNames,
@@ -887,7 +886,7 @@ class Model implements IModel {
       return attrs
     }, {})
 
-    const data: UnpersistedJSONAPIDataObject = {
+    const data: IDOptionalJSONAPIDataObject = {
       type,
       attributes,
       id,

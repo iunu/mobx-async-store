@@ -429,7 +429,7 @@ describe('Store', () => {
 
       await store.bulkSave('todos', [todo1, todo3])
 
-      expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      expect(JSON.parse(fetchMock.mock.calls[0][1]?.body)).toEqual({
         data: [
           {
             type: 'todos',
@@ -496,7 +496,7 @@ describe('Store', () => {
 
       await store.bulkSave('todos', [todo1])
 
-      expect(fetchMock.mock.calls[0][1].headers['Content-Type']).toEqual(
+      expect(fetchMock.mock.calls[0][1]?.headers['Content-Type']).toEqual(
         'application/vnd.api+json; ext="bulk"'
       )
     })
@@ -520,7 +520,7 @@ describe('Store', () => {
 
       await store.bulkSave('todos', [todo1], { extensions })
 
-      expect(fetchMock.mock.calls[0][1].headers['Content-Type']).toEqual(
+      expect(fetchMock.mock.calls[0][1]?.headers['Content-Type']).toEqual(
         'application/vnd.api+json; ext="bulk,artemis/group,artemis/extendDaThings"'
       )
     })
@@ -544,7 +544,7 @@ describe('Store', () => {
 
       await store.bulkSave('todos', [todo1], { extensions })
 
-      expect(fetchMock.mock.calls[0][1].headers['Content-Type']).toEqual(
+      expect(fetchMock.mock.calls[0][1]?.headers['Content-Type']).toEqual(
         'application/vnd.api+json; ext="bulk"'
       )
     })
@@ -580,7 +580,7 @@ describe('Store', () => {
 
       await store.bulkCreate('todos', [todo1, todo2])
 
-      expect(fetchMock.mock.calls[0][1].method).toEqual('POST')
+      expect(fetchMock.mock.calls[0][1]?.method).toEqual('POST')
     })
   })
 
@@ -617,7 +617,7 @@ describe('Store', () => {
 
       await store.bulkUpdate('todos', [todo1, todo2])
 
-      expect(fetchMock.mock.calls[0][1].method).toEqual('PATCH')
+      expect(fetchMock.mock.calls[0][1]?.method).toEqual('PATCH')
     })
   })
 

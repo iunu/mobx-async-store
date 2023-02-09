@@ -1,6 +1,6 @@
-import { IRecordObject } from 'interfaces/global'
+import { IRecordObject, ModelClass, ModelClassArray } from 'interfaces/global'
 import { IModelInitOptions, StoreClass } from 'Model'
-import Store, { IRESTTypes, ModelClass, ModelClassArray } from 'Store'
+import Store, { IRESTTypes } from './Store'
 import FactoryFarm, { IDefineOptions, IFactoryFarm } from './FactoryFarm'
 import { serverResponse } from './testUtils'
 import { FetchMock, MockResponseInit } from 'jest-fetch-mock'
