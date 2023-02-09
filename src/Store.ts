@@ -9,8 +9,8 @@ import {
   newId
 } from './utils'
 import cloneDeep from 'lodash/cloneDeep'
-import Model, { IModel, IModelInitOptions } from 'Model'
-import { IErrorMessage, IErrorMessages, IObjectWithAny, IQueryParams, IRecordObject, IRequestParamsOpts, JSONAPIDataObject, JSONAPIErrorObject } from 'interfaces/global'
+import Model, { IModelInitOptions } from 'Model'
+import { ModelClass, IErrorMessages, IQueryParams, IRecordObject, IRequestParamsOpts, JSONAPIDataObject, JSONAPIErrorObject, ModelClassArray } from 'interfaces/global'
 
 interface IStoreInitOptions {
   baseUrl?: string
@@ -38,12 +38,6 @@ interface ILoadingState {
   queryParams?: IQueryParams
   queryTag?: string
   id?: string
-}
-
-export type ModelClass = IModel | InstanceType<typeof Model>
-
-export interface ModelClassArray extends Array<ModelClass> {
-  meta?: IObjectWithAny
 }
 
 export type IRESTTypes = 'POST' | 'PATCH' | 'GET' | 'DELETE'

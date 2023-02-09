@@ -1,6 +1,5 @@
-import { JSONAPIDocumentReference } from 'interfaces/global'
+import { JSONAPIDocumentReference, ModelClass, ModelClassArray, IRelatedRecordsArray } from 'interfaces/global'
 import { action, transaction } from 'mobx'
-import { ModelClass } from 'Store'
 import Model, { IRelationshipDefinition, IRelationshipInverseDefinition, StoreClass } from './Model'
 
 /**
@@ -10,7 +9,7 @@ import Model, { IRelationshipDefinition, IRelationshipInverseDefinition, StoreCl
  * @param {string} direction the direction of the relationship
  */
 export const definitionsByDirection = action((model: ModelClass, direction: string): [string, IRelationshipDefinition][] => {
-  const { relationshipDefinitions = {} } = model
+  const { relationshipDefinitions }: { [key: string]: IRelationshipDefinition } = model
 
   const definitionValues = Object.entries(relationshipDefinitions)
   return definitionValues.filter((definition) => definition[1].direction === direction)
@@ -41,7 +40,7 @@ export const defineToOneRelationships = action((record: ModelClass, store: Store
 
     Object.defineProperty(object, relationshipName, {
       get () {
-        const reference = record.relationships[relationshipName]?.data
+        const reference = record.relationships[relationshipName]?.data as JSONAPIDocumentReference | void
         if (reference) {
           return coerceDataToExistingRecord(store, reference)
         }
@@ -84,19 +83,19 @@ export const defineToManyRelationships = action((record: ModelClass, store: Stor
 
     Object.defineProperty(object, relationshipName, {
       get () {
-        const references = record.relationships[relationshipName]?.data
-        let relatedRecords
+        const references = record.relationships[relationshipName]?.data as JSONAPIDocumentReference[] | void
+        let relatedRecords: (ModelClass | void)[] = []
         if (references) {
           relatedRecords = references.filter((reference) => store.getKlass(reference.type)).map((reference) => coerceDataToExistingRecord(store, reference))
         } else if (inverse) {
           const types = relationshipTypes || [relationshipName]
           relatedRecords = types.map((type) => store.getAll(type)).flat().filter((potentialRecord) => {
-            const reference = potentialRecord.relationships[inverse.name]?.data
+            const reference = potentialRecord.relationships[inverse.name]?.data as JSONAPIDocumentReference | void
             return reference && (reference.type === record.type) && (String(reference.id) === record.id)
           })
         }
 
-        return new RelatedRecordsArray(record, relationshipName, relatedRecords)
+        return new RelatedRecordsArray(record, relationshipName, relatedRecords.filter((record: ModelClass | void) => record) as ModelClass[])
       },
       set (relatedRecords: ModelClass[]) {
         const previousReferences = this.relationships[relationshipName]
@@ -112,7 +111,7 @@ export const defineToManyRelationships = action((record: ModelClass, store: Stor
           const types = inverse.types || [inferredType]
 
           const oldRelatedRecords = types.map((type) => store.getAll(type)).flat().filter((potentialRecord) => {
-            const reference = potentialRecord.relationships[inverseName]?.data
+            const reference = potentialRecord.relationships[inverseName]?.data as JSONAPIDocumentReference
             return reference && (reference.type === record.type) && (reference.id === record.id)
           })
 
@@ -120,8 +119,10 @@ export const defineToManyRelationships = action((record: ModelClass, store: Stor
             delete oldRelatedRecord.relationships[inverseName]
           })
 
-          relatedRecordsFromStore.forEach((relatedRecord: ModelClass) => {
-            relatedRecord.relationships[inverseName] = { data: { id: record.id, type: record.type } }
+          relatedRecordsFromStore.forEach((relatedRecord: ModelClass | void) => {
+            if (relatedRecord) {
+              relatedRecord.relationships[inverseName] = { data: { id: String(record.id), type: record.type } }
+            }
           })
         }
 
@@ -169,7 +170,7 @@ export const setRelatedRecord = action((relationshipName: string, record: ModelC
         addRelatedRecord(inverse.name, relatedRecord, record)
       }
   
-      record.relationships[relationshipName] = { data: { id: relatedRecord.id, type: relatedRecord.type } }
+      if (relatedRecord.id) { record.relationships[relationshipName] = { data: { id: relatedRecord.id, type: relatedRecord.type } } }
     }
   }
 
@@ -189,9 +190,9 @@ export const setRelatedRecord = action((relationshipName: string, record: ModelC
 export const removeRelatedRecord = action((relationshipName: string, record: ModelClass, relatedRecord: ModelClass, inverse: IRelationshipInverseDefinition | void) => {
   if (relatedRecord == null || record == null || record.store == null) { return relatedRecord }
 
-  const existingData = (record.relationships[relationshipName]?.data || [])
+  const existingData = (record.relationships[relationshipName]?.data || []) as JSONAPIDocumentReference[]
 
-  const recordIndexToRemove = existingData.findIndex(({ id: comparedId, type: comparedType }: ) => {
+  const recordIndexToRemove = existingData.findIndex(({ id: comparedId, type: comparedType }) => {
     return comparedId === relatedRecord.id && comparedType === relatedRecord.type
   })
 
@@ -209,6 +210,7 @@ export const removeRelatedRecord = action((relationshipName: string, record: Mod
   return relatedRecord
 })
 
+/* eslint-disable jsdoc/require-jsdoc */
 /**
  * Adds a record to a related array and updates the jsonapi reference in the relationships
  *
@@ -218,22 +220,21 @@ export const removeRelatedRecord = action((relationshipName: string, record: Mod
  * @param {object} inverse the definition of the inverse relationship
  * @returns {object} the added record
  */
-export const addRelatedRecord = action((relationshipName: string, record: ModelClass, relatedRecord: ModelClass | ModelClass[], inverse: IRelationshipInverseDefinition | void): ModelClass | ModelClass[] => {
+function addRelatedRecord (relationshipName: string, record: ModelClass, relatedRecord: ModelClass, inverse?: IRelationshipInverseDefinition): ModelClass | void
+function addRelatedRecord (relationshipName: string, record: ModelClass, relatedRecord: ModelClass[], inverse?: IRelationshipInverseDefinition): ModelClass[]
+function addRelatedRecord (relationshipName: string, record: ModelClass, relatedRecord: ModelClass | ModelClass[], inverse?: IRelationshipInverseDefinition): ModelClass | void | (void | ModelClass)[] {
   if (Array.isArray(relatedRecord)) {
-    const records: ModelClass[] = relatedRecord.map(singleRecord => {
-      const addedRecord: ModelClass = addRelatedRecord(relationshipName, record, singleRecord, inverse)
-      return addedRecord
-    })
-
-    return records
+    return relatedRecord.map((singleRecord: ModelClass) => {
+      return addRelatedRecord(relationshipName, record, singleRecord, inverse)
+    }).filter((record: ModelClass | void) => typeof record !== 'undefined')
   }
 
-  if (relatedRecord == null || record == null || !record.store?.getKlass(record.type)) { return relatedRecord }
+  if (relatedRecord?.id == null || record == null || !record.store?.getKlass(record.type)) { return relatedRecord }
 
   const relatedRecordFromStore = coerceDataToExistingRecord(record.store, relatedRecord)
 
-  if (inverse?.direction === 'toOne') {
-    const previousRelatedRecord = relatedRecordFromStore?[inverse.name]
+  if (inverse?.direction === 'toOne' && relatedRecordFromStore) {
+    const previousRelatedRecord = relatedRecordFromStore?.[inverse.name]
     removeRelatedRecord(relationshipName, previousRelatedRecord, relatedRecordFromStore)
 
     setRelatedRecord(inverse.name, relatedRecordFromStore, record, record.store)
@@ -245,15 +246,21 @@ export const addRelatedRecord = action((relationshipName: string, record: ModelC
     record.relationships[relationshipName] = { data: [] }
   }
 
-  const alreadyThere = record.relationships[relationshipName].data.some(({ id, type }) => id === relatedRecord.id && type === relatedRecord.type)
+  const dataToTest = record.relationships[relationshipName]?.data as JSONAPIDocumentReference[] | void
 
-  if (!alreadyThere) {
-    record.relationships[relationshipName].data.push({ id: relatedRecord.id, type: relatedRecord.type })
+  if (typeof dataToTest === 'undefined') {
+    record.relationships[relationshipName] = { data: [{ id: relatedRecord.id, type: relatedRecord.type }] }
+  } else {
+    const alreadyThere = dataToTest.some(({ id, type }) => id === relatedRecord.id && type === relatedRecord.type)
+    if (!alreadyThere) {
+      (record.relationships[relationshipName]?.data as JSONAPIDocumentReference[]).push({ id: relatedRecord.id, type: relatedRecord.type })
+    }
   }
 
   record.takeSnapshot()
   return relatedRecordFromStore
-})
+}
+/* eslint-enable jsdoc/require-jsdoc */
 
 /**
  * Takes any object with { id, type } properties and gets an object from the store with that structure.
@@ -265,18 +272,17 @@ export const addRelatedRecord = action((relationshipName: string, record: ModelC
  * @returns {object} the store object
  */
 export const coerceDataToExistingRecord = action((store: StoreClass, record: ModelClass | JSONAPIDocumentReference): ModelClass | void => {
-  if (record == null || !store?.data?.[record.type]) { return }
+  if (record?.id == null || !store?.data?.[record.type]) { return }
   if (record && !(record instanceof Model)) {
     const { id, type } = record
-    const foundRecord = store.getOne(type, id) || store.add(type, { id }, { skipInitialization: true })
-    return foundRecord
+    return store.getOne(type, id) || store.add(type, { id }, { skipInitialization: true })
   }
 })
 
 /**
  * An array that allows for updating store references and relationships
  */
-export class RelatedRecordsArray extends Array {
+export class RelatedRecordsArray extends Array implements IRelatedRecordsArray {
   /**
    * Extends an array to create an enhanced array.
    *
@@ -284,8 +290,10 @@ export class RelatedRecordsArray extends Array {
    * @param {string} property the property on the record that references the array
    * @param {Array} array the array to extend
    */
-  constructor (record: ModelClass, property: string, array = []) {
-    super(...array)
+  constructor (record: ModelClass, property: string, array: ModelClass[] = []) {
+    super()
+    this.push(...array)
+
     this._property = property
     this._record = record
     this._store = record.store
@@ -297,17 +305,25 @@ export class RelatedRecordsArray extends Array {
   private _store?: StoreClass
   private _inverse?: IRelationshipInverseDefinition
 
+  /* eslint-disable jsdoc/require-jsdoc */
   /**
    * Adds a record to the array, and updates references in the store, as well as inverse references
    *
    * @param {object} relatedRecord the record to add to the array
    * @returns {object} a model record reflecting the original relatedRecord
    */
-  add = (relatedRecord: ModelClass) => {
+  add (relatedRecord: ModelClass): ModelClass | void
+  add (relatedRecord: ModelClass[]): ModelClass[]
+  add (relatedRecord: ModelClass | ModelClass[]): ModelClass | void | (ModelClass | void)[] {
     const { _inverse, _record, _property } = this
 
+    if (Array.isArray(relatedRecord)) {
+      return relatedRecord.map((oneRecord) => addRelatedRecord(_property, _record, oneRecord, _inverse))
+    }
+    
     return addRelatedRecord(_property, _record, relatedRecord, _inverse)
   }
+  /* eslint-enable jsdoc/require-jsdoc */
 
   /**
    * Removes a record from the array, and updates references in the store, as well as inverse references
@@ -315,7 +331,7 @@ export class RelatedRecordsArray extends Array {
    * @param {object} relatedRecord the record to remove from the array
    * @returns {object} a model record reflecting the original relatedRecord
    */
-  remove = (relatedRecord: ModelClass) => {
+  remove (relatedRecord: ModelClass): ModelClass {
     const { _inverse, _record, _property } = this
     return removeRelatedRecord(_property, _record, relatedRecord, _inverse)
   }
@@ -326,9 +342,9 @@ export class RelatedRecordsArray extends Array {
    * @param {Array} array the array of objects that will replace the existing one
    * @returns {Array} this internal array
    */
-  replace = (array = []) => {
+  replace (array: ModelClass[] | ModelClassArray = []): ModelClass[] {
     const { _inverse, _record, _property, _store } = this
-    let newRecords
+    let newRecords: ModelClass[] = []
 
     transaction(() => {
       if (_inverse?.direction === 'toOne') {
@@ -342,7 +358,7 @@ export class RelatedRecordsArray extends Array {
       }
 
       _record.relationships[_property] = { data: [] }
-      newRecords = array.map((relatedRecord) => addRelatedRecord(_property, _record, relatedRecord, _inverse))
+      newRecords = addRelatedRecord(_property, _record, array, _inverse)
     })
 
     return newRecords

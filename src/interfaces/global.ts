@@ -1,3 +1,5 @@
+import Model, { IModel } from "Model"
+
 export type NestedKeyOf<ObjectType extends object> =
   {[Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object
     // @ts-ignore
@@ -38,7 +40,7 @@ export interface JSONAPIErrorObject {
 interface BaseJSONAPIDataObject {
   type: string
   attributes?: { [key: string]: any }
-  relationships?: { [key: string]: { data: JSONAPIRelationshipObject | JSONAPIRelationshipReference } | null }
+  relationships?: { [key: string]: { data: JSONAPIRelationshipReference } | null }
   links?: { [key: string]: string }
   meta?: { [key: string]: any }
 }
@@ -110,3 +112,17 @@ export interface JSONAPIDocumentReference {
 }
 
 export type JSONAPIRelationshipReference = JSONAPIDocumentReference | JSONAPIDocumentReference[]
+
+export type ModelClass = IModel | InstanceType<typeof Model>
+
+export interface ModelClassArray extends Array<ModelClass> {
+  meta?: IObjectWithAny
+}
+
+export interface IRelatedRecordsArray extends Array<ModelClass> {
+  add(relatedRecord: ModelClass): ModelClass | void
+  add(relatedRecord: ModelClass[]): ModelClass[]
+  add(relatedRecord: ModelClass | ModelClass[]): ModelClass | void | (ModelClass | void)[]
+  remove(relatedRecord: ModelClass): ModelClass
+  replace(array: ModelClass[] | ModelClassArray): ModelClass[]
+}

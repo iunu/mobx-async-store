@@ -15,10 +15,10 @@ import isEqual from 'lodash/isEqual'
 import isObject from 'lodash/isObject'
 import findLast from 'lodash/findLast'
 import union from 'lodash/union'
-import Store, { IStore, ModelClass } from './Store'
+import Store, { IStore } from './Store'
 import { defineToManyRelationships, defineToOneRelationships, definitionsByDirection } from './relationships'
 import pick from 'lodash/pick'
-import { ValidationResult, JSONAPIRelationshipObject, JSONAPIDocument, IRequestParamsOpts, JSONAPISingleDocument, IObjectWithAny, JSONAPIRelationshipReference, IQueryParams, JSONAPIDocumentReference, JSONAPIDataObject, UnpersistedJSONAPIDataObject, JSONAPIErrorObject, IErrorMessage } from 'interfaces/global'
+import { ValidationResult, JSONAPIRelationshipObject, JSONAPIDocument, IRequestParamsOpts, JSONAPISingleDocument, IObjectWithAny, JSONAPIRelationshipReference, IQueryParams, JSONAPIDocumentReference, ModelClass, UnpersistedJSONAPIDataObject, IErrorMessage } from 'interfaces/global'
 
 /**
  * Coerces all ids to strings
@@ -130,18 +130,18 @@ export interface IModel {
   relationshipDefinitions: { [key: string]: IRelationshipDefinition }
   type: string
   relationshipNames: string[]
-  destroy(options: { params?: {} | undefined; skipRemove?: boolean }): Promise<this|void>
+  destroy(options?: { params?: {} | undefined; skipRemove?: boolean }): Promise<this|void>
   clearSnapshots: () => void
   errorForKey: (key: string) => IErrorMessage[]
   initializeAttributes: (attributes: { [key: string]: any }) => void
   initializeRelationships: () => void
-  isSame: (model: IModel) => boolean
+  isSame(other: IModel | JSONAPIDocumentReference | null | void): boolean
   jsonapi(options?: IRequestParamsOpts): JSONAPIDocument
   reload: () => Promise<IModel>
   rollback: () => void
   save(options?: { skip_validations?: boolean, queryParams?: IQueryParams, relationships?: string[], attributes?: string[] }): Promise<ModelClass>
   takeSnapshot: (options?: { persisted: boolean }) => void
-  validate: (options: { attributes: string[], relationships: string[] }) => boolean
+  validate: (options?: { attributes: string[], relationships: string[] }) => boolean
   undo: () => void
   updateAttributes: (attributes: { [key: string]: any }) => void
   
@@ -637,7 +637,7 @@ class Model implements IModel {
    * @param {object} options params and option to skip removal from the store
    * @returns {Promise} an empty promise with any success/error status
    */
-  destroy (options: { params?: {} | undefined; skipRemove?: boolean }): Promise<this|void> {
+  destroy (options: { params?: {} | undefined; skipRemove?: boolean } = {}): Promise<this|void> {
     const { type, id, isNew, store } = this
 
     if (isNew && id) {
@@ -935,7 +935,7 @@ class Model implements IModel {
    * @param {IModel} other other model object
    * @returns {boolean} if this object has the same type and id
    */
-  isSame (other: IModel) {
+  isSame (other: IModel | JSONAPIDocumentReference | null | void) {
     if (!other) return false
     return this.type === other.type && this.id === other.id
   }
