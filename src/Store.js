@@ -15,7 +15,6 @@ import cloneDeep from 'lodash/cloneDeep'
  */
 
 const mobxAnnotations = {
-  data: observable,
   lastResponseHeaders: observable,
   loadingStates: observable,
   loadedStates: observable,
@@ -69,9 +68,9 @@ class Store {
    * Stores data by type.
    * {
    *   todos: {
-   *     records: observable.map(), // records by id
-   *     cache: observable.map(), // cached ids by url
-   *     meta: observable.map() // meta information by url
+   *     records: new Map(), // records by id
+   *     cache: new Map(), // cached ids by url
+   *     meta: new Map() // meta information by url
    *   }
    * }
    *
@@ -680,9 +679,9 @@ class Store {
     const types = type ? [type] : this.models.map(({ type }) => type)
     types.forEach((type) => {
       this.data[type] = {
-        records: observable.map(),
-        cache: observable.map(),
-        meta: observable.map()
+        records: new Map(),
+        cache: new Map(),
+        meta: new Map()
       }
     })
   }
