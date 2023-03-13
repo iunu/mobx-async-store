@@ -231,7 +231,7 @@ class Model {
 
     return Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
       const currentValue = this.attributes[attr]
-      const previousValue = this.previousSnapshot.attributes[attr]
+      const previousValue = this.persistedOrFirstSnapshot.attributes[attr]
 
       if (isObject(currentValue)) {
         const currentToPreviousDiff = diff(currentValue, previousValue)
