@@ -4,7 +4,7 @@ import _createClass from '@babel/runtime/helpers/createClass';
 import _defineProperty$1 from '@babel/runtime/helpers/defineProperty';
 import _typeof from '@babel/runtime/helpers/typeof';
 import _regeneratorRuntime from '@babel/runtime/regenerator';
-import { toJS, runInAction, observable, makeObservable, action, transaction, extendObservable, computed } from 'mobx';
+import { toJS, runInAction, makeObservable, observable, action, transaction, extendObservable, computed } from 'mobx';
 import _inherits from '@babel/runtime/helpers/inherits';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import { v1 } from 'uuid';
@@ -8219,7 +8219,6 @@ function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { 
  */
 
 var mobxAnnotations$1 = {
-  data: observable,
   lastResponseHeaders: observable,
   loadingStates: observable,
   loadedStates: observable,
@@ -8273,9 +8272,9 @@ var Store = /*#__PURE__*/function () {
    * Stores data by type.
    * {
    *   todos: {
-   *     records: observable.map(), // records by id
-   *     cache: observable.map(), // cached ids by url
-   *     meta: observable.map() // meta information by url
+   *     records: new Map(), // records by id
+   *     cache: new Map(), // cached ids by url
+   *     meta: new Map() // meta information by url
    *   }
    * }
    *
@@ -9079,9 +9078,9 @@ var Store = /*#__PURE__*/function () {
       });
       types.forEach(function (type) {
         _this5.data[type] = {
-          records: observable.map(),
-          cache: observable.map(),
-          meta: observable.map()
+          records: new Map(),
+          cache: new Map(),
+          meta: new Map()
         };
       });
     }
@@ -10182,7 +10181,7 @@ var Model = /*#__PURE__*/function () {
       }
       return Object.keys(this.attributes).reduce(function (dirtyAccumulator, attr) {
         var currentValue = _this.attributes[attr];
-        var previousValue = _this.previousSnapshot.attributes[attr];
+        var previousValue = _this.persistedOrFirstSnapshot.attributes[attr];
         if (isObject_1(currentValue)) {
           var currentToPreviousDiff = diff(currentValue, previousValue);
           var previousToCurrentDiff = diff(previousValue, currentValue);
@@ -11618,11 +11617,10 @@ var MockServer = /*#__PURE__*/function () {
       var store = _backendFactoryFarm.store;
       var _URL = new URL(url, 'http://example.com'),
         pathname = _URL.pathname;
-      var type = Object.keys(store.data).find(function (model_type) {
-        return pathname.match(model_type);
-      });
-      var id = pathname.match(/\d+$/);
-      id = id && String(id);
+      var _pathname$match = pathname.match(/(?:\/)([A-Za-z0-9\-_]+)(?:\/*)(\d*)$/),
+        _pathname$match2 = _slicedToArray(_pathname$match, 3),
+        type = _pathname$match2[1],
+        id = _pathname$match2[2];
       if (method === 'POST') {
         return simulatePost(store, type, body);
       } else if (method === 'PATCH') {
