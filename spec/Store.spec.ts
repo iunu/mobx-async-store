@@ -275,10 +275,6 @@ describe('Store', () => {
     })
   })
 
-  it('has observable data property', () => {
-    expect(isObservable(store.data)).toBe(true)
-  })
-
   it('sets network configuration properties', () => {
     expect(store.baseUrl).toEqual(mockBaseUrl)
     expect(store.defaultFetchOptions).toEqual(mockFetchOptions)
@@ -300,11 +296,11 @@ describe('Store', () => {
 
   it('initializes data observable', () => {
     const map = new Map()
-    expect(toJS(store.data)).toEqual({
-      todos: { cache: map, meta: map, records: map },
-      notes: { cache: map, meta: map, records: map },
-      categories: { cache: map, meta: map, records: map },
-      tags: { cache: map, meta: map, records: map }
+    expect(store.data).toEqual({
+      todos: { cache: new Map(), meta: new Map(), records: new Map() },
+      notes: { cache: new Map(), meta: new Map(), records: new Map() },
+      categories: { cache: new Map(), meta: new Map(), records: new Map() },
+      tags: { cache: new Map(), meta: new Map(), records: new Map() }
     })
   })
 

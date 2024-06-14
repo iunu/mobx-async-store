@@ -943,8 +943,15 @@ describe('Model', () => {
         description: 'Example description'
       })
 
+      const note2 = store.add('notes', {
+        id: '11',
+        description: 'Example description'
+      })
+
       todo.notes.add(note)
       note.description = 'something different'
+      todo.notes.replace([note, note2])
+
       expect(todo.dirtyAttributes).toEqual(blankSet)
       expect(note.dirtyAttributes.size).toEqual(1)
       expect(note.dirtyAttributes).toContain('description')
