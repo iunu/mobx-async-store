@@ -4628,10 +4628,10 @@ mobx-react@^7.5.2:
   dependencies:
     mobx-react-lite "^3.4.0"
 
-mobx@6.3.5:
-  version "6.3.5"
-  resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.3.5.tgz#4464565bf2fa0f74f5dc2e4d6a9713bcee0ddf9c"
-  integrity sha512-MeDfqtiSbhVoJgXqQsrJwvq2klj7Xk9pPdMThCdFiwFt33vgWJe82ATppPwVzQoz0AI3QpSSwQzcp3TBDK4syg==
+mobx@6.12.4:
+  version "6.12.4"
+  resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.12.4.tgz#a1e176cd173bf45d3e5eb825eaff2c736c0a90cb"
+  integrity sha512-uIymg89x+HmItX1p3MG+d09irn2k63J6biftZ5Ok+UpNojS1I3NJPLfcmJT9ANnUltNlHi+HQqrVyxiAN8ISYg==
 
 moment@^2.29.4:
   version "2.29.4"
