@@ -63,7 +63,7 @@ yarn install
 ### Step 3 - Publish
 
 `npm login` to authenticate yourself as someone authorized to publish this package
-`npm publish` (or `npm publish =tag=develop` for development releases)
+`npm publish` (or `npm publish --tag develop` for development releases)
 
 ## Installation
 

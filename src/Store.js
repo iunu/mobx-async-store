@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, runInAction, toJS } from 'mobx'
 import pick from 'lodash/pick'
+import uniqBy from 'lodash/uniqBy'
 import {
   fetchWithRetry,
   deriveIdQueryStrings,
@@ -517,7 +518,7 @@ class Store {
     if (queryParams) {
       return this.getCachedRecords(type, queryParams)
     } else {
-      return this.getRecords(type).filter((record) => record.initialized)
+      return uniqBy(this.getRecords(type).filter((record) => record.initialized), 'id')
     }
   }
 
