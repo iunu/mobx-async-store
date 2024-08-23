@@ -7241,7 +7241,7 @@ var baseMatches = _baseMatches,
  * @param {*} [value=_.identity] The value to convert to an iteratee.
  * @returns {Function} Returns the iteratee.
  */
-function baseIteratee$2(value) {
+function baseIteratee$3(value) {
   // Don't store the `typeof` result in a variable to avoid a JIT bug in Safari 9.
   // See https://bugs.webkit.org/show_bug.cgi?id=156034 for more details.
   if (typeof value == 'function') {
@@ -7258,9 +7258,9 @@ function baseIteratee$2(value) {
   return property(value);
 }
 
-var _baseIteratee = baseIteratee$2;
+var _baseIteratee = baseIteratee$3;
 
-var baseIteratee$1 = _baseIteratee,
+var baseIteratee$2 = _baseIteratee,
     isArrayLike$1 = isArrayLike_1,
     keys = keys_1;
 
@@ -7275,7 +7275,7 @@ function createFind$1(findIndexFunc) {
   return function(collection, predicate, fromIndex) {
     var iterable = Object(collection);
     if (!isArrayLike$1(collection)) {
-      var iteratee = baseIteratee$1(predicate);
+      var iteratee = baseIteratee$2(predicate);
       collection = keys(collection);
       predicate = function(key) { return iteratee(iterable[key], key, iterable); };
     }
@@ -7499,7 +7499,7 @@ function toInteger$2(value) {
 var toInteger_1 = toInteger$2;
 
 var baseFindIndex$1 = _baseFindIndex,
-    baseIteratee = _baseIteratee,
+    baseIteratee$1 = _baseIteratee,
     toInteger$1 = toInteger_1;
 
 /* Built-in method references for those with the same name as other `lodash` methods. */
@@ -7553,7 +7553,7 @@ function findLastIndex$1(array, predicate, fromIndex) {
       ? nativeMax$1(length + index, 0)
       : nativeMin$1(index, length - 1);
   }
-  return baseFindIndex$1(array, baseIteratee(predicate), index, true);
+  return baseFindIndex$1(array, baseIteratee$1(predicate), index, true);
 }
 
 var findLastIndex_1 = findLastIndex$1;
@@ -7927,7 +7927,7 @@ var LARGE_ARRAY_SIZE = 200;
  * @param {Function} [comparator] The comparator invoked per element.
  * @returns {Array} Returns the new duplicate free array.
  */
-function baseUniq$1(array, iteratee, comparator) {
+function baseUniq$2(array, iteratee, comparator) {
   var index = -1,
       includes = arrayIncludes,
       length = array.length,
@@ -7979,7 +7979,7 @@ function baseUniq$1(array, iteratee, comparator) {
   return result;
 }
 
-var _baseUniq = baseUniq$1;
+var _baseUniq = baseUniq$2;
 
 var isArrayLike = isArrayLike_1,
     isObjectLike = isObjectLike_1;
@@ -8017,7 +8017,7 @@ var isArrayLikeObject_1 = isArrayLikeObject$1;
 
 var baseFlatten$1 = _baseFlatten,
     baseRest = _baseRest,
-    baseUniq = _baseUniq,
+    baseUniq$1 = _baseUniq,
     isArrayLikeObject = isArrayLikeObject_1;
 
 /**
@@ -8037,7 +8037,7 @@ var baseFlatten$1 = _baseFlatten,
  * // => [2, 1]
  */
 var union = baseRest(function(arrays) {
-  return baseUniq(baseFlatten$1(arrays, 1, isArrayLikeObject, true));
+  return baseUniq$1(baseFlatten$1(arrays, 1, isArrayLikeObject, true));
 });
 
 var union_1 = union;
@@ -8210,6 +8210,38 @@ var pick = flatRest(function(object, paths) {
 });
 
 var pick_1 = pick;
+
+var baseIteratee = _baseIteratee,
+    baseUniq = _baseUniq;
+
+/**
+ * This method is like `_.uniq` except that it accepts `iteratee` which is
+ * invoked for each element in `array` to generate the criterion by which
+ * uniqueness is computed. The order of result values is determined by the
+ * order they occur in the array. The iteratee is invoked with one argument:
+ * (value).
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Array
+ * @param {Array} array The array to inspect.
+ * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+ * @returns {Array} Returns the new duplicate free array.
+ * @example
+ *
+ * _.uniqBy([2.1, 1.2, 2.3], Math.floor);
+ * // => [2.1, 1.2]
+ *
+ * // The `_.property` iteratee shorthand.
+ * _.uniqBy([{ 'x': 1 }, { 'x': 2 }, { 'x': 1 }], 'x');
+ * // => [{ 'x': 1 }, { 'x': 2 }]
+ */
+function uniqBy(array, iteratee) {
+  return (array && array.length) ? baseUniq(array, baseIteratee(iteratee)) : [];
+}
+
+var uniqBy_1 = uniqBy;
 
 function ownKeys$3(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread$3(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys$3(Object(source), !0).forEach(function (key) { _defineProperty$1(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys$3(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
@@ -8855,9 +8887,9 @@ var Store = /*#__PURE__*/function () {
       if (queryParams) {
         return this.getCachedRecords(type, queryParams);
       } else {
-        return this.getRecords(type).filter(function (record) {
+        return uniqBy_1(this.getRecords(type).filter(function (record) {
           return record.initialized;
-        });
+        }), 'id');
       }
     }
 
