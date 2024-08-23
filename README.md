@@ -63,7 +63,7 @@ yarn install
 ### Step 3 - Publish
 
 `npm login` to authenticate yourself as someone authorized to publish this package
-`npm publish` (or `npm publish =tag=develop` for development releases)
+`npm publish` (or `npm publish --tag develop` for development releases)
 
 ## Installation
 
@@ -255,7 +255,7 @@ Example with a component
 // Component
 @inject('dataStore')
 class Button extends Component {
-  @observable zone 
+  @observable zone
   changeZoneName = (name) => {
     const { zone } = this
     zone.name = name
@@ -332,7 +332,7 @@ describe('fetchZone', () => {
 })
 
 
-Example - failure on specific call 
+Example - failure on specific call
 
 // Testing a catch alerts with errors
   it('returns errors if saving fails', async (done) => {
@@ -354,13 +354,13 @@ Example - failure on specific call
     // Pass in response overrides when starting the server
     const mockServer = new MockServer()
     mockServer.start({ responseOverrides })
-    
+
     window.alert = jest.fn()
     expect(fetch.mock.calls).toHaveLength(1)
-    
+
     const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
     await submitBtn.simulate('click')
-    
+
     expect(fetch.mock.calls).toHaveLength(2)
     setImmediate(() => {
       expect(window.alert).toHaveBeenCalledWith('There is an error!')
@@ -377,10 +377,10 @@ Example - failure on all calls
     // Pass in non-200 status when starting the server (this will fail all responses)
     const mockServer = new MockServer()
     mockServer.start({ status: 500 })
-    
+
     expect(fetch.mock.calls).toHaveLength(1)
     const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
-  
+
     try {
       await submitBtn.simulate('click')
     } catch (error) {
@@ -394,7 +394,7 @@ You can pass in a factory or store to define data that will be returned by the s
 // Component
 @inject('dataStore')
 class Button extends Component {
-  @observable zone 
+  @observable zone
 
   componentDidMount() {
     this.loadData()
