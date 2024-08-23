@@ -294,7 +294,6 @@ describe('Store', () => {
   })
 
   it('initializes data observable', () => {
-    const map = new Map()
     expect(store.data).toEqual({
       todos: { cache: new Map(), meta: new Map(), records: new Map() },
       notes: { cache: new Map(), meta: new Map(), records: new Map() },
