@@ -817,11 +817,15 @@ class Model {
 
     if (options.relationships) {
       filteredRelationshipNames = this.relationshipNames
-        .filter(name => options.relationships.includes(name) && this.relationships[name])
+        .filter(name => options.relationships.includes(name))
 
       const relationships = filteredRelationshipNames.reduce((rels, key) => {
         rels[key] = toJS(this.relationships[key])
-        stringifyIds(rels[key])
+        if (rels[key] == null) {
+          rels[key] = { data: null }
+        } else {
+          stringifyIds(rels[key])
+        }
         return rels
       }, {})
 
