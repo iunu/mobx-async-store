@@ -25,8 +25,24 @@ class Todo extends Model {
   }
 }
 
+class BlueTodo extends Model {
+  static type = 'blue_todos'
+  static endpoint = 'blue_todos'
+
+  static attributeDefinitions = {
+    title: {
+      transformer: stringType,
+      defaultValue: ''
+    },
+    subtitle: {
+      transformer: stringType,
+      defaultValue: ''
+    }
+  }
+}
+
 class AppStore extends Store {
-  static models = [Todo]
+  static models = [Todo, BlueTodo]
 }
 
 describe('MockServer', () => {
@@ -45,6 +61,16 @@ describe('MockServer', () => {
     mockServer.start()
 
     const todo = await store.fetchOne('todos', '2')
+    expect(todo.id).toEqual('2')
+    expect(todo.title).toEqual('Plant Seeds')
+  })
+
+  it('finds one with a similar type', async () => {
+    const mockServer = new MockServer({ factoryFarm })
+    mockServer.add('blue_todos', { id: '2', title: 'Plant Seeds' })
+    mockServer.start()
+
+    const todo = await store.fetchOne('blue_todos', '2')
     expect(todo.id).toEqual('2')
     expect(todo.title).toEqual('Plant Seeds')
   })

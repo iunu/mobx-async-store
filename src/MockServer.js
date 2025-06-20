@@ -254,10 +254,7 @@ class MockServer {
     const { store } = _backendFactoryFarm
 
     const { pathname } = new URL(url, 'http://example.com')
-    const type = Object.keys(store.data).find((model_type) => pathname.match(model_type))
-
-    let id = pathname.match(/\d+$/)
-    id = id && String(id)
+    const [, type, id] = pathname.match(/(?:\/)([A-Za-z0-9\-_]+)(?:\/*)(\d*)$/)
 
     if (method === 'POST') {
       return simulatePost(store, type, body)
