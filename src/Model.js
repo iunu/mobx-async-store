@@ -823,7 +823,7 @@ class Model {
         rels[key] = toJS(this.relationships[key])
         if (rels[key] === null) {
           console.log('here 1', rels[key], key)
-          rels[key] = { data: n=ull }
+          rels[key] = { data: null }
         } else if(rels[key] == undefined) {
           console.log('here 2', rels[key], key)
         } else {
