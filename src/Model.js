@@ -822,8 +822,10 @@ class Model {
       const relationships = filteredRelationshipNames.reduce((rels, key) => {
         rels[key] = toJS(this.relationships[key])
         if (rels[key] == null) {
+          console.log('here 1', rels[key], key)
           rels[key] = { data: null }
         } else {
+          console.log('here 2', rels[key], key)
           stringifyIds(rels[key])
         }
         return rels
