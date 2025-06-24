@@ -817,7 +817,7 @@ class Model {
 
     if (options.relationships) {
       filteredRelationshipNames = this.relationshipNames
-        .filter(name => options.relationships.includes(name))
+        .filter(name => options.relationships.includes(name) && this.relationships[name] !== undefined)
 
       const relationships = filteredRelationshipNames.reduce((rels, key) => {
         rels[key] = toJS(this.relationships[key])
