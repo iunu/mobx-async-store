@@ -823,9 +823,11 @@ class Model {
         rels[key] = toJS(this.relationships[key])
         if (rels[key] === null) {
           console.log('here 1', rels[key], key)
-          rels[key] = { data: null }
-        } else {
+          rels[key] = { data: n=ull }
+        } else if(rels[key] == undefined) {
           console.log('here 2', rels[key], key)
+        } else {
+          console.log('here 3', rels[key], key)
           stringifyIds(rels[key])
         }
         return rels
