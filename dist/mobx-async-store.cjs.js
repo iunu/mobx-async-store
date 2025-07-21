@@ -10920,11 +10920,21 @@ var Model = /*#__PURE__*/function () {
       };
       if (options.relationships) {
         filteredRelationshipNames = this.relationshipNames.filter(function (name) {
-          return options.relationships.includes(name) && _this5.relationships[name];
+          return options.relationships.includes(name);
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
+          if (!(key in _this5.relationships)) {
+            // Don't include keys that are truly undefined / not present
+            return rels;
+          }
           rels[key] = mobx.toJS(_this5.relationships[key]);
-          stringifyIds(rels[key]);
+          if (rels[key] == null) {
+            rels[key] = {
+              data: null
+            };
+          } else {
+            stringifyIds(rels[key]);
+          }
           return rels;
         }, {});
         data.relationships = relationships;
