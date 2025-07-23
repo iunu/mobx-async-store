@@ -27,7 +27,7 @@ import pick from 'lodash/pick'
  * @param {object} propertyDefinitions a hash map containing validators by property
  * @returns {Array} an array of booleans representing results of validations
  */
-function validateProperties (model, propertyNames, propertyDefinitions) {
+function validateProperties(model, propertyNames, propertyDefinitions) {
   return propertyNames.map((propertyName) => {
     if (propertyDefinitions) {
       const { validator } = propertyDefinitions[propertyName]
@@ -50,7 +50,7 @@ function validateProperties (model, propertyNames, propertyDefinitions) {
  *
  * @param {object} object object to coerce
  */
-function stringifyIds (object) {
+function stringifyIds(object) {
   Object.keys(object).forEach(key => {
     const property = object[key]
     if (typeof property === 'object') {
@@ -117,7 +117,7 @@ class Model {
    * @param {object} store the store that will define relationships
    * @param {object} options supports `skipInitialization`
    */
-  constructor (initialProperties = {}, store = new Store({ models: [this.constructor] }), options = {}) {
+  constructor(initialProperties = {}, store = new Store({ models: [this.constructor] }), options = {}) {
     const { id, relationships } = initialProperties
 
     this.store = store
@@ -206,7 +206,7 @@ class Model {
    *
    * @type {boolean}
    */
-  get isDirty () {
+  get isDirty() {
     return this.dirtyAttributes.size > 0 || this.dirtyRelationships.size > 0
   }
 
@@ -226,7 +226,7 @@ class Model {
    * @type {Set}
    * @readonly
    */
-  get dirtyAttributes () {
+  get dirtyAttributes() {
     if (this._snapshots.length === 0) { return [] }
 
     return Object.keys(this.attributes).reduce((dirtyAccumulator, attr) => {
@@ -261,7 +261,7 @@ class Model {
    *
    * @type {Set}
    */
-  get dirtyRelationships () {
+  get dirtyRelationships() {
     if (this._snapshots.length === 0 || !this.relationshipDefinitions) { return new Set() }
 
     const { previousSnapshot, persistedOrFirstSnapshot, relationshipDefinitions } = this
@@ -292,7 +292,7 @@ class Model {
    *
    * @type {boolean}
    */
-  get hasUnpersistedChanges () {
+  get hasUnpersistedChanges() {
     return this.isDirty || !this.previousSnapshot.persisted
   }
 
@@ -301,7 +301,7 @@ class Model {
    *
    * @type {boolean}
    */
-  get isNew () {
+  get isNew() {
     const { id } = this
     if (!id) return true
     if (String(id).indexOf('tmp') === -1) return false
@@ -351,7 +351,7 @@ class Model {
    *
    * @param {object} initialProperties attributes
    */
-   initialize (initialProperties) {
+  initialize(initialProperties) {
     const { ...attributes } = initialProperties
 
     makeObservable(this, mobxAnnotations)
@@ -368,7 +368,7 @@ class Model {
    *
    * @param {object} overrides data that will be set over defaults
    */
-  initializeAttributes (overrides) {
+  initializeAttributes(overrides) {
     const { attributeDefinitions } = this
 
     const attributes = Object.keys(attributeDefinitions).reduce((object, attributeName) => {
@@ -382,7 +382,7 @@ class Model {
   /**
    * Initializes relationships based on the `relationships` hash.
    */
-  initializeRelationships () {
+  initializeRelationships() {
     const { store } = this
 
     const toOneDefinitions = definitionsByDirection(this, 'toOne')
@@ -408,7 +408,7 @@ class Model {
    * => "A good thing to measure"
    * ```
    */
-  rollback () {
+  rollback() {
     this._applySnapshot(this.persistedOrFirstSnapshot)
     this.takeSnapshot({ persisted: true })
   }
@@ -417,7 +417,7 @@ class Model {
    * restores data to its last state
    * state if the model was never persisted
    */
-  undo () {
+  undo() {
     this._applySnapshot(this.previousSnapshot)
   }
 
@@ -427,7 +427,7 @@ class Model {
    * @param {object} options query params and sparse fields to use
    * @returns {Promise} the persisted record
    */
-  async save (options = {}) {
+  async save(options = {}) {
     if (!options.skip_validations && !this.validate(options)) {
       const errorString = JSON.stringify(this.errors)
       return Promise.reject(new Error(errorString))
@@ -495,7 +495,7 @@ class Model {
    * @param {object} options props to use for the fetch
    * @returns {Promise} the refreshed record
    */
-  reload (options = {}) {
+  reload(options = {}) {
     const { constructor, id, isNew } = this
 
     if (isNew) {
@@ -514,7 +514,7 @@ class Model {
    * @param {object} options attributes and relationships to use for the validation
    * @returns {boolean} key / value of attributes and relationship validations
    */
-  validate (options = {}) {
+  validate(options = {}) {
     this.errors = {}
     const { attributeDefinitions, relationshipDefinitions } = this
 
@@ -533,7 +533,7 @@ class Model {
    * @param {object} options params and option to skip removal from the store
    * @returns {Promise} an empty promise with any success/error status
    */
-  destroy (options = {}) {
+  destroy(options = {}) {
     const {
       constructor: { type }, id, snapshot, isNew
     } = this
@@ -594,7 +594,7 @@ class Model {
     )
   }
 
-   /* Private Methods */
+  /* Private Methods */
 
   /**
    * The current state of defined attributes and relationships of the instance
@@ -611,7 +611,7 @@ class Model {
    *
    * @type {object}
    */
-  get snapshot () {
+  get snapshot() {
     return {
       attributes: this.attributes,
       relationships: toJS(this.relationships)
@@ -623,7 +623,7 @@ class Model {
    *
    * @type {object}
    */
-  get previousSnapshot () {
+  get previousSnapshot() {
     const length = this._snapshots.length
     // if (length === 0) throw new Error('Invariant violated: model has no snapshots')
     return this._snapshots[length - 1]
@@ -634,7 +634,7 @@ class Model {
    *
    * @type {object}
    */
-  get persistedOrFirstSnapshot () {
+  get persistedOrFirstSnapshot() {
     return findLast(this._snapshots, (ss) => ss.persisted) || this._snapshots[0]
   }
 
@@ -645,7 +645,7 @@ class Model {
    *
    * @param {object} options options to use to set the persisted state
    */
-  takeSnapshot (options = {}) {
+  takeSnapshot(options = {}) {
     const { store, _snapshots } = this
     if (store.pauseSnapshots && _snapshots.length > 0) { return }
     const persisted = options.persisted || false
@@ -660,7 +660,7 @@ class Model {
   /**
    * Sets `_snapshots` to an empty array
    */
-  clearSnapshots () {
+  clearSnapshots() {
     this._snapshots = []
   }
 
@@ -670,7 +670,7 @@ class Model {
    *
    * @param {object} snapshot the snapshot to apply
    */
-  _applySnapshot (snapshot) {
+  _applySnapshot(snapshot) {
     if (!snapshot) throw new Error('Invariant violated: tried to apply undefined snapshot')
     runInAction(() => {
       this.attributeNames.forEach((key) => {
@@ -686,7 +686,7 @@ class Model {
    *
    * @type {string}
    */
-  get type () {
+  get type() {
     return this.constructor.type
   }
 
@@ -695,7 +695,7 @@ class Model {
    *
    * @type {object}
    */
-  get attributes () {
+  get attributes() {
     return this.attributeNames.reduce((attributes, key) => {
       const value = toJS(this[key])
       if (value != null) {
@@ -710,7 +710,7 @@ class Model {
    *
    * @type {object}
    */
-  get attributeDefinitions () {
+  get attributeDefinitions() {
     return this.constructor.attributeDefinitions || {}
   }
 
@@ -719,7 +719,7 @@ class Model {
    *
    * @type {object}
    */
-  get relationshipDefinitions () {
+  get relationshipDefinitions() {
     return this.constructor.relationshipDefinitions || {}
   }
 
@@ -728,7 +728,7 @@ class Model {
    *
    * @type {boolean}
    */
-  get hasErrors () {
+  get hasErrors() {
     return Object.keys(this.errors).length > 0
   }
 
@@ -738,7 +738,7 @@ class Model {
    * @param {string} key the key to check
    * @returns {string} the error text
    */
-  errorForKey (key) {
+  errorForKey(key) {
     return this.errors[key]
   }
 
@@ -747,7 +747,7 @@ class Model {
    *
    * @returns {Array} the keys of the attribute definitions
    */
-  get attributeNames () {
+  get attributeNames() {
     return Object.keys(this.attributeDefinitions)
   }
 
@@ -756,7 +756,7 @@ class Model {
    *
    * @returns {Array} the keys of the relationship definitions
    */
-  get relationshipNames () {
+  get relationshipNames() {
     return Object.keys(this.relationshipDefinitions)
   }
 
@@ -765,7 +765,7 @@ class Model {
    *
    * @returns {object} key / value of attributes and defaults
    */
-  get defaultAttributes () {
+  get defaultAttributes() {
     const { attributeDefinitions } = this
     return this.attributeNames.reduce((defaults, key) => {
       const { defaultValue } = attributeDefinitions[key]
@@ -783,7 +783,7 @@ class Model {
    * @param {object} options serialization options
    * @returns {object} data in JSON::API format
    */
-  jsonapi (options = {}) {
+  jsonapi(options = {}) {
     const {
       attributeDefinitions,
       attributeNames,
@@ -817,11 +817,11 @@ class Model {
 
     if (options.relationships) {
       filteredRelationshipNames = this.relationshipNames
-        .filter(name => options.relationships.includes(name))
+        .filter(name => options.relationships.includes(name) && this.relationships[name] !== undefined)
 
       const relationships = filteredRelationshipNames.reduce((rels, key) => {
         rels[key] = toJS(this.relationships[key])
-        if (rels[key] == null) {
+        if (rels[key] === null) {
           rels[key] = { data: null }
         } else {
           stringifyIds(rels[key])
@@ -848,7 +848,7 @@ class Model {
    *
    * @param {object} attributes the attributes to update
    */
-  updateAttributes (attributes) {
+  updateAttributes(attributes) {
     const { attributeNames } = this
     const validAttributes = pick(attributes, attributeNames)
 
@@ -863,7 +863,7 @@ class Model {
    * @param {object} other other model object
    * @returns {boolean} if this object has the same type and id
    */
-  isSame (other) {
+  isSame(other) {
     if (!other) return false
     return this.type === other.type && this.id === other.id
   }

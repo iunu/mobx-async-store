@@ -13,6 +13,9 @@ const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel])
 
   Object.keys(relationships).forEach((key) => {
     let { data } = relationships[key]
+    if (data === null) {
+      return
+    }
     if (!Array.isArray(data)) {
       data = [data]
     }

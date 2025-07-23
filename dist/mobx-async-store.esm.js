@@ -10902,11 +10902,17 @@ var Model = /*#__PURE__*/function () {
       };
       if (options.relationships) {
         filteredRelationshipNames = this.relationshipNames.filter(function (name) {
-          return options.relationships.includes(name) && _this5.relationships[name];
+          return options.relationships.includes(name) && _this5.relationships[name] !== undefined;
         });
         var relationships = filteredRelationshipNames.reduce(function (rels, key) {
           rels[key] = toJS(_this5.relationships[key]);
-          stringifyIds(rels[key]);
+          if (rels[key] === null) {
+            rels[key] = {
+              data: null
+            };
+          } else {
+            stringifyIds(rels[key]);
+          }
           return rels;
         }, {});
         data.relationships = relationships;
@@ -11305,6 +11311,9 @@ var addIncluded = function addIncluded(store, encodedModel, included) {
   var relationships = encodedModel.relationships;
   Object.keys(relationships).forEach(function (key) {
     var data = relationships[key].data;
+    if (data === null) {
+      return;
+    }
     if (!Array.isArray(data)) {
       data = [data];
     }
