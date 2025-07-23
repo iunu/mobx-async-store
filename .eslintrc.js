@@ -7,7 +7,8 @@ module.exports = {
   rules: {
     'camelcase': 0,
     'indent': 0,
-    'quote-props': [2, 'consistent-as-needed']
+    'quote-props': [2, 'consistent-as-needed'],
+    'space-before-function-paren': 'off'
   },
   env: {
     jest: true
