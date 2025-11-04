@@ -117,11 +117,6 @@ const disallowFetches = (store) => {
  * Wraps response JSON or object in a Response object that is itself wrapped in a
  * resolved Promise. If no status is given then it will fill in a default based on
  * the method.
- *
- * @param {string} response JSON string
- * @param {string} method the http method
- * @param {number} status the http status
- * @returns {Promise} a promise wrapping the response
  */
 const wrapResponse = ({ response, method, status }: { response: string, method: string, status?: number }) => {
   if (!status) {
@@ -157,8 +152,7 @@ class MockServer {
    *   - factoryFarm: a pre-existing factory to use on this server
    *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
    *     from the internal store.
-   *
-   * @param {object} options currently `responseOverrides` and `factoriesForTypes`
+   *   - jsonapiVersion: the version string to use in responses
    */
   constructor (options: MockServerOptions = {}) {
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm()

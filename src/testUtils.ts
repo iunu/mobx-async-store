@@ -50,7 +50,7 @@ const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel])
 
 export const serverResponse = function (
   modelOrArray: unknown | Array<unknown>,
-  options: { version?: string } = {}
+  options: { version?: string } = {},
 ): string {
   let model
   let array
