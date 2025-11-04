@@ -48,7 +48,10 @@ const addIncluded = (store, encodedModel, included, allEncoded = [encodedModel])
  * @returns {string} JSON encoded data
  */
 
-export const serverResponse = function (modelOrArray) {
+export const serverResponse = function (
+  modelOrArray: unknown | Array<unknown>,
+  options: { version?: string } = {},
+): string {
   let model
   let array
   let encodedData
@@ -80,7 +83,10 @@ export const serverResponse = function (modelOrArray) {
     encodedData = { data: [] }
   }
 
-  return JSON.stringify(encodedData)
+  return JSON.stringify({
+    ...encodedData,
+    version: options.version ?? '1.0'
+  })
 }
 
 /**
