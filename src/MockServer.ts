@@ -123,7 +123,7 @@ const disallowFetches = (store) => {
  * @param {number} status the http status
  * @returns {Promise} a promise wrapping the response
  */
-const wrapResponse = (response, method, status) => {
+const wrapResponse = ({ response, method, status }: { response: string, method: string, status?: number }) => {
   if (!status) {
     status = method === 'POST' ? 201 : 200
   }
@@ -131,10 +131,27 @@ const wrapResponse = (response, method, status) => {
   return Promise.resolve(new Response(response, { status }))
 }
 
+type ResponseOverride = {
+  path: string,
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  status?: number,
+  response: (_server: MockServer, _req: Request) => any
+}
+
+type MockServerOptions = {
+  jsonapiVersion?: string
+  factoryFarm?: FactoryFarm
+  responseOverrides?: Array<ResponseOverride>
+}
+
 /**
  * A backend "server" to be used for creating jsonapi-compliant responses.
  */
 class MockServer {
+  _backendFactoryFarm: FactoryFarm
+  responseOverrides: Array<ResponseOverride>
+  jsonapiVersion: string
+
   /**
    * Sets properties needed internally
    *   - factoryFarm: a pre-existing factory to use on this server
@@ -143,13 +160,15 @@ class MockServer {
    *
    * @param {object} options currently `responseOverrides` and `factoriesForTypes`
    */
-  constructor (options = {}) {
+  constructor (options: MockServerOptions = {}) {
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm()
     this._backendFactoryFarm.__usedForMockServer__ = true
     this._backendFactoryFarm.store.__usedForMockServer__ = true
 
     this.responseOverrides = options.responseOverrides || []
     disallowFetches(this._backendFactoryFarm.store)
+
+    this.jsonapiVersion = options.jsonapiVersion ?? '1.0'
   }
 
   /**
@@ -171,6 +190,7 @@ class MockServer {
    *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
    *     from the internal store.
    *   - factoriesForTypes: A key map that can be used to build factories if a queried id does not exist
+   *   - jsonapiVersion: the version string to use in responses
    *
    * @param {object} options currently `responseOverrides` and `factoriesForTypes`
    */
@@ -191,9 +211,10 @@ class MockServer {
 
       const response = foundQuery
         ? foundQuery.response(this, req)
-        : serverResponse(this._findFromStore(req, factoriesForTypes))
+        : serverResponse(this._findFromStore(req, factoriesForTypes), { version: this.jsonapiVersion })
 
-      return wrapResponse(response, req.method, foundQuery?.status)
+
+      return wrapResponse({ response, method: req.method, status: foundQuery?.status })
     })
   }
 

@@ -181,46 +181,53 @@ store.findAll('todos', { queryParams: filter: { title: 'Do taxes', filter: { ove
 ```
 
 ## Testing
-`FactoryFarm`  to quickly build data models that can be used for testing. An instance of FactoryFarm has factories defined that can be used to build models at runtime.
+`FactoryFarm` can quickly build data models that can be used for testing. An instance of FactoryFarm has factories defined that can be used to build models at runtime.
 
 Defining a factory
 You can define a factory for any model in shared-js/store. Then, objects can be built using the predefined factory, which describes attributes and relationships.
 
+```JavaScript
 const factoryFarm = new FactoryFarm()
 factoryFarm.define('funZone', { type: 'zones', name: 'Fun Zone' })
 
 const funZone = factoryFarm.build('funZone')
 funZone.name
-=> 'Fun Zone'
+// 'Fun Zone'
+```
 
 Factories follow an inheritance tree which can be used to override some properties while keeping the other parent properties.
 
+```JavaScript
 const factoryFarm = new FactoryFarm()
 factoryFarm.define('funZone', { type: 'zones', name: 'Fun Zone' })
 factoryFarm.define('bigZone', { parent: 'funZone', seeding_unit_capacity: 1000 })
 
 const funZone = factoryFarm.build('bigZone')
 funZone.name
-=> 'Fun Zone'
+// 'Fun Zone'
 funZone.seeding_unit_capacity
-=> 1000
+// 1000
+```
 
 FactoryFarm from utils/Testing comes pre-loaded with a number of factories. Most are singularized versions of the model name.
 
 Factories and relationships
 Factories can be used to build relationships just as you would with mobx-async-store.
 
+```JavaScript
 const factoryFarm = new FactoryFarm()
 const seeding_unit = factoryFarm.build('seeding_unit', { name: 'Seeding Unit 1')
 factoryFarm.define('bigZone', { parent: 'funZone', seeding_unit })
 
 const funZone = factoryFarm.build('funZone')
 funZone.seeding_unit.name
-=> 'Seeding Unit 1'
+// 'Seeding Unit 1'
+```
 
-Dynamic factories
+### Dynamic factories
 Attributes and relationships can be defined as functions. The function will be executed at build. Passing a third parameter while building will return an array of objects.
 
+```JavaScript
 const factoryFarm = new FactoryFarm()
 factoryFarm.define('dynamicZone', {
   parent: 'funZone',
@@ -234,24 +241,26 @@ const dynamicZones = factoryFarm.build('dynamicZone', { facility }, 2)
 const [zone1, zone2] = dynamicZones
 
 zone1.name
-=> 'Fun Zone 1'
+// 'Fun Zone 1'
 zone1.seeding_unit.name
-=> 'Seeding Unit 1'
+// 'Seeding Unit 1'
 zone1.facility.name
-=> 'Jay St'
+// 'Jay St'
 zone2.name
-=> 'Fun Zone 2'
+// 'Fun Zone 2'
 zone2.seeding_unit.name
-=> 'Seeding Unit 2'
+// 'Seeding Unit 2'
 zone2.facility.name
-=> 'Jay St'
+// 'Jay St'
+```
 
-More on Server Calls
-MockServer uses an internal factory and store to simulate data to return during a fetch. For GET requests, it will first try to return a defined object from the store. If that misses, it will return an object from the default factory. PATCH requests return the properties that were sent, and POST requests return a new object with the properties that were sent with a new id. Special cases such as defining specific routes (eg for external apis), delayed responses (for race conditions), and error states are described below.
+### More on Server Calls
+`MockServer` uses an internal factory and store to simulate data to return during a fetch. For GET requests, it will first try to return a defined object from the store. If that misses, it will return an object from the default factory. PATCH requests return the properties that were sent, and POST requests return a new object with the properties that were sent with a new id. Special cases such as defining specific routes (eg for external apis), delayed responses (for race conditions), and error states are described below.
 
 
-Example with a component
+#### Example with a component
 
+```JavaScript
 // Component
 @inject('dataStore')
 class Button extends Component {
@@ -306,9 +315,11 @@ describe('it changes the zone name', () => {
     expect(fetchZone[0].body).toMatch('Zone 2')
   })
 })
+```
 
-Example with a helper
+#### Example with a helper
 
+```JavaScript
 export const fetchZone = (zoneId) {
   return dataStore.fetchOne('zones', zoneId)
 }
@@ -330,67 +341,72 @@ describe('fetchZone', () => {
     expect(fetch.mock.calls[0].method).toEqual('GET')
   })
 })
+```
 
+#### Example - failure on specific call
 
-Example - failure on specific call
-
+```JavaScript
 // Testing a catch alerts with errors
-  it('returns errors if saving fails', async (done) => {
-    expect.assertions(3)
-    // Include non 200 status in response override (default is 200)
-    const responseOverrides = [
-      {
-        path: '/new/completions',
-        method: 'POST',
-        status: 500,
-        response: () => {
-          return {
-            errors: [{ title: 'Invalid options', detail: 'There is an error!', meta: { server: true } }],
-          }
-        },
+it('returns errors if saving fails', async (done) => {
+  expect.assertions(3)
+  // Include non 200 status in response override (default is 200)
+  const responseOverrides = [
+    {
+      path: '/new/completions',
+      method: 'POST',
+      status: 500,
+      response: () => {
+        return {
+          errors: [{ title: 'Invalid options', detail: 'There is an error!', meta: { server: true } }],
+        }
       },
-    ]
+    },
+  ]
 
-    // Pass in response overrides when starting the server
-    const mockServer = new MockServer()
-    mockServer.start({ responseOverrides })
+  // Pass in response overrides when starting the server
+  const mockServer = new MockServer()
+  mockServer.start({ responseOverrides })
 
-    window.alert = jest.fn()
-    expect(fetch.mock.calls).toHaveLength(1)
+  window.alert = jest.fn()
+  expect(fetch.mock.calls).toHaveLength(1)
 
-    const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
-    await submitBtn.simulate('click')
+  const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
+  await submitBtn.simulate('click')
 
-    expect(fetch.mock.calls).toHaveLength(2)
-    setImmediate(() => {
-      expect(window.alert).toHaveBeenCalledWith('There is an error!')
-      done()
-    })
+  expect(fetch.mock.calls).toHaveLength(2)
+  setImmediate(() => {
+    expect(window.alert).toHaveBeenCalledWith('There is an error!')
+    done()
   })
+})
+```
 
-Example - failure on all calls
+#### Example - failure on all calls
 
+```JavaScript
 // Testing a catch alerts with errors
-  it('returns errors if saving fails', async (done) => {
-    expect.assertions(2)
+it('returns errors if saving fails', async (done) => {
+  expect.assertions(2)
 
-    // Pass in non-200 status when starting the server (this will fail all responses)
-    const mockServer = new MockServer()
-    mockServer.start({ status: 500 })
+  // Pass in non-200 status when starting the server (this will fail all responses)
+  const mockServer = new MockServer()
+  mockServer.start({ status: 500 })
 
-    expect(fetch.mock.calls).toHaveLength(1)
-    const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
+  expect(fetch.mock.calls).toHaveLength(1)
+  const submitBtn = wrapper.find('button[data-testid="manual-task-submit-button"]')
 
-    try {
-      await submitBtn.simulate('click')
-    } catch (error) {
-      expect(fetch.mock.calls).toHaveLength(2)
-    }
-  })
+  try {
+    await submitBtn.simulate('click')
+  } catch (error) {
+    expect(fetch.mock.calls).toHaveLength(2)
+  }
+})
+```
 
-Customizing Data
+### Customizing Data
 You can pass in a factory or store to define data that will be returned by the server, using the factoryFarm and store in the constructor options. Passing factoriesForType  will allow you to use a defined factory for mocking data instead of the default factory.
 
+```JavaScript
 // Component
 @inject('dataStore')
 class Button extends Component {
@@ -445,10 +461,32 @@ describe('it displays the zone name', () => {
     expect(fetch.mock.calls[0].method).toEqual('GET')
   })
 })
+```
 
-Complex Setup
-responseOverrides will take a hash of responses and use those to match fetch calls, overriding the server’s calls to the store. delayedResponse, in conjunction with serverResponse, adds a timeout to the promise to simulate a delay in returning from the server.
+### Complex Setup
+`responseOverrides` will take a hash of responses and use those to match fetch calls, overriding the server’s calls to the store.
+`delayedResponse`, in conjunction with `serverResponse`, adds a timeout to the promise to simulate a delay in returning from the server.
 
+### JSONAPI versioning
+Mocked responses will, by default, be marked as JSONAPI version 1.0 (as that is the version this library was developed around). If you are migrating to version 1.1 and need to override certain endpoints
+to reflect that, the `serverResponse` utility takes a version option to change this in the response payload.
+
+```JavaScript
+mockServer.start({
+  responseOverrides: [
+    {
+      path: '/users/1',
+      method: 'GET',
+      response: (mockServer) => serverResponse(mockServer.store.getOne('users', 1), { version: '1.1' }),
+    }
+  ]
+})
+```
+
+If you wish to set this version globally, you can initialize MockServer with the `jsonapiVersion` of your choice. Do so at your own discretion!
+```JavaScript
+const mockServer = new MockServer({ jsonapiVersion: '1.1' })
+```
 
 ### Errors
 `errorMessages`: These are optional error messages that can be configured to provide additional details

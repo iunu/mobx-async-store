@@ -432,7 +432,8 @@ describe('FactoryFarm', () => {
             },
             type: 'tags'
           }
-        ]
+        ],
+        version: '1.0',
       })
     })
   })
