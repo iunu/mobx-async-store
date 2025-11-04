@@ -117,6 +117,11 @@ const disallowFetches = (store) => {
  * Wraps response JSON or object in a Response object that is itself wrapped in a
  * resolved Promise. If no status is given then it will fill in a default based on
  * the method.
+ *
+ * @param {string} response JSON string
+ * @param {string} method the http method
+ * @param {number} status the http status
+ * @returns {Promise} a promise wrapping the response
  */
 const wrapResponse = ({ response, method, status }: { response: string, method: string, status?: number }) => {
   if (!status) {
@@ -130,6 +135,8 @@ type ResponseOverride = {
   path: string,
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
   status?: number,
+  // TODO: fix our linting so we can actually define proper types without warnings
+  // eslint-disable-next-line
   response: (_server: MockServer, _req: Request) => any
 }
 
@@ -153,6 +160,8 @@ class MockServer {
    *   - responseOverrides: An array of alternative responses that can be used to override the ones that would be served
    *     from the internal store.
    *   - jsonapiVersion: the version string to use in responses
+   *
+   * @param {object} options currently `responseOverrides` and `factoriesForTypes`
    */
   constructor (options: MockServerOptions = {}) {
     this._backendFactoryFarm = options.factoryFarm || new FactoryFarm()
